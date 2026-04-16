@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMA Studio — Keegan Whitacre</title>
+<style>
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+:root {
+  --bg:          #0d1117;
+  --bg-1:        #161b22;
+  --bg-2:        #21262d;
+  --bg-3:        #2d333b;
+  --border:      #30363d;
+  --border-hi:   #444c56;
+  --fg:          #e6edf3;
+  --fg-2:        #adbac7;
+  --fg-3:        #768390;
+  --accent:      #e8716a;
+  --accent-dim:  rgba(232,113,106,0.15);
+  --accent-hover:#f08078;
+  --green:       #3fb950;
+  --yellow:      #d29922;
+  --blue:        #388bfd;
+  --font:        "TX-02", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:   ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  --radius:      6px;
+  --radius-lg:   10px;
+  --shadow:      0 8px 24px rgba(0,0,0,0.4);
+  --transition:  0.15s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =============================================
+   LAYOUT SHELL
+   ============================================= */
+#app {
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Top bar ---- */
+#topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  gap: 16px;
+  z-index: 10;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  text-transform: uppercase;
+}
+
+.topbar-logo {
+  width: 22px; height: 22px;
+  background: var(--accent);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.topbar-logo svg { width: 13px; height: 13px; fill: #fff; }
+
+.topbar-sep {
+  width: 1px; height: 20px;
+  background: var(--border);
+}
+
+.topbar-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.tab-btn {
+  padding: 5px 12px;
+  border: none;
+  background: transparent;
+  color: var(--fg-3);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+  letter-spacing: 0.02em;
+}
+.tab-btn:hover { color: var(--fg-2); background: var(--bg-2); }
+.tab-btn.active { color: var(--fg); background: var(--bg-3); }
+
+.topbar-actions { display: flex; gap: 8px; margin-left: auto; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--fg-2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--border-hi); color: var(--fg); background: var(--bg-3); }
+.btn.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.btn.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn svg { width: 13px; height: 13px; }
+
+/* ---- Config panel ---- */
+#config-panel {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-1);
+}
+
+/* ---- Preview panel ---- */
+#preview-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* =============================================
+   CONFIG SECTIONS
+   ============================================= */
+.config-section {
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+}
+.config-section.active { display: flex; }
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+  margin-bottom: 4px;
+}
+
+/* Field groups */
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-2);
+}
+.field-hint {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-top: 2px;
+}
+
+input[type="text"],
+input[type="color"],
+input[type="time"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 60px; }
+input[type="color"] { padding: 3px 4px; height: 34px; cursor: pointer; }
+
+select option { background: var(--bg-2); }
+
+/* Accent swatch row */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-preview {
+  width: 34px; height: 34px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Days of week */
+.dow-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dow-chip {
+  width: 36px; height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--fg-3);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.dow-chip.on { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+/* Time windows */
+.window-list { display: flex; flex-direction: column; gap: 8px; }
+.window-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 8px 1fr 28px;
+  gap: 6px;
+  align-items: center;
+}
+.window-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.window-sep { font-size: 11px; color: var(--fg-3); text-align: center; }
+.window-del {
+  width: 24px; height: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: all var(--transition);
+}
+.window-del:hover { border-color: #f85149; color: #f85149; background: rgba(248,81,73,0.1); }
+
+/* =============================================
+   QUESTION BUILDER
+   ============================================= */
+.question-list { display: flex; flex-direction: column; gap: 8px; }
+
+.q-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition);
+}
+.q-card:hover { border-color: var(--border-hi); }
+.q-card.expanded { border-color: var(--accent); }
+
+.q-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.q-drag-handle {
+  color: var(--fg-3);
+  font-size: 14px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.q-drag-handle:active { cursor: grabbing; }
+.q-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fg-3);
+  min-width: 18px;
+}
+.q-preview-text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.q-type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.q-type-badge.slider { background: rgba(56,139,253,0.15); color: var(--blue); }
+.q-type-badge.choice { background: rgba(63,185,80,0.15); color: var(--green); }
+.q-chevron {
+  color: var(--fg-3);
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+.q-card.expanded .q-chevron { transform: rotate(180deg); }
+
+.q-body {
+  display: none;
+  padding: 0 12px 12px;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+}
+.q-card.expanded .q-body { display: flex; }
+
+.q-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.q-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.q-condition-block {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.q-condition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.q-condition-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.condition-row { display: grid; grid-template-columns: 1fr 100px 80px; gap: 6px; }
+
+.q-del-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--fg-3);
+  font-family: var(--font);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+  align-self: flex-end;
+  margin-top: 4px;
+}
+.q-del-btn:hover { border-color: #f85149; color: #f85149; background: rgba(248,81,73,0.1); }
+
+/* Options editor for choice questions */
+.options-list { display: flex; flex-direction: column; gap: 6px; }
+.option-row { display: flex; gap: 6px; align-items: center; }
+.option-row input { flex: 1; }
+.option-del {
+  width: 24px; height: 24px; flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1;
+  transition: all var(--transition);
+}
+.option-del:hover { border-color: #f85149; color: #f85149; background: rgba(248,81,73,0.1); }
+
+/* Add button row */
+.add-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.toggle-label { font-size: 12px; color: var(--fg-2); }
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 34px; height: 18px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.toggle input:checked + .toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--fg-3);
+  transition: transform var(--transition), background var(--transition);
+}
+.toggle input:checked + .toggle-track::after {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+/* =============================================
+   PREVIEW PANEL
+   ============================================= */
+#preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  flex-shrink: 0;
+}
+
+.preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fg-3);
+}
+
+.preview-session-tabs {
+  display: flex;
+  gap: 4px;
+}
+.preview-session-tab {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-3);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.preview-session-tab:hover { color: var(--fg-2); border-color: var(--border-hi); }
+.preview-session-tab.active { background: var(--bg-3); border-color: var(--border-hi); color: var(--fg); }
+
+#preview-viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(255,255,255,0.01) 20px,
+    rgba(255,255,255,0.01) 21px
+  );
+}
+
+.phone-shell {
+  width: 320px;
+  height: 580px;
+  border: 2px solid var(--border-hi);
+  border-radius: 36px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow), 0 0 0 6px var(--bg-1);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100px; height: 24px;
+  background: var(--bg-1);
+  border-radius: 0 0 16px 16px;
+  z-index: 10;
+}
+
+#preview-iframe {
+  width: 375px;
+  height: 812px;
+  border: none;
+  transform-origin: top left;
+  transform: scale(0.8533);
+  /* 320/375 = 0.8533 */
+  pointer-events: none;
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+
+/* =============================================
+   UTILITY
+   ============================================= */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.badge-muted { background: var(--bg-3); color: var(--fg-3); }
+
+.schema-version {
+  font-size: 10px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+}
+
+/* mobile fallback */
+@media (max-width: 900px) {
+  #app { grid-template-columns: 1fr; grid-template-rows: 48px 1fr 0; }
+  #preview-panel { display: none; }
+}
+
+/* Export modal */
+#export-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+#export-modal.open { display: flex; }
+.modal-box {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 480px;
+  max-width: calc(100vw - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.modal-subtitle { font-size: 12px; color: var(--fg-3); }
+.export-option {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.export-option:hover { border-color: var(--accent); background: var(--bg-3); }
+.export-option-title { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 4px; }
+.export-option-desc { font-size: 11px; color: var(--fg-3); line-height: 1.5; }
+.modal-close {
+  align-self: flex-end;
+  background: transparent;
+  border: none;
+  color: var(--fg-3);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: color var(--transition);
+  padding: 0;
+}
+.modal-close:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== TOP BAR ========== -->
+  <header id="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="2.5"/><path d="M6.5 1v1.5M6.5 10.5V12M12 6.5h-1.5M2.5 6.5H1M10.3 2.7l-1 1M3.7 9.3l-1 1M10.3 10.3l-1-1M3.7 3.7l-1-1" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      EMA Studio
+    </div>
+    <div class="topbar-sep"></div>
+    <nav class="topbar-tabs">
+      <button class="tab-btn active" data-tab="study">Study</button>
+      <button class="tab-btn" data-tab="questions">Questions</button>
+      <button class="tab-btn" data-tab="schedule">Schedule</button>
+    </nav>
+    <div class="topbar-actions">
+      <span class="schema-version">schema v1.0.0</span>
+      <button class="btn" id="preview-json-btn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.72 3.22a.75.75 0 011.06 1.06L2.06 8l3.72 3.72a.75.75 0 11-1.06 1.06L.47 8.53a.75.75 0 010-1.06l4.25-4.25zm6.56 0a.75.75 0 10-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 101.06 1.06l4.25-4.25a.75.75 0 000-1.06l-4.25-4.25z"/></svg>
+        JSON
+      </button>
+      <button class="btn btn-primary" id="export-btn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
+        Export Study
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== CONFIG PANEL ========== -->
+  <section id="config-panel">
+
+    <!-- STUDY TAB -->
+    <div class="config-section active" id="tab-study">
+      <div>
+        <div class="section-title">Study Identity</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Study Name</label>
+        <input type="text" id="study-name" value="Interoception Study" placeholder="e.g. Interoception Study">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Institution Label</label>
+        <input type="text" id="institution" value="" placeholder="e.g. Ohio State University">
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Visual Theme</div>
+
+      <div class="field-group">
+        <label class="field-label">Accent Color</label>
+        <div class="color-row">
+          <div class="color-preview" id="color-preview-swatch"></div>
+          <input type="color" id="accent-color" value="#e8716a" style="flex:1">
+        </div>
+        <div class="field-hint">Used for buttons, sliders, and interactive elements</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Session Greeting — Morning</label>
+        <input type="text" id="greeting-morning" value="Good Morning" placeholder="Good Morning">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Session Greeting — Afternoon</label>
+        <input type="text" id="greeting-afternoon" value="Check-In" placeholder="Check-In">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Session Greeting — Evening</label>
+        <input type="text" id="greeting-evening" value="Good Evening" placeholder="Good Evening">
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Tasks <span class="badge badge-muted" style="margin-left:6px">MVP</span></div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">EMA (Ecological Momentary Assessment)</span>
+        <label class="toggle">
+          <input type="checkbox" checked disabled>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="opacity:0.4">
+        <span class="toggle-label" style="display:flex;flex-direction:column;gap:2px">
+          PAT (Phase Adjustment Task)
+          <span style="font-size:10px;color:var(--fg-3)">Coming in a future release</span>
+        </span>
+        <label class="toggle">
+          <input type="checkbox" disabled>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- QUESTIONS TAB -->
+    <div class="config-section" id="tab-questions">
+      <div>
+        <div class="section-title">Questions</div>
+        <div class="field-hint" style="margin-top:4px">Questions appear in all EMA sessions unless a condition is set.</div>
+      </div>
+
+      <div class="question-list" id="question-list"></div>
+
+      <div class="add-row">
+        <button class="btn" id="add-slider-btn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>
+          Slider
+        </button>
+        <button class="btn" id="add-choice-btn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>
+          Choice
+        </button>
+      </div>
+    </div>
+
+    <!-- SCHEDULE TAB -->
+    <div class="config-section" id="tab-schedule">
+      <div>
+        <div class="section-title">Study Duration</div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Study Length (days)</label>
+          <input type="number" id="study-days" value="14" min="1" max="365">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Daily Prompts</label>
+          <input type="number" id="daily-prompts" value="3" min="1" max="10">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Days of Week</div>
+
+      <div class="dow-grid" id="dow-grid">
+        <div class="dow-chip on" data-dow="1">Mo</div>
+        <div class="dow-chip on" data-dow="2">Tu</div>
+        <div class="dow-chip on" data-dow="3">We</div>
+        <div class="dow-chip on" data-dow="4">Th</div>
+        <div class="dow-chip on" data-dow="5">Fr</div>
+        <div class="dow-chip" data-dow="6">Sa</div>
+        <div class="dow-chip" data-dow="7">Su</div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Time Windows</div>
+      <div class="field-hint">One prompt is sent at a random time within each window.</div>
+
+      <div class="window-list" id="window-list"></div>
+
+      <div class="add-row">
+        <button class="btn" id="add-window-btn">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>
+          Add Window
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========== PREVIEW PANEL ========== -->
+  <section id="preview-panel">
+    <div id="preview-header">
+      <span class="preview-label">Live Preview</span>
+      <div class="preview-session-tabs" id="preview-session-tabs">
+        <button class="preview-session-tab active" data-session="morning">Morning</button>
+        <button class="preview-session-tab" data-session="afternoon">Afternoon</button>
+        <button class="preview-session-tab" data-session="evening">Evening</button>
+      </div>
+    </div>
+    <div id="preview-viewport">
+      <div class="phone-shell">
+        <div class="phone-notch"></div>
+        <iframe id="preview-iframe" sandbox="allow-scripts" title="Preview"></iframe>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ========== EXPORT MODAL ========== -->
+<div id="export-modal">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-title">Export Study</div>
+      <button class="modal-close" id="modal-close-btn">✕</button>
+    </div>
+    <div class="modal-subtitle">Choose an export format. Both options produce a fully self-contained study that runs without a server.</div>
+
+    <div class="export-option" id="export-two-file">
+      <div class="export-option-title">Two-file export (recommended)</div>
+      <div class="export-option-desc">Downloads <code>index.html</code> + <code>config.json</code> as a zip. The HTML is lean — it reads config at runtime. Updating study parameters only requires replacing config.json; you don't need to re-export the HTML.</div>
+    </div>
+    <div class="export-option" id="export-single-file">
+      <div class="export-option-title">Single-file export</div>
+      <div class="export-option-desc">Bakes config inline as a <code>&lt;script&gt;</code> block in the HTML. One file to deploy or send. Use when simplicity of distribution matters more than updateability.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== JSON INSPECTOR ========== -->
+<div id="json-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)">
+  <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;width:560px;max-width:calc(100vw - 40px);max-height:80vh;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-title">config.json preview</div>
+      <button class="modal-close" id="json-modal-close">✕</button>
+    </div>
+    <pre id="json-preview" style="flex:1;overflow:auto;font-family:var(--font-mono);font-size:11px;color:var(--fg-2);background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;line-height:1.6;white-space:pre;"></pre>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ============================================================
+// STATE
+// ============================================================
+const SCHEMA_VERSION = "1.0.0";
+
+let state = {
+  study: {
+    name: "Interoception Study",
+    institution: "",
+    accent_color: "#e8716a",
+    greetings: { morning: "Good Morning", afternoon: "Check-In", evening: "Good Evening" }
+  },
+  tasks: ["ema"],
+  ema: {
+    sessions: [
+      { id: "morning",   label: "Morning Check-In",   greeting_key: "morning" },
+      { id: "afternoon", label: "Afternoon Check-In",  greeting_key: "afternoon" },
+      { id: "evening",   label: "Evening Check-In",    greeting_key: "evening" }
+    ],
+    questions: [
+      {
+        id: "q1", type: "slider",
+        text: "How would you rate your current mood?",
+        min: 0, max: 100, step: 1, unit: null,
+        anchors: ["Very Negative", "Very Positive"],
+        required: true, condition: null
+      },
+      {
+        id: "q2", type: "slider",
+        text: "How physically rested do you feel?",
+        min: 0, max: 100, step: 1, unit: null,
+        anchors: ["Exhausted", "Fully Energized"],
+        required: true, condition: null
+      },
+      {
+        id: "q3", type: "choice",
+        text: "What are you currently doing?",
+        options: ["Working", "Exercising", "Relaxing", "Socializing", "Other"],
+        required: true, condition: null
+      }
+    ],
+    scheduling: {
+      study_days: 14,
+      daily_prompts: 3,
+      days_of_week: [1,2,3,4,5],
+      windows: [
+        { id: "w1", label: "Morning",   start: "08:00", end: "10:00" },
+        { id: "w2", label: "Afternoon", start: "13:00", end: "15:00" },
+        { id: "w3", label: "Evening",   start: "19:00", end: "21:00" }
+      ]
+    }
+  }
+};
+
+let previewSession = "morning";
+let previewDebounceTimer = null;
+let questionIdCounter = 10;
+let windowIdCounter = 10;
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function genId(prefix) {
+  return `${prefix}${++questionIdCounter}`;
+}
+function genWindowId() {
+  return `w${++windowIdCounter}`;
+}
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+function darkenHex(hex, amount) {
+  let r = parseInt(hex.slice(1,3),16);
+  let g = parseInt(hex.slice(3,5),16);
+  let b = parseInt(hex.slice(5,7),16);
+  r = Math.max(0, r - amount);
+  g = Math.max(0, g - amount);
+  b = Math.max(0, b - amount);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.config-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ============================================================
+// STUDY TAB BINDINGS
+// ============================================================
+function bindStudyTab() {
+  const bind = (id, path, transform) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const val = transform ? transform(el.value) : el.value;
+      setNestedPath(state, path, val);
+      schedulePreview();
+    });
+  };
+
+  document.getElementById('study-name').addEventListener('input', e => {
+    state.study.name = e.target.value;
+    schedulePreview();
+  });
+  document.getElementById('institution').addEventListener('input', e => {
+    state.study.institution = e.target.value;
+    schedulePreview();
+  });
+  document.getElementById('greeting-morning').addEventListener('input', e => {
+    state.study.greetings.morning = e.target.value;
+    schedulePreview();
+  });
+  document.getElementById('greeting-afternoon').addEventListener('input', e => {
+    state.study.greetings.afternoon = e.target.value;
+    schedulePreview();
+  });
+  document.getElementById('greeting-evening').addEventListener('input', e => {
+    state.study.greetings.evening = e.target.value;
+    schedulePreview();
+  });
+  document.getElementById('accent-color').addEventListener('input', e => {
+    state.study.accent_color = e.target.value;
+    document.getElementById('color-preview-swatch').style.background = e.target.value;
+    schedulePreview();
+  });
+
+  // Init swatch
+  document.getElementById('color-preview-swatch').style.background = state.study.accent_color;
+}
+
+function setNestedPath(obj, path, val) {
+  const keys = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
+  cur[keys[keys.length - 1]] = val;
+}
+
+// ============================================================
+// QUESTION BUILDER
+// ============================================================
+function renderQuestions() {
+  const list = document.getElementById('question-list');
+  list.innerHTML = '';
+  state.ema.questions.forEach((q, i) => {
+    list.appendChild(buildQuestionCard(q, i));
+  });
+}
+
+function buildQuestionCard(q, index) {
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.dataset.qid = q.id;
+
+  const typeBadge = q.type === 'slider' ? 'Slider' : 'Choice';
+  const typeClass = q.type;
+
+  card.innerHTML = `
+    <div class="q-header">
+      <span class="q-drag-handle">⠿</span>
+      <span class="q-num">${index + 1}</span>
+      <span class="q-preview-text">${q.text || '(no text)'}</span>
+      <span class="q-type-badge ${typeClass}">${typeBadge}</span>
+      <svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+        <path d="M2 4l4 4 4-4"/>
+      </svg>
+    </div>
+    <div class="q-body">
+      <div class="field-group">
+        <label class="field-label">Question Text</label>
+        <input type="text" class="q-text" value="${escHtml(q.text)}" placeholder="Enter question…">
+      </div>
+      ${q.type === 'slider' ? buildSliderFields(q) : buildChoiceFields(q)}
+      <div class="field-group">
+        <label class="field-label">Condition (show only if…)</label>
+        ${buildConditionBlock(q, index)}
+      </div>
+      <div class="toggle-row" style="margin-top:4px">
+        <span class="toggle-label">Required</span>
+        <label class="toggle">
+          <input type="checkbox" class="q-required" ${q.required ? 'checked' : ''}>
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <button class="q-del-btn">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1.75a.25.25 0 01.25-.25h2.5a.25.25 0 01.25.25V3h-3V1.75zM5 3V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75V3h3.25a.75.75 0 010 1.5H.75A.75.75 0 010 4.5H3zm1.5 0h3v1H6.5V3zM3.074 5.5l.75 7.5a.75.75 0 00.746.676h6.86a.75.75 0 00.745-.676l.75-7.5H3.074zm3.426 1a.75.75 0 011.5 0v5a.75.75 0 01-1.5 0v-5zm-2 0a.75.75 0 011.5 0v5a.75.75 0 01-1.5 0v-5zm4 0a.75.75 0 011.5 0v5a.75.75 0 01-1.5 0v-5z"/></svg>
+        Remove Question
+      </button>
+    </div>
+  `;
+
+  // Header toggle
+  card.querySelector('.q-header').addEventListener('click', () => {
+    card.classList.toggle('expanded');
+  });
+
+  // Text change
+  card.querySelector('.q-text').addEventListener('input', e => {
+    q.text = e.target.value;
+    card.querySelector('.q-preview-text').textContent = q.text || '(no text)';
+    schedulePreview();
+  });
+
+  // Required toggle
+  card.querySelector('.q-required').addEventListener('change', e => {
+    q.required = e.target.checked;
+  });
+
+  // Delete
+  card.querySelector('.q-del-btn').addEventListener('click', () => {
+    state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
+    renderQuestions();
+    schedulePreview();
+  });
+
+  if (q.type === 'slider') bindSliderFields(card, q);
+  else bindChoiceFields(card, q);
+  bindConditionFields(card, q, index);
+
+  return card;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildSliderFields(q) {
+  return `
+    <div class="q-row-3">
+      <div class="field-group">
+        <label class="field-label">Min</label>
+        <input type="number" class="q-min" value="${q.min}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Max</label>
+        <input type="number" class="q-max" value="${q.max}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Step</label>
+        <input type="number" class="q-step" value="${q.step}" min="0.01" step="0.5">
+      </div>
+    </div>
+    <div class="q-row-2">
+      <div class="field-group">
+        <label class="field-label">Left anchor</label>
+        <input type="text" class="q-anchor-left" value="${escHtml((q.anchors||['',''])[0])}">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Right anchor</label>
+        <input type="text" class="q-anchor-right" value="${escHtml((q.anchors||['',''])[1])}">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Unit suffix (optional)</label>
+      <input type="text" class="q-unit" value="${escHtml(q.unit||'')}" placeholder="e.g. hrs, km">
+    </div>
+  `;
+}
+
+function bindSliderFields(card, q) {
+  const num = (sel, key) => {
+    const el = card.querySelector(sel);
+    if (!el) return;
+    el.addEventListener('input', () => { q[key] = parseFloat(el.value) || 0; schedulePreview(); });
+  };
+  num('.q-min','min'); num('.q-max','max'); num('.q-step','step');
+  card.querySelector('.q-anchor-left').addEventListener('input', e => {
+    if (!q.anchors) q.anchors = ['',''];
+    q.anchors[0] = e.target.value; schedulePreview();
+  });
+  card.querySelector('.q-anchor-right').addEventListener('input', e => {
+    if (!q.anchors) q.anchors = ['',''];
+    q.anchors[1] = e.target.value; schedulePreview();
+  });
+  card.querySelector('.q-unit').addEventListener('input', e => {
+    q.unit = e.target.value || null; schedulePreview();
+  });
+}
+
+function buildChoiceFields(q) {
+  const opts = (q.options || []).map((o,i) => `
+    <div class="option-row" data-oi="${i}">
+      <input type="text" class="opt-text" value="${escHtml(o)}" placeholder="Option ${i+1}">
+      <button class="option-del">×</button>
+    </div>
+  `).join('');
+  return `
+    <div class="field-group">
+      <label class="field-label">Options</label>
+      <div class="options-list" data-qid="${q.id}">${opts}</div>
+      <button class="btn add-opt-btn" style="margin-top:6px;font-size:11px">+ Add option</button>
+    </div>
+  `;
+}
+
+function bindChoiceFields(card, q) {
+  const list = card.querySelector('.options-list');
+  if (!list) return;
+
+  function refreshOptions() {
+    list.innerHTML = (q.options||[]).map((o,i) => `
+      <div class="option-row" data-oi="${i}">
+        <input type="text" class="opt-text" value="${escHtml(o)}" placeholder="Option ${i+1}">
+        <button class="option-del">×</button>
+      </div>
+    `).join('');
+    // rebind
+    list.querySelectorAll('.opt-text').forEach((inp, i) => {
+      inp.addEventListener('input', e => { q.options[i] = e.target.value; schedulePreview(); rebuildConditionSelects(); });
+    });
+    list.querySelectorAll('.option-del').forEach((btn, i) => {
+      btn.addEventListener('click', () => { q.options.splice(i,1); refreshOptions(); schedulePreview(); rebuildConditionSelects(); });
+    });
+  }
+
+  card.querySelector('.add-opt-btn').addEventListener('click', () => {
+    if (!q.options) q.options = [];
+    q.options.push(''); refreshOptions(); schedulePreview();
+  });
+
+  refreshOptions();
+}
+
+function buildConditionBlock(q, index) {
+  if (index === 0) {
+    return `<div style="font-size:11px;color:var(--fg-3);padding:6px 0">First question — no condition possible</div>`;
+  }
+  const priors = state.ema.questions.slice(0, index);
+  const hasCondition = !!q.condition;
+  const condSource = q.condition ? q.condition.question_id : (priors[0]?.id || '');
+
+  const qOptions = priors.map(p => `<option value="${p.id}" ${p.id===condSource?'selected':''}>${escHtml(p.text.slice(0,40)||p.id)}</option>`).join('');
+
+  const operatorOptions = [
+    ['eq','equals'],['neq','not equals'],
+    ['gt','greater than'],['gte','≥'],
+    ['lt','less than'],['lte','≤'],
+    ['includes','includes']
+  ].map(([v,l]) => `<option value="${v}" ${q.condition?.operator===v?'selected':''}>${l}</option>`).join('');
+
+  return `
+    <div class="toggle-row" style="margin-bottom:${hasCondition?'8px':'0'}">
+      <span class="toggle-label" style="font-size:11px;color:var(--fg-3)">Enable condition</span>
+      <label class="toggle">
+        <input type="checkbox" class="cond-enable" ${hasCondition?'checked':''}>
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+    <div class="q-condition-block" style="display:${hasCondition?'flex':'none'}">
+      <div class="condition-row">
+        <div class="field-group" style="margin:0">
+          <select class="cond-qid">${qOptions}</select>
+        </div>
+        <div class="field-group" style="margin:0">
+          <select class="cond-op">${operatorOptions}</select>
+        </div>
+        <div class="field-group" style="margin:0">
+          <input type="text" class="cond-val" value="${escHtml(Array.isArray(q.condition?.value)?q.condition.value.join(','):String(q.condition?.value??''))}">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--fg-3)">For choice/includes: comma-separate multiple values. Numerics compared by value.</div>
+    </div>
+  `;
+}
+
+function bindConditionFields(card, q, index) {
+  const enableChk = card.querySelector('.cond-enable');
+  const block = card.querySelector('.q-condition-block');
+  if (!enableChk) return;
+
+  enableChk.addEventListener('change', () => {
+    if (enableChk.checked) {
+      const priors = state.ema.questions.slice(0, index);
+      q.condition = { question_id: priors[0]?.id||'', operator: 'gte', value: 50 };
+      block.style.display = 'flex';
+    } else {
+      q.condition = null;
+      block.style.display = 'none';
+    }
+    schedulePreview();
+  });
+
+  const qidSel = card.querySelector('.cond-qid');
+  const opSel  = card.querySelector('.cond-op');
+  const valInp = card.querySelector('.cond-val');
+
+  if (qidSel) qidSel.addEventListener('change', () => { if(q.condition) q.condition.question_id = qidSel.value; });
+  if (opSel)  opSel.addEventListener('change',  () => { if(q.condition) q.condition.operator    = opSel.value; });
+  if (valInp) valInp.addEventListener('input',   () => {
+    if (!q.condition) return;
+    const v = valInp.value;
+    if (v.includes(',')) q.condition.value = v.split(',').map(x=>x.trim());
+    else if (!isNaN(Number(v)) && v !== '') q.condition.value = Number(v);
+    else q.condition.value = v;
+  });
+}
+
+function rebuildConditionSelects() {
+  // Re-render questions to keep condition selects in sync when options change
+  renderQuestions();
+}
+
+document.getElementById('add-slider-btn').addEventListener('click', () => {
+  state.ema.questions.push({
+    id: genId('q'), type: 'slider',
+    text: '', min: 0, max: 100, step: 1, unit: null,
+    anchors: ['', ''], required: true, condition: null
+  });
+  renderQuestions();
+  schedulePreview();
+  // Auto-expand the new card
+  const cards = document.querySelectorAll('.q-card');
+  if (cards.length) cards[cards.length - 1].classList.add('expanded');
+});
+
+document.getElementById('add-choice-btn').addEventListener('click', () => {
+  state.ema.questions.push({
+    id: genId('q'), type: 'choice',
+    text: '', options: ['', ''],
+    required: true, condition: null
+  });
+  renderQuestions();
+  schedulePreview();
+  const cards = document.querySelectorAll('.q-card');
+  if (cards.length) cards[cards.length - 1].classList.add('expanded');
+});
+
+// ============================================================
+// SCHEDULE TAB
+// ============================================================
+function bindScheduleTab() {
+  document.getElementById('study-days').addEventListener('input', e => {
+    state.ema.scheduling.study_days = parseInt(e.target.value)||1;
+  });
+  document.getElementById('daily-prompts').addEventListener('input', e => {
+    state.ema.scheduling.daily_prompts = parseInt(e.target.value)||1;
+  });
+
+  document.getElementById('dow-grid').addEventListener('click', e => {
+    const chip = e.target.closest('.dow-chip');
+    if (!chip) return;
+    const dow = parseInt(chip.dataset.dow);
+    const idx = state.ema.scheduling.days_of_week.indexOf(dow);
+    if (idx >= 0) state.ema.scheduling.days_of_week.splice(idx,1);
+    else state.ema.scheduling.days_of_week.push(dow);
+    state.ema.scheduling.days_of_week.sort();
+    chip.classList.toggle('on', idx < 0);
+  });
+
+  document.getElementById('add-window-btn').addEventListener('click', () => {
+    state.ema.scheduling.windows.push({ id: genWindowId(), label: 'New Window', start: '09:00', end: '11:00' });
+    renderWindows();
+  });
+}
+
+function renderWindows() {
+  const list = document.getElementById('window-list');
+  list.innerHTML = '';
+  state.ema.scheduling.windows.forEach(w => {
+    const row = document.createElement('div');
+    row.className = 'window-row';
+    row.innerHTML = `
+      <input type="text" class="wlabel" value="${escHtml(w.label)}" placeholder="Label">
+      <input type="time" class="wstart" value="${w.start}">
+      <span class="window-sep">–</span>
+      <input type="time" class="wend" value="${w.end}">
+      <button class="window-del">×</button>
+    `;
+    row.querySelector('.wlabel').addEventListener('input', e => { w.label = e.target.value; });
+    row.querySelector('.wstart').addEventListener('input', e => { w.start = e.target.value; });
+    row.querySelector('.wend').addEventListener('input', e => { w.end = e.target.value; });
+    row.querySelector('.window-del').addEventListener('click', () => {
+      state.ema.scheduling.windows = state.ema.scheduling.windows.filter(x => x.id !== w.id);
+      renderWindows();
+    });
+    list.appendChild(row);
+  });
+}
+
+// ============================================================
+// PREVIEW
+// ============================================================
+function schedulePreview() {
+  clearTimeout(previewDebounceTimer);
+  previewDebounceTimer = setTimeout(renderPreview, 150);
+}
+
+function renderPreview() {
+  const iframe = document.getElementById('preview-iframe');
+  const doc = buildPreviewDoc(previewSession);
+  iframe.srcdoc = doc;
+}
+
+function buildPreviewDoc(sessionId) {
+  const s = state.study;
+  const accent = s.accent_color;
+  const accentHover = darkenHex(accent, 20);
+  const accentRgb = hexToRgb(accent);
+  const greeting = s.greetings[sessionId] || 'Check-In';
+  const studyName = s.name || 'Study';
+
+  // Build question HTML — for preview we show all (conditions are a runtime concern)
+  const questionsHtml = state.ema.questions.map((q, i) => {
+    if (q.type === 'slider') {
+      const leftAnchor = (q.anchors && q.anchors[0]) || '';
+      const rightAnchor = (q.anchors && q.anchors[1]) || '';
+      const condBadge = q.condition ? `<span style="font-size:9px;color:${accent};margin-left:6px;opacity:0.8">conditional</span>` : '';
+      return `
+        <div style="width:100%;margin-bottom:28px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+            <label style="font-size:13px;color:#e6edf3;font-weight:500;line-height:1.4">${i+1}. ${escHtmlPreview(q.text||'(empty)')}${condBadge}</label>
+          </div>
+          <input type="range" style="width:100%;height:6px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.12);border-radius:3px;outline:none;margin:10px 0 8px;accent-color:${accent}" min="${q.min}" max="${q.max}" step="${q.step}" value="${(q.min+q.max)/2}">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.4);font-weight:500">
+            <span>${escHtmlPreview(leftAnchor)}</span><span>${escHtmlPreview(rightAnchor)}</span>
+          </div>
+        </div>`;
+    } else {
+      const opts = (q.options||[]).map(o =>
+        `<div style="padding:9px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;background:rgba(255,255,255,0.05);color:#e6edf3;font-size:13px;cursor:pointer;margin-bottom:6px">${escHtmlPreview(o||'(empty)')}</div>`
+      ).join('');
+      const condBadge = q.condition ? `<span style="font-size:9px;color:${accent};margin-left:6px;opacity:0.8">conditional</span>` : '';
+      return `
+        <div style="width:100%;margin-bottom:20px">
+          <label style="font-size:13px;color:#e6edf3;font-weight:500;display:block;margin-bottom:10px;line-height:1.4">${i+1}. ${escHtmlPreview(q.text||'(empty)')}${condBadge}</label>
+          ${opts}
+        </div>`;
+    }
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0d1117;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e6edf3;overflow:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:40px 20px 24px;overflow-y:auto}
+.screen-header{text-align:center;margin-bottom:24px}
+.study-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.3);margin-bottom:8px}
+h1{font-size:22px;font-weight:700;color:#e6edf3;margin-bottom:4px}
+.session-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px}
+.questions{display:flex;flex-direction:column;width:100%;max-width:320px;margin:0 auto;flex:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:${accent};cursor:pointer;border:2px solid #0d1117}
+.submit-btn{
+  width:100%;max-width:320px;margin:0 auto;
+  padding:14px;border:none;border-radius:8px;
+  background:${accent};color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;display:block;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+}
+.inst-label{font-size:10px;color:rgba(255,255,255,0.25);text-align:center;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="screen-header">
+    ${s.institution ? `<div class="study-label">${escHtmlPreview(s.institution)}</div>` : ''}
+    <h1>${escHtmlPreview(greeting)}</h1>
+    <div class="session-sub">${escHtmlPreview(studyName)}</div>
+  </div>
+  <div class="questions">${questionsHtml || '<p style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;margin-top:40px">No questions yet.<br>Add some in the Questions tab.</p>'}</div>
+  <div style="flex-shrink:0;padding-top:16px">
+    <button class="submit-btn">Submit Check-In</button>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function escHtmlPreview(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Preview session tab switching
+document.getElementById('preview-session-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.preview-session-tab');
+  if (!tab) return;
+  previewSession = tab.dataset.session;
+  document.querySelectorAll('.preview-session-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderPreview();
+});
+
+// ============================================================
+// CONFIG JSON
+// ============================================================
+function buildConfig() {
+  return {
+    schema_version: SCHEMA_VERSION,
+    study: { ...state.study },
+    tasks: [...state.tasks],
+    ema: JSON.parse(JSON.stringify(state.ema))
+  };
+}
+
+document.getElementById('preview-json-btn').addEventListener('click', () => {
+  document.getElementById('json-preview').textContent = JSON.stringify(buildConfig(), null, 2);
+  document.getElementById('json-modal').style.display = 'flex';
+});
+document.getElementById('json-modal-close').addEventListener('click', () => {
+  document.getElementById('json-modal').style.display = 'none';
+});
+
+// ============================================================
+// GENERATED INDEX HTML TEMPLATE
+// ============================================================
+function buildIndexHtml(configInline) {
+  // configInline: if true, embed config as window.__CONFIG__; if false, use fetch('config.json')
+  const configLoader = configInline
+    ? `
+    // Config baked inline at export time
+    async function loadConfig() {
+      return Promise.resolve(window.__CONFIG__);
+    }`
+    : `
+    async function loadConfig() {
+      const r = await fetch('config.json');
+      if (!r.ok) throw new Error('Could not load config.json');
+      return r.json();
+    }`;
+
+  const accent = state.study.accent_color;
+  const accentHover = darkenHex(accent, 20);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>${escHtmlPreview(state.study.name)}</title>
+${configInline ? `<script>window.__CONFIG__ = ${JSON.stringify(buildConfig(), null, 2)};<\/script>` : ''}
+<style>
+/* Generated by EMA Studio v${SCHEMA_VERSION} */
+:root {
+  --bg: #0d1117;
+  --bg-card: #161b22;
+  --border: #30363d;
+  --fg: #e6edf3;
+  --fg-muted: #768390;
+  --accent: ${accent};
+  --accent-hover: ${accentHover};
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; width: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top, 24px) + 16px) 24px calc(env(safe-area-inset-bottom, 24px) + 16px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+  overflow-y: auto;
+}
+.screen.active { opacity: 1; pointer-events: all; }
+h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+.study-sublabel { font-size: 0.8rem; color: var(--fg-muted); font-weight: 500; margin-bottom: 24px; text-align: center; }
+.label { font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14px 24px; border-radius: var(--radius);
+  border: none; cursor: pointer;
+  font-family: var(--font); font-size: 1rem; font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; pointer-events: none; }
+.btn-block { width: 100%; }
+.spacer { flex: 1; min-height: 16px; }
+
+/* Participant screen */
+#screen-pid { justify-content: center; align-items: center; gap: 16px; text-align: center; }
+.input-group { width: 100%; max-width: 320px; text-align: left; margin-bottom: 16px; }
+.input-group input {
+  width: 100%; padding: 14px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--fg);
+  font-family: var(--font); font-size: 1rem; outline: none;
+}
+.input-group input:focus { border-color: var(--accent); }
+
+/* EMA questions */
+#screen-ema { justify-content: flex-start; }
+.ema-header { text-align: center; margin-bottom: 20px; }
+.questions-wrap { display: flex; flex-direction: column; width: 100%; max-width: 340px; margin: 0 auto; flex: 1; }
+
+.slider-group { width: 100%; margin-bottom: 28px; }
+.slider-label { font-size: 0.95rem; font-weight: 500; color: var(--fg); margin-bottom: 12px; display: block; line-height: 1.4; }
+.range-slider {
+  -webkit-appearance: none; width: 100%; height: 6px;
+  border-radius: 3px; outline: none;
+  background: var(--border); margin-bottom: 10px;
+}
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 26px; height: 26px;
+  border-radius: 50%; background: var(--accent);
+  cursor: pointer; border: 2px solid var(--bg);
+}
+.slider-labels { display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 500; color: var(--fg-muted); }
+
+.choice-group { width: 100%; margin-bottom: 24px; }
+.choice-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.choice-opt {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--fg);
+  font-size: 0.95rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  font-family: var(--font);
+}
+.choice-opt.selected { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+
+/* Thank you */
+#screen-done { justify-content: center; align-items: center; text-align: center; gap: 16px; }
+.done-icon { font-size: 48px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-pid">
+  <div style="text-align:center;margin-bottom:32px">
+    <h1 id="study-title">Loading…</h1>
+    <div class="study-sublabel" id="inst-label"></div>
+  </div>
+  <div class="input-group">
+    <label class="label">Participant ID</label>
+    <input type="text" id="pid-input" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter your ID">
+  </div>
+  <button class="btn btn-primary" id="pid-btn" style="max-width:320px" disabled>Begin Check-In</button>
+</div>
+
+<div class="screen" id="screen-ema">
+  <div class="ema-header">
+    <h1 id="ema-greeting">Check-In</h1>
+    <div class="study-sublabel" id="ema-sublabel"></div>
+  </div>
+  <div class="questions-wrap" id="questions-wrap"></div>
+  <div style="flex-shrink:0;padding-top:12px;max-width:340px;width:100%;margin:0 auto">
+    <button class="btn btn-primary btn-block" id="submit-btn" disabled>Submit Check-In</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-done">
+  <div class="done-icon">✓</div>
+  <h1>Check-In Complete</h1>
+  <p style="color:var(--fg-muted);font-size:0.9rem;max-width:260px;line-height:1.6">Your response has been recorded. Thank you.</p>
+</div>
+
+<script>
+"use strict";
+
+${configLoader}
+
+// --- Screen management ---
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// --- Condition evaluator ---
+function evalCondition(cond, responses) {
+  if (!cond) return true;
+  const val = responses[cond.question_id];
+  if (val === undefined || val === null) return false;
+  const cv = cond.value;
+  switch (cond.operator) {
+    case 'eq':  return val == cv;
+    case 'neq': return val != cv;
+    case 'gt':  return Number(val) > Number(cv);
+    case 'gte': return Number(val) >= Number(cv);
+    case 'lt':  return Number(val) < Number(cv);
+    case 'lte': return Number(val) <= Number(cv);
+    case 'includes': {
+      const arr = Array.isArray(cv) ? cv : [cv];
+      const ansArr = Array.isArray(val) ? val : [val];
+      return arr.some(v => ansArr.includes(v));
+    }
+    default: return true;
+  }
+}
+
+// --- Main ---
+(async function() {
+  const config = await loadConfig();
+  const study = config.study;
+  const ema   = config.ema;
+
+  // Apply accent
+  document.documentElement.style.setProperty('--accent', study.accent_color || '#e8716a');
+
+  // Study identity
+  document.getElementById('study-title').textContent = study.name || 'Study';
+  document.getElementById('inst-label').textContent   = study.institution || '';
+  document.title = study.name || 'Study';
+
+  // Detect session from URL param
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session') || 'afternoon';
+  const sessionCfg = ema.sessions.find(s => s.id === sessionId) || ema.sessions[0];
+
+  // Set greeting
+  const greeting = study.greetings?.[sessionCfg.greeting_key] || sessionCfg.label || 'Check-In';
+  document.getElementById('ema-greeting').textContent = greeting;
+  document.getElementById('ema-sublabel').textContent = study.name || '';
+
+  // PID screen
+  const pidInput = document.getElementById('pid-input');
+  const pidBtn   = document.getElementById('pid-btn');
+  pidInput.addEventListener('input', () => {
+    pidBtn.disabled = !pidInput.value.trim();
+  });
+
+  const sessionData = { session: sessionId, responses: {}, timestamps: {}, meta: {} };
+
+  pidBtn.addEventListener('click', () => {
+    sessionData.participantID = pidInput.value.trim();
+    sessionData.start_time    = new Date().toISOString();
+    renderQuestions(ema.questions, sessionData.responses);
+    show('screen-ema');
+  });
+
+  // Question renderer
+  function renderQuestions(questions, responses) {
+    const wrap = document.getElementById('questions-wrap');
+    wrap.innerHTML = '';
+
+    function rebuild() {
+      wrap.innerHTML = '';
+      let visibleCount = 0;
+
+      questions.forEach((q, idx) => {
+        if (!evalCondition(q.condition, responses)) return;
+        visibleCount++;
+        const n = visibleCount;
+
+        if (q.type === 'slider') {
+          const grp = document.createElement('div');
+          grp.className = 'slider-group';
+          const mid = ((q.min||0) + (q.max||100)) / 2;
+          const cur = responses[q.id] !== undefined ? responses[q.id] : mid;
+          grp.innerHTML = \`
+            <span class="slider-label">\${n}. \${esc(q.text)}</span>
+            <input type="range" class="range-slider" min="\${q.min||0}" max="\${q.max||100}" step="\${q.step||1}" value="\${cur}">
+            <div class="slider-labels"><span>\${esc((q.anchors||['',''])[0])}</span><span>\${esc((q.anchors||['',''])[1])}</span></div>
+          \`;
+          const inp = grp.querySelector('input');
+          // Mark answered on first interaction if no prior value
+          if (responses[q.id] === undefined) {
+            inp.addEventListener('input', function handler() {
+              responses[q.id] = Number(inp.value);
+              sessionData.timestamps[q.id] = Date.now();
+              inp.removeEventListener('input', handler);
+              checkSubmitEnabled();
+            });
+          } else {
+            inp.addEventListener('input', () => {
+              responses[q.id] = Number(inp.value);
+              sessionData.timestamps[q.id] = Date.now();
+              checkSubmitEnabled();
+            });
+          }
+          wrap.appendChild(grp);
+
+        } else if (q.type === 'choice') {
+          const grp = document.createElement('div');
+          grp.className = 'choice-group';
+          const selectedVal = responses[q.id];
+          grp.innerHTML = \`
+            <span class="slider-label">\${n}. \${esc(q.text)}</span>
+            <div class="choice-options">
+              \${(q.options||[]).map(o => \`<button class="choice-opt\${selectedVal===o?' selected':''}" data-val="\${esc(o)}">\${esc(o)}</button>\`).join('')}
+            </div>
+          \`;
+          grp.querySelectorAll('.choice-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+              responses[q.id] = btn.dataset.val;
+              sessionData.timestamps[q.id] = Date.now();
+              grp.querySelectorAll('.choice-opt').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              // A choice answer may unlock conditional questions
+              rebuild();
+              checkSubmitEnabled();
+            });
+          });
+          wrap.appendChild(grp);
+        }
+      });
+    }
+
+    rebuild();
+
+    function checkSubmitEnabled() {
+      const required = questions.filter(q => q.required && evalCondition(q.condition, responses));
+      const allAnswered = required.every(q => responses[q.id] !== undefined && responses[q.id] !== '');
+      document.getElementById('submit-btn').disabled = !allAnswered;
+    }
+
+    checkSubmitEnabled();
+  }
+
+  // Submit
+  document.getElementById('submit-btn').addEventListener('click', () => {
+    sessionData.end_time = new Date().toISOString();
+    // Download response JSON
+    const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = \`ema_\${sessionData.participantID}_\${sessionId}_\${new Date().toISOString().slice(0,10)}.json\`;
+    a.click();
+    URL.revokeObjectURL(url);
+    show('screen-done');
+  });
+})();
+
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+<\/script>
+</body>
+</html>`;
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+document.getElementById('export-btn').addEventListener('click', () => {
+  document.getElementById('export-modal').classList.add('open');
+});
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  document.getElementById('export-modal').classList.remove('open');
+});
+
+document.getElementById('export-two-file').addEventListener('click', async () => {
+  // We need JSZip — load dynamically
+  document.getElementById('export-modal').classList.remove('open');
+
+  try {
+    // Load JSZip from CDN
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const zip = new JSZip();
+    zip.file('index.html', buildIndexHtml(false));
+    zip.file('config.json', JSON.stringify(buildConfig(), null, 2));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(blob, `${slugify(state.study.name)}-study.zip`);
+  } catch (e) {
+    // Fallback: download separately if zip fails
+    downloadBlob(new Blob([buildIndexHtml(false)], {type:'text/html'}), 'index.html');
+    await sleep(300);
+    downloadBlob(new Blob([JSON.stringify(buildConfig(),null,2)], {type:'application/json'}), 'config.json');
+  }
+});
+
+document.getElementById('export-single-file').addEventListener('click', () => {
+  document.getElementById('export-modal').classList.remove('open');
+  const html = buildIndexHtml(true);
+  downloadBlob(new Blob([html], {type:'text/html'}), `${slugify(state.study.name)}-study.html`);
+});
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+function slugify(str) {
+  return (str||'study').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// INIT
+// ============================================================
+bindStudyTab();
+bindScheduleTab();
+renderWindows();
+renderQuestions();
+renderPreview();
+</script>
+</body>
+</html>`;
