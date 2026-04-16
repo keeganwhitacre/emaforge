@@ -28,7 +28,12 @@
       <button class="tab-btn" data-tab="tasks">Tasks</button>
     </nav>
     <div class="topbar-actions">
-      <span class="schema-version">schema v1.0.0</span>
+      <span class="schema-version" id="save-status">Up to date</span>
+      <input type="file" id="import-file" accept=".json" style="display: none;">
+      <button class="btn" id="btn-import">📂 Import</button>
+      <button class="btn" id="btn-save-project">💾 Save Project</button>
+      <button class="btn" id="btn-reset" style="color: #f85149; border-color: rgba(248,81,73,0.3); background: rgba(248,81,73,0.1);">⚠️ Reset</button>
+      <div class="topbar-sep" style="margin: 0 4px; height: 16px;"></div>
       <button class="btn" id="preview-json-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.72 3.22a.75.75 0 011.06 1.06L2.06 8l3.72 3.72a.75.75 0 11-1.06 1.06L.47 8.53a.75.75 0 010-1.06l4.25-4.25zm6.56 0a.75.75 0 10-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 101.06 1.06l4.25-4.25a.75.75 0 000-1.06l-4.25-4.25z"/></svg>
         JSON
