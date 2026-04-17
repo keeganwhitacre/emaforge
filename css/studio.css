@@ -16,26 +16,52 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; font-size: 14px; line-height: 1.5; }
 
-/* Shell */
-#app { display: grid; grid-template-rows: 48px 1fr; grid-template-columns: 450px 1fr; height: 100vh; overflow: hidden; }
-#topbar { grid-column: 1 / -1; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--bg-1); gap: 16px; z-index: 10; }
-.topbar-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; letter-spacing: 0.04em; color: var(--fg); text-transform: uppercase; }
-.topbar-logo { width: 22px; height: 22px; background: var(--accent); border-radius: 5px; display: flex; align-items: center; justify-content: center; }
-.topbar-logo svg { width: 13px; height: 13px; }
-.topbar-sep { width: 1px; height: 20px; background: var(--border); }
+/* Shell — 60/40 config/preview split */
+#app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 45fr 55fr; height: 100vh; overflow: hidden; }
+ 
+/* Topbar */
+#topbar { grid-column: 1 / -1; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--bg-1); gap: 16px; z-index: 10; height: 52px; }
+.topbar-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; letter-spacing: 0.06em; color: var(--fg); text-transform: uppercase; flex-shrink: 0; }
+.topbar-logo { width: 26px; height: 26px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.topbar-logo svg { width: 15px; height: 15px; }
+/* Back arrow for index navigation — hidden on builder by default, shown when .has-back is on #topbar */
+.topbar-back { display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius); background: transparent; border: 1px solid var(--border); color: var(--fg-3); cursor: pointer; transition: all var(--transition); flex-shrink: 0; text-decoration: none; }
+.topbar-back:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
+#topbar.has-back .topbar-back { display: flex; }
+.topbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 .topbar-tabs { display: flex; gap: 2px; flex: 1; }
-.tab-btn { padding: 5px 12px; border: none; background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 12px; font-weight: 500; border-radius: var(--radius); cursor: pointer; transition: color var(--transition), background var(--transition); letter-spacing: 0.02em; }
+.tab-btn { padding: 5px 13px; border: none; background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 12px; font-weight: 500; border-radius: var(--radius); cursor: pointer; transition: color var(--transition), background var(--transition); letter-spacing: 0.02em; }
 .tab-btn:hover { color: var(--fg-2); background: var(--bg-2); }
 .tab-btn.active { color: var(--fg); background: var(--bg-3); }
-.topbar-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+ 
+/* Topbar action group — unified ghost style */
+.topbar-actions { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+ 
+/* Status pill */
+.save-status { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fg-3); padding: 3px 8px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; }
+ 
+/* Ghost action buttons — used for Import, Save, Reset, JSON */
+.btn-ghost { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 11px; font-weight: 500; cursor: pointer; transition: all var(--transition); white-space: nowrap; letter-spacing: 0.02em; }
+.btn-ghost:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
+.btn-ghost svg { width: 12px; height: 12px; flex-shrink: 0; }
+/* Danger ghost — Reset */
+.btn-ghost-danger { border-color: transparent; color: var(--fg-3); }
+.btn-ghost-danger:hover { color: #f85149; border-color: rgba(248,81,73,0.4); background: rgba(248,81,73,0.08); }
+ 
+/* Topbar separator between action groups */
+.topbar-actions-sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
 
-/* Buttons & Inputs */
+/* .btn — used in config panels (add question, add window, etc.) NOT in topbar */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-2); color: var(--fg-2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all var(--transition); letter-spacing: 0.02em; white-space: nowrap; }
 .btn:hover { border-color: var(--border-hi); color: var(--fg); background: var(--bg-3); }
 .btn.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 .btn.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 .btn svg { width: 13px; height: 13px; }
-.schema-version { font-size: 11px; color: var(--fg-3); margin-right: 10px; }
+ 
+/* Export — prominent filled button, only one in topbar */
+.btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: var(--radius); background: var(--accent); color: #fff; font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: background var(--transition); letter-spacing: 0.03em; white-space: nowrap; }
+.btn-export:hover { background: var(--accent-hover); }
+.btn-export svg { width: 12px; height: 12px; }
 
 #config-panel { border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; background: var(--bg-1); }
 .config-section { display: none; flex-direction: column; padding: 20px; gap: 16px; }
@@ -125,8 +151,7 @@ textarea { resize: vertical; min-height: 60px; }
 .preview-reset-btn:hover { color: var(--fg-2); border-color: var(--border-hi); }
 
 #preview-viewport { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; background: var(--bg); }
-.phone-shell { width: 375px; height: 800px; border: 1px solid var(--border-hi); border-radius: 12px; overflow: hidden; background: #000; position: relative; flex-shrink: 0; max-height: 100%; }
-.phone-notch { display: none; }
+.phone-shell { width: 360px; height: min(720px, calc(100vh - 120px)); border: 1px solid var(--border-hi); border-radius: 12px; overflow: hidden; background: #000; position: relative; flex-shrink: 0; }
 #preview-iframe { width: 100%; height: 100%; border: none; }
 
 /* Modals */
@@ -142,6 +167,26 @@ textarea { resize: vertical; min-height: 60px; }
 .export-option-title { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 4px; }
 .export-option-desc { font-size: 11px; color: var(--fg-3); line-height: 1.5; }
 
+/* Phase sequencer pills in Schedule tab window cards */
+.phase-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+/* Session checkbox rows in question cards */
+.q-session-checks { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.session-check-row { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.85rem; color: var(--fg-2); user-select: none; }
+.session-check-row input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0; cursor: pointer; }
+.session-check-row:hover span { color: var(--fg); }
+
+.phase-pill-pre  { background: rgba(99, 179, 237, 0.15); color: #63b3ed; border: 1px solid rgba(99, 179, 237, 0.3); }
+.phase-pill-task { background: rgba(232, 113, 106, 0.15); color: var(--accent); border: 1px solid rgba(232, 113, 106, 0.3); }
+.phase-pill-post { background: rgba(154, 215, 160, 0.15); color: #9ad7a0; border: 1px solid rgba(154, 215, 160, 0.3); }
+
 /* Misc */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -150,4 +195,5 @@ textarea { resize: vertical; min-height: 60px; }
 .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 .badge-muted { background: var(--bg-3); color: var(--fg-3); }
 .badge-blue { background: rgba(56,139,253,0.15); color: var(--blue); }
-@media (max-width: 900px) { #app { grid-template-columns: 1fr; grid-template-rows: 48px 1fr 0; } #preview-panel { display: none; } }
+
+@media (max-width: 900px) { #app { grid-template-columns: 1fr; grid-template-rows: 52px 1fr 0; } #preview-panel { display: none; } }

@@ -31,7 +31,7 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
     ? `async function loadConfig() { return Promise.resolve(window.__CONFIG__); }` 
     : `async function loadConfig() { const r = await fetch('config.json'); if (!r.ok) throw new Error('Could not load config.json'); return r.json(); }`;
   
-  const patCoreBlock = cfg.tasks.includes('pat') ? `<script>\n${templates.epatCore}\n<\/script>` : '';
+ const patCoreBlock = cfg.modules?.epat ? `<script>\n${templates.epatCore}\n<\/script>` : '';
 
   // Setup mode flags for study-base.js
   const previewFlag = `window.__PREVIEW_MODE__ = ${previewMode};`;
@@ -46,9 +46,10 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
       return;
     }`;
 
-  const previewSessionForce = previewMode 
-    ? `const sessionId = "${_ps || 'afternoon'}";` 
-    : `const sessionId = params.get('session') || 'afternoon';`;
+    const fallbackSession = cfg.ema?.scheduling?.windows?.[0]?.id || 'onboarding';
+  const previewSessionForce = previewMode
+    ? `const sessionId = ${JSON.stringify(_ps || fallbackSession)};`
+    : `const sessionId = params.get('session') || ${JSON.stringify(fallbackSession)};`;
 
   let studyJs = templates.studyBase;
   studyJs = studyJs.replace('// {{CONFIG_LOADER}}', () => configLoader + '\n' + previewFlag);
@@ -56,7 +57,8 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
   studyJs = studyJs.replace('// {{PREVIEW_SESSION_FORCE}}', () => previewSessionForce);
 
   // Stitch the modules into the router template
-  let injectedModules = templates.modOnboarding + '\n\n' + templates.modEma + '\n\n' + templates.modEpat;
+  const epatModule = cfg.modules?.epat ? '\n\n' + templates.modEpat : '';
+  let injectedModules = templates.modOnboarding + '\n\n' + templates.modEma + epatModule;
   studyJs = studyJs.replace('// {{MODULES_INJECT}}', () => injectedModules);
 
   return `<!DOCTYPE html>

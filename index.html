@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMA Studio</title>
+<link rel="stylesheet" href="css/studio.css">
+<style>
+  /* ── Homepage-specific overrides ───────────────────────── */
+  /* Body scrolls on this page; builder.html locks overflow  */
+  body { overflow: auto; }
+
+  /* Full-height shell — topbar + hero + cards */
+  #home { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Topbar (no tabs, no actions — just brand) ─────────── */
+  #home-topbar {
+    display: flex; align-items: center;
+    padding: 0 28px; height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-1);
+    gap: 14px; flex-shrink: 0;
+  }
+  .home-brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 14px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--fg);
+  }
+  .home-logo {
+    width: 26px; height: 26px;
+    background: var(--accent); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .home-logo svg { width: 15px; height: 15px; }
+  .home-topbar-right {
+    margin-left: auto;
+    font-size: 11px; color: var(--fg-3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Hero ───────────────────────────────────────────────── */
+  #hero {
+    padding: 72px 28px 48px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .hero-eyebrow {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block; width: 20px; height: 1px;
+    background: var(--accent);
+  }
+  .hero-title {
+    font-size: 42px; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.1;
+    color: var(--fg); margin-bottom: 16px;
+  }
+  .hero-title span { color: var(--accent); }
+  .hero-sub {
+    font-size: 15px; color: var(--fg-3);
+    line-height: 1.7; max-width: 520px;
+  }
+
+  /* ── Cards grid ─────────────────────────────────────────── */
+  #cards {
+    padding: 0 28px 72px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .home-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px 24px;
+    display: flex; flex-direction: column; gap: 0;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    cursor: pointer; position: relative; overflow: hidden;
+  }
+  .home-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--card-tint, transparent) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .home-card:hover {
+    border-color: var(--border-hi);
+    background: var(--bg-2);
+    transform: translateY(-2px);
+  }
+  .home-card:hover::before { opacity: 1; }
+
+  /* Primary card (Builder) gets accent tint on hover */
+  .home-card.card-primary { --card-tint: rgba(232,113,106,0.08); }
+  .home-card.card-primary:hover { border-color: var(--accent); }
+
+  .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; flex-shrink: 0;
+  }
+  .card-icon svg { width: 20px; height: 20px; }
+  .card-icon-accent  { background: rgba(232,113,106,0.15); color: var(--accent); }
+  .card-icon-blue    { background: rgba(56,139,253,0.15);  color: var(--blue); }
+  .card-icon-muted   { background: var(--bg-3); color: var(--fg-3); }
+
+  .card-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-3); margin-bottom: 8px;
+  }
+  .card-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--fg); letter-spacing: -0.02em;
+    margin-bottom: 10px; line-height: 1.2;
+  }
+  .card-desc {
+    font-size: 12px; color: var(--fg-3);
+    line-height: 1.65; flex: 1;
+  }
+  .card-footer {
+    margin-top: 24px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .card-footer-accent { color: var(--accent); }
+  .card-footer-blue   { color: var(--blue); }
+  .card-footer-muted  { color: var(--fg-3); }
+  .card-footer svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+  /* Disabled/coming-soon card */
+  .home-card.card-soon {
+    opacity: 0.55; pointer-events: none; cursor: default;
+  }
+  .card-soon-badge {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px;
+    background: var(--bg-3); color: var(--fg-3);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Divider line between hero and cards ────────────────── */
+  .home-divider {
+    max-width: 860px; margin: 0 auto 40px;
+    width: calc(100% - 56px);
+    height: 1px; background: var(--border);
+  }
+
+  /* ── Footer ─────────────────────────────────────────────── */
+  #home-footer {
+    margin-top: auto;
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between;
+    font-size: 11px; color: var(--fg-3);
+  }
+  .footer-version {
+    font-family: var(--font-mono);
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 8px;
+  }
+</style>
+</head>
+<body>
+<div id="home">
+
+  <!-- ── Topbar ─────────────────────────────────────────── -->
+  <header id="home-topbar">
+    <div class="home-brand">
+      <div class="home-logo">
+        <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="6.5" cy="6.5" r="2.5" fill="white"/>
+          <path d="M6.5 1v1.5M6.5 10.5V12M12 6.5h-1.5M2.5 6.5H1M10.3 2.7l-1 1M3.7 9.3l-1 1M10.3 10.3l-1-1M3.7 3.7l-1-1" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      EMA Studio
+    </div>
+  </header>
+
+  <!-- ── Hero ──────────────────────────────────────────── -->
+  <section id="hero">
+    <h1 class="hero-title">EMA Studio</h1>
+    <p class="hero-sub">An open-source tool for building and deploying ecological momentary assessment studies. No server required.</p>
+  </section>
+
+  <div class="home-divider"></div>
+
+  <!-- ── Cards ─────────────────────────────────────────── -->
+  <section id="cards">
+
+    <!-- Builder -->
+    <a href="builder.html" class="home-card card-primary">
+      <div class="card-icon card-icon-accent">
+        <!-- Sliders / builder icon -->
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <line x1="3" y1="6"  x2="17" y2="6"/>
+          <line x1="3" y1="10" x2="17" y2="10"/>
+          <line x1="3" y1="14" x2="17" y2="14"/>
+          <circle cx="7"  cy="6"  r="2" fill="currentColor" stroke="none"/>
+          <circle cx="13" cy="10" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="9"  cy="14" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="card-label">Core tool</div>
+      <div class="card-title">Study Builder</div>
+      <div class="card-desc">
+        Design your EMA protocol — configure questions, session windows,
+        task modules, and phase sequences. Export a fully self-contained
+        participant app.
+      </div>
+      <div class="card-footer card-footer-accent">
+        Open builder
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
+      </div>
+    </a>
+
+    <!-- Analysis Dashboard — coming soon -->
+    <div class="home-card card-soon">
+      <span class="card-soon-badge">Coming soon</span>
+      <div class="card-icon card-icon-blue">
+        <!-- Chart icon -->
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="10" width="3" height="7" rx="1"/>
+          <rect x="8.5" y="6" width="3" height="11" rx="1"/>
+          <rect x="14" y="3" width="3" height="14" rx="1"/>
+        </svg>
+      </div>
+      <div class="card-label">Analysis</div>
+      <div class="card-title">Data Dashboard</div>
+      <div class="card-desc">
+        Upload participant JSON or CSV exports and monitor study progress —
+        attrition rates, completion timelines, and per-session response summaries.
+      </div>
+      <div class="card-footer card-footer-blue">
+        In development
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
+      </div>
+    </div>
+
+    <!-- README -->
+    <a href="readme.html" class="home-card">
+      <div class="card-icon card-icon-muted">
+        <!-- Docs icon -->
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="12" height="16" rx="2"/>
+          <line x1="7" y1="7"  x2="13" y2="7"/>
+          <line x1="7" y1="10" x2="13" y2="10"/>
+          <line x1="7" y1="13" x2="10" y2="13"/>
+        </svg>
+      </div>
+      <div class="card-label">Documentation</div>
+      <div class="card-title">README</div>
+      <div class="card-desc">
+        Setup instructions, deployment guide, config schema reference,
+        and notes on extending EMA Studio with new task modules.
+      </div>
+      <div class="card-footer card-footer-muted">
+        Read the docs
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
+      </div>
+    </a>
+
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────── -->
+  <footer id="home-footer">
+    <span>EMA Studio — Keegan Whitacre</span>
+    <span class="footer-version">v1.2.0</span>
+  </footer>
+
+</div>
+</body>
+</html>

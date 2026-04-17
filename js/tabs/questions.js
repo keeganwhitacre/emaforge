@@ -1,3 +1,22 @@
+"use strict";
+
+// ---------------------------------------------------------------------------
+// Questions Tab — v1.2.1
+//
+// Changes from v1.2.0:
+//   - Added "Active Sessions" checkbox group to each question card.
+//     q.windows = null means "all sessions" (default, backward-compatible).
+//     q.windows = ["w1","w3"] means this question only fires in those windows.
+//   - buildSessionSelector(q) builds the checkbox group dynamically from
+//     state.ema.scheduling.windows so it stays in sync when windows are
+//     added, removed, or renamed (renderQuestions is called on those events).
+//   - bindSessionSelector(card, q) wires the checkboxes and handles the
+//     "all selected = null" normalization: if every window is checked we
+//     store null rather than an explicit array, keeping the config clean.
+//   - addQ() defaults now include windows: null.
+//   - Schema migration: questions without a windows field get null on load.
+// ---------------------------------------------------------------------------
+
 function renderQuestions() {
   const list = document.getElementById('question-list');
   list.innerHTML = '';
@@ -9,7 +28,10 @@ function buildQCard(q, index) {
   card.className = 'q-card';
   card.dataset.qid = q.id;
 
-  // Handle Page Break UI entirely differently
+  // Schema migrations
+  if (!q.block && q.type !== 'page_break')   q.block   = 'both';
+  if (q.windows === undefined)               q.windows = null;
+
   if (q.type === 'page_break') {
     card.classList.add('page-break');
     card.innerHTML = `
@@ -26,10 +48,15 @@ function buildQCard(q, index) {
     return card;
   }
 
-  // Handle standard questions
   let typeLabel = q.type.charAt(0).toUpperCase() + q.type.slice(1);
-  if (q.type === 'choice') typeLabel = 'Single Choice';
+  if (q.type === 'choice')   typeLabel = 'Single Choice';
   if (q.type === 'checkbox') typeLabel = 'Multi Select';
+
+  const blockOpts = [
+    { value: 'pre',  label: 'Pre-task only' },
+    { value: 'both', label: 'Pre & Post'    },
+    { value: 'post', label: 'Post-task only' }
+  ].map(o => `<option value="${o.value}" ${q.block === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
 
   card.innerHTML = `
     <div class="q-header">
@@ -47,7 +74,34 @@ function buildQCard(q, index) {
       ${q.type === 'slider' ? buildSliderFields(q) : ''}
       ${(q.type === 'choice' || q.type === 'checkbox') ? buildChoiceFields(q) : ''}
       ${(q.type === 'text' || q.type === 'numeric') ? `<div class="field-hint" style="margin-top:6px">Participants will be given a ${q.type === 'numeric' ? 'number pad' : 'text box'} to answer this question.</div>` : ''}
-      <div class="field-group" style="margin-top: 10px;">
+
+      <!-- ── Scheduling controls row ───────────────────────────────── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+
+        <!-- Block / Phase selector -->
+        <div class="field-group" style="margin:0">
+          <label class="field-label">Show In (Phase)
+            <span class="field-hint" style="display:inline;margin-left:4px;">Which EMA block when a task is present.</span>
+          </label>
+          <select class="q-block-select" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-family:var(--font);font-size:0.88rem;outline:none;">
+            ${blockOpts}
+          </select>
+        </div>
+
+        <!-- Active Sessions checkbox group -->
+        <div class="field-group" style="margin:0">
+          <label class="field-label">Active Sessions
+            <span class="field-hint" style="display:inline;margin-left:4px;">Uncheck to exclude from a session.</span>
+          </label>
+          <div class="q-session-checks">
+            ${buildSessionSelector(q)}
+          </div>
+        </div>
+
+      </div>
+      <!-- ── end scheduling controls ──────────────────────────────── -->
+
+      <div class="field-group" style="margin-top:10px;">
         <label class="field-label">Skip Logic</label>
         ${buildConditionBlock(q, index)}
       </div>
@@ -66,12 +120,20 @@ function buildQCard(q, index) {
   `;
 
   card.querySelector('.q-header').addEventListener('click', () => card.classList.toggle('expanded'));
+
   card.querySelector('.q-text').addEventListener('input', e => {
     q.text = e.target.value;
     card.querySelector('.q-preview-text').innerHTML = escH(q.text) || '<em style="color:var(--fg-3)">(no text)</em>';
     schedulePreview();
   });
+
+  card.querySelector('.q-block-select').addEventListener('change', e => {
+    q.block = e.target.value;
+    schedulePreview();
+  });
+
   card.querySelector('.q-required').addEventListener('change', e => { q.required = e.target.checked; schedulePreview(); });
+
   card.querySelector('.q-del-btn').addEventListener('click', () => {
     state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
     renderQuestions(); schedulePreview();
@@ -80,10 +142,53 @@ function buildQCard(q, index) {
   if (q.type === 'slider') bindSliderFields(card, q);
   if (q.type === 'choice' || q.type === 'checkbox') bindChoiceFields(card, q);
   bindConditionFields(card, q, index);
+  bindSessionSelector(card, q);
 
   return card;
 }
 
+// ---------------------------------------------------------------------------
+// buildSessionSelector(q)
+// Renders a compact checkbox-per-window group.
+// null = all windows active (every box checked).
+// An explicit array = only those window ids are active.
+// ---------------------------------------------------------------------------
+function buildSessionSelector(q) {
+  const windows = state.ema.scheduling.windows;
+  if (windows.length === 0) {
+    return `<div class="field-hint" style="margin-top:4px;">No sessions defined yet.</div>`;
+  }
+  return windows.map(w => {
+    const checked = q.windows === null || q.windows.includes(w.id);
+    return `
+      <label class="session-check-row" data-wid="${w.id}">
+        <input type="checkbox" class="session-chk" data-wid="${w.id}" ${checked ? 'checked' : ''}>
+        <span>${escH(w.label)}</span>
+      </label>
+    `;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// bindSessionSelector(card, q)
+// Collects checked window ids on any change.
+// Normalizes back to null when all windows are checked — keeps config clean
+// and ensures new windows added later are automatically included.
+// ---------------------------------------------------------------------------
+function bindSessionSelector(card, q) {
+  card.querySelectorAll('.session-chk').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const allChecks = [...card.querySelectorAll('.session-chk')];
+      const checked   = allChecks.filter(c => c.checked).map(c => c.dataset.wid);
+      q.windows = checked.length === allChecks.length ? null : checked;
+      schedulePreview();
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Slider fields
+// ---------------------------------------------------------------------------
 function buildSliderFields(q) {
   return `
     <div class="q-row-3">
@@ -95,18 +200,24 @@ function buildSliderFields(q) {
       <div class="field-group"><label class="field-label">Left Anchor</label><input type="text" class="q-anchor-l" value="${escH((q.anchors||['',''])[0])}"></div>
       <div class="field-group"><label class="field-label">Right Anchor</label><input type="text" class="q-anchor-r" value="${escH((q.anchors||['',''])[1])}"></div>
     </div>
-    <div class="field-group"><label class="field-label">Unit Suffix (optional)</label><input type="text" class="q-unit" value="${escH(q.unit||'')}" placeholder="e.g. hrs"></div>
+    <div class="field-group"><label class="field-label">Unit Suffix (optional)</label><input type="text" class="q-unit" value="${escH(q.unit||'')}" placeholder="e.g. bpm, hrs"></div>
   `;
 }
 
 function bindSliderFields(card, q) {
-  const n = (sel, key) => { const el = card.querySelector(sel); if(el) el.addEventListener('input', () => { q[key] = parseFloat(el.value)||0; schedulePreview(); }); };
+  const n = (sel, key) => {
+    const el = card.querySelector(sel);
+    if (el) el.addEventListener('input', () => { q[key] = parseFloat(el.value)||0; schedulePreview(); });
+  };
   n('.q-min','min'); n('.q-max','max'); n('.q-step','step');
   card.querySelector('.q-anchor-l').addEventListener('input', e => { q.anchors[0] = e.target.value; schedulePreview(); });
   card.querySelector('.q-anchor-r').addEventListener('input', e => { q.anchors[1] = e.target.value; schedulePreview(); });
-  card.querySelector('.q-unit').addEventListener('input', e => { q.unit = e.target.value || null; schedulePreview(); });
+  card.querySelector('.q-unit').addEventListener('input',     e => { q.unit = e.target.value || null; schedulePreview(); });
 }
 
+// ---------------------------------------------------------------------------
+// Choice / Checkbox fields
+// ---------------------------------------------------------------------------
 function buildChoiceFields(q) {
   const opts = (q.options||[]).map((o,i) => `
     <div class="option-row" data-oi="${i}">
@@ -114,7 +225,7 @@ function buildChoiceFields(q) {
       <button class="option-del">×</button>
     </div>`).join('');
   return `
-    <div class="field-group" style="margin-top: 10px;">
+    <div class="field-group" style="margin-top:10px;">
       <label class="field-label">Options</label>
       <div class="options-list">${opts}</div>
       <button class="btn add-opt-btn" style="margin-top:6px;font-size:11px">+ Add option</button>
@@ -134,16 +245,19 @@ function bindChoiceFields(card, q) {
     list.querySelectorAll('.opt-text').forEach((inp,i) => inp.addEventListener('input', e => { q.options[i] = e.target.value; schedulePreview(); }));
     list.querySelectorAll('.option-del').forEach((btn,i) => btn.addEventListener('click', () => { q.options.splice(i,1); refresh(); schedulePreview(); }));
   }
-  card.querySelector('.add-opt-btn').addEventListener('click', () => { q.options = q.options || []; q.options.push(''); refresh(); schedulePreview(); });
+  card.querySelector('.add-opt-btn').addEventListener('click', () => { q.options = q.options||[]; q.options.push(''); refresh(); schedulePreview(); });
   refresh();
 }
 
+// ---------------------------------------------------------------------------
+// Skip Logic / Condition block
+// ---------------------------------------------------------------------------
 function buildConditionBlock(q, index) {
   const priors = state.ema.questions.slice(0, index).filter(p => p.type !== 'page_break');
   if (priors.length === 0) return `<div style="font-size:11px;color:var(--fg-3);padding:4px 0">No prior questions available for logic.</div>`;
-  const has = !!q.condition;
-  const src = q.condition ? q.condition.question_id : (priors[0]?.id || '');
-  const qOpts = priors.map(p => `<option value="${p.id}" ${p.id===src?'selected':''}>${escH(p.text.slice(0,35)||p.id)}</option>`).join('');
+  const has    = !!q.condition;
+  const src    = q.condition ? q.condition.question_id : (priors[0]?.id || '');
+  const qOpts  = priors.map(p => `<option value="${p.id}" ${p.id===src?'selected':''}>${escH(p.text.slice(0,35)||p.id)}</option>`).join('');
   const opOpts = [['eq','='],['neq','≠'],['gt','>'],['gte','≥'],['lt','<'],['lte','≤'],['includes','includes']]
     .map(([v,l]) => `<option value="${v}" ${q.condition?.operator===v?'selected':''}>${l}</option>`).join('');
   return `
@@ -164,7 +278,7 @@ function buildConditionBlock(q, index) {
 
 function bindConditionFields(card, q, index) {
   const enableChk = card.querySelector('.cond-enable');
-  const block = card.querySelector('.q-condition-block');
+  const block     = card.querySelector('.q-condition-block');
   if (!enableChk) return;
   enableChk.addEventListener('change', () => {
     if (enableChk.checked) {
@@ -178,28 +292,36 @@ function bindConditionFields(card, q, index) {
   const opSel  = card.querySelector('.cond-op');
   const valInp = card.querySelector('.cond-val');
   if (qidSel) qidSel.addEventListener('change', () => { if (q.condition) q.condition.question_id = qidSel.value; schedulePreview(); });
-  if (opSel)  opSel.addEventListener('change',  () => { if (q.condition) q.condition.operator = opSel.value; schedulePreview(); });
+  if (opSel)  opSel.addEventListener('change',  () => { if (q.condition) q.condition.operator    = opSel.value; schedulePreview(); });
   if (valInp) valInp.addEventListener('input',  () => {
     if (!q.condition) return;
     const v = valInp.value;
-    if (v.includes(',')) q.condition.value = v.split(',').map(x => x.trim());
+    if (v.includes(','))                    q.condition.value = v.split(',').map(x => x.trim());
     else if (v !== '' && !isNaN(Number(v))) q.condition.value = Number(v);
-    else q.condition.value = v;
+    else                                    q.condition.value = v;
     schedulePreview();
   });
 }
 
-// Button Bindings
+// ---------------------------------------------------------------------------
+// Add question helpers
+// ---------------------------------------------------------------------------
 function addQ(obj) {
   state.ema.questions.push(obj);
   renderQuestions(); schedulePreview();
-  const cards = document.querySelectorAll('.q-card'); 
+  const cards = document.querySelectorAll('.q-card');
   if (cards.length && obj.type !== 'page_break') cards[cards.length-1].classList.add('expanded');
 }
 
-document.getElementById('add-slider-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1, unit: null, anchors: ['',''], required: true, condition: null }));
-document.getElementById('add-choice-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'choice', text: '', options: ['',''], required: true, condition: null }));
-document.getElementById('add-check-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'checkbox', text: '', options: ['',''], required: true, condition: null }));
-document.getElementById('add-text-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'text', text: '', required: true, condition: null }));
-document.getElementById('add-num-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'numeric', text: '', required: true, condition: null }));
-document.getElementById('add-page-btn').addEventListener('click', () => addQ({ id: genQId(), type: 'page_break' }));
+document.getElementById('add-slider-btn').addEventListener('click', () =>
+  addQ({ id: genQId(), type: 'slider',   text: '', min: 0, max: 100, step: 1, unit: null, anchors: ['',''], required: true, condition: null, block: 'both', windows: null }));
+document.getElementById('add-choice-btn').addEventListener('click', () =>
+  addQ({ id: genQId(), type: 'choice',   text: '', options: ['',''], required: true, condition: null, block: 'both', windows: null }));
+document.getElementById('add-check-btn').addEventListener('click',  () =>
+  addQ({ id: genQId(), type: 'checkbox', text: '', options: ['',''], required: true, condition: null, block: 'both', windows: null }));
+document.getElementById('add-text-btn').addEventListener('click',   () =>
+  addQ({ id: genQId(), type: 'text',     text: '', required: true, condition: null, block: 'both', windows: null }));
+document.getElementById('add-num-btn').addEventListener('click',    () =>
+  addQ({ id: genQId(), type: 'numeric',  text: '', required: true, condition: null, block: 'both', windows: null }));
+document.getElementById('add-page-btn').addEventListener('click',   () =>
+  addQ({ id: genQId(), type: 'page_break' }));

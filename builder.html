@@ -10,7 +10,10 @@
 <div id="app">
 
   <!-- ========== TOP BAR ========== -->
-  <header id="topbar">
+   <header id="topbar" class="has-back">
+    <a href="index.html" class="topbar-back" title="Back to home">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12"><path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/></svg>
+    </a>
     <div class="topbar-brand">
       <div class="topbar-logo">
         <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,17 +33,34 @@
       <button class="tab-btn" data-tab="deployment">Deployment</button>
     </nav>
     <div class="topbar-actions">
-      <span class="schema-version" id="save-status">Up to date</span>
-      <input type="file" id="import-file" accept=".json" style="display: none;">
-      <button class="btn" id="btn-import">📂 Import</button>
-      <button class="btn" id="btn-save-project">💾 Save Project</button>
-      <button class="btn" id="btn-reset" style="color: #f85149; border-color: rgba(248,81,73,0.3); background: rgba(248,81,73,0.1);">⚠️ Reset</button>
-      <div class="topbar-sep" style="margin: 0 4px; height: 16px;"></div>
-      <button class="btn" id="preview-json-btn">
+      <!-- Status indicator -->
+      <span class="save-status" id="save-status">Up to date</span>
+ 
+      <div class="topbar-actions-sep"></div>
+ 
+      <!-- Project management -->
+      <input type="file" id="import-file" accept=".json" style="display:none;">
+      <button class="btn-ghost" id="btn-import">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689V2a.75.75 0 00-1.5 0v5.689L3.53 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L7.25 7.689z"/></svg>
+        Import
+      </button>
+      <button class="btn-ghost" id="btn-save-project">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-10.5C1 .784 1.784 0 2.75 0h8a.75.75 0 01.53.22l3.5 3.5c.141.14.22.331.22.53v8a1.75 1.75 0 01-1.75 1.75H2.75zM11.5 13.5V8.75a.25.25 0 00-.25-.25h-6.5a.25.25 0 00-.25.25v4.75h7zm-5.75-10v2.25c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V3.5z"/></svg>
+        Save
+      </button>
+      <button class="btn-ghost btn-ghost-danger" id="btn-reset">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.343 13.657A8 8 0 1113.657 2.343 8 8 0 012.343 13.657zM6.03 4.97a.75.75 0 00-1.06 1.06L6.94 8 4.97 9.97a.75.75 0 101.06 1.06L8 9.06l1.97 1.97a.75.75 0 101.06-1.06L9.06 8l1.97-1.97a.75.75 0 10-1.06-1.06L8 6.94 6.03 4.97z"/></svg>
+        Reset
+      </button>
+ 
+      <div class="topbar-actions-sep"></div>
+ 
+      <!-- Output actions -->
+      <button class="btn-ghost" id="preview-json-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.72 3.22a.75.75 0 011.06 1.06L2.06 8l3.72 3.72a.75.75 0 11-1.06 1.06L.47 8.53a.75.75 0 010-1.06l4.25-4.25zm6.56 0a.75.75 0 10-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 101.06 1.06l4.25-4.25a.75.75 0 000-1.06l-4.25-4.25z"/></svg>
         JSON
       </button>
-      <button class="btn btn-primary" id="export-btn">
+      <button class="btn-export" id="export-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
         Export
       </button>
@@ -202,76 +222,24 @@
     <!-- TASKS TAB -->
     <div class="config-section" id="tab-tasks">
       <div class="section-title">Task Modules</div>
-      <div class="field-hint">Toggle additional measurement tasks. EMA is always included.</div>
-
-      <!-- EMA — always on -->
-      <div class="task-card enabled">
+      <div class="field-hint" style="margin-bottom:16px;">
+        Enable modules to make them available for assignment in the
+        <strong>Schedule</strong> tab. EMA is always included and needs
+        no module entry.
+      </div>
+ 
+      <!-- EMA — always on, static card -->
+      <div class="task-card enabled" style="margin-bottom:12px;">
         <div class="task-header">
           <div>
             <div class="task-name">EMA <span class="badge badge-muted" style="margin-left:6px">Required</span></div>
-            <div class="task-desc">Ecological Momentary Assessment — configurable question battery delivered on schedule.</div>
+            <div class="task-desc">Ecological Momentary Assessment — configurable question battery. Configure questions in the Questions tab and assign per-window phases in the Schedule tab.</div>
           </div>
         </div>
       </div>
-
-      <!-- ePAT -->
-      <div class="task-card" id="pat-card">
-        <div class="task-header">
-          <div>
-            <div class="task-name">ePAT <span class="badge badge-blue" style="margin-left:6px">Beta</span></div>
-            <div class="task-desc">Ecological Phase Adjustment Task — objective cardiac interoceptive accuracy via PPG. Requires rear camera + torch on participant device.</div>
-          </div>
-          <label class="toggle" style="margin-top:2px">
-            <input type="checkbox" id="pat-toggle">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="task-settings hidden" id="pat-settings">
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Valid Trials Target</label>
-              <input type="number" id="pat-trials" value="20" min="5" max="40">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Trial Duration (s)</label>
-              <input type="number" id="pat-trial-dur" value="30" min="15" max="60">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Retry Budget</label>
-              <input type="number" id="pat-retries" value="30" min="20" max="60">
-              <div class="field-hint">Max attempts covering SQI + trial quality failures.</div>
-            </div>
-            <div class="field-group">
-              <label class="field-label">SQI Threshold</label>
-              <input type="number" id="pat-sqi" value="0.3" min="0.1" max="1.0" step="0.05">
-              <div class="field-hint">Perfusion index floor for trial acceptance.</div>
-            </div>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Include Body Map Sensation Tracker</span>
-            <label class="toggle">
-              <input type="checkbox" id="pat-bodymap" checked>
-              <span class="toggle-track"></span>
-            </label>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Per-trial confidence ratings</span>
-            <label class="toggle">
-              <input type="checkbox" id="pat-conf" checked>
-              <span class="toggle-track"></span>
-            </label>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Two-phase practice (tone-to-tone + tone-to-heartbeat)</span>
-            <label class="toggle">
-              <input type="checkbox" id="pat-practice" checked>
-              <span class="toggle-track"></span>
-            </label>
-          </div>
-        </div>
-      </div>
+ 
+      <!-- Dynamic module cards injected by js/tabs/tasks.js -->
+      <div id="module-list"></div>
     </div>
 
     <!-- DEPLOYMENT TAB -->
