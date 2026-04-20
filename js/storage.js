@@ -143,14 +143,14 @@ const StorageManager = {
     triggerUIRefresh() {
         // 1. Study Tab
         const el = id => document.getElementById(id);
-        if (el('study-name'))    el('study-name').value = state.study.name;
-        if (el('institution'))   el('institution').value = state.study.institution;
+        if (el('study-name'))    el('study-name').value = state.study.name || '';
+        if (el('institution'))   el('institution').value = state.study.institution || '';
         if (el('accent-color')) {
-            el('accent-color').value = state.study.accent_color;
+            el('accent-color').value = state.study.accent_color || '#e8716a';
             const sw = el('color-preview-swatch');
-            if (sw) sw.style.background = state.study.accent_color;
+            if (sw) sw.style.background = state.study.accent_color || '#e8716a';
         }
-        if (el('study-theme'))   el('study-theme').value = state.study.theme;
+        if (el('study-theme'))   el('study-theme').value = state.study.theme || 'oled';
         document.querySelectorAll('#format-ctrl .seg-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.fmt === state.study.output_format);
         });

@@ -35,10 +35,10 @@ function buildQCard(q, index) {
   if (q.type === 'page_break') {
     card.classList.add('page-break');
     card.innerHTML = `
-      <div class="q-header">
-        <span class="q-drag-handle" style="position:absolute;left:12px;cursor:grab;">⠿</span>
-        <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--accent);">--- PAGE BREAK ---</span>
-        <button class="q-del-btn" style="position:absolute;right:12px;">✕</button>
+      <div class="q-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;">
+        <span class="q-drag-handle" style="cursor:grab;flex-shrink:0;">⠿</span>
+        <span style="flex:1;text-align:center;font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--accent);">--- PAGE BREAK ---</span>
+        <button class="q-del-btn" style="flex-shrink:0;padding:2px 8px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--fg-3);cursor:pointer;">✕</button>
       </div>
     `;
     card.querySelector('.q-del-btn').addEventListener('click', () => {

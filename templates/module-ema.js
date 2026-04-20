@@ -247,11 +247,17 @@ const EMA = (function() {
     setTimeout(() => container.classList.remove('fade-in'), 50);
   }
 
-  document.getElementById('ema-next-btn').addEventListener('click', () => {
-    const container = document.getElementById('ema-single-container');
-    container.classList.add('fade-out');
-    setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);
-  });
+  // Install the next-button handler inside start() instead of at module
+  // init time. This way each screen (EMA, ePAT confidence) owns the
+  // button freshly and there are no ghost listeners surviving across
+  // phase transitions.
+  function installNextHandler() {
+    document.getElementById('ema-next-btn').onclick = () => {
+      const container = document.getElementById('ema-single-container');
+      container.classList.add('fade-out');
+      setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);
+    };
+  }
 
   // -----------------------------------------------------------------------
   // Public API
@@ -298,6 +304,7 @@ const EMA = (function() {
         return;
       }
 
+      installNextHandler();
       show('screen-ema');
       renderCurrentPage();
     }

@@ -339,19 +339,27 @@
 
 <!-- Initialize everything -->
 <script>
-  bindStudyTab();
-  bindOnboardingTab();
-  bindScheduleTab();
-  bindTasksTab();
-  bindDeploymentTab();
-  
-  // These render functions now trigger UI cascades (e.g. Schedule -> Greetings)
-  renderWindows();
-  renderQuestions();
-  
-  // Build tabs and initial iframe
-  renderPreviewTabs();
-  renderPreview();
-</script>
+    bindStudyTab();
+    bindOnboardingTab();
+    bindScheduleTab();
+    bindTasksTab();
+    bindDeploymentTab();
+    
+    // These render functions now trigger UI cascades (e.g. Schedule -> Greetings)
+    renderWindows();
+    renderQuestions();
+    renderGreetings();
+    
+    // Build tabs and initial iframe
+    renderPreviewTabs();
+    renderPreview();
+    
+    // Rehydrate DOM from any state loaded by StorageManager.
+    // (StorageManager.init already ran on DOMContentLoaded; this just pushes
+    // the loaded state into the input elements.)
+    if (typeof StorageManager !== 'undefined' && StorageManager.triggerUIRefresh) {
+      StorageManager.triggerUIRefresh();
+    }
+  </script>
 </body>
 </html>
