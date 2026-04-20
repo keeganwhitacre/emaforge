@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Study Test</title>
-  <script>window.__CONFIG__ = {"schema_version":"1.2.0","study":{"name":"Study Test","institution":"","theme":"dark","accent_color":"#e32400","output_format":"json","greetings":{"w1":"Good Morning","w2":"Check-In","w3":"Good Evening"}},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":88,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"pre","windows":["w1","w3"]},{"id":"q12","type":"page_break","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"post","windows":null},{"id":"q12","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"both","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Morning","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true}},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false}},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false}}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":20,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}},"pat":{"trials":20,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true},"tasks":["ema","epat"]};</script>
+  <title>Interoception Study123</title>
+  <script>window.__CONFIG__ = {"schema_version":"1.3.0","study":{"name":"Interoception Study123","institution":" asdf","theme":"light","accent_color":"#0056d6","output_format":"csv","greetings":{"w1":"Good Morning123456","w2":"Check-In","w3":"Good Evening"}},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q11","type":"text","text":"testing","required":true,"condition":null,"block":"post","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Morning","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true}},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false}},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false}}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":2,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}}};</script>
   <script>
 /* ============================================================
  * epat-core.js
@@ -642,13 +642,11 @@
 })();
 
 </script>
-  <style>
-    :root { --accent: #e32400; --accent-hover: #cf1000; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #121212; --bg-surface: #1e1e1e; --bg-elevated: #2d2d2d; --border: #3d3d3d; --fg: #e0e0e0; --fg-muted: #9e9e9e; }
-
+  <style>:root{--accent: #0056d6; --accent-hover: #0042c2; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #f9f9fb; --bg-surface: #ffffff; --bg-elevated: #f0f0f4; --border: #e0e0e5; --fg: #1c1c1e; --fg-muted: #8e8e93;}
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 
-    /* Screen Transitions */
+    /* Screen transitions */
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
     .screen.active { opacity: 1; pointer-events: all; }
 
@@ -656,122 +654,114 @@
     h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--fg); text-align: center; }
     h2 { font-size: 1.1rem; font-weight: 400; color: var(--fg-muted); margin-bottom: 32px; letter-spacing: -0.01em; text-align: center; }
     p { font-size: 1.05rem; line-height: 1.5; color: var(--fg-muted); margin-bottom: 24px; font-weight: 400; text-align: center; }
-    .label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; text-align: center;}
+    .label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; text-align: center; }
 
-    /* Inputs */
+    /* Institution branding label on PID screen */
+    .institution-label { font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; text-align: center; opacity: 0.8; }
+
+    /* Buttons */
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 18px 28px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .btn:active { transform: scale(0.97); }
-    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-dim); }
-    .btn-primary:active { background: var(--accent-hover); box-shadow: 0 2px 8px var(--accent-dim); }
-    .btn-primary:disabled { opacity: 0.3; pointer-events: none; box-shadow: none; background: #333; color: #888; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:disabled { background: var(--bg-elevated); color: var(--fg-muted); }
     .btn-secondary { background: var(--bg-surface); color: var(--fg); border: 1px solid var(--border); }
-    .btn-secondary:active { background: var(--bg-elevated); }
-    .btn-block { width: 100%; max-width: 340px; margin-left: auto; margin-right: auto; }
-    .input-group { width: 100%; max-width: 340px; margin: 0 auto 32px; text-align: left; }
+    .btn-block { width: 100%; margin-top: auto; flex-shrink: 0; }
+
+    /* PID input */
+    .input-group { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px; }
     .input-group input { width: 100%; padding: 18px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1.1rem; outline: none; transition: border-color 0.2s, background 0.2s; }
     .input-group input:focus { border-color: var(--accent); background: var(--bg-elevated); }
 
-    /* EMA Layout */
-    #screen-ema { justify-content: space-between; }
-    .ema-progress { width: 100%; max-width: 340px; margin: 0 auto 28px; height: 3px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
-    .ema-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-    .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: center; opacity: 1; transition: opacity 0.3s ease, transform 0.3s ease; }
-    .ema-item-container.fade-out { opacity: 0; transform: translateY(-10px); }
-    .ema-item-container.fade-in { opacity: 0; transform: translateY(10px); }
-    .ema-question { font-size: 1.9rem; font-weight: 400; color: var(--fg); line-height: 1.25; text-align: center; margin-bottom: 48px; letter-spacing: -0.03em; }
+    /* ======== EMA SCREEN ======== */
+    .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
+    .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
+    .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding: 8px 4px; }
+    .ema-question { font-size: 1.15rem; font-weight: 500; color: var(--fg); margin-bottom: 24px; line-height: 1.4; text-align: left; }
 
-    /* Interactive Components */
-    .slider-group { width: 100%; max-width: 340px; margin: 0 auto; }
-    .slider-val-display { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 400; color: var(--accent); text-align: center; margin-bottom: 20px; min-height:30px; }
-    .range-slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; outline: none; background: var(--bg-elevated); position: relative; margin-bottom: 20px; }
-    .range-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 36px; height: 36px; border-radius: 50%; background: var(--fg); cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    .slider-labels { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 500; color: var(--fg-muted); }
-    .bubble-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 340px; margin: 0 auto; }
-    .bubble { padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--fg); font-size: 1.05rem; font-weight: 500; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; }
-    .bubble:active { transform: scale(0.98); }
-    .bubble.selected { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-dim); }
+    /* Slider */
+    .slider-group { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
+    .slider-val-display { font-size: 2.2rem; font-weight: 600; color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
+    .range-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--bg-elevated); border-radius: 3px; outline: none; }
+    .range-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .range-slider::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--fg-muted); padding: 0 4px; }
 
-    /* Onboarding Overrides */
-    .ob-progress { width: 100%; max-width: 340px; margin: 0 auto 32px; height: 3px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-    .ob-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
-    .consent-scroll { flex: 1; overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; min-height: 0; -webkit-user-select: text; user-select: text; font-size: 0.95rem; line-height: 1.7; color: var(--fg-muted); }
-    .consent-scroll h3 { color: var(--fg); font-size: 1rem; font-weight: 600; margin: 16px 0 6px; text-align: left; }
-    .consent-scroll h3:first-child { margin-top: 0; }
-    .consent-scroll p { font-size: 0.95rem; margin-bottom: 10px; text-align: left; color: var(--fg-muted); }
-    .consent-scroll-hint { font-size: 0.8rem; color: var(--fg-muted); text-align: center; margin-bottom: 12px; flex-shrink: 0; transition: opacity 0.3s; }
-    .checkbox-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; cursor: pointer; flex-shrink: 0; max-width: 340px; margin-left: auto; margin-right: auto; }
+    /* Choice / Checkbox pills */
+    .choice-group { display: flex; flex-direction: column; gap: 10px; }
+    .choice-btn { display: block; width: 100%; padding: 16px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; font-weight: 500; text-align: left; cursor: pointer; transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
+    .choice-btn:hover { border-color: var(--fg-muted); background: var(--bg-elevated); }
+    .choice-btn:active { transform: scale(0.99); }
+    .choice-btn.selected { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent); font-weight: 600; }
+    .choice-btn.selected::before { content: '✓'; display: inline-block; margin-right: 10px; color: var(--accent); font-weight: 700; }
+
+    /* Text / numeric input */
+    .text-group { width: 100%; }
+    .text-input { width: 100%; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; outline: none; transition: border-color 0.2s, background 0.2s; }
+    .text-input:focus { border-color: var(--accent); background: var(--bg-elevated); }
+
+    /* ======== ONBOARDING ======== */
+    .ob-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 20px; flex-shrink: 0; }
+    .ob-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; }
+    .consent-scroll-hint { font-size: 0.8rem; color: var(--accent); text-align: center; margin-bottom: 8px; transition: opacity 0.3s; }
+    .consent-scroll { flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-y: auto; margin-bottom: 16px; color: var(--fg); font-size: 0.95rem; line-height: 1.6; text-align: left; }
+    .consent-scroll h3 { font-size: 1rem; font-weight: 600; margin: 16px 0 8px 0; color: var(--fg); text-align: left; }
+    .consent-scroll p { font-size: 0.95rem; color: var(--fg); margin-bottom: 12px; text-align: left; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; margin-bottom: 12px; width: 100%; max-width: 340px; margin-left: auto; margin-right: auto; transition: opacity 0.3s, pointer-events 0.3s; }
     .checkbox-row input[type="checkbox"] { width: 24px; height: 24px; flex-shrink: 0; margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
     .checkbox-row span { font-size: 0.95rem; color: var(--fg-muted); line-height: 1.5; text-align: left; }
     .ob-input { width: 100%; max-width: 340px; margin: 0 auto 20px; display: block; }
     .ob-input input { width: 100%; padding: 16px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1.05rem; outline: none; transition: border-color 0.2s, background 0.2s; }
     .ob-input input:focus { border-color: var(--accent); background: var(--bg-elevated); }
+    .ob-input input:disabled { opacity: 0.5; }
+
     .schedule-section { width: 100%; max-width: 340px; margin: 0 auto 28px; }
     .schedule-label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; }
     .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
     .day-btn { padding: 10px 0; border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border); color: var(--fg-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
-    .day-btn.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+    .day-btn.selected { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent); }
     .time-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .time-row-label { width: 76px; font-size: 0.82rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
     .time-row input[type="time"] { flex: 1; padding: 12px 8px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font-mono); font-size: 0.9rem; outline: none; }
     .time-sep { color: var(--fg-muted); font-size: 0.85rem; flex-shrink: 0; }
+
     .check-list { width: 100%; max-width: 340px; margin: 0 auto 16px; }
-    .check-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; transition: border-color 0.3s; }
-    .check-item.pass { border-color: var(--accent-green); }
-    .check-item.fail { border-color: var(--accent-red); }
-    .check-item.testing { border-color: var(--accent); }
-    .check-icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); font-size: 0.9rem; }
-    .check-item.pass .check-icon { background: rgba(50,215,75,0.15); }
-    .check-item.fail .check-icon { background: rgba(255,69,58,0.15); }
-    .check-info { flex: 1; }
-    .check-title { font-size: 0.95rem; font-weight: 600; color: var(--fg); }
-    .check-status { font-size: 0.8rem; color: var(--fg-muted); margin-top: 2px; }
-    .check-item.pass .check-status { color: var(--accent-green); }
-    .check-item.fail .check-status { color: var(--accent-red); }
-    .training-timeline { width: 100%; max-width: 340px; height: 72px; margin: 0 auto 28px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex-shrink: 0; }
-    #training-canvas { width: 100%; height: 100%; display: block; }
-    .training-dial-wrapper { position: relative; width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; border-radius: 50%; user-select: none; flex-shrink: 0; }
-    .training-dial-ticks { position: absolute; inset: 0; pointer-events: none; border-radius: 50%; }
-    .training-tick { position: absolute; width: 2px; height: 5px; background: var(--border); top: 7px; left: 50%; transform-origin: 50% 113px; margin-left: -1px; }
-    .training-dial { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(145deg, #1f1f23, #121214); box-shadow: 8px 8px 16px rgba(0,0,0,0.8), -4px -4px 12px rgba(255,255,255,0.03), inset 0 2px 4px rgba(255,255,255,0.05); border: 1px solid var(--border); position: relative; touch-action: none; cursor: grab; z-index: 2; }
-    .training-dial:active { cursor: grabbing; }
-    .training-dial-indicator { position: absolute; top: 10px; left: 50%; width: 4px; height: 22px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px var(--accent-dim); }
-    .training-dial-labels { display: flex; justify-content: space-between; width: 240px; margin: 0 auto 20px; font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.07em; flex-shrink: 0; }
-    .training-status { text-align: center; font-size: 0.95rem; color: var(--fg-muted); min-height: 1.4em; transition: color 0.3s; flex-shrink: 0; margin-bottom: 8px; }
-    .training-status.aligned { color: var(--accent-green); }
+    .check-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; font-size: 0.95rem; color: var(--fg); }
+    .check-item.pass { border-color: var(--accent-green); color: var(--accent-green); }
+    .check-item.fail { border-color: var(--accent-red); color: var(--accent-red); }
+    .check-item.testing { border-color: var(--accent); color: var(--accent); }
 
-    /* PAT Specific Layouts */
-    #screen-baseline, #screen-trial { align-items: center; justify-content: center; }
-    .progress-ring { width: 180px; height: 180px; position: relative; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
-    .progress-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); z-index: 2; width: 100%; height: 100%; }
-    .progress-ring circle { fill: none; stroke-width: 3; }
-    .progress-ring .track { stroke: var(--bg-elevated); }
-    .progress-ring .fill { stroke: var(--accent); stroke-dasharray: 534; stroke-dashoffset: 534; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
-    .baseline-bpm-box { text-align: center; z-index: 3; }
-    .baseline-bpm-number { font-size: 3.8rem; font-weight: 500; font-family: var(--font-mono); color: var(--fg); line-height: 1; letter-spacing: -0.04em; }
-    .baseline-bpm-label { font-size: 0.8rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
-    
-    .rotary-dial-wrapper { position: relative; width: 280px; height: 280px; margin: 0 auto 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; user-select: none; }
-    .rotary-dial-ticks { position: absolute; inset: 0; pointer-events: none; border-radius: 50%; z-index: 1; }
-    .dial-tick { position: absolute; width: 2px; height: 6px; background: var(--border); top: 8px; left: 50%; transform-origin: 50% 132px; margin-left: -1px; }
-    .rotary-dial { width: 160px; height: 160px; border-radius: 50%; background: linear-gradient(145deg, #1f1f23, #121214); box-shadow: 8px 8px 16px rgba(0,0,0,0.8), -4px -4px 12px rgba(255,255,255,0.03), inset 0 2px 4px rgba(255,255,255,0.05); border: 1px solid var(--border); position: relative; touch-action: none; cursor: grab; z-index: 2; display: flex; align-items: center; justify-content: center; }
-    .rotary-dial:active { cursor: grabbing; background: linear-gradient(145deg, #1a1a1d, #0f0f11); }
-    .rotary-dial-indicator { position: absolute; top: 12px; left: 50%; width: 4px; height: 24px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px var(--accent-dim); }
-    .dial-labels { display: flex; justify-content: space-between; width: 100%; max-width: 280px; margin: 0 auto; font-size: 0.85rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    
-    .sensor-warning-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    /* ======== ePAT SCREENS ======== */
+    .progress-ring { position: relative; width: 180px; height: 180px; margin: 0 auto; }
+    .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .progress-ring circle { fill: none; stroke-width: 8; }
+    .progress-ring circle.track { stroke: var(--bg-surface); }
+    .progress-ring circle.fill { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 534; stroke-dashoffset: 534; transition: stroke-dashoffset 0.5s linear; }
+    .baseline-bpm-box { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .baseline-bpm-number { font-size: 3rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+    .baseline-bpm-label { font-size: 0.85rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .rotary-dial { width: 220px; height: 220px; border-radius: 50%; background: var(--bg-surface); border: 2px solid var(--border); position: relative; cursor: grab; touch-action: none; }
+    .rotary-dial:active { cursor: grabbing; }
+    .rotary-dial-ticks { position: absolute; inset: 0; }
+    .dial-tick { position: absolute; top: 4px; left: 50%; width: 2px; height: 8px; background: var(--fg-muted); transform-origin: 50% 106px; }
+
+    .movement-warning { position: absolute; top: calc(env(safe-area-inset-top, 24px) + 80px); left: 50%; transform: translateX(-50%); background: var(--accent-red); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .movement-warning.active { opacity: 1; }
+
+    .sensor-warning-overlay { position: fixed; bottom: 100px; right: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 10; }
     .sensor-warning-overlay.visible { opacity: 1; pointer-events: all; }
-    .sensor-preview-circle { width: 120px; height: 120px; border-radius: 50%; background: #000; border: 3px solid var(--fg); object-fit: cover; transition: border-color 0.3s ease; margin-bottom: 24px; }
-    .movement-warning { position: fixed; top: 40px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg); padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; z-index: 50; opacity: 0; transition: all 0.3s ease; }
-    .movement-warning.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .sensor-preview-circle { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--fg); background: #000; transition: border-color 0.2s, box-shadow 0.2s; }
+    .sensor-warning-text { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: var(--fg); max-width: 180px; text-align: center; line-height: 1.3; }
 
-    /* Body Map */
-    .body-map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 340px; margin: 0 auto; }
-    .body-part { padding: 16px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border); color: var(--fg); font-size: 1rem; cursor: pointer; text-align: center; font-weight: 500; transition: all 0.2s; }
-    .body-part.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .body-map-container { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .body-part { cursor: pointer; transition: all 0.15s; }
+    .body-part.selected { fill: var(--accent); }
+    #nowhere-btn { padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg-muted); font-family: var(--font); font-size: 0.9rem; cursor: pointer; margin: 16px auto; display: block; }
+    #nowhere-btn.selected { border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
-
   <!-- Hidden Camera feeds -->
   <video id="video-feed" playsinline muted style="position:fixed;top:-999px;opacity:0;"></video>
   <canvas id="sampling-canvas" style="position:fixed;top:-999px;opacity:0;"></canvas>
@@ -808,73 +798,52 @@
     <div class="consent-scroll" id="ob-consent-scroll"></div>
     <label class="checkbox-row" id="ob-consent-check-row" style="opacity:0.4; pointer-events:none;">
       <input type="checkbox" id="ob-consent-check">
-      <span>I have read and understood the above. I voluntarily agree to participate.</span>
+      <span>I have read and understood the above.</span>
     </label>
-    <div class="ob-input">
-      <input type="text" id="ob-initials" placeholder="Your initials" maxlength="5" autocomplete="off" style="text-transform:uppercase;" disabled>
-    </div>
-    <button class="btn btn-primary btn-block" id="ob-consent-next" disabled>I Consent — Continue</button>
+    <div class="ob-input"><input type="text" id="ob-initials" placeholder="Your initials" disabled></div>
+    <button class="btn btn-primary btn-block" id="ob-consent-next" disabled>Continue</button>
   </div>
 
+  <!-- Onboarding Schedule, Device Checks, Complete — placeholder structures preserved -->
   <div class="screen" id="screen-ob-schedule">
-    <div class="ob-progress"><div class="ob-progress-fill" style="width:40%"></div></div>
-    <h1>Scheduling</h1>
-    <p style="margin-bottom:24px;">Choose your available days and preferred check-in windows.</p>
+    <div class="ob-progress"><div class="ob-progress-fill" style="width:50%"></div></div>
+    <h1>Your Schedule</h1>
+    <p>Select the days you're available.</p>
     <div class="schedule-section">
-      <span class="schedule-label">Available days</span>
       <div class="day-grid" id="ob-day-grid">
-        <div class="day-btn selected" data-day="Mon">Mon</div><div class="day-btn selected" data-day="Tue">Tue</div>
-        <div class="day-btn selected" data-day="Wed">Wed</div><div class="day-btn selected" data-day="Thu">Thu</div>
-        <div class="day-btn selected" data-day="Fri">Fri</div><div class="day-btn selected" data-day="Sat">Sat</div>
-        <div class="day-btn selected" data-day="Sun">Sun</div>
+        <button class="day-btn" data-day="1">Mo</button><button class="day-btn" data-day="2">Tu</button>
+        <button class="day-btn" data-day="3">We</button><button class="day-btn" data-day="4">Th</button>
+        <button class="day-btn" data-day="5">Fr</button><button class="day-btn" data-day="6">Sa</button>
+        <button class="day-btn" data-day="7">Su</button>
       </div>
     </div>
     <div class="schedule-section">
-      <span class="schedule-label">Check-in time windows</span>
-      <div class="time-row"><span class="time-row-label">Morning</span><input type="time" id="ob-am-start" value="08:00"><span class="time-sep">–</span><input type="time" id="ob-am-end" value="10:00"></div>
-      <div class="time-row"><span class="time-row-label">Afternoon</span><input type="time" id="ob-pm-start" value="13:00"><span class="time-sep">–</span><input type="time" id="ob-pm-end" value="15:00"></div>
-      <div class="time-row"><span class="time-row-label">Evening</span><input type="time" id="ob-ev-start" value="19:00"><span class="time-sep">–</span><input type="time" id="ob-ev-end" value="21:00"></div>
+      <div class="time-row"><span class="time-row-label">Morning</span><input type="time" id="ob-am-start" value="08:00"><span class="time-sep">to</span><input type="time" id="ob-am-end" value="10:00"></div>
+      <div class="time-row"><span class="time-row-label">Afternoon</span><input type="time" id="ob-pm-start" value="13:00"><span class="time-sep">to</span><input type="time" id="ob-pm-end" value="15:00"></div>
+      <div class="time-row"><span class="time-row-label">Evening</span><input type="time" id="ob-ev-start" value="19:00"><span class="time-sep">to</span><input type="time" id="ob-ev-end" value="21:00"></div>
     </div>
-    <div style="flex:1; min-height:16px;"></div>
     <button class="btn btn-primary btn-block" id="ob-schedule-next">Continue</button>
   </div>
 
   <div class="screen" id="screen-ob-device">
-    <div class="ob-progress"><div class="ob-progress-fill" style="width:60%"></div></div>
-    <h1>Device Check</h1>
-    <p style="margin-bottom:24px;">We'll confirm your device supports the task.</p>
-    <div class="check-list">
-      <div class="check-item" id="ob-check-camera"><div class="check-icon">📷</div><div class="check-info"><div class="check-title">Camera</div><div class="check-status" id="ob-check-camera-status">Waiting…</div></div></div>
-      <div class="check-item" id="ob-check-torch"><div class="check-icon">🔦</div><div class="check-info"><div class="check-title">Flashlight</div><div class="check-status" id="ob-check-torch-status">Waiting…</div></div></div>
-      <div class="check-item" id="ob-check-audio"><div class="check-icon">🔊</div><div class="check-info"><div class="check-title">Audio</div><div class="check-status" id="ob-check-audio-status">Waiting…</div></div></div>
-      <div class="check-item" id="ob-check-signal"><div class="check-icon">♥</div><div class="check-info"><div class="check-title">PPG Signal</div><div class="check-status" id="ob-check-signal-status">Waiting…</div></div></div>
-      <div id="ob-signal-preview-wrap" style="display:none; justify-content:center; margin: 4px 0 8px;"><canvas id="ob-signal-preview" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--border); background:#000; display:block;"></canvas></div>
-    </div>
-    <p id="ob-device-status" style="text-align:center; font-size:0.9rem; min-height:1.4em; color:var(--fg-muted);"></p>
-    <div style="flex:1; min-height:16px;"></div>
-    <button class="btn btn-primary btn-block" id="ob-device-start">Run Checks</button>
-    <button class="btn btn-primary btn-block" id="ob-device-next" style="display:none; margin-top:12px;">Continue</button>
-    <button class="btn btn-secondary btn-block" id="ob-device-retry" style="display:none; margin-top:8px;">Retry</button>
-  </div>
-
-  <div class="screen" id="screen-ob-training">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:80%"></div></div>
-    <h1>Learn the Task</h1>
-    <p style="margin-bottom:16px;">A simulated heartbeat plays below. Rotate the dial to align the tone with each beat.</p>
-    <div class="training-timeline"><canvas id="training-canvas"></canvas></div>
-    <div class="training-dial-wrapper"><div class="training-dial-ticks" id="training-dial-ticks"></div><div class="training-dial" id="training-dial"><div class="training-dial-indicator"></div></div></div>
-    <div class="training-dial-labels"><span>Earlier</span><span>Later</span></div>
-    <p class="training-status" id="training-status">Rotate the dial to align the tone</p>
-    <div style="flex:1; min-height:8px;"></div>
-    <button class="btn btn-primary btn-block" id="ob-training-next" disabled>Continue</button>
+    <h1>Device Check</h1>
+    <p id="ob-device-status">Ready to run checks.</p>
+    <div class="check-list">
+      <div class="check-item" id="ob-check-camera"><span>Camera</span><span id="ob-check-camera-status">Not tested</span></div>
+      <div class="check-item" id="ob-check-torch"><span>Torch</span><span id="ob-check-torch-status">Not tested</span></div>
+      <div class="check-item" id="ob-check-audio"><span>Audio</span><span id="ob-check-audio-status">Not tested</span></div>
+      <div class="check-item" id="ob-check-signal"><span>Signal</span><span id="ob-check-signal-status">Not tested</span></div>
+    </div>
+    <button class="btn btn-primary btn-block" id="ob-device-start">Run Checks</button>
+    <button class="btn btn-primary btn-block" id="ob-device-next" style="display:none;">Continue</button>
   </div>
 
   <div class="screen" id="screen-ob-complete">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:100%"></div></div>
     <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h1>You're All Set</h1>
-      <p>Setup is complete. Your check-in schedule has been saved.</p>
+      <h1>Setup Complete</h1>
+      <p>Your check-in schedule has been saved.</p>
     </div>
     <button class="btn btn-primary btn-block" id="ob-complete-pat">Begin First Session →</button>
   </div>
@@ -900,31 +869,20 @@
 
   <div class="screen" id="screen-trial">
     <div class="movement-warning" id="trial-movement-warning">Keep still</div>
-    <div style="text-align: center; position: absolute; top: calc(env(safe-area-inset-top, 24px) + 24px); width: 100%;"><p class="label" id="trial-label" style="color: var(--fg-muted);">Trial 1</p></div>
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%;">
-      <p style="margin-bottom: 40px;">Rotate the dial until the tone precisely aligns with your heartbeat.</p>
-      <div class="rotary-dial-wrapper">
-        <div class="rotary-dial-ticks" id="rotary-dial-ticks"></div>
-        <div class="rotary-dial" id="rotary-dial"><div class="rotary-dial-indicator"></div></div>
-      </div>
-      <div class="dial-labels"><span>Earlier</span><span>Later</span></div>
+    <div style="text-align: center; position: absolute; top: calc(env(safe-area-inset-top, 24px) + 24px); width: 100%;">
+      <p class="label" id="trial-label" style="color: var(--fg-muted);">Trial 1</p>
     </div>
-    <button class="btn btn-primary btn-block" id="confirm-trial-btn" disabled style="margin-top: 40px;">Confirm Timing</button>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <div id="rotary-dial" class="rotary-dial"><div id="rotary-dial-ticks" class="rotary-dial-ticks"></div></div>
+    </div>
+    <button class="btn btn-primary btn-block" id="confirm-trial-btn" disabled>Confirm</button>
   </div>
 
   <div class="screen" id="screen-bodymap">
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-      <h1>Sensation</h1>
-      <p>Where did you primarily feel your heartbeat?</p>
-      <button class="btn btn-secondary btn-block" id="nowhere-btn" style="margin-bottom: 16px; border-radius: 12px; font-weight: 500;">Did not feel it</button>
-      <div class="body-map-grid">
-        <div class="body-part" data-value="1">Chest</div><div class="body-part" data-value="2">Fingers</div>
-        <div class="body-part" data-value="3">Neck</div><div class="body-part" data-value="4">Ears</div>
-        <div class="body-part" data-value="5">Abdomen</div><div class="body-part" data-value="6">Legs</div>
-        <div class="body-part" data-value="7" style="grid-column: span 2;">Head</div>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-block" id="confirm-bodymap-btn" disabled style="margin-top: 32px;">Confirm Location</button>
+    <h1>Where did you feel it?</h1>
+    <div class="body-map-container"><!-- body parts injected separately --></div>
+    <button id="nowhere-btn">I didn't feel anything</button>
+    <button class="btn btn-primary btn-block" id="confirm-bodymap-btn" disabled>Continue</button>
   </div>
 
   <div class="screen" id="screen-end">
@@ -937,30 +895,83 @@
     <button class="btn btn-secondary btn-block" id="download-btn">Save Local Copy</button>
   </div>
 
-<script>
+  <script>
 "use strict";
+
+// ==========================================================
+// EMA Studio — study-base.js (runtime)
+// v1.3.0
+// ==========================================================
+//
+// Changes from v1.2:
+//
+// ROUTER (the big one):
+//   - Sessions are now resolved by looking up the window in config.ema.scheduling.windows
+//     and consuming its { pre, task, post } phase spec. Legacy string-matching on
+//     "pair_" and "ema" prefixes is gone. A session is identified by sessionId alone,
+//     which is always a window id (e.g. "w1") or the literal string "onboarding".
+//   - sessionData.phases now contains tokens of three shapes:
+//       "pre_<windowId>"   — EMA block before the task
+//       "post_<windowId>"  — EMA block after the task
+//       "<moduleId>"       — a task module (e.g. "epat")
+//   - runNextPhase() dispatches by token shape: pre_/post_ → EMA.start,
+//     any other token → look up in config.modules and invoke the registered handler.
+//
+// MODULE NAMING:
+//   - Hardcoded 'pat' string literals are gone. Everywhere we look for ePAT config
+//     we now read config.modules.epat. Everywhere we dispatch we use the module id.
+//
+// DATA CONTRACT (session output):
+//   - sessionData.schemaVersion    — stamped from config.schema_version
+//   - sessionData.studyName        — for downstream identification
+//   - Each ema_response entry in sessionData.data now has:
+//       .startedAt   — ISO timestamp when the phase first rendered
+//       .submittedAt — ISO timestamp when the phase was submitted
+//       .responses   — { [questionId]: { value, respondedAt } }
+//     The per-question .respondedAt enables response-latency analyses.
+//
+// UPLOAD:
+//   - Default output format is now CSV (long-format EMA responses) per
+//     config.study.output_format. JSON is opt-in.
+//   - When ePAT is present in the session, the task portion always downloads
+//     as JSON (signal data doesn't flatten). CSV export covers EMA only.
+//   - Filename convention: <study_slug>_<pid>_<sessionId>_<type>.<ext>
+//
+// STORAGE HOOK:
+//   - (no change in this file — the auto-save fix lives in js/storage.js)
+//
+// ==========================================================
 
 async function loadConfig() { return Promise.resolve(window.__CONFIG__); }
 window.__PREVIEW_MODE__ = false;
 
 const isPreview = window.__PREVIEW_MODE__ === true;
 
-function show(id) { 
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
-  if (el) el.classList.add('active'); 
+  if (el) el.classList.add('active');
 }
 
 function evalCond(cond, responses) {
   if (!cond) return true;
-  const val = responses[cond.question_id];
+  // responses is { qid: { value, respondedAt } } — we compare against .value
+  const rec = responses[cond.question_id];
+  const val = rec && typeof rec === 'object' ? rec.value : rec;
   if (val === undefined || val === null || val === '') return false;
   const cv = cond.value;
   switch(cond.operator) {
-    case 'eq': return val == cv; case 'neq': return val != cv;
-    case 'gt': return Number(val) > Number(cv); case 'gte': return Number(val) >= Number(cv);
-    case 'lt': return Number(val) < Number(cv); case 'lte': return Number(val) <= Number(cv);
-    case 'includes': { const arr = Array.isArray(cv)?cv:[cv]; const ans = Array.isArray(val)?val:[val]; return arr.some(v => ans.includes(v)); }
+    case 'eq':  return val == cv;
+    case 'neq': return val != cv;
+    case 'gt':  return Number(val) >  Number(cv);
+    case 'gte': return Number(val) >= Number(cv);
+    case 'lt':  return Number(val) <  Number(cv);
+    case 'lte': return Number(val) <= Number(cv);
+    case 'includes': {
+      const arr = Array.isArray(cv) ? cv : [cv];
+      const ans = Array.isArray(val) ? val : [val];
+      return arr.some(v => ans.includes(v));
+    }
     default: return true;
   }
 }
@@ -984,15 +995,201 @@ function evalCond(cond, responses) {
   });
 })();
 
+// ==========================================================
+// UPLOAD
+// ----------------------------------------------------------
+// Emits participant data. Format selection per config.study.output_format.
+//
+// CSV format (default): long-format EMA responses only.
+//   Columns: schema_version, study_name, participant_id, session_id,
+//            session_type, day, window_id, window_label, block,
+//            session_started_at, session_submitted_at,
+//            phase_started_at, phase_submitted_at,
+//            question_id, question_text, question_type,
+//            response_value, response_numeric, response_latency_ms
+//
+//   Multi-select questions: one row per response with semicolon-separated values.
+//   Non-numeric responses get NA in response_numeric.
+//
+// JSON format: full nested sessionData with all task signal data.
+//   This is also used when ePAT data is present, regardless of format setting,
+//   because signal arrays don't flatten to CSV meaningfully. In mixed sessions
+//   we emit BOTH files: _ema.csv (responses) and _task.json (signal data).
+// ==========================================================
 const Upload = {
-  send(sessionData, cb) {
-    if (isPreview) { if(cb) cb(); return; }
-    const a = document.createElement("a");
-    const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: "application/json" });
+
+  _slugify(str) {
+    return (str || 'study').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  },
+
+  _downloadBlob(blob, filename) {
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `${sessionData.type}_${sessionData.participantId}_${new Date().toISOString().slice(0,10)}.json`;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
-    if(cb) cb();
+    document.body.removeChild(a);
+  },
+
+  // Coerce a response value to a number where possible. Returns '' for NA.
+  // Arrays (multi-select) never coerce — they're flagged with a sentinel.
+  _toNumeric(val) {
+    if (val === null || val === undefined || val === '') return '';
+    if (Array.isArray(val)) return '';
+    const n = Number(val);
+    return Number.isFinite(n) ? n : '';
+  },
+
+  _serializeValue(val) {
+    if (val === null || val === undefined) return '';
+    if (Array.isArray(val)) return val.join(';');
+    return String(val);
+  },
+
+  _csvEscape(val) {
+    const s = String(val ?? '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  },
+
+  // Build a lookup of question metadata by id for CSV enrichment.
+  _buildQuestionIndex(cfg) {
+    const idx = {};
+    (cfg.ema?.questions || []).forEach(q => {
+      if (q.type !== 'page_break') idx[q.id] = q;
+    });
+    return idx;
+  },
+
+  // Flatten sessionData into long-format CSV rows (EMA responses only).
+  // Returns { header, rows } where rows is an array of arrays.
+  _buildEmaCsv(sessionData, cfg) {
+    const qIdx = this._buildQuestionIndex(cfg);
+    const windows = cfg.ema?.scheduling?.windows || [];
+    const header = [
+      'schema_version', 'study_name', 'participant_id', 'session_id',
+      'session_type', 'day', 'window_id', 'window_label', 'block',
+      'session_started_at', 'session_submitted_at',
+      'phase_started_at', 'phase_submitted_at',
+      'question_id', 'question_text', 'question_type',
+      'response_value', 'response_numeric', 'response_latency_ms'
+    ];
+
+    const rows = [];
+    const emaEntries = (sessionData.data || []).filter(e => e && e.type === 'ema_response');
+
+    emaEntries.forEach(entry => {
+      const wId  = entry.windowId || '';
+      const wCfg = windows.find(w => w.id === wId);
+      const wLabel = wCfg ? wCfg.label : '';
+      const phaseStart = entry.startedAt || '';
+      const phaseSubmit = entry.submittedAt || '';
+      const phaseStartMs = phaseStart ? Date.parse(phaseStart) : null;
+
+      Object.entries(entry.responses || {}).forEach(([qid, rec]) => {
+        const q = qIdx[qid] || {};
+        const rawVal = (rec && typeof rec === 'object') ? rec.value : rec;
+        const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
+        const latency = (phaseStartMs && respAt) ? (Date.parse(respAt) - phaseStartMs) : '';
+
+        rows.push([
+          sessionData.schemaVersion || '',
+          sessionData.studyName || '',
+          sessionData.participantId,
+          sessionData.sessionId,
+          sessionData.type,
+          sessionData.day ?? '',
+          wId,
+          wLabel,
+          entry.block || '',
+          sessionData.startedAt || '',
+          sessionData.completedAt || '',
+          phaseStart,
+          phaseSubmit,
+          qid,
+          q.text || '',
+          q.type || '',
+          this._serializeValue(rawVal),
+          this._toNumeric(rawVal),
+          latency
+        ]);
+      });
+    });
+
+    return { header, rows };
+  },
+
+  _csvString({ header, rows }) {
+    const esc = this._csvEscape.bind(this);
+    const lines = [header.map(esc).join(',')];
+    rows.forEach(r => lines.push(r.map(esc).join(',')));
+    return lines.join('\n');
+  },
+
+  // Does this session contain any non-EMA task data that can't flatten to CSV?
+  _hasTaskSignalData(sessionData) {
+    return (sessionData.data || []).some(e =>
+      e && (e.type === 'baseline' || e.type === 'trial')
+    );
+  },
+
+  send(sessionData, cb) {
+    if (isPreview) { if (cb) cb(); return; }
+
+    const cfg = (typeof config !== 'undefined') ? config : {};
+    const format = cfg.study?.output_format || 'csv';
+    const slug = this._slugify(cfg.study?.name);
+    const pid = sessionData.participantId || 'unknown';
+    const sid = sessionData.sessionId;
+    const date = new Date().toISOString().slice(0, 10);
+    const base = `${slug}_${pid}_${date}_${sid}`;
+
+    // Always emit JSON if format is json OR if there's task signal data
+    const shouldEmitJson = format === 'json' || this._hasTaskSignalData(sessionData);
+    const shouldEmitCsv  = format === 'csv';
+
+    if (shouldEmitCsv) {
+      const csv = this._csvString(this._buildEmaCsv(sessionData, cfg));
+      this._downloadBlob(
+        new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
+        `${base}_ema.csv`
+      );
+    }
+
+    if (shouldEmitJson) {
+      // When CSV is selected but task data is present, emit task-only JSON
+      // to avoid duplicating EMA responses. When JSON is selected outright,
+      // emit the full session.
+      const payload = (shouldEmitCsv && this._hasTaskSignalData(sessionData))
+        ? {
+            // Task-only payload — EMA responses are in the CSV
+            schemaVersion: sessionData.schemaVersion,
+            studyName:     sessionData.studyName,
+            sessionId:     sessionData.sessionId,
+            participantId: sessionData.participantId,
+            day:           sessionData.day,
+            type:          sessionData.type,
+            phases:        sessionData.phases,
+            counterbalance: sessionData.counterbalance,
+            startedAt:     sessionData.startedAt,
+            completedAt:   sessionData.completedAt,
+            device:        sessionData.device,
+            status:        sessionData.status,
+            data:          (sessionData.data || []).filter(e => e && e.type !== 'ema_response')
+          }
+        : sessionData;
+
+      const suffix = (shouldEmitCsv && this._hasTaskSignalData(sessionData)) ? '_task' : '';
+      this._downloadBlob(
+        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        `${base}${suffix}.json`
+      );
+    }
+
+    if (cb) cb();
   }
 };
 
@@ -1011,14 +1208,16 @@ function collectDeviceMetadata() {
   };
 }
 
+// ==========================================================
 // MAIN RUNTIME EXECUTOR
+// ==========================================================
 (async function() {
   const config = await loadConfig();
   const params = new URLSearchParams(window.location.search);
-  
+
   document.getElementById('study-title').textContent = config.study.name || 'Study';
-  document.getElementById('task-subtitle').textContent  = config.study.institution || '';
-  
+  document.getElementById('task-subtitle').textContent = config.study.institution || '';
+
   
     const tParam = params.get('t');
     const expiryMs = (config.ema.scheduling.timing?.expiry_minutes || 60) * 60 * 1000;
@@ -1029,7 +1228,7 @@ function collectDeviceMetadata() {
       return;
     }
   const sessionId = params.get('session') || "w1";
-  
+
   const pidInput = document.getElementById('pid-input');
   const startBtn = document.getElementById('start-btn');
 
@@ -1044,60 +1243,90 @@ function collectDeviceMetadata() {
   }
   pidInput.addEventListener('input', () => { startBtn.disabled = !pidInput.value.trim(); });
 
-  let sessionData = { 
-    sessionId: "ses_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
-    participantId: '', 
-    day: parseInt(params.get('day')) || null,
-    type: "", phases: [], currentPhase: 0, counterbalance: null,
-    startedAt: null, device: null, data: [], status: "in_progress" 
+  let sessionData = {
+    schemaVersion: config.schema_version || '',
+    studyName:     config.study?.name || '',
+    sessionId:     "ses_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
+    participantId: '',
+    day:           parseInt(params.get('day')) || null,
+    type:          "",
+    phases:        [],
+    currentPhase:  0,
+    counterbalance: null,
+    startedAt:     null,
+    completedAt:   null,
+    device:        null,
+    data:          [],
+    status:        "in_progress"
   };
 
+  const cbParam = params.get('cb');
   const dynamicWindows = config.ema?.scheduling?.windows || [];
+  const enabledModules = config.modules || {};
 
-  // ---------------------------------------------------------------------------
-  // Build sessionData.phases from w.phases
-  //
-  // w.phases = { pre: bool, task: "epat"|null, post: bool }
-  //
-  // Phase token format:
-  //   EMA blocks   → "pre_<windowId>"  or "post_<windowId>"  (EMA.start() consumes these)
-  //   Task modules → "<moduleId>"                             (TASK_MODULES[id]() handles these)
-  //
-  // Examples:
-  //   { pre: true,  task: null,   post: false } → ["pre_w1"]
-  //   { pre: true,  task: "epat", post: true  } → ["pre_w1", "epat", "post_w1"]
-  //   { pre: false, task: "epat", post: false } → ["epat"]
-  // ---------------------------------------------------------------------------
+  // -----------------------------------------------------------------
+  // ROUTER — v1.3: consume window.phases instead of string-matching.
+  // -----------------------------------------------------------------
   if (sessionId === 'onboarding') {
     sessionData.type = "onboarding";
     document.getElementById('task-subtitle').textContent = "Study Setup";
-
   } else {
-    const wCfg = dynamicWindows.find(w => w.id === sessionId);
+    const w = dynamicWindows.find(win => win.id === sessionId);
 
-    if (wCfg) {
-      const ph = wCfg.phases || { pre: true, task: null, post: false };
-      const phases = [];
-      if (ph.pre)  phases.push(`pre_${wCfg.id}`);
-      if (ph.task) phases.push(ph.task);
-      if (ph.post) phases.push(`post_${wCfg.id}`);
-
-      sessionData.phases   = phases;
-      sessionData.type     = ph.task ? `ema_${ph.task}` : "ema_only";
-      sessionData.windowId = wCfg.id;
-
-      document.getElementById('task-subtitle').textContent =
-        config.study.greetings?.[wCfg.id] || wCfg.label || 'Check-In';
-      document.getElementById('ema-greeting').textContent =
-        config.study.greetings?.[wCfg.id] || wCfg.label || 'Check-In';
-
+    if (!w) {
+      // Unknown session id — treat as a minimal EMA-only shot at whatever the
+      // first window is, so we degrade gracefully instead of blanking out.
+      const fallback = dynamicWindows[0];
+      if (fallback) {
+        sessionData.type = "ema_only";
+        sessionData.phases = [`pre_${fallback.id}`];
+        document.getElementById('task-subtitle').textContent = fallback.label || 'Check-In';
+      } else {
+        sessionData.type = "error";
+        document.getElementById('task-subtitle').textContent = "Invalid Session";
+        startBtn.disabled = true;
+        startBtn.textContent = 'Session not found';
+        return;
+      }
     } else {
-      console.warn(`[study-base] Unknown sessionId "${sessionId}", falling back to EMA pre-only.`);
-      sessionData.phases = [`pre_${sessionId}`];
-      sessionData.type   = "ema_only";
-      document.getElementById('ema-greeting').textContent = 'Check-In';
+      const ph = w.phases || { pre: true, task: null, post: false };
+      const taskId = ph.task && enabledModules[ph.task] ? ph.task : null;
+
+      // Build phase token list in order
+      const phaseTokens = [];
+      if (ph.pre)  phaseTokens.push(`pre_${w.id}`);
+      if (taskId)  phaseTokens.push(taskId);
+      if (ph.post && taskId) phaseTokens.push(`post_${w.id}`);
+
+      // Apply counterbalancing if requested AND the window has task+pre (not post)
+      // Honored counterbalance values: 'task_first' (reverses pre,task → task,pre)
+      // Retained for backward compat: 'pat_first' (alias for task_first when task is epat)
+      if (cbParam && taskId && ph.pre) {
+        const wantTaskFirst = (cbParam === 'task_first') ||
+                              (cbParam === 'pat_first' && taskId === 'epat');
+        if (wantTaskFirst) {
+          // swap first two: [pre_w, task, ...] → [task, pre_w, ...]
+          [phaseTokens[0], phaseTokens[1]] = [phaseTokens[1], phaseTokens[0]];
+          sessionData.counterbalance = 'task_first';
+        } else {
+          sessionData.counterbalance = 'pre_first';
+        }
+      }
+
+      sessionData.type = taskId ? (ph.post ? "pre_task_post" : "pre_task") : "ema_only";
+      sessionData.phases = phaseTokens;
+
+      document.getElementById('task-subtitle').textContent = w.label || 'Check-In';
     }
   }
+
+  // Dynamic greeting based on window id — module-ema can also override at start
+  const greetings = config.study?.greetings || {};
+  const matchedWindow = dynamicWindows.find(w => w.id === sessionId);
+  const greetingText = greetings[sessionId]
+                    || (matchedWindow ? matchedWindow.label : 'Check-In');
+  const greetingEl = document.getElementById('ema-greeting');
+  if (greetingEl) greetingEl.textContent = greetingText;
 
   // ==========================================================
 // ONBOARDING ENGINE
@@ -1126,13 +1355,13 @@ const OnboardingSession = (function() {
 
     nextBtn.onclick = () => {
       sessionData.data.push({ type: "consent", agreed: true, initials: initials.value.trim().toUpperCase(), timestamp: new Date().toISOString() });
-      
-      // Dynamic routing based on schedule preference toggle
+
       if (config.onboarding.ask_schedule !== false) {
         show("screen-ob-schedule");
+      } else if (config.modules?.epat && window.ePATCore) {
+        show("screen-ob-device");
       } else {
-        if (config.tasks.includes('pat') && window.ePATCore) show("screen-ob-device");
-        else show("screen-ob-complete");
+        show("screen-ob-complete");
       }
     };
   }
@@ -1150,7 +1379,7 @@ const OnboardingSession = (function() {
           evening:   { start: document.getElementById("ob-ev-start").value, end: document.getElementById("ob-ev-end").value }
         }
       });
-      if (config.tasks.includes('pat') && window.ePATCore) {
+      if (config.modules?.epat && window.ePATCore) {
         show("screen-ob-device");
       } else {
         show("screen-ob-complete");
@@ -1396,10 +1625,12 @@ const OnboardingSession = (function() {
     };
   }
 
+
+
   return {
     start() {
       initConsent(); initSchedule(); initDevice(); initTraining();
-      document.getElementById("ob-complete-pat").onclick = () => {
+      document.getElementById("ob-complete").onclick = () => {
         sessionData.type = "pat_only"; sessionData.phases = ['pat'];
         sessionData.currentPhase = 0; runNextPhase();
       };
@@ -1409,35 +1640,39 @@ const OnboardingSession = (function() {
 })();
 
 // ==========================================================
-// EMA PAGINATION ENGINE — v1.2
+// EMA PAGINATION ENGINE — v1.3
 // ==========================================================
 //
-// Changes from v1.1:
-//   - EMA.start() now receives a phase token ("pre_w1", "post_w3")
-//     instead of a raw session id string. It parses the token to
-//     extract the windowId and block direction.
-//   - buildPages(windowId, blockDir) filters questions by:
-//       (1) q.windows — null means all windows; explicit array checked
-//       (2) q.block   — "pre"/"both" pass for pre-phases;
-//                       "post"/"both" pass for post-phases
-//   - Greeting is now set by study-base.js before EMA.start() is
-//     called, so module-ema.js no longer touches the greeting element.
-//   - The "Submit / Next" button label logic now checks whether the
-//     current phase is the last in sessionData.phases instead of
-//     checking config.tasks for 'pat' specifically.
+// Changes from v1.2:
+//
+// DATA CONTRACT:
+//   - emaResponses.startedAt — ISO timestamp when the phase first rendered
+//   - emaResponses.submittedAt — ISO timestamp when the phase was submitted
+//   - Each entry in emaResponses.responses is now an object:
+//       { value, respondedAt }
+//     instead of the bare value. This enables per-question response-latency
+//     analyses. evalCond() in study-base.js handles both shapes for
+//     backward compatibility with imported data, but new writes always
+//     use the object shape.
+//
+// ROUTER COMPAT:
+//   - The legacy "plain window id" phase token path is gone. v1.3 always
+//     sends "pre_<wid>" or "post_<wid>". If you see an unprefixed token,
+//     it's a bug in the router, not input to tolerate here.
+//
+// GREETING:
+//   - study-base.js sets the greeting before calling EMA.start() — this
+//     module doesn't touch the element. Keeps one responsibility per file.
 //
 // ==========================================================
 
 const EMA = (function() {
-  let emaPages        = [];
+  let emaPages         = [];
   let currentPageIndex = 0;
-  let emaResponses    = { type: 'ema_response', responses: {} };
+  let emaResponses     = null;
 
   // -----------------------------------------------------------------------
   // buildPages(windowId, blockDir)
-  //
-  // windowId  — the schedule window id (e.g. "w1") or null for unknown
-  // blockDir  — "pre" or "post" — which block we are rendering
   //
   // Filtering logic:
   //   Window filter: q.windows === null  → appears in all windows
@@ -1445,8 +1680,7 @@ const EMA = (function() {
   //   Block filter:  blockDir "pre"  → q.block is "pre" or "both"
   //                  blockDir "post" → q.block is "post" or "both"
   //
-  // Page breaks are preserved as separators only if questions on both
-  // sides survive the filter — orphan page breaks are dropped.
+  // Orphan page breaks (with nothing surviving on one side) are dropped.
   // -----------------------------------------------------------------------
   function buildPages(windowId, blockDir) {
     emaPages = [];
@@ -1461,16 +1695,14 @@ const EMA = (function() {
         return;
       }
 
-      // Window filter
       const windowMatch = q.windows === null
         || q.windows === undefined
         || (windowId && q.windows.includes(windowId));
 
-      // Block filter
       const block = q.block || 'both';
       const blockMatch = blockDir === 'post'
         ? (block === 'post' || block === 'both')
-        : (block === 'pre'  || block === 'both');  // default pre for unknown
+        : (block === 'pre'  || block === 'both');
 
       if (windowMatch && blockMatch) {
         currentBlock.push(q);
@@ -1481,23 +1713,45 @@ const EMA = (function() {
   }
 
   // -----------------------------------------------------------------------
-  // renderCurrentPage — unchanged from v1.1 except the "Submit/Next" label
+  // Record a response with timestamp. This wraps the raw value in the
+  // v1.3 { value, respondedAt } envelope.
+  // -----------------------------------------------------------------------
+  function recordResponse(qid, value) {
+    emaResponses.responses[qid] = {
+      value: value,
+      respondedAt: new Date().toISOString()
+    };
+  }
+
+  // -----------------------------------------------------------------------
+  // Get the bare value for a qid (for skip-logic evaluation during render).
+  // -----------------------------------------------------------------------
+  function valueOf(qid) {
+    const rec = emaResponses.responses[qid];
+    if (rec === undefined) return undefined;
+    return (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
+  }
+
+  // -----------------------------------------------------------------------
+  // renderCurrentPage — builds DOM for the current page, advancing through
+  // any pages whose questions all fail skip-logic.
   // -----------------------------------------------------------------------
   function renderCurrentPage() {
     const container = document.getElementById('ema-single-container');
     const nextBtn   = document.getElementById('ema-next-btn');
 
-    // Fast-forward past pages where all questions fail skip-logic
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
-      visibleQuestions = emaPages[currentPageIndex].filter(
-        q => evalCond(q.condition, emaResponses.responses)
-      );
+      visibleQuestions = emaPages[currentPageIndex].filter(q => {
+        // Rewrap responses in the shape evalCond expects
+        return evalCond(q.condition, emaResponses.responses);
+      });
       if (visibleQuestions.length > 0) break;
       currentPageIndex++;
     }
 
     if (currentPageIndex >= emaPages.length) {
+      emaResponses.submittedAt = new Date().toISOString();
       sessionData.data.push(emaResponses);
       advancePhase();
       return;
@@ -1507,88 +1761,111 @@ const EMA = (function() {
     document.getElementById('ema-progress-fill').style.width = pct + '%';
     container.innerHTML = '';
 
+    // Tracks whether every required question on this page has been answered.
+    function checkSubmit() {
+      const allAnswered = visibleQuestions.every(q => {
+        if (!q.required) return true;
+        const v = valueOf(q.id);
+        if (v === undefined || v === null || v === '') return false;
+        if (Array.isArray(v) && v.length === 0) return false;
+        return true;
+      });
+      nextBtn.disabled = !allAnswered;
+    }
+
     visibleQuestions.forEach(q => {
       const wrapper = document.createElement('div');
       wrapper.style.marginBottom = '48px';
 
       const qTitle = document.createElement('div');
       qTitle.className = 'ema-question';
-      qTitle.textContent = q.text;
+      qTitle.textContent = q.text || '';
       wrapper.appendChild(qTitle);
 
-      const checkSubmit = () => {
-        nextBtn.disabled = !visibleQuestions.every(q =>
-          !q.required || (emaResponses.responses[q.id] !== undefined && emaResponses.responses[q.id] !== '')
-        );
-      };
-
       if (q.type === 'slider') {
-        const mid = ((q.min || 0) + (q.max || 100)) / 2;
-        if (emaResponses.responses[q.id] === undefined) emaResponses.responses[q.id] = mid;
-
-        const grp     = document.createElement('div'); grp.className = 'slider-group';
-        const valDisp = document.createElement('div'); valDisp.className = 'slider-val-display';
-        valDisp.textContent = emaResponses.responses[q.id] + (q.unit || '');
-
-        const inp = document.createElement('input');
-        inp.type = 'range'; inp.className = 'range-slider';
-        inp.min = q.min; inp.max = q.max; inp.step = q.step || 1;
-        inp.value = emaResponses.responses[q.id];
-
-        inp.addEventListener('input', () => {
-          emaResponses.responses[q.id] = Number(inp.value);
-          valDisp.textContent = inp.value + (q.unit || '');
+        const grp = document.createElement('div');
+        grp.className = 'slider-group';
+        const cur = valueOf(q.id);
+        const defaultVal = (cur !== undefined && cur !== null && cur !== '')
+          ? cur
+          : Math.round((Number(q.min) + Number(q.max)) / 2);
+        grp.innerHTML = `
+          <div class="slider-val-display" data-for="${q.id}">${defaultVal}${q.unit ? ' ' + q.unit : ''}</div>
+          <input type="range" class="range-slider" data-qid="${q.id}"
+                 min="${q.min}" max="${q.max}" step="${q.step || 1}" value="${defaultVal}">
+          <div class="slider-labels">
+            <span>${(q.anchors || ['',''])[0] || ''}</span>
+            <span>${(q.anchors || ['',''])[1] || ''}</span>
+          </div>
+        `;
+        const slider = grp.querySelector('input');
+        const disp   = grp.querySelector('.slider-val-display');
+        // Slider needs an explicit interaction before we count it as answered
+        let touched = cur !== undefined && cur !== null && cur !== '';
+        slider.addEventListener('input', () => {
+          touched = true;
+          const v = Number(slider.value);
+          disp.textContent = v + (q.unit ? ' ' + q.unit : '');
+          recordResponse(q.id, v);
           checkSubmit();
         });
-
-        const labels = document.createElement('div'); labels.className = 'slider-labels';
-        labels.innerHTML = `<span>${q.anchors[0] || ''}</span><span>${q.anchors[1] || ''}</span>`;
-        grp.append(valDisp, inp, labels);
+        // If pre-filled (resumption case), record it
+        if (touched && (cur !== valueOf(q.id))) {
+          recordResponse(q.id, Number(defaultVal));
+        }
         wrapper.appendChild(grp);
-      }
 
-      else if (q.type === 'choice') {
-        const grp = document.createElement('div'); grp.className = 'bubble-group';
-        q.options.forEach(opt => {
-          const b = document.createElement('div'); b.className = 'bubble'; b.textContent = opt;
-          if (emaResponses.responses[q.id] === opt) b.classList.add('selected');
-          b.onclick = () => {
-            grp.querySelectorAll('.bubble').forEach(x => x.classList.remove('selected'));
-            b.classList.add('selected');
-            emaResponses.responses[q.id] = opt;
+      } else if (q.type === 'choice') {
+        const grp = document.createElement('div');
+        grp.className = 'choice-group';
+        (q.options || []).forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = opt;
+          btn.dataset.val = opt;
+          btn.addEventListener('click', () => {
+            grp.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            recordResponse(q.id, opt);
             checkSubmit();
-          };
-          grp.appendChild(b);
+          });
+          if (valueOf(q.id) === opt) btn.classList.add('selected');
+          grp.appendChild(btn);
         });
         wrapper.appendChild(grp);
-      }
 
-      else if (q.type === 'checkbox') {
-        if (!Array.isArray(emaResponses.responses[q.id])) emaResponses.responses[q.id] = [];
-        const grp = document.createElement('div'); grp.className = 'bubble-group';
-        q.options.forEach(opt => {
-          const b = document.createElement('div'); b.className = 'bubble'; b.textContent = opt;
-          if (emaResponses.responses[q.id].includes(opt)) b.classList.add('selected');
-          b.onclick = () => {
-            b.classList.toggle('selected');
-            const arr = emaResponses.responses[q.id];
-            if (b.classList.contains('selected')) { if (!arr.includes(opt)) arr.push(opt); }
-            else { const i = arr.indexOf(opt); if (i > -1) arr.splice(i, 1); }
+      } else if (q.type === 'checkbox') {
+        const grp = document.createElement('div');
+        grp.className = 'choice-group';
+        const selected = new Set(Array.isArray(valueOf(q.id)) ? valueOf(q.id) : []);
+        (q.options || []).forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = opt;
+          btn.dataset.val = opt;
+          if (selected.has(opt)) btn.classList.add('selected');
+          btn.addEventListener('click', () => {
+            if (selected.has(opt)) { selected.delete(opt); btn.classList.remove('selected'); }
+            else { selected.add(opt); btn.classList.add('selected'); }
+            recordResponse(q.id, Array.from(selected));
             checkSubmit();
-          };
-          grp.appendChild(b);
+          });
+          grp.appendChild(btn);
         });
         wrapper.appendChild(grp);
-      }
 
-      else if (q.type === 'text' || q.type === 'numeric') {
-        const grp = document.createElement('div'); grp.className = 'input-group';
+      } else {
+        // Generic text / numeric input
+        const grp = document.createElement('div');
+        grp.className = 'text-group';
         const inp = document.createElement('input');
-        inp.type = q.type === 'numeric' ? 'number' : 'text';
-        inp.placeholder = 'Tap to answer';
-        if (emaResponses.responses[q.id] !== undefined) inp.value = emaResponses.responses[q.id];
+        inp.type = (q.type === 'numeric') ? 'number' : 'text';
+        inp.className = 'text-input';
+        const cur = valueOf(q.id);
+        if (cur !== undefined && cur !== null) inp.value = cur;
         inp.addEventListener('input', () => {
-          emaResponses.responses[q.id] = q.type === 'numeric' ? Number(inp.value) : inp.value;
+          const v = (q.type === 'numeric' && inp.value !== '') ? Number(inp.value) : inp.value;
+          recordResponse(q.id, v);
           checkSubmit();
         });
         grp.appendChild(inp);
@@ -1596,10 +1873,11 @@ const EMA = (function() {
       }
 
       container.appendChild(wrapper);
-      checkSubmit();
     });
 
-    // "Submit" on last page of last EMA phase; "Next" otherwise
+    checkSubmit();
+
+    // Button label: "Submit" on last page of last phase, "Next" otherwise.
     const isLastPage  = currentPageIndex === emaPages.length - 1;
     const isLastPhase = sessionData.currentPhase === sessionData.phases.length - 1;
     nextBtn.textContent = (isLastPage && isLastPhase) ? 'Submit Check-In' : 'Next';
@@ -1610,63 +1888,77 @@ const EMA = (function() {
     setTimeout(() => container.classList.remove('fade-in'), 50);
   }
 
-  document.getElementById('ema-next-btn').addEventListener('click', () => {
-    const container = document.getElementById('ema-single-container');
-    container.classList.add('fade-out');
-    setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);
-  });
+  // Install the next-button handler inside start() instead of at module
+  // init time. This way each screen (EMA, ePAT confidence) owns the
+  // button freshly and there are no ghost listeners surviving across
+  // phase transitions.
+  function installNextHandler() {
+    document.getElementById('ema-next-btn').onclick = () => {
+      const container = document.getElementById('ema-single-container');
+      container.classList.add('fade-out');
+      setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);
+    };
+  }
 
   // -----------------------------------------------------------------------
   // Public API
   // -----------------------------------------------------------------------
   return {
-    // phaseToken — new format: "pre_w1" | "post_w3"
-    //              old format: "w1" | "w2" (plain window id, treated as pre)
+    // phaseToken must be "pre_<wid>" or "post_<wid>". The v1.3 router
+    // never emits bare window ids. If you're calling this from new code,
+    // use the prefixed form.
     start(phaseToken) {
-      // Parse token — support both new "pre_w1" format and legacy "w1" format.
-      // The legacy format comes from study-base.js in the repo which still
-      // builds phases as [sessionId] (e.g. ["w1"]) for ema_only sessions.
-      // We detect new format by checking if token starts with "pre_" or "post_".
-      let blockDir, windowId;
-      if (phaseToken.startsWith('pre_') || phaseToken.startsWith('post_')) {
-        const underIdx = phaseToken.indexOf('_');
-        blockDir  = phaseToken.slice(0, underIdx);          // "pre" or "post"
-        windowId  = phaseToken.slice(underIdx + 1);         // "w1", "w3", etc.
-      } else {
-        // Legacy format — plain window id, always pre-block
+      let blockDir = 'pre';
+      let windowId = null;
+
+      if (phaseToken.startsWith('pre_')) {
         blockDir = 'pre';
-        windowId = phaseToken || null;
+        windowId = phaseToken.slice(4);
+      } else if (phaseToken.startsWith('post_')) {
+        blockDir = 'post';
+        windowId = phaseToken.slice(5);
+      } else {
+        // Legacy — should not occur from v1.3 router but we tolerate it
+        // to keep imports of older session data rendering in preview.
+        console.warn('EMA.start received unprefixed phase token:', phaseToken);
+        windowId = phaseToken;
       }
 
       emaResponses = {
-        type:     'ema_response',
-        phase:    phaseToken,
-        windowId: windowId,
-        block:    blockDir,
-        responses: {}
+        type:        'ema_response',
+        phase:       phaseToken,
+        windowId:    windowId,
+        block:       blockDir,
+        startedAt:   new Date().toISOString(),
+        submittedAt: null,
+        responses:   {}
       };
 
       buildPages(windowId, blockDir);
       currentPageIndex = 0;
 
-      // If no questions survive filtering, skip this phase entirely
       if (emaPages.length === 0) {
+        // Nothing to ask — mark submitted_at = started_at and move on
+        emaResponses.submittedAt = emaResponses.startedAt;
+        sessionData.data.push(emaResponses);
         advancePhase();
         return;
       }
 
+      installNextHandler();
       show('screen-ema');
       renderCurrentPage();
     }
   };
 })();
 
+
 // ==========================================================
 // PAT SENSOR LOGIC (Full Port)
 // ==========================================================
 const ePAT = (function() {
   const core = window.ePATCore;
-  const NUM_TRIALS = config.pat?.trials || 20;
+  const NUM_TRIALS = config.modules?.epat?.trials || 20;
   const IBI_CHANGE_THRESHOLD = 0.30;
   const SQI_GOOD = 0.008, SQI_WARN = 0.004;
 
@@ -1679,7 +1971,7 @@ const ePAT = (function() {
   let baselineTimer = null, baselineBPMs = [], baselineStartTime = 0;
   let isFingerPresent = false, currentSqiValue = 0, lastBeatPerfTime = performance.now(), sensorCheckInterval = null;
   let dialEl, dialAngle = 0, dialDragging = false, dialCx = 0, dialCy = 0, lastAngle = 0;
-  let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.pat?.two_phase_practice ? -2 : 0;
+let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modules?.epat?.two_phase_practice ? -2 : 0;
   let trialDetectorRunning = false, trialRunning = false;
 
   function initDial() {
@@ -1760,7 +2052,7 @@ const ePAT = (function() {
   async function startBaseline() {
     show("screen-baseline");
     baselineBPMs = []; baselineStartTime = Date.now();
-    currentTrialIndex = config.pat?.two_phase_practice ? -2 : 0;
+    currentTrialIndex = config.modules?.epat?.two_phase_practice ? -2 : 0;
     initDial();
 
     const bpmEl = document.getElementById("baseline-bpm");
@@ -1925,8 +2217,8 @@ const ePAT = (function() {
     }
 
     // Evaluate overlays
-    const needsConf = config.pat?.confidence_ratings && !td.isPractice;
-    const needsMap = config.pat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % 4 === 0;
+    const needsConf = config.modules?.epat?.confidence_ratings && !td.isPractice;
+    const needsMap  = config.modules?.epat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % 4 === 0;
 
     if (needsMap) {
       show("screen-bodymap");
@@ -1992,31 +2284,11 @@ const ePAT = (function() {
   return { startBaseline };
 })();
 
-  // ---------------------------------------------------------------------------
-  // TASK MODULE REGISTRY
-  // ---------------------------------------------------------------------------
-  // Inside the IIFE so handlers share the same closure as `config`, `ePAT`,
-  // and `advancePhase`. Each handler must call advancePhase() when done.
-  // Adding a new module = one new entry here; runNextPhase() needs no changes.
-  // ---------------------------------------------------------------------------
-  const TASK_MODULES = {
-    epat: () => {
-      if (window.ePATCore && typeof ePAT !== 'undefined') {
-        ePAT.startBaseline();
-      } else {
-        console.warn('[study-base] ePAT module not available, skipping.');
-        advancePhase();
-      }
-    }
-    // future: nback:   () => NBack.start(),
-    // future: flanker: () => Flanker.start(),
-  };
-
   startBtn.addEventListener('click', () => {
     sessionData.participantId = pidInput.value.trim();
     sessionData.startedAt = new Date().toISOString();
     sessionData.device = collectDeviceMetadata();
-    
+
     if (window.ePATCore) window.ePATCore.AudioEngine.init();
 
     if (sessionData.type === 'onboarding' && config.onboarding?.enabled) {
@@ -2026,59 +2298,82 @@ const ePAT = (function() {
     }
   });
 
-  // ---------------------------------------------------------------------------
-  // runNextPhase — dispatches on phase token prefix:
-  //   "pre_*" / "post_*"  → EMA.start()
-  //   anything else       → TASK_MODULES lookup
-  // ---------------------------------------------------------------------------
+  // -----------------------------------------------------------------
+  // PHASE DISPATCH — v1.3: token shape determines handler.
+  //   "pre_<wid>" / "post_<wid>"  → EMA.start(token)
+  //   "<moduleId>"                → dispatch via module's global API
+  //
+  // Module dispatch table is intentionally explicit — when you add a new
+  // task module, add a case here. Keeping this explicit prevents accidental
+  // execution of code that happens to share a name with something else.
+  // -----------------------------------------------------------------
   function runNextPhase() {
     const phase = sessionData.phases[sessionData.currentPhase];
-    if (phase === undefined) { finalizeSession(); return; }
+    if (!phase) { finalizeSession(); return; }
 
     if (phase.startsWith('pre_') || phase.startsWith('post_')) {
       EMA.start(phase);
-    } else {
-      const handler = TASK_MODULES[phase];
-      if (handler) {
-        handler();
-      } else {
-        console.warn(`[study-base] No handler for task phase "${phase}", skipping.`);
+      return;
+    }
+
+    switch (phase) {
+      case 'epat':
+        if (config.modules?.epat && window.ePATCore && typeof ePAT !== 'undefined') {
+          ePAT.startBaseline();
+        } else {
+          console.warn('ePAT phase requested but module/core not available; skipping.');
+          advancePhase();
+        }
+        break;
+      // case 'stroop': if (...) Stroop.start(); else advancePhase(); break;
+      default:
+        console.warn(`Unknown phase token: ${phase}. Skipping.`);
         advancePhase();
-      }
     }
   }
 
-  function advancePhase() { 
-    sessionData.currentPhase++; 
-    runNextPhase(); 
+  function advancePhase() {
+    sessionData.currentPhase++;
+    runNextPhase();
   }
 
   function finalizeSession() {
     sessionData.status = "complete";
     sessionData.completedAt = new Date().toISOString();
-    
+
     if (isPreview) {
-      document.getElementById('screen-end').querySelector('p').textContent = '✓ Preview complete.'; 
+      document.getElementById('screen-end').querySelector('p').textContent = '✓ Preview complete.';
       show('screen-end');
       return;
     }
 
+    // Beat count vanity (ePAT-specific; harmless when absent)
     const totalBeats = sessionData.data.reduce((sum, entry) => {
       if (entry.type === "baseline") return sum + (entry.recordedHR ? entry.recordedHR.length : 0);
       if (entry.type === "trial") return sum + (entry.qualitySummary ? entry.qualitySummary.totalBeats : 0);
       return sum;
     }, 0);
-    
+
     if (totalBeats > 0) {
-      document.getElementById("end-beat-count").textContent = `${totalBeats.toLocaleString()} beats contributed to science.`;
-      document.getElementById("end-beat-count").style.display = "block";
+      const el = document.getElementById("end-beat-count");
+      if (el) {
+        el.textContent = `${totalBeats.toLocaleString()} beats contributed to science.`;
+        el.style.display = "block";
+      }
     }
 
     document.getElementById("download-btn").onclick = () => Upload.send(sessionData);
     show('screen-end');
   }
 
+  // Expose advancePhase + sessionData to injected modules. They were implicit
+  // globals under the old structure; making them explicit here removes a whole
+  // class of "works in this order but not that order" bugs.
+  window.advancePhase = advancePhase;
+  window.__sessionData = sessionData;
+
 })();
+
 </script>
 </body>
 </html>
