@@ -51,8 +51,9 @@ const DataParser = {
   
       await Promise.all(readPromises);
       
-      // Initial calculation with default filters
-      this.calculateMetrics({ excludeNoise: true, day: 'all' });
+      // Calculate initial metrics
+      this.state.allSessions.forEach(s => this.state.participants.add(s.participantId));
+      this.calculateMetrics({ excludeNoise: true, excludeMissed: false, day: 'all', participant: 'all' });
       return this.state;
     },
   
@@ -70,7 +71,7 @@ const DataParser = {
   
     normalizeSession(json) {
       const meta = json.metadata || json; 
-      const payload = json.payload || {}; // Grab actual survey answers too!
+      const payload = json.payload || {}; 
       
       const start = new Date(meta.startedAt || meta.startTime || Date.now()).getTime();
       const end = new Date(meta.completedAt || meta.endTime || Date.now()).getTime();
@@ -87,34 +88,39 @@ const DataParser = {
         latencyMs: latencyMs > 0 ? latencyMs : 0,
         isCompleted: true, 
         isNoise: durationMs < 30000, // Speeding detection
-        ...payload // Spread the actual survey data into the object for CSV export
+        ...payload 
       };
     },
   
     /**
-     * Recalculates all math based on the active UI filters
+     * Recalculates all math based on ALL active UI filters
      */
-    calculateMetrics(filters = { excludeNoise: false, day: 'all' }) {
+    calculateMetrics(filters = { excludeNoise: false, excludeMissed: false, day: 'all', participant: 'all' }) {
       let sessions = this.state.allSessions;
       
-      // Identify unique participants from the WHOLE dataset (to know how many missed)
-      this.state.allSessions.forEach(s => this.state.participants.add(s.participantId));
-      const pCount = this.state.participants.size || 1;
-
-      // 1. Apply Filters
-      if (filters.excludeNoise) {
-        sessions = sessions.filter(s => !s.isNoise);
-      }
+      // 1. Apply Scope Filters (Date & Participant)
       if (filters.day !== 'all') {
         sessions = sessions.filter(s => s.day === parseInt(filters.day, 10));
       }
+      if (filters.participant !== 'all') {
+        sessions = sessions.filter(s => s.participantId === filters.participant);
+      }
+
+      // Calculate Total Noise strictly based on Date/Participant scope 
+      // (We calculate this BEFORE excluding noise so the UI can still show how much noise there *was*)
+      this.state.metrics.totalNoise = sessions.filter(s => s.isNoise).length;
+
+      // 2. Apply Quality Filters
+      if (filters.excludeNoise) {
+        sessions = sessions.filter(s => !s.isNoise);
+      }
       this.state.filteredSessions = sessions;
   
-      // 2. Base Expected Math
+      // 3. Base Expected Math
+      let pCount = filters.participant !== 'all' ? 1 : (this.state.participants.size || 1);
       let expectedPerDay = this.state.studyConfig?.schedule?.windows?.length || 3; 
       let studyDays = this.state.studyConfig?.study?.days || Math.max(...this.state.allSessions.map(s => s.day), 1);
       
-      // If viewing a single day, adjust the expected denominator
       if (filters.day !== 'all') {
         this.state.metrics.totalExpectedPings = pCount * expectedPerDay;
       } else {
@@ -122,29 +128,43 @@ const DataParser = {
       }
 
       this.state.metrics.totalCompleted = sessions.length;
-      this.state.metrics.totalMissed = Math.max(0, this.state.metrics.totalExpectedPings - this.state.metrics.totalCompleted);
+      
+      // Handle the "Exclude Missed" toggle logic
+      if (filters.excludeMissed) {
+          this.state.metrics.totalExpectedPings = this.state.metrics.totalCompleted;
+          this.state.metrics.totalMissed = 0;
+      } else {
+          this.state.metrics.totalMissed = Math.max(0, this.state.metrics.totalExpectedPings - this.state.metrics.totalCompleted);
+      }
+
       this.state.metrics.totalDelivered = this.state.metrics.totalExpectedPings; 
   
       let totalDuration = 0;
       let totalLatency = 0;
-      this.state.metrics.totalNoise = this.state.allSessions.filter(s => s.isNoise).length; // Noise is absolute, not filtered
       this.state.metrics.complianceByDay = {};
       this.state.metrics.latencyByDay = {};
   
       // Setup day buckets based on filter
-      const daysToTrack = filters.day !== 'all' ? [parseInt(filters.day)] : Array.from({length: studyDays}, (_, i) => i + 1);
+      const daysToTrack = filters.day !== 'all' ? [parseInt(filters.day, 10)] : Array.from({length: studyDays}, (_, i) => i + 1);
       daysToTrack.forEach(d => {
-        this.state.metrics.complianceByDay[d] = { completed: 0, missed: pCount * expectedPerDay, latencies: [] };
+        this.state.metrics.complianceByDay[d] = { 
+            completed: 0, 
+            missed: filters.excludeMissed ? 0 : pCount * expectedPerDay, 
+            latencies: [] 
+        };
       });
   
-      // 3. Crunch the filtered sessions
+      // 4. Crunch the final filtered sessions
       sessions.forEach(s => {
         totalDuration += s.durationMs;
         totalLatency += s.latencyMs;
   
         if (this.state.metrics.complianceByDay[s.day]) {
            this.state.metrics.complianceByDay[s.day].completed++;
-           this.state.metrics.complianceByDay[s.day].missed = Math.max(0, this.state.metrics.complianceByDay[s.day].missed - 1);
+           
+           if (!filters.excludeMissed) {
+             this.state.metrics.complianceByDay[s.day].missed = Math.max(0, this.state.metrics.complianceByDay[s.day].missed - 1);
+           }
            this.state.metrics.complianceByDay[s.day].latencies.push(s.latencyMs);
         }
       });
