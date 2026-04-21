@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMA Studio — Keegan Whitacre</title>
+<title>EMA Studio — Builder</title>
 <link rel="stylesheet" href="css/studio.css">
 </head>
 <body>
@@ -178,9 +178,24 @@
           </label>
         </div>
         <div class="field-group" style="margin-top: 16px;">
-          <label class="field-label">Consent Text (HTML allowed)</label>
-          <textarea id="ob-consent-text" style="height: 250px; font-family: var(--font-mono); font-size: 11px;"></textarea>
-          <div class="field-hint">Use &lt;h3&gt; for headers and &lt;p&gt; for paragraphs to maintain styling.</div>
+          <label class="field-label">Informed Consent Document</label>
+          <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
+            
+            <div style="display: flex; gap: 4px; padding: 6px; background: var(--bg-2); border-bottom: 1px solid var(--border);">
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'H3')">Heading</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'P')">Paragraph</button>
+              <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-weight: bold;" onclick="document.execCommand('bold', false, null)">B</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-style: italic;" onclick="document.execCommand('italic', false, null)">I</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; text-decoration: underline;" onclick="document.execCommand('underline', false, null)">U</button>
+              <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('insertUnorderedList', false, null)">• List</button>
+            </div>
+            
+            <div id="ob-consent-text" contenteditable="true" style="height: 250px; padding: 16px; background: var(--bg-surface); color: var(--fg); font-family: var(--font); font-size: 13px; outline: none; overflow-y: auto; line-height: 1.6;"></div>
+          
+          </div>
+          <div class="field-hint" style="margin-top: 6px;">Highlight text and use the formatting bar to style your document. No HTML required.</div>
         </div>
       </div>
     </div>

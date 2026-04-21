@@ -35,7 +35,7 @@ const SCHEMA_VERSION = "1.5.0";
 
 let state = {
   study: {
-    name: "Interoception Study",
+    name: "",
     institution: "",
     theme: "oled",
     accent_color: "#e8716a",
@@ -48,7 +48,7 @@ let state = {
   onboarding: {
     enabled: true,
     ask_schedule: true,
-    consent_text: "<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"
+    consent_text: "<h3>1. Purpose</h3>\n<p>This research investigates daily experiences and mood in real-world settings.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"
   },
 
   modules: [
