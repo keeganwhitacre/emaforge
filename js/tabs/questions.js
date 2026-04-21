@@ -117,7 +117,7 @@ function buildQCard(q, index, displayNum) {
         </div>
       </div>
 
-      <div class="field-group" style="margin-top:10px;">
+      <div class="field-group condition-wrapper" style="margin-top:10px;">
         <label class="field-label">Skip Logic</label>
         ${buildConditionBlock(q, index)}
       </div>
@@ -158,7 +158,7 @@ function buildQCard(q, index, displayNum) {
   if (q.type === 'affect_grid')                         bindAffectGridFields(card, q);
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
 
-  bindConditionBlock(card, q);
+  bindConditionBlock(card, q, index);
   bindSessionSelector(card, q);
 
   return card;
@@ -312,14 +312,35 @@ function bindAffectGridFields(card, q) {
 // ---------------------------------------------------------------------------
 // Skip Logic / Condition block
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Skip Logic / Compound Condition block
+// ---------------------------------------------------------------------------
 function buildConditionBlock(q, index) {
   const priors = state.ema.questions.slice(0, index).filter(p => p.type !== 'page_break' && p.type !== 'checkbox' && p.type !== 'affect_grid');
   if (priors.length === 0) return `<div style="font-size:11px;color:var(--fg-3);padding:4px 0">No prior questions available.</div>`;
-  const has   = !!q.condition;
-  const src   = q.condition?.question_id || priors[0]?.id || '';
-  const qOpts = priors.map(p => `<option value="${p.id}" ${p.id===src?'selected':''}>${escH(p.text?.slice(0,40)||p.id)}</option>`).join('');
-  const ops   = ['eq','neq','gt','gte','lt','lte'].map(op => `<option value="${op}" ${q.condition?.operator===op?'selected':''}>${op}</option>`).join('');
-  const val   = q.condition?.value ?? '';
+
+  // Migrate legacy condition to compound array
+  if (q.condition && !q.condition.rules) {
+    q.condition = { logical_op: 'AND', rules: [q.condition] };
+  }
+
+  const has = !!q.condition;
+  const rules = has ? q.condition.rules : [];
+  const logOp = has ? (q.condition.logical_op || 'AND') : 'AND';
+
+  let rulesHtml = rules.map((r, ri) => {
+    const qOpts = priors.map(p => `<option value="${p.id}" ${p.id===r.question_id?'selected':''}>${escH(p.text?.slice(0,40)||p.id)}</option>`).join('');
+    const ops = ['eq','neq','gt','gte','lt','lte','includes'].map(op => `<option value="${op}" ${r.operator===op?'selected':''}>${op}</option>`).join('');
+    return `
+      <div class="condition-row" data-ri="${ri}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <select class="cond-q" style="flex:1;min-width:0;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">${qOpts}</select>
+        <select class="cond-op" style="padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">${ops}</select>
+        <input type="text" class="cond-val" value="${escH(String(r.value??''))}" placeholder="val" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">
+        <button class="cond-del-rule" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:16px;">✕</button>
+      </div>
+    `;
+  }).join('');
+
   return `
     <div class="q-condition-block">
       <div class="toggle-row">
@@ -327,43 +348,75 @@ function buildConditionBlock(q, index) {
         <label class="toggle"><input type="checkbox" class="cond-enable" ${has?'checked':''}><span class="toggle-track"></span></label>
       </div>
       <div class="cond-fields" style="display:${has?'flex':'none'};flex-direction:column;gap:6px;margin-top:8px;">
-        <div class="condition-row">
-          <select class="cond-q">${qOpts}</select>
-          <select class="cond-op">${ops}</select>
-          <input type="text" class="cond-val" value="${escH(String(val))}" placeholder="value">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <select class="cond-logical-op" style="padding:2px 6px;font-size:11px;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:4px;">
+            <option value="AND" ${logOp==='AND'?'selected':''}>Match ALL rules (AND)</option>
+            <option value="OR"  ${logOp==='OR'?'selected':''}>Match ANY rule (OR)</option>
+          </select>
+          <button class="cond-add-rule" style="font-size:11px;background:none;border:1px solid var(--border);color:var(--accent);border-radius:4px;cursor:pointer;padding:2px 6px;">+ Add Rule</button>
+        </div>
+        <div class="rules-container" style="background:var(--bg-elevated);padding:8px;border-radius:6px;border:1px solid var(--border);">
+          ${rulesHtml || '<div style="font-size:11px;color:var(--fg-3);">No rules defined. Click + Add Rule.</div>'}
         </div>
       </div>
     </div>
   `;
 }
 
-function bindConditionBlock(card, q) {
-  const toggle  = card.querySelector('.cond-enable');
-  const fields  = card.querySelector('.cond-fields');
-  const qSel    = card.querySelector('.cond-q');
-  const opSel   = card.querySelector('.cond-op');
-  const valInp  = card.querySelector('.cond-val');
+function refreshConditionBlock(card, q, index) {
+  const wrapper = card.querySelector('.condition-wrapper');
+  wrapper.innerHTML = `<label class="field-label">Skip Logic</label>` + buildConditionBlock(q, index);
+  bindConditionBlock(card, q, index);
+}
+
+function bindConditionBlock(card, q, index) {
+  const toggle = card.querySelector('.cond-enable');
   if (!toggle) return;
 
   toggle.addEventListener('change', () => {
     if (toggle.checked) {
-      q.condition = { question_id: qSel?.value||'', operator: opSel?.value||'eq', value: valInp?.value||0 };
-      if (fields) fields.style.display = 'flex';
+      q.condition = { logical_op: 'AND', rules: [{ question_id: '', operator: 'eq', value: '' }] };
     } else {
       q.condition = null;
-      if (fields) fields.style.display = 'none';
     }
     schedulePreview();
+    refreshConditionBlock(card, q, index);
   });
-  if (qSel) qSel.addEventListener('change', () => { if (!q.condition) return; q.condition.question_id = qSel.value; schedulePreview(); });
-  if (opSel) opSel.addEventListener('change', () => { if (!q.condition) return; q.condition.operator = opSel.value; schedulePreview(); });
-  if (valInp) valInp.addEventListener('input', () => {
-    if (!q.condition) return;
-    const v = valInp.value;
-    if (v.includes(',')) q.condition.value = v.split(',').map(x => x.trim());
-    else if (v !== '' && !isNaN(Number(v))) q.condition.value = Number(v);
-    else q.condition.value = v;
-    schedulePreview();
+
+  if (!q.condition) return;
+
+  const logOp = card.querySelector('.cond-logical-op');
+  if (logOp) logOp.addEventListener('change', e => { q.condition.logical_op = e.target.value; schedulePreview(); });
+
+  const addBtn = card.querySelector('.cond-add-rule');
+  if (addBtn) addBtn.addEventListener('click', () => {
+    q.condition.rules.push({ question_id: '', operator: 'eq', value: '' });
+    schedulePreview(); 
+    refreshConditionBlock(card, q, index);
+  });
+
+  card.querySelectorAll('.condition-row').forEach((row, i) => {
+    const rule = q.condition.rules[i];
+    const qSel = row.querySelector('.cond-q');
+    const opSel = row.querySelector('.cond-op');
+    const valInp = row.querySelector('.cond-val');
+    const delBtn = row.querySelector('.cond-del-rule');
+
+    qSel.addEventListener('change', e => { rule.question_id = e.target.value; schedulePreview(); });
+    opSel.addEventListener('change', e => { rule.operator = e.target.value; schedulePreview(); });
+    valInp.addEventListener('input', e => {
+      const v = e.target.value;
+      if (v.includes(',')) rule.value = v.split(',').map(x => x.trim());
+      else if (v !== '' && !isNaN(Number(v))) rule.value = Number(v);
+      else rule.value = v;
+      schedulePreview();
+    });
+    delBtn.addEventListener('click', () => {
+      q.condition.rules.splice(i, 1);
+      if (q.condition.rules.length === 0) q.condition = null;
+      schedulePreview(); 
+      refreshConditionBlock(card, q, index);
+    });
   });
 }
 

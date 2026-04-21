@@ -48,8 +48,16 @@ const EMA = (function() {
   let emaResponses     = null;
 
   // -----------------------------------------------------------------------
-  // buildPages — unchanged from v1.3
+  // buildPages — updated for randomization
   // -----------------------------------------------------------------------
+  // Helper to shuffle an array (Fisher-Yates)
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
   function buildPages(windowId, blockDir) {
     emaPages = [];
     let currentBlock = [];
@@ -57,6 +65,8 @@ const EMA = (function() {
     config.ema.questions.forEach(q => {
       if (q.type === 'page_break') {
         if (currentBlock.length > 0) {
+          // Shuffle the block if the config allows it
+          if (config.ema.randomize_questions) shuffleArray(currentBlock);
           emaPages.push(currentBlock);
           currentBlock = [];
         }
@@ -77,7 +87,10 @@ const EMA = (function() {
       }
     });
 
-    if (currentBlock.length > 0) emaPages.push(currentBlock);
+    if (currentBlock.length > 0) {
+      if (config.ema.randomize_questions) shuffleArray(currentBlock);
+      emaPages.push(currentBlock);
+    }
   }
 
   function recordResponse(qid, value) {
@@ -674,6 +687,10 @@ const EMA = (function() {
 
       buildPages(windowId, blockDir);
       currentPageIndex = 0;
+      
+      // Take a snapshot of the exact 2D array layout of questions 
+      // so researchers know the visual order if randomized.
+      emaResponses.presentationOrder = emaPages.map(page => page.map(q => q.id));
 
       if (emaPages.length === 0) {
         emaResponses.submittedAt = emaResponses.startedAt;

@@ -99,7 +99,16 @@ function bindStudyTab() {
       schedulePreview();
     });
   }
-}
+// v1.5 EMA Randomization
+  const randEl = document.getElementById('ema-randomize');
+  if (randEl) {
+    randEl.checked = !!state.ema.randomize_questions;
+    randEl.addEventListener('change', e => {
+      state.ema.randomize_questions = e.target.checked;
+      schedulePreview();
+    });
+  }
+} 
 
 // Dynamically generate greeting inputs based on schedule windows.
 // Also prunes orphan greetings (keys whose windows no longer exist) — keeps

@@ -60,9 +60,23 @@ function show(id) {
 
 function evalCond(cond, responses) {
   if (!cond) return true;
+  
+  // 1. Handle new Compound Logic (AND / OR)
+  if (cond.logical_op && Array.isArray(cond.rules)) {
+    if (cond.rules.length === 0) return true;
+    if (cond.logical_op === 'OR') {
+      return cond.rules.some(rule => evalCond(rule, responses));
+    } else {
+      // Default to AND
+      return cond.rules.every(rule => evalCond(rule, responses));
+    }
+  }
+
+  // 2. Handle legacy/single condition parsing
   const rec = responses[cond.question_id];
   const val = rec && typeof rec === 'object' ? rec.value : rec;
   if (val === undefined || val === null || val === '') return false;
+  
   const cv = cond.value;
   switch(cond.operator) {
     case 'eq':  return val == cv;
@@ -273,6 +287,7 @@ const Upload = {
       'session_started_at', 'session_submitted_at',
       'phase_started_at', 'phase_submitted_at',
       'question_id', 'question_text', 'question_type',
+      'presentation_order',
       'response_value', 'response_numeric', 'response_latency_ms'
     ];
 
@@ -293,6 +308,14 @@ const Upload = {
         const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
         const latency = (phaseStartMs && respAt) ? (Date.parse(respAt) - phaseStartMs) : '';
 
+        // Flatten the 2D layout and find exactly where this question appeared
+        let presOrder = '';
+        if (entry.presentationOrder) {
+          const flatLayout = entry.presentationOrder.flat();
+          const idx = flatLayout.indexOf(qid);
+          if (idx !== -1) presOrder = idx + 1; // 1-indexed for easy reading
+        }
+
         rows.push([
           sessionData.schemaVersion || '',
           sessionData.studyName || '',
@@ -310,8 +333,9 @@ const Upload = {
           qid,
           q.text || '',
           q.type || '',
-          this._serializeValue(rawVal),
-          this._toNumeric(rawVal),
+          presOrder, // <--- ADD THIS HERE
+          Upload._serializeValue(rawVal),
+          Upload._toNumeric(rawVal),
           latency
         ]);
       });

@@ -246,16 +246,22 @@ function buildStepControls(step, w, si) {
 }
 
 // ---------------------------------------------------------------------------
-// buildConditionRow — optional gate condition for task steps
+// buildConditionRow — optional compound gate condition for task steps
 // ---------------------------------------------------------------------------
 function buildConditionRow(step, w) {
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
 
+  // Migrate legacy
+  if (step.condition && !step.condition.rules) {
+    step.condition = { logical_op: 'AND', rules: [step.condition] };
+  }
+
+  const hasCondition = !!step.condition;
+  
   // Toggle
   const toggleRow = document.createElement('div');
   toggleRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  const hasCondition = !!step.condition;
   toggleRow.innerHTML = `
     <input type="checkbox" class="cond-toggle" ${hasCondition?'checked':''} style="accent-color:var(--accent);cursor:pointer;">
     <span style="font-size:0.78rem;color:var(--fg-muted);">Run conditionally</span>
@@ -265,60 +271,85 @@ function buildConditionRow(step, w) {
   const condFields = document.createElement('div');
   condFields.style.cssText = `display:${hasCondition?'flex':'none'};flex-direction:column;gap:4px;margin-top:2px;padding:8px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border);`;
 
-  function getQuestionOptions() {
+  function getQuestionOptions(selectedId) {
     const allQ = state.ema.questions.filter(q => q.type !== 'page_break' && q.type !== 'checkbox' && q.type !== 'choice' && q.type !== 'affect_grid');
-    return allQ.map(q => `<option value="${q.id}" ${step.condition?.question_id===q.id?'selected':''}>${escH(q.text?.slice(0,40)||q.id)}</option>`).join('');
+    return allQ.map(q => `<option value="${q.id}" ${selectedId===q.id?'selected':''}>${escH(q.text?.slice(0,40)||q.id)}</option>`).join('');
   }
 
-  condFields.innerHTML = `
-    <div style="display:flex;gap:6px;align-items:center;">
+  const logOp = step.condition?.logical_op || 'AND';
+  const rules = step.condition?.rules || [];
+
+  let rulesHtml = rules.map((r, ri) => `
+    <div class="task-cond-rule" data-ri="${ri}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
       <label style="font-size:0.75rem;color:var(--fg-muted);flex-shrink:0;">If</label>
       <select class="cond-qid" style="flex:1;min-width:0;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.78rem;outline:none;">
         <option value="">— question —</option>
-        ${getQuestionOptions()}
+        ${getQuestionOptions(r.question_id)}
       </select>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <select class="cond-op" style="flex:1;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.78rem;outline:none;">
-        <option value="gt"  ${step.condition?.operator==='gt'?'selected':''}>&gt; greater than</option>
-        <option value="gte" ${step.condition?.operator==='gte'?'selected':''}>≥ at least</option>
-        <option value="lt"  ${step.condition?.operator==='lt'?'selected':''}>&lt; less than</option>
-        <option value="lte" ${step.condition?.operator==='lte'?'selected':''}>≤ at most</option>
-        <option value="eq"  ${step.condition?.operator==='eq'?'selected':''}>= equals</option>
-        <option value="neq" ${step.condition?.operator==='neq'?'selected':''}>≠ not equals</option>
+      <select class="cond-op" style="width:50px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.78rem;outline:none;">
+        <option value="gt"  ${r.operator==='gt'?'selected':''}>&gt;</option>
+        <option value="gte" ${r.operator==='gte'?'selected':''}>≥</option>
+        <option value="lt"  ${r.operator==='lt'?'selected':''}>&lt;</option>
+        <option value="lte" ${r.operator==='lte'?'selected':''}>≤</option>
+        <option value="eq"  ${r.operator==='eq'?'selected':''}>=</option>
+        <option value="neq" ${r.operator==='neq'?'selected':''}>≠</option>
       </select>
-      <input type="number" class="cond-val" value="${step.condition?.value??''}" placeholder="value"
-        style="width:70px;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font-mono);font-size:0.78rem;outline:none;">
+      <input type="number" class="cond-val" value="${r.value??''}" placeholder="val"
+        style="width:50px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font-mono);font-size:0.78rem;outline:none;">
+      <button class="cond-del-rule" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;">✕</button>
     </div>
-    <div style="font-size:0.72rem;color:var(--fg-muted);">Evaluates against the response collected earlier in this session. HR captures report BPM as their value.</div>
+  `).join('');
+
+  condFields.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <select class="cond-logical-op" style="padding:2px 6px;font-size:11px;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:4px;">
+        <option value="AND" ${logOp==='AND'?'selected':''}>Match ALL (AND)</option>
+        <option value="OR"  ${logOp==='OR'?'selected':''}>Match ANY (OR)</option>
+      </select>
+      <button class="cond-add-rule" style="font-size:11px;background:none;border:1px solid var(--border);color:var(--accent);border-radius:4px;cursor:pointer;padding:2px 6px;">+ Rule</button>
+    </div>
+    <div class="rules-container">${rulesHtml || '<div style="font-size:11px;color:var(--fg-3);">No rules defined.</div>'}</div>
+    <div style="font-size:0.72rem;color:var(--fg-muted);margin-top:4px;">Evaluates against the responses collected earlier in this session.</div>
   `;
   wrap.appendChild(condFields);
 
+  // BINDINGS
   toggleRow.querySelector('.cond-toggle').addEventListener('change', e => {
     if (e.target.checked) {
-      step.condition = { question_id: '', operator: 'gt', value: 0 };
-      condFields.style.display = 'flex';
+      step.condition = { logical_op: 'AND', rules: [{ question_id: '', operator: 'gt', value: 0 }] };
     } else {
       step.condition = null;
-      condFields.style.display = 'none';
     }
     schedulePreview();
+    const container = wrap.closest('.step-list');
+    if (container) renderStepList(container, w); 
   });
 
-  condFields.querySelector('.cond-qid').addEventListener('change', e => {
-    if (!step.condition) step.condition = { operator: 'gt', value: 0 };
-    step.condition.question_id = e.target.value;
-    schedulePreview();
+  if (!step.condition) return wrap;
+
+  condFields.querySelector('.cond-logical-op').addEventListener('change', e => {
+    step.condition.logical_op = e.target.value; schedulePreview();
   });
-  condFields.querySelector('.cond-op').addEventListener('change', e => {
-    if (!step.condition) step.condition = { question_id: '', value: 0 };
-    step.condition.operator = e.target.value;
+
+  condFields.querySelector('.cond-add-rule').addEventListener('click', () => {
+    step.condition.rules.push({ question_id: '', operator: 'gt', value: 0 });
     schedulePreview();
+    const container = wrap.closest('.step-list');
+    if (container) renderStepList(container, w); 
   });
-  condFields.querySelector('.cond-val').addEventListener('input', e => {
-    if (!step.condition) step.condition = { question_id: '', operator: 'gt' };
-    step.condition.value = parseFloat(e.target.value) ?? 0;
-    schedulePreview();
+
+  condFields.querySelectorAll('.task-cond-rule').forEach((row, i) => {
+    const rule = step.condition.rules[i];
+    row.querySelector('.cond-qid').addEventListener('change', e => { rule.question_id = e.target.value; schedulePreview(); });
+    row.querySelector('.cond-op').addEventListener('change', e => { rule.operator = e.target.value; schedulePreview(); });
+    row.querySelector('.cond-val').addEventListener('input', e => { rule.value = parseFloat(e.target.value) ?? 0; schedulePreview(); });
+    row.querySelector('.cond-del-rule').addEventListener('click', () => {
+      step.condition.rules.splice(i, 1);
+      if (step.condition.rules.length === 0) step.condition = null;
+      schedulePreview();
+      const container = wrap.closest('.step-list');
+      if (container) renderStepList(container, w);
+    });
   });
 
   return wrap;
