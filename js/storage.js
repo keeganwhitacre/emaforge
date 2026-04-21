@@ -58,18 +58,20 @@ const StorageManager = {
     // Handles schema migrations forward; refuses to load backups from the future.
     // -----------------------------------------------------------------------
     mergeState(saved) {
+        // Fallback to global SCHEMA_VERSION if defined, otherwise 1.0.0
+        const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
         const savedVer = saved.schema_version || saved._schema_version || '1.0.0';
-        const cmp = this._compareVersions(savedVer, SCHEMA_VERSION);
+        const cmp = this._compareVersions(savedVer, currentVersion);
 
         if (cmp > 0) {
-            console.warn(`EMA Studio: saved project is schema v${savedVer}, runtime is v${SCHEMA_VERSION}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
+            console.warn(`EMA Studio: saved project is schema v${savedVer}, runtime is v${currentVersion}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Incompatible backup'; status.style.color = 'var(--accent-red)'; }
             return;
         }
 
         if (cmp < 0) {
-            console.info(`EMA Studio: migrating project from schema v${savedVer} to v${SCHEMA_VERSION}.`);
+            console.info(`EMA Studio: migrating project from schema v${savedVer} to v${currentVersion}.`);
         }
 
         ['study', 'onboarding', 'ema'].forEach(key => {
@@ -117,9 +119,10 @@ const StorageManager = {
 
     saveLocalState() {
         try {
+            const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
             // Stamp the schema version into the saved state so future loads
             // can version-check.
-            const toSave = Object.assign({}, state, { schema_version: SCHEMA_VERSION });
+            const toSave = Object.assign({}, state, { schema_version: currentVersion });
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Up to date'; status.style.color = ''; }
@@ -130,7 +133,8 @@ const StorageManager = {
 
     saveProject() {
         if (typeof state === 'undefined') return;
-        const toSave = Object.assign({}, state, { schema_version: SCHEMA_VERSION });
+        const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
+        const toSave = Object.assign({}, state, { schema_version: currentVersion });
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(toSave, null, 2));
         const a = document.createElement('a');
         a.setAttribute("href", dataStr);
@@ -212,6 +216,5 @@ const StorageManager = {
     }
 };
 
-// Kick off storage initialization at page load — exposed as a one-liner so
-// builder.html can choose ordering.
-document.addEventListener('DOMContentLoaded', () => StorageManager.init());
+// Initialize immediately so state is loaded BEFORE the inline script in builder.html triggers renders
+StorageManager.init();

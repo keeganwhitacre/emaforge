@@ -430,6 +430,7 @@ function collectDeviceMetadata() {
   if (urlPid) {
     pidInput.value = urlPid;
     document.getElementById('participant-input-group').style.display = 'none';
+    startBtn.disabled = false;
   }
   if (urlDay) {
     const dl = document.getElementById('day-label');
