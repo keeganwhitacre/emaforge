@@ -35,9 +35,13 @@ const DataParser = {
           reader.onload = (e) => {
             try {
               const json = JSON.parse(e.target.result);
-              if (json.schedule && json.study) {
+              
+              // 1. Detect if this is the config.json file
+              if (json.schema_version && json.ema && json.ema.scheduling) {
                 this.state.studyConfig = json;
-              } else if (json.metadata || json.participantId) {
+              } 
+              // 2. Otherwise, treat it as a participant session payload
+              else if (json.participantId || json.sessionId) {
                 this.state.allSessions.push(this.normalizeSession(json));
               }
             } catch (err) {
@@ -70,25 +74,24 @@ const DataParser = {
     },
   
     normalizeSession(json) {
-      const meta = json.metadata || json; 
-      const payload = json.payload || {}; 
-      
-      const start = new Date(meta.startedAt || meta.startTime || Date.now()).getTime();
-      const end = new Date(meta.completedAt || meta.endTime || Date.now()).getTime();
-      const delivered = new Date(meta.promptDeliveredAt || meta.scheduledTime || start).getTime();
+      const start = new Date(json.startedAt || Date.now()).getTime();
+      const end = new Date(json.completedAt || Date.now()).getTime();
   
       const durationMs = end - start;
-      const latencyMs = start - delivered;
+      
+      // Note: Latency (time from SMS delivery to app open) requires backend logs.
+      // For pure client-side data, we leave it at 0 until external notification data is merged.
+      const latencyMs = 0; 
   
       return {
-        participantId: meta.participantId || meta.id || 'Unknown',
-        day: parseInt(meta.dayNumber || meta.day || 1, 10),
-        sessionType: meta.sessionType || meta.session || 'unknown',
+        participantId: json.participantId || 'Unknown',
+        day: parseInt(json.day || 1, 10),
+        sessionType: json.type || 'unknown',
         durationMs: durationMs > 0 ? durationMs : 0,
-        latencyMs: latencyMs > 0 ? latencyMs : 0,
-        isCompleted: true, 
-        isNoise: durationMs < 30000, // Speeding detection
-        ...payload 
+        latencyMs: latencyMs,
+        isCompleted: json.status === "complete", 
+        isNoise: durationMs < 30000, // Speeding detection (<30s for a whole session)
+        data: json.data || []
       };
     },
   
@@ -107,7 +110,6 @@ const DataParser = {
       }
 
       // Calculate Total Noise strictly based on Date/Participant scope 
-      // (We calculate this BEFORE excluding noise so the UI can still show how much noise there *was*)
       this.state.metrics.totalNoise = sessions.filter(s => s.isNoise).length;
 
       // 2. Apply Quality Filters
@@ -118,13 +120,15 @@ const DataParser = {
   
       // 3. Base Expected Math
       let pCount = filters.participant !== 'all' ? 1 : (this.state.participants.size || 1);
-      let expectedPerDay = this.state.studyConfig?.schedule?.windows?.length || 3; 
-      let studyDays = this.state.studyConfig?.study?.days || Math.max(...this.state.allSessions.map(s => s.day), 1);
+      let expectedPerDay = this.state.studyConfig?.ema?.scheduling?.windows?.length || 3; 
+      
+      // Calculate based on the CURRENT day, not the total future length of the study
+      let currentDay = Math.max(...this.state.allSessions.map(s => s.day), 1);
       
       if (filters.day !== 'all') {
         this.state.metrics.totalExpectedPings = pCount * expectedPerDay;
       } else {
-        this.state.metrics.totalExpectedPings = pCount * studyDays * expectedPerDay;
+        this.state.metrics.totalExpectedPings = pCount * currentDay * expectedPerDay;
       }
 
       this.state.metrics.totalCompleted = sessions.length;
@@ -144,8 +148,8 @@ const DataParser = {
       this.state.metrics.complianceByDay = {};
       this.state.metrics.latencyByDay = {};
   
-      // Setup day buckets based on filter
-      const daysToTrack = filters.day !== 'all' ? [parseInt(filters.day, 10)] : Array.from({length: studyDays}, (_, i) => i + 1);
+      // Setup day buckets based on filter (ONLY track up to currentDay)
+      const daysToTrack = filters.day !== 'all' ? [parseInt(filters.day, 10)] : Array.from({length: currentDay}, (_, i) => i + 1);
       daysToTrack.forEach(d => {
         this.state.metrics.complianceByDay[d] = { 
             completed: 0, 

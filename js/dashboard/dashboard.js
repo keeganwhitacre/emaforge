@@ -143,34 +143,110 @@ const AppUI = {
     }
   },
 
+  _toNumeric(val) {
+    if (val === null || val === undefined || val === '') return '';
+    if (Array.isArray(val)) return '';
+    const n = Number(val);
+    return Number.isFinite(n) ? n : '';
+  },
+
+  _serializeValue(val) {
+    if (val === null || val === undefined) return '';
+    if (Array.isArray(val)) return val.join(';');
+    if (val && typeof val === 'object' && 'valence' in val && 'arousal' in val) {
+      return `${val.valence};${val.arousal}`;
+    }
+    return String(val);
+  },
+
+  _csvEscape(val) {
+    const s = String(val ?? '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  },
+
   exportToCSV() {
     const sessions = DataParser.state.filteredSessions;
     if (sessions.length === 0) return alert("No data available to export.");
 
-    const headerSet = new Set();
-    sessions.forEach(s => Object.keys(s).forEach(k => headerSet.add(k)));
-    const headers = Array.from(headerSet);
+    const cfg = DataParser.state.studyConfig || {};
+    
+    // Build question lookup index
+    const qIdx = {};
+    (cfg.ema?.questions || []).forEach(q => {
+      if (q.type !== 'page_break') qIdx[q.id] = q;
+    });
+    const windows = cfg.ema?.scheduling?.windows || [];
 
-    const csvRows = [];
-    csvRows.push(headers.join(',')); 
+    const header = [
+      'participant_id', 'day', 'session_id', 'window_id', 'window_label', 'block',
+      'session_started_at', 'session_submitted_at',
+      'phase_started_at', 'phase_submitted_at',
+      'question_id', 'question_text', 'question_type', 'presentation_order',
+      'response_value', 'response_numeric', 'response_latency_ms'
+    ];
 
-    sessions.forEach(session => {
-        const values = headers.map(header => {
-            const val = session[header];
-            if (typeof val === 'string') return `"${val.replace(/"/g, '""')}"`;
-            if (val === undefined || val === null) return "";
-            return val;
+    const rows = [];
+    rows.push(header.map(this._csvEscape.bind(this)).join(','));
+
+    // Flatten all nested EMA responses across all JSON files into a long-format array
+    sessions.forEach(sessionData => {
+      const emaEntries = (sessionData.data || []).filter(e => e && e.type === 'ema_response');
+
+      emaEntries.forEach(entry => {
+        const wId  = entry.windowId || '';
+        const wCfg = windows.find(w => w.id === wId);
+        const wLabel = wCfg ? wCfg.label : '';
+        const phaseStart = entry.startedAt || '';
+        const phaseSubmit = entry.submittedAt || '';
+        const phaseStartMs = phaseStart ? Date.parse(phaseStart) : null;
+
+        Object.entries(entry.responses || {}).forEach(([qid, rec]) => {
+          const q = qIdx[qid] || {};
+          const rawVal = (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
+          const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
+          const latency = (phaseStartMs && respAt) ? (Date.parse(respAt) - phaseStartMs) : '';
+
+          let presOrder = '';
+          if (entry.presentationOrder) {
+            const flatLayout = entry.presentationOrder.flat();
+            const idx = flatLayout.indexOf(qid);
+            if (idx !== -1) presOrder = idx + 1;
+          }
+
+          const rowData = [
+            sessionData.participantId,
+            sessionData.day,
+            sessionData.sessionId || '',
+            wId,
+            wLabel,
+            entry.block || '',
+            sessionData.startedAt || sessionData.startTime || '',
+            sessionData.completedAt || sessionData.endTime || '',
+            phaseStart,
+            phaseSubmit,
+            qid,
+            q.text || '',
+            q.type || '',
+            presOrder,
+            this._serializeValue(rawVal),
+            this._toNumeric(rawVal),
+            latency
+          ];
+          rows.push(rowData.map(this._csvEscape.bind(this)).join(','));
         });
-        csvRows.push(values.join(','));
+      });
     });
 
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv' });
+    const csvString = rows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     
     const a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'ema_studio_export.csv');
+    a.href = url;
+    a.download = `ema_master_dataset_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
   },
 
@@ -244,7 +320,8 @@ const AppUI = {
         ? `Local File Analysis — ${data.participants.size} Active Participants`
         : `Local File Analysis — Isolating Participant ${cohortFilter}`;
     
-    const studyDays = data.studyConfig?.study?.days || Object.keys(data.metrics.complianceByDay).length;
+    const studyDays = data.studyConfig?.ema?.scheduling?.study_days || Object.keys(data.metrics.complianceByDay).length;
+    
     const currentDay = Math.max(...data.allSessions.map(s => s.day), 1);
     const pct = Math.round((currentDay / studyDays) * 100);
     
@@ -365,10 +442,11 @@ const AppUI = {
 
     const currentDayFilter = document.getElementById('filter-date').value;
     const isExcludeMissed = document.getElementById('toggle-exclude-missed').checked;
-    const expectedPerDay = data.studyConfig?.schedule?.windows?.length || 3;
-    const studyDays = data.studyConfig?.study?.days || 14;
+    const expectedPerDay = data.studyConfig?.ema?.scheduling?.windows?.length || 3;
     
-    const expectedPerP = currentDayFilter === 'all' ? (studyDays * expectedPerDay) : expectedPerDay;
+    // Evaluate against current day, not total study days
+    const currentDay = Math.max(...data.allSessions.map(s => s.day), 1);
+    const expectedPerP = currentDayFilter === 'all' ? (currentDay * expectedPerDay) : expectedPerDay;
 
     const rows = Object.keys(pStats).map(pId => {
       const comp = pStats[pId].completed;
