@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Testing Stduy</title>
-  <script>window.__CONFIG__ = {"schema_version":"1.4.0","study":{"name":"Testing Stduy","institution":"","theme":"light","accent_color":"#c3d117","output_format":"csv","greetings":{"w1":"Good Morning","w2":"Check-In","w3":"Good Evening"},"completion_lock":true,"resume_enabled":true},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q13","type":"page_break","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q12","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q14","type":"affect_grid","text":"Right now, how are you feeling?","valence_labels":["Unpleasant","Pleasant"],"arousal_labels":["Deactivated","Activated"],"show_quadrant_labels":true,"required":true,"condition":null,"block":"pre","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Morning","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true},"phase_sequence":[{"kind":"ema","block":"pre"},{"kind":"task","id":"epat"},{"kind":"ema","block":"post"}]},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":20,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}}};</script>
+  <title>Testing</title>
+  <script>window.__CONFIG__ = {"schema_version":"1.4.0","study":{"name":"Testing","institution":"","theme":"light","accent_color":"#7b219f","output_format":"csv","completion_lock":true,"resume_enabled":true,"greetings":{"w1":"Good Morning","w2":"Check-In","w3":"Good Evening"}},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":10,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q12","type":"page_break","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":10,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"pre","windows":null},{"id":"q13","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"pre","windows":null},{"id":"q14","type":"page_break","windows":null},{"id":"q11","type":"affect_grid","text":"Right now, how are you feeling?","valence_labels":["Unpleasant","Pleasant"],"arousal_labels":["Deactivated","Activated"],"show_quadrant_labels":true,"required":true,"condition":null,"block":"both","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Session 1","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true},"phase_sequence":[{"kind":"ema","block":"pre"},{"kind":"task","id":"epat"},{"kind":"ema","block":"post"}]},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":20,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}}};</script>
   <script>
 /* ============================================================
  * epat-core.js
@@ -642,44 +642,39 @@
 })();
 
 </script>
-  <style>:root{--accent: #c3d117; --accent-hover: #afbd03; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #f9f9fb; --bg-surface: #ffffff; --bg-elevated: #f0f0f4; --border: #e0e0e5; --fg: #1c1c1e; --fg-muted: #8e8e93;}
+  <style>:root{--accent: #7b219f; --accent-hover: #670d8b; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #f9f9fb; --bg-surface: #ffffff; --bg-elevated: #f0f0f4; --border: #e0e0e5; --fg: #1c1c1e; --fg-muted: #8e8e93;}
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 
-    /* Screen transitions */
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
     .screen.active { opacity: 1; pointer-events: all; }
 
-    /* Typography */
     h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--fg); text-align: center; }
     h2 { font-size: 1.1rem; font-weight: 400; color: var(--fg-muted); margin-bottom: 32px; letter-spacing: -0.01em; text-align: center; }
     p { font-size: 1.05rem; line-height: 1.5; color: var(--fg-muted); margin-bottom: 24px; font-weight: 400; text-align: center; }
     .label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; text-align: center; }
-
-    /* Institution branding label on PID screen */
     .institution-label { font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; text-align: center; opacity: 0.8; }
 
-    /* Buttons */
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 18px 28px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:disabled { background: var(--bg-elevated); color: var(--fg-muted); }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    .btn-primary:active { background: var(--accent-hover); }
+    .btn-primary:disabled { background: var(--bg-elevated); color: var(--fg-muted); box-shadow: none; }
     .btn-secondary { background: var(--bg-surface); color: var(--fg); border: 1px solid var(--border); }
+    .btn-secondary:active { background: var(--bg-elevated); }
     .btn-block { width: 100%; margin-top: auto; flex-shrink: 0; }
 
-    /* PID input */
     .input-group { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px; }
     .input-group input { width: 100%; padding: 18px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1.1rem; outline: none; transition: border-color 0.2s, background 0.2s; }
     .input-group input:focus { border-color: var(--accent); background: var(--bg-elevated); }
 
-    /* ======== EMA SCREEN ======== */
+    /* EMA */
     .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
     .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
     .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding: 8px 4px; }
     .ema-question { font-size: 1.15rem; font-weight: 500; color: var(--fg); margin-bottom: 24px; line-height: 1.4; text-align: left; }
 
-    /* Slider */
     .slider-group { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
     .slider-val-display { font-size: 2.2rem; font-weight: 600; color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
     .range-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--bg-elevated); border-radius: 3px; outline: none; }
@@ -687,38 +682,36 @@
     .range-slider::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
     .slider-labels { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--fg-muted); padding: 0 4px; }
 
-    /* Choice / Checkbox pills */
     .choice-group { display: flex; flex-direction: column; gap: 10px; }
-    .choice-btn { display: block; width: 100%; padding: 16px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; font-weight: 500; text-align: left; cursor: pointer; transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent; }
-    .choice-btn:hover { border-color: var(--fg-muted); background: var(--bg-elevated); }
+    .choice-btn { display: block; width: 100%; padding: 16px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; font-weight: 500; text-align: left; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
     .choice-btn:active { transform: scale(0.99); }
     .choice-btn.selected { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent); font-weight: 600; }
     .choice-btn.selected::before { content: '✓'; display: inline-block; margin-right: 10px; color: var(--accent); font-weight: 700; }
 
-    /* Text / numeric input */
     .text-group { width: 100%; }
     .text-input { width: 100%; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; outline: none; transition: border-color 0.2s, background 0.2s; }
     .text-input:focus { border-color: var(--accent); background: var(--bg-elevated); }
 
-    /* ======== ONBOARDING ======== */
+    /* Onboarding */
     .ob-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 20px; flex-shrink: 0; }
     .ob-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; }
     .consent-scroll-hint { font-size: 0.8rem; color: var(--accent); text-align: center; margin-bottom: 8px; transition: opacity 0.3s; }
-    .consent-scroll { flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-y: auto; margin-bottom: 16px; color: var(--fg); font-size: 0.95rem; line-height: 1.6; text-align: left; }
+    .consent-scroll { flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-y: auto; margin-bottom: 16px; font-size: 0.95rem; line-height: 1.6; text-align: left; -webkit-user-select: text; user-select: text; min-height: 0; }
     .consent-scroll h3 { font-size: 1rem; font-weight: 600; margin: 16px 0 8px 0; color: var(--fg); text-align: left; }
-    .consent-scroll p { font-size: 0.95rem; color: var(--fg); margin-bottom: 12px; text-align: left; }
-    .checkbox-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; margin-bottom: 12px; width: 100%; max-width: 340px; margin-left: auto; margin-right: auto; transition: opacity 0.3s, pointer-events 0.3s; }
+    .consent-scroll h3:first-child { margin-top: 0; }
+    .consent-scroll p { font-size: 0.95rem; color: var(--fg-muted); margin-bottom: 12px; text-align: left; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; margin-bottom: 12px; width: 100%; max-width: 340px; margin-left: auto; margin-right: auto; }
     .checkbox-row input[type="checkbox"] { width: 24px; height: 24px; flex-shrink: 0; margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
     .checkbox-row span { font-size: 0.95rem; color: var(--fg-muted); line-height: 1.5; text-align: left; }
     .ob-input { width: 100%; max-width: 340px; margin: 0 auto 20px; display: block; }
-    .ob-input input { width: 100%; padding: 16px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1.05rem; outline: none; transition: border-color 0.2s, background 0.2s; }
+    .ob-input input { width: 100%; padding: 16px; text-align: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1.05rem; outline: none; transition: border-color 0.2s; }
     .ob-input input:focus { border-color: var(--accent); background: var(--bg-elevated); }
     .ob-input input:disabled { opacity: 0.5; }
 
     .schedule-section { width: 100%; max-width: 340px; margin: 0 auto 28px; }
     .schedule-label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; }
     .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-    .day-btn { padding: 10px 0; border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border); color: var(--fg-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .day-btn { padding: 10px 0; border-radius: 8px; background: var(--bg-surface); border: 1px solid var(--border); color: var(--fg-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
     .day-btn.selected { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent); }
     .time-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .time-row-label { width: 76px; font-size: 0.82rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
@@ -726,50 +719,75 @@
     .time-sep { color: var(--fg-muted); font-size: 0.85rem; flex-shrink: 0; }
 
     .check-list { width: 100%; max-width: 340px; margin: 0 auto 16px; }
-    .check-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; font-size: 0.95rem; color: var(--fg); }
-    .check-item.pass { border-color: var(--accent-green); color: var(--accent-green); }
-    .check-item.fail { border-color: var(--accent-red); color: var(--accent-red); }
-    .check-item.testing { border-color: var(--accent); color: var(--accent); }
+    .check-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; transition: border-color 0.3s; }
+    .check-item.pass { border-color: var(--accent-green); }
+    .check-item.fail { border-color: var(--accent-red); }
+    .check-item.testing { border-color: var(--accent); }
+    .check-icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); font-size: 0.9rem; }
+    .check-item.pass .check-icon { background: rgba(50,215,75,0.15); }
+    .check-item.fail .check-icon { background: rgba(255,69,58,0.15); }
+    .check-info { flex: 1; }
+    .check-title { font-size: 0.95rem; font-weight: 600; color: var(--fg); }
+    .check-status { font-size: 0.8rem; color: var(--fg-muted); margin-top: 2px; }
+    .check-item.pass .check-status { color: var(--accent-green); }
+    .check-item.fail .check-status { color: var(--accent-red); }
 
-    /* ======== ePAT SCREENS ======== */
-    .progress-ring { position: relative; width: 180px; height: 180px; margin: 0 auto; }
-    .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .progress-ring circle { fill: none; stroke-width: 8; }
-    .progress-ring circle.track { stroke: var(--bg-surface); }
-    .progress-ring circle.fill { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 534; stroke-dashoffset: 534; transition: stroke-dashoffset 0.5s linear; }
-    .baseline-bpm-box { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .baseline-bpm-number { font-size: 3rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
-    .baseline-bpm-label { font-size: 0.85rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    /* ePAT — Baseline */
+    .progress-ring { position: relative; width: 180px; height: 180px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .progress-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); z-index: 2; width: 100%; height: 100%; }
+    .progress-ring circle { fill: none; stroke-width: 3; }
+    .progress-ring circle.track { stroke: var(--bg-elevated); }
+    .progress-ring circle.fill { stroke: var(--accent); stroke-dasharray: 534; stroke-dashoffset: 534; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .baseline-bpm-box { text-align: center; z-index: 3; }
+    .baseline-bpm-number { font-size: 3.8rem; font-weight: 500; font-family: var(--font-mono); color: var(--fg); line-height: 1; letter-spacing: -0.04em; }
+    .baseline-bpm-label { font-size: 0.8rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
 
-    .rotary-dial { width: 220px; height: 220px; border-radius: 50%; background: var(--bg-surface); border: 2px solid var(--border); position: relative; cursor: grab; touch-action: none; }
-    .rotary-dial:active { cursor: grabbing; }
-    .rotary-dial-ticks { position: absolute; inset: 0; }
-    .dial-tick { position: absolute; top: 4px; left: 50%; width: 2px; height: 8px; background: var(--fg-muted); transform-origin: 50% 106px; }
+    /* ePAT — Trial */
+    #screen-trial { align-items: center; justify-content: center; }
+    .trial-instruction { font-size: 1.1rem; color: var(--fg-muted); text-align: center; max-width: 300px; line-height: 1.4; margin-bottom: 40px; font-weight: 400; }
 
-    .movement-warning { position: absolute; top: calc(env(safe-area-inset-top, 24px) + 80px); left: 50%; transform: translateX(-50%); background: var(--accent-red); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-    .movement-warning.active { opacity: 1; }
+    .rotary-dial-wrapper { position: relative; width: 280px; height: 280px; margin: 0 auto 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; user-select: none; }
+    .rotary-dial-ticks { position: absolute; inset: 0; pointer-events: none; border-radius: 50%; z-index: 1; }
+    .dial-tick { position: absolute; width: 2px; height: 6px; background: var(--border); top: 8px; left: 50%; transform-origin: 50% 132px; margin-left: -1px; transition: background 0.2s; }
 
-    .sensor-warning-overlay { position: fixed; bottom: 100px; right: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 10; }
+    .rotary-dial { width: 160px; height: 160px; border-radius: 50%; background: linear-gradient(145deg, #1f1f23, #121214); box-shadow: 8px 8px 16px rgba(0,0,0,0.8), -4px -4px 12px rgba(255,255,255,0.03), inset 0 2px 4px rgba(255,255,255,0.05); border: 1px solid var(--border); position: relative; touch-action: none; cursor: grab; z-index: 2; display: flex; align-items: center; justify-content: center; }
+    .rotary-dial:active { cursor: grabbing; background: linear-gradient(145deg, #1a1a1d, #0f0f11); }
+    .rotary-dial-indicator { position: absolute; top: 12px; left: 50%; width: 4px; height: 24px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(232, 113, 106, 0.6); }
+    .dial-labels { display: flex; justify-content: space-between; width: 100%; max-width: 280px; margin: 0 auto; font-size: 0.85rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .movement-warning { position: fixed; top: calc(env(safe-area-inset-top, 24px) + 16px); left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--bg-elevated); border: 1px solid var(--border); color: var(--fg); padding: 10px 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: 500; z-index: 50; pointer-events: none; opacity: 0; transition: all 0.3s ease; }
+    .movement-warning.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .sensor-warning-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .sensor-warning-overlay.visible { opacity: 1; pointer-events: all; }
-    .sensor-preview-circle { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--fg); background: #000; transition: border-color 0.2s, box-shadow 0.2s; }
-    .sensor-warning-text { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: var(--fg); max-width: 180px; text-align: center; line-height: 1.3; }
+    .sensor-preview-circle { width: 120px; height: 120px; border-radius: 50%; background: #000; border: 3px solid var(--fg); transition: border-color 0.3s ease, box-shadow 0.3s ease; margin-bottom: 24px; }
+    .sensor-warning-text { text-align: center; font-size: 1.1rem; color: var(--fg); font-weight: 500; line-height: 1.4; }
 
-    .body-map-container { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .body-part { cursor: pointer; transition: all 0.15s; }
-    .body-part.selected { fill: var(--accent); }
-    #nowhere-btn { padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg-muted); font-family: var(--font); font-size: 0.9rem; cursor: pointer; margin: 16px auto; display: block; }
+    /* Body map */
+    .body-map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 340px; margin: 0 auto; }
+    .body-part { padding: 16px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border); color: var(--fg); font-size: 1rem; cursor: pointer; text-align: center; font-weight: 500; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+    .body-part.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #nowhere-btn { display: block; width: 100%; max-width: 340px; margin: 0 auto 16px; padding: 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg-muted); font-family: var(--font); font-size: 1rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
     #nowhere-btn.selected { border-color: var(--accent); color: var(--accent); }
 
-    cconst AFFECT_GRID_CSS = 
-    /* ======== AFFECT GRID ======== */
+    /* Training dial (onboarding) */
+    .training-timeline { width: 100%; max-width: 340px; height: 72px; margin: 0 auto 28px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; flex-shrink: 0; }
+    #training-canvas { width: 100%; height: 100%; display: block; }
+    .training-dial-wrapper { position: relative; width: 240px; height: 240px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; border-radius: 50%; user-select: none; flex-shrink: 0; }
+    .training-dial-ticks { position: absolute; inset: 0; pointer-events: none; border-radius: 50%; }
+    .training-tick { position: absolute; width: 2px; height: 5px; background: var(--border); top: 7px; left: 50%; transform-origin: 50% 113px; margin-left: -1px; }
+    .training-dial { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(145deg, #1f1f23, #121214); box-shadow: 8px 8px 16px rgba(0,0,0,0.8), -4px -4px 12px rgba(255,255,255,0.03), inset 0 2px 4px rgba(255,255,255,0.05); border: 1px solid var(--border); position: relative; touch-action: none; cursor: grab; z-index: 2; }
+    .training-dial:active { cursor: grabbing; }
+    .training-dial-indicator { position: absolute; top: 10px; left: 50%; width: 4px; height: 22px; background: var(--accent); border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(232,113,106,0.6); }
+    .training-dial-labels { display: flex; justify-content: space-between; width: 240px; margin: 0 auto 20px; font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.07em; flex-shrink: 0; }
+    .training-status { text-align: center; font-size: 0.95rem; color: var(--fg-muted); min-height: 1.4em; transition: color 0.3s; flex-shrink: 0; margin-bottom: 8px; }
+    .training-status.aligned { color: var(--accent-green); }
+
+    /* Affect grid — layout is handled via inline styles in module-ema.js */
     .affect-grid-container { width: 100%; max-width: 360px; margin: 0 auto; }
-    /* Values and marker positioning are inline on the SVG — the container
-       just centers and spaces. SVG styles use CSS vars via inline style
-       attrs set in module-ema.js. */
-</style>
+  </style>
 </head>
 <body>
-  <!-- Hidden Camera feeds -->
   <video id="video-feed" playsinline muted style="position:fixed;top:-999px;opacity:0;"></video>
   <canvas id="sampling-canvas" style="position:fixed;top:-999px;opacity:0;"></canvas>
 
@@ -778,13 +796,14 @@
     <div class="sensor-warning-text" id="sensor-warning-text">Place finger on camera</div>
   </div>
 
+  <!-- PID / Start screen -->
   <div class="screen active" id="screen-pid">
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 24px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       <h1 id="study-title">Loading…</h1>
       <h2 id="task-subtitle"></h2>
-      <div id="day-label" style="display:none; font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;"></div>
-      <div class="input-group" id="participant-input-group" style="margin-top: 24px;">
+      <div id="day-label" style="display:none;font-family:var(--font-mono);font-size:0.8rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;"></div>
+      <div class="input-group" id="participant-input-group" style="margin-top:24px;">
         <label class="label">Participant ID</label>
         <input type="text" id="pid-input" autocomplete="off" placeholder="Enter ID">
       </div>
@@ -792,81 +811,127 @@
     <button class="btn btn-primary btn-block" id="start-btn" disabled>Begin Session</button>
   </div>
 
-  <!-- Onboarding Sub-Screens -->
+  <!-- Pre-trial instructions (reused by ePAT module) -->
   <div class="screen" id="screen-onboarding">
     <div class="ema-item-container" id="onboarding-container"></div>
-    <div style="margin-top: 32px;"><button class="btn btn-primary btn-block" id="onboarding-next-btn">Continue</button></div>
+    <div style="margin-top:32px;"><button class="btn btn-primary btn-block" id="onboarding-next-btn">Continue</button></div>
   </div>
 
+  <!-- Onboarding: Consent -->
   <div class="screen" id="screen-ob-consent">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:20%"></div></div>
     <h1>Informed Consent</h1>
     <p class="consent-scroll-hint" id="ob-consent-hint">↓ Scroll to read</p>
     <div class="consent-scroll" id="ob-consent-scroll"></div>
-    <label class="checkbox-row" id="ob-consent-check-row" style="opacity:0.4; pointer-events:none;">
+    <label class="checkbox-row" id="ob-consent-check-row" style="opacity:0.4;pointer-events:none;">
       <input type="checkbox" id="ob-consent-check">
-      <span>I have read and understood the above.</span>
+      <span>I have read and understood the above. I voluntarily agree to participate.</span>
     </label>
-    <div class="ob-input"><input type="text" id="ob-initials" placeholder="Your initials" disabled></div>
-    <button class="btn btn-primary btn-block" id="ob-consent-next" disabled>Continue</button>
+    <div class="ob-input"><input type="text" id="ob-initials" placeholder="Your initials" maxlength="5" autocomplete="off" style="text-transform:uppercase;" disabled></div>
+    <button class="btn btn-primary btn-block" id="ob-consent-next" disabled>I Consent — Continue</button>
   </div>
 
-  <!-- Onboarding Schedule, Device Checks, Complete — placeholder structures preserved -->
+  <!-- Onboarding: Schedule -->
   <div class="screen" id="screen-ob-schedule">
-    <div class="ob-progress"><div class="ob-progress-fill" style="width:50%"></div></div>
-    <h1>Your Schedule</h1>
-    <p>Select the days you're available.</p>
+    <div class="ob-progress"><div class="ob-progress-fill" style="width:40%"></div></div>
+    <h1>Scheduling</h1>
+    <p>Choose your available days and preferred check-in windows.</p>
     <div class="schedule-section">
+      <span class="schedule-label">Available days</span>
       <div class="day-grid" id="ob-day-grid">
-        <button class="day-btn" data-day="1">Mo</button><button class="day-btn" data-day="2">Tu</button>
-        <button class="day-btn" data-day="3">We</button><button class="day-btn" data-day="4">Th</button>
-        <button class="day-btn" data-day="5">Fr</button><button class="day-btn" data-day="6">Sa</button>
-        <button class="day-btn" data-day="7">Su</button>
+        <button class="day-btn selected" data-day="Mon">Mon</button>
+        <button class="day-btn selected" data-day="Tue">Tue</button>
+        <button class="day-btn selected" data-day="Wed">Wed</button>
+        <button class="day-btn selected" data-day="Thu">Thu</button>
+        <button class="day-btn selected" data-day="Fri">Fri</button>
+        <button class="day-btn selected" data-day="Sat">Sat</button>
+        <button class="day-btn selected" data-day="Sun">Sun</button>
       </div>
     </div>
     <div class="schedule-section">
-      <div class="time-row"><span class="time-row-label">Morning</span><input type="time" id="ob-am-start" value="08:00"><span class="time-sep">to</span><input type="time" id="ob-am-end" value="10:00"></div>
-      <div class="time-row"><span class="time-row-label">Afternoon</span><input type="time" id="ob-pm-start" value="13:00"><span class="time-sep">to</span><input type="time" id="ob-pm-end" value="15:00"></div>
-      <div class="time-row"><span class="time-row-label">Evening</span><input type="time" id="ob-ev-start" value="19:00"><span class="time-sep">to</span><input type="time" id="ob-ev-end" value="21:00"></div>
+      <span class="schedule-label">Check-in time windows</span>
+      <div class="time-row"><span class="time-row-label">Morning</span><input type="time" id="ob-am-start" value="08:00"><span class="time-sep">–</span><input type="time" id="ob-am-end" value="10:00"></div>
+      <div class="time-row"><span class="time-row-label">Afternoon</span><input type="time" id="ob-pm-start" value="13:00"><span class="time-sep">–</span><input type="time" id="ob-pm-end" value="15:00"></div>
+      <div class="time-row"><span class="time-row-label">Evening</span><input type="time" id="ob-ev-start" value="19:00"><span class="time-sep">–</span><input type="time" id="ob-ev-end" value="21:00"></div>
     </div>
+    <div style="flex:1;min-height:16px;"></div>
     <button class="btn btn-primary btn-block" id="ob-schedule-next">Continue</button>
   </div>
 
+  <!-- Onboarding: Device Check -->
   <div class="screen" id="screen-ob-device">
-    <div class="ob-progress"><div class="ob-progress-fill" style="width:80%"></div></div>
+    <div class="ob-progress"><div class="ob-progress-fill" style="width:60%"></div></div>
     <h1>Device Check</h1>
-    <p id="ob-device-status">Ready to run checks.</p>
+    <p style="margin-bottom:24px;">We'll confirm your device supports the task. For multi-lens phones, cover the lens <em>closest</em> to the flashlight.</p>
     <div class="check-list">
-      <div class="check-item" id="ob-check-camera"><span>Camera</span><span id="ob-check-camera-status">Not tested</span></div>
-      <div class="check-item" id="ob-check-torch"><span>Torch</span><span id="ob-check-torch-status">Not tested</span></div>
-      <div class="check-item" id="ob-check-audio"><span>Audio</span><span id="ob-check-audio-status">Not tested</span></div>
-      <div class="check-item" id="ob-check-signal"><span>Signal</span><span id="ob-check-signal-status">Not tested</span></div>
+      <div class="check-item" id="ob-check-camera">
+        <div class="check-icon">📷</div>
+        <div class="check-info"><div class="check-title">Camera</div><div class="check-status" id="ob-check-camera-status">Waiting…</div></div>
+      </div>
+      <div class="check-item" id="ob-check-torch">
+        <div class="check-icon">🔦</div>
+        <div class="check-info"><div class="check-title">Flashlight</div><div class="check-status" id="ob-check-torch-status">Waiting…</div></div>
+      </div>
+      <div class="check-item" id="ob-check-audio">
+        <div class="check-icon">🔊</div>
+        <div class="check-info"><div class="check-title">Audio</div><div class="check-status" id="ob-check-audio-status">Waiting…</div></div>
+      </div>
+      <div class="check-item" id="ob-check-signal">
+        <div class="check-icon">♥</div>
+        <div class="check-info"><div class="check-title">PPG Signal</div><div class="check-status" id="ob-check-signal-status">Waiting…</div></div>
+      </div>
+      <div id="ob-signal-preview-wrap" style="display:none;justify-content:center;margin:4px 0 8px;">
+        <canvas id="ob-signal-preview" style="width:80px;height:80px;border-radius:50%;border:2px solid var(--border);background:#000;display:block;"></canvas>
+      </div>
     </div>
+    <p id="ob-device-status" style="text-align:center;font-size:0.9rem;min-height:1.4em;color:var(--fg-muted);"></p>
+    <div style="flex:1;min-height:16px;"></div>
     <button class="btn btn-primary btn-block" id="ob-device-start">Run Checks</button>
-    <button class="btn btn-primary btn-block" id="ob-device-next" style="display:none;">Continue</button>
+    <button class="btn btn-primary btn-block" id="ob-device-next" style="display:none;margin-top:12px;">Continue</button>
+    <button class="btn btn-secondary btn-block" id="ob-device-retry" style="display:none;margin-top:8px;">Retry</button>
   </div>
 
+  <!-- Onboarding: Task Training -->
+  <div class="screen" id="screen-ob-training">
+    <div class="ob-progress"><div class="ob-progress-fill" style="width:80%"></div></div>
+    <h1>Learn the Task</h1>
+    <p style="margin-bottom:16px;">A simulated heartbeat plays below. Rotate the dial to move the tone earlier or later until it lands on each beat.</p>
+    <div class="training-timeline"><canvas id="training-canvas"></canvas></div>
+    <div class="training-dial-wrapper">
+      <div class="training-dial-ticks" id="training-dial-ticks"></div>
+      <div class="training-dial" id="training-dial"><div class="training-dial-indicator"></div></div>
+    </div>
+    <div class="training-dial-labels"><span>Earlier</span><span>Later</span></div>
+    <p class="training-status" id="training-status">Rotate the dial to align the tone with the beats</p>
+    <div style="flex:1;min-height:8px;"></div>
+    <button class="btn btn-primary btn-block" id="ob-training-next" disabled>Continue</button>
+  </div>
+
+  <!-- Onboarding: Complete -->
   <div class="screen" id="screen-ob-complete">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:100%"></div></div>
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <h1>Setup Complete</h1>
-      <p>Your check-in schedule has been saved.</p>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <h1>You're All Set</h1>
+      <p>Setup is complete. Your first session begins now.</p>
     </div>
     <button class="btn btn-primary btn-block" id="ob-complete-pat">Begin First Session →</button>
   </div>
 
-  <!-- Primary EMA Screen -->
+  <!-- EMA -->
   <div class="screen" id="screen-ema">
-    <h2 id="ema-greeting" style="margin-bottom: 12px; font-weight: 600; color: var(--fg);">Check-In</h2>
+    <h2 id="ema-greeting" style="margin-bottom:12px;font-weight:600;color:var(--fg);">Check-In</h2>
     <div class="ema-progress"><div class="ema-progress-fill" id="ema-progress-fill" style="width:0%"></div></div>
     <div class="ema-item-container" id="ema-single-container"></div>
-    <div style="margin-top: 40px; flex-shrink: 0;"><button class="btn btn-primary btn-block" id="ema-next-btn" disabled>Next</button></div>
+    <div style="margin-top:40px;flex-shrink:0;"><button class="btn btn-primary btn-block" id="ema-next-btn" disabled>Next</button></div>
   </div>
 
-  <!-- PAT Screens -->
+  <!-- Baseline -->
   <div class="screen" id="screen-baseline">
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-      <div style="margin-bottom: 40px;"><h1>Calibration</h1><p class="label">Keep your finger completely still</p></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <div style="margin-bottom:40px;"><h1>Calibration</h1><p class="label">Keep your finger completely still</p></div>
       <div class="progress-ring">
         <svg viewBox="0 0 180 180"><circle class="track" cx="90" cy="90" r="85"/><circle class="fill" id="baseline-progress-circle" cx="90" cy="90" r="85"/></svg>
         <div class="baseline-bpm-box"><div class="baseline-bpm-number" id="baseline-bpm">--</div><div class="baseline-bpm-label">BPM</div></div>
@@ -874,30 +939,61 @@
     </div>
   </div>
 
+  <!-- Trial -->
   <div class="screen" id="screen-trial">
     <div class="movement-warning" id="trial-movement-warning">Keep still</div>
-    <div style="text-align: center; position: absolute; top: calc(env(safe-area-inset-top, 24px) + 24px); width: 100%;">
-      <p class="label" id="trial-label" style="color: var(--fg-muted);">Trial 1</p>
+
+    <div class="trial-header" style="text-align:center;position:absolute;top:calc(env(safe-area-inset-top,24px) + 24px);width:100%;">
+      <p class="label" id="trial-label" style="color:var(--fg-muted);">Trial 1</p>
     </div>
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <div id="rotary-dial" class="rotary-dial"><div id="rotary-dial-ticks" class="rotary-dial-ticks"></div></div>
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;">
+      <p class="trial-instruction">Rotate the dial until the tone precisely aligns with your heartbeat.</p>
+
+      <div class="rotary-dial-wrapper">
+        <div class="rotary-dial-ticks" id="rotary-dial-ticks"></div>
+        <div class="rotary-dial" id="rotary-dial">
+          <div class="rotary-dial-indicator"></div>
+        </div>
+      </div>
+
+      <div class="dial-labels">
+        <span>Earlier</span>
+        <span>Later</span>
+      </div>
     </div>
-    <button class="btn btn-primary btn-block" id="confirm-trial-btn" disabled>Confirm</button>
+
+    <button class="btn btn-primary btn-block" id="confirm-trial-btn" disabled style="margin-top:40px;">
+      Confirm Timing
+    </button>
   </div>
 
+  <!-- Body map -->
   <div class="screen" id="screen-bodymap">
-    <h1>Where did you feel it?</h1>
-    <div class="body-map-container"><!-- body parts injected separately --></div>
-    <button id="nowhere-btn">I didn't feel anything</button>
-    <button class="btn btn-primary btn-block" id="confirm-bodymap-btn" disabled>Continue</button>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+      <h1>Sensation</h1>
+      <p>Where did you primarily feel your heartbeat?</p>
+      <button id="nowhere-btn" style="margin-bottom:16px;">Did not feel it</button>
+      <div class="body-map-grid">
+        <div class="body-part" data-value="1">Chest</div>
+        <div class="body-part" data-value="2">Fingers</div>
+        <div class="body-part" data-value="3">Neck</div>
+        <div class="body-part" data-value="4">Ears</div>
+        <div class="body-part" data-value="5">Abdomen</div>
+        <div class="body-part" data-value="6">Legs</div>
+        <div class="body-part" data-value="7">Head</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="confirm-bodymap-btn" disabled style="margin-top:32px;">Confirm Location</button>
   </div>
 
+  <!-- End -->
   <div class="screen" id="screen-end">
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       <h1>Session Complete</h1>
       <p>Thank you for your participation.</p>
-      <p id="end-beat-count" style="display:none; font-family: var(--font-mono); font-size: 1rem; color: var(--accent); margin-top: 0;"></p>
+      <p id="end-beat-count" style="display:none;font-family:var(--font-mono);font-size:1rem;color:var(--accent);margin-top:0;"></p>
     </div>
     <button class="btn btn-secondary btn-block" id="download-btn">Save Local Copy</button>
   </div>
@@ -1341,7 +1437,7 @@ function collectDeviceMetadata() {
   const urlSession = sessionId;
   const forceOverride = params.get('force') === '1';
 
-  if (urlPid) {
+if (urlPid) {
     pidInput.value = urlPid;
     document.getElementById('participant-input-group').style.display = 'none';
   }
@@ -1351,6 +1447,27 @@ function collectDeviceMetadata() {
     dl.style.display = 'block';
   }
   pidInput.addEventListener('input', () => { startBtn.disabled = !pidInput.value.trim(); });
+ 
+  // Enable the start button whenever there's a usable PID, covering all cases:
+  //   1. URL supplied ?id=  (real participant link)
+  //   2. Preview mode       (no URL params, no one typing)
+  //   3. ?session=onboarding (PID collected later during consent)
+  if (pidInput.value.trim() || isPreview || sessionId === 'onboarding') {
+    if (isPreview) pidInput.value = pidInput.value.trim() || 'preview';
+    document.getElementById('participant-input-group').style.display = 'none';
+    startBtn.disabled = false;
+  }
+ 
+  // Enable the start button whenever there's a usable PID, covering all cases:
+  //   1. URL supplied ?id=  (real participant link)
+  //   2. Preview mode       (no URL params, no one typing)
+  //   3. ?session=onboarding (PID collected later during consent)
+  if (pidInput.value.trim() || isPreview || sessionId === 'onboarding') {
+    if (isPreview) pidInput.value = pidInput.value.trim() || 'preview';
+    document.getElementById('participant-input-group').style.display = 'none';
+    startBtn.disabled = false;
+  }
+
 
   // ---------------------------------------------------------------
   // COMPLETION LOCK CHECK (before anything else)
@@ -1504,30 +1621,33 @@ function collectDeviceMetadata() {
 // ONBOARDING ENGINE
 // ==========================================================
 const OnboardingSession = (function() {
+
   function initConsent() {
-    const scroll = document.getElementById("ob-consent-scroll");
-    const check = document.getElementById("ob-consent-check");
-    const nextBtn = document.getElementById("ob-consent-next");
+    const scroll   = document.getElementById("ob-consent-scroll");
+    const check    = document.getElementById("ob-consent-check");
+    const nextBtn  = document.getElementById("ob-consent-next");
     const initials = document.getElementById("ob-initials");
-    
+    const hint     = document.getElementById("ob-consent-hint");
+    const checkRow = document.getElementById("ob-consent-check-row");
+
     scroll.innerHTML = config.onboarding.consent_text;
 
     scroll.addEventListener("scroll", () => {
       if (scroll.scrollHeight - scroll.scrollTop <= scroll.clientHeight + 40) {
-        document.getElementById("ob-consent-check-row").style.opacity = "1";
-        document.getElementById("ob-consent-check-row").style.pointerEvents = "auto";
-        initials.disabled = false;
-        document.getElementById("ob-consent-hint").style.opacity = "0";
+        if (checkRow) { checkRow.style.opacity = "1"; checkRow.style.pointerEvents = "auto"; }
+        if (initials) initials.disabled = false;
+        if (hint) hint.style.opacity = "0";
       }
     });
 
-    const updateNext = () => nextBtn.disabled = !(check.checked && initials.value.trim().length >= 1);
-    check.addEventListener("change", updateNext);
-    initials.addEventListener("input", updateNext);
+    const updateNext = () => {
+      if (nextBtn) nextBtn.disabled = !(check && check.checked && initials && initials.value.trim().length >= 1);
+    };
+    if (check) check.addEventListener("change", updateNext);
+    if (initials) initials.addEventListener("input", updateNext);
 
-    nextBtn.onclick = () => {
-      sessionData.data.push({ type: "consent", agreed: true, initials: initials.value.trim().toUpperCase(), timestamp: new Date().toISOString() });
-
+    if (nextBtn) nextBtn.onclick = () => {
+      sessionData.data.push({ type: "consent", agreed: true, initials: initials ? initials.value.trim().toUpperCase() : '', timestamp: new Date().toISOString() });
       if (config.onboarding.ask_schedule !== false) {
         show("screen-ob-schedule");
       } else if (config.modules?.epat && window.ePATCore) {
@@ -1540,15 +1660,18 @@ const OnboardingSession = (function() {
 
   function initSchedule() {
     const grid = document.getElementById("ob-day-grid");
+    if (!grid) return;
     grid.querySelectorAll(".day-btn").forEach(btn => btn.addEventListener("click", () => btn.classList.toggle("selected")));
-    document.getElementById("ob-schedule-next").onclick = () => {
+
+    const nextBtn = document.getElementById("ob-schedule-next");
+    if (nextBtn) nextBtn.onclick = () => {
       sessionData.data.push({
         type: "schedule_pref",
         days: [...grid.querySelectorAll(".day-btn.selected")].map(b => b.dataset.day),
         windows: {
-          morning:   { start: document.getElementById("ob-am-start").value, end: document.getElementById("ob-am-end").value },
-          afternoon: { start: document.getElementById("ob-pm-start").value, end: document.getElementById("ob-pm-end").value },
-          evening:   { start: document.getElementById("ob-ev-start").value, end: document.getElementById("ob-ev-end").value }
+          morning:   { start: (document.getElementById("ob-am-start") || {}).value, end: (document.getElementById("ob-am-end") || {}).value },
+          afternoon: { start: (document.getElementById("ob-pm-start") || {}).value, end: (document.getElementById("ob-pm-end") || {}).value },
+          evening:   { start: (document.getElementById("ob-ev-start") || {}).value, end: (document.getElementById("ob-ev-end") || {}).value }
         }
       });
       if (config.modules?.epat && window.ePATCore) {
@@ -1562,27 +1685,23 @@ const OnboardingSession = (function() {
   function initDevice() {
     const checks = { camera: false, torch: false, audio: false, signal: false };
     const BeatDetector = window.ePATCore ? window.ePATCore.BeatDetector : null;
+    const statusEl = document.getElementById("ob-device-status");
 
     function setCheck(id, state, msg) {
       const el = document.getElementById("ob-check-" + id);
       const st = document.getElementById("ob-check-" + id + "-status");
-      if(el) el.className = "check-item" + (state ? " " + state : "");
+      if (el) el.className = "check-item" + (state ? " " + state : "");
       if (st && msg) st.textContent = msg;
     }
 
-    document.getElementById("ob-device-start").onclick = async () => {
-      if (isPreview) {
-        document.getElementById("ob-device-start").style.display = "none";
-        document.getElementById("ob-device-next").style.display = "block";
-        document.getElementById("ob-device-status").textContent = "Camera & PPG simulated ok for studio.";
-        ["camera","torch","audio","signal"].forEach(id => setCheck(id, "pass", "Pass (Simulated)"));
-        return;
-      }
+    const startBtn = document.getElementById("ob-device-start");
+    if (!startBtn) return;
 
-      document.getElementById("ob-device-start").style.display = "none";
-      const statusEl = document.getElementById("ob-device-status");
-      statusEl.textContent = "Running checks…";
+    startBtn.onclick = async () => {
+      startBtn.style.display = "none";
+      if (statusEl) statusEl.textContent = "Running checks…";
 
+      // Camera
       try {
         setCheck("camera", "testing", "Requesting access…");
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -1590,6 +1709,7 @@ const OnboardingSession = (function() {
         checks.camera = true; setCheck("camera", "pass", "Access granted");
       } catch(e) { setCheck("camera", "fail", "Permission denied"); }
 
+      // Torch
       try {
         setCheck("torch", "testing", "Testing flashlight…");
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -1603,6 +1723,7 @@ const OnboardingSession = (function() {
         stream.getTracks().forEach(t => t.stop());
       } catch(e) { setCheck("torch", "fail", "Error: " + e.message); }
 
+      // Audio
       try {
         setCheck("audio", "testing", "Playing test tone…");
         const actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1617,24 +1738,28 @@ const OnboardingSession = (function() {
         checks.audio = true; setCheck("audio", "pass", "Audio OK");
       } catch(e) { setCheck("audio", "fail", "Audio error"); }
 
+      // PPG Signal
       if (BeatDetector) {
         setCheck("signal", "testing", "Place finger on camera…");
-        statusEl.textContent = "Place your finger on the camera and flashlight…";
-        
+        if (statusEl) statusEl.textContent = "Place your finger on the camera and flashlight…";
+
         const previewWrap = document.getElementById("ob-signal-preview-wrap");
         const previewCanvas = document.getElementById("ob-signal-preview");
-        const dpr = window.devicePixelRatio || 1;
-        previewCanvas.width = 80 * dpr; previewCanvas.height = 80 * dpr;
-        const previewCtx = previewCanvas.getContext("2d");
-        previewWrap.style.display = "flex";
+        let previewCtx = null;
+        if (previewCanvas) {
+          const dpr = window.devicePixelRatio || 1;
+          previewCanvas.width = 80 * dpr; previewCanvas.height = 80 * dpr;
+          previewCtx = previewCanvas.getContext("2d");
+          if (previewWrap) previewWrap.style.display = "flex";
+        }
 
         let beatCount = 0;
         await new Promise(resolve => {
           const timeout = setTimeout(() => {
-            previewWrap.style.display = "none";
+            if (previewWrap) previewWrap.style.display = "none";
             setCheck("signal", "fail", "No signal — try again"); resolve();
           }, 20000);
-          
+
           BeatDetector.start({
             video: document.getElementById("video-feed"),
             canvas: document.getElementById("sampling-canvas"),
@@ -1644,81 +1769,118 @@ const OnboardingSession = (function() {
               if (beatCount >= 5) {
                 clearTimeout(timeout);
                 checks.signal = true;
-                previewWrap.style.display = "none";
+                if (previewWrap) previewWrap.style.display = "none";
                 setCheck("signal", "pass", `Signal confirmed — ${Math.round(beat.averageBPM)} BPM`);
                 BeatDetector.stop();
                 resolve();
               }
             },
             onFingerChangeCb: (p) => {
-              statusEl.textContent = p ? "Finger detected, measuring…" : "Place finger on camera and flashlight…";
-              previewCanvas.style.borderColor = p ? "var(--accent)" : "var(--border)";
+              if (statusEl) statusEl.textContent = p ? "Finger detected, measuring…" : "Place finger on camera and flashlight…";
+              if (previewCanvas) previewCanvas.style.borderColor = p ? "var(--accent)" : "var(--border)";
             },
             onPPGSampleCb: () => {
               const vid = document.getElementById("video-feed");
-              if (vid && vid.readyState === vid.HAVE_ENOUGH_DATA) previewCtx.drawImage(vid, 0, 0, 80 * dpr, 80 * dpr);
+              if (vid && vid.readyState === vid.HAVE_ENOUGH_DATA && previewCtx) {
+                const dpr = window.devicePixelRatio || 1;
+                previewCtx.drawImage(vid, 0, 0, 80 * dpr, 80 * dpr);
+              }
             }
           });
         });
+      } else {
+        checks.signal = true; setCheck("signal", "pass", "Skipped (no core)");
       }
 
       const allPass = Object.values(checks).every(v => v);
-      statusEl.textContent = allPass ? "All checks passed." : "Some checks failed — you may still continue.";
-      statusEl.style.color = allPass ? "var(--accent-green)" : "var(--fg-muted)";
-      document.getElementById("ob-device-next").style.display = "block";
-      if (!allPass) document.getElementById("ob-device-retry").style.display = "block";
+      if (statusEl) {
+        statusEl.textContent = allPass ? "All checks passed." : "Some checks failed — you may still continue.";
+        statusEl.style.color = allPass ? "var(--accent-green)" : "var(--fg-muted)";
+      }
+      const nextEl = document.getElementById("ob-device-next");
+      const retryEl = document.getElementById("ob-device-retry");
+      if (nextEl) nextEl.style.display = "block";
+      if (!allPass && retryEl) retryEl.style.display = "block";
     };
 
-    document.getElementById("ob-device-retry").onclick = () => {
+    const retryEl = document.getElementById("ob-device-retry");
+    if (retryEl) retryEl.onclick = () => {
       ["camera","torch","audio","signal"].forEach(id => setCheck(id, "", "Waiting…"));
-      document.getElementById("ob-device-status").textContent = "";
-      document.getElementById("ob-device-next").style.display = "none";
-      document.getElementById("ob-device-retry").style.display = "none";
-      document.getElementById("ob-device-start").style.display = "block";
+      if (statusEl) statusEl.textContent = "";
+      const nextEl = document.getElementById("ob-device-next");
+      if (nextEl) nextEl.style.display = "none";
+      retryEl.style.display = "none";
+      startBtn.style.display = "block";
     };
 
-    document.getElementById("ob-device-next").onclick = () => show("screen-ob-training");
+    const nextEl = document.getElementById("ob-device-next");
+    if (nextEl) nextEl.onclick = () => show("screen-ob-training");
   }
 
   function initTraining() {
     const nextBtn = document.getElementById("ob-training-next");
+    if (!nextBtn) return;
+
     if (isPreview) {
       nextBtn.disabled = false;
       nextBtn.onclick = () => show("screen-ob-complete");
       return;
     }
 
-    const SIM_BPM = 65, SIM_PERIOD_MS = (60 / SIM_BPM) * 1000, ALIGN_THRESHOLD = 0.12, ALIGN_HOLD_MS = 2000;
+    const SIM_BPM = 65, SIM_PERIOD_MS = (60 / SIM_BPM) * 1000;
+    const ALIGN_THRESHOLD = 0.12, ALIGN_HOLD_MS = 2000;
+
     let dialAngle = 0, dialDragging = false, dialCx = 0, dialCy = 0, lastDialAngle = 0;
-    const INITIAL_KNOB = 0.5; let knobValue = INITIAL_KNOB;
+    const INITIAL_KNOB = 0.5;
+    let knobValue = INITIAL_KNOB;
     dialAngle = INITIAL_KNOB * Math.PI;
-    let simStartTime = null, animFrameId = null, alignedSince = null, gateUnlocked = false;
+    let simStartTime = null, animFrameId = null;
+    let alignedSince = null, gateUnlocked = false;
     let lastScheduledBeat = -1, trainingACtx = null;
 
     const canvas = document.getElementById("training-canvas");
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     const statusEl = document.getElementById("training-status");
     const dialEl = document.getElementById("training-dial");
 
-    dialEl.addEventListener("pointerdown", (e) => {
-      e.preventDefault(); dialDragging = true;
-      const r = dialEl.getBoundingClientRect(); dialCx = r.left + r.width / 2; dialCy = r.top + r.height / 2;
-      lastDialAngle = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
-      dialEl.setPointerCapture(e.pointerId);
-    }, { passive: false });
+    // Build training dial ticks
+    const tickContainer = document.getElementById("training-dial-ticks");
+    if (tickContainer && !tickContainer.dataset.built) {
+      tickContainer.dataset.built = "1";
+      for (let i = 0; i < 60; i++) {
+        const t = document.createElement("div"); t.className = "training-tick";
+        t.style.transform = `rotate(${i * 6}deg)`;
+        if (i % 2 === 0) t.style.height = "8px";
+        if (i % 15 === 0) { t.style.height = "12px"; t.style.background = "var(--fg-muted)"; }
+        tickContainer.appendChild(t);
+      }
+    }
 
-    window.addEventListener("pointermove", (e) => {
-      if (!dialDragging) return; e.preventDefault();
-      const a = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
-      let d = a - lastDialAngle;
-      if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI;
-      dialAngle += d; lastDialAngle = a;
-      dialEl.style.transform = `rotate(${dialAngle}rad)`;
-      let raw = (dialAngle / Math.PI) % 2;
-      if (raw > 1) raw -= 2; if (raw < -1) raw += 2;
-      knobValue = raw;
-    }, { passive: false });
-    window.addEventListener("pointerup", () => { dialDragging = false; });
+    if (dialEl) {
+      dialEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault(); dialDragging = true;
+        const r = dialEl.getBoundingClientRect();
+        dialCx = r.left + r.width / 2; dialCy = r.top + r.height / 2;
+        lastDialAngle = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
+        dialEl.setPointerCapture(e.pointerId);
+      }, { passive: false });
+
+      window.addEventListener("pointermove", (e) => {
+        if (!dialDragging) return; e.preventDefault();
+        const a = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
+        let d = a - lastDialAngle;
+        if (d > Math.PI) d -= 2 * Math.PI;
+        if (d < -Math.PI) d += 2 * Math.PI;
+        dialAngle += d; lastDialAngle = a;
+        dialEl.style.transform = `rotate(${dialAngle}rad)`;
+        let raw = (dialAngle / Math.PI) % 2;
+        if (raw > 1) raw -= 2; if (raw < -1) raw += 2;
+        knobValue = raw;
+      }, { passive: false });
+
+      window.addEventListener("pointerup", () => { dialDragging = false; });
+    }
 
     function playTone(delayS) {
       if (!trainingACtx) trainingACtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1727,7 +1889,8 @@ const OnboardingSession = (function() {
       const osc = trainingACtx.createOscillator(), gain = trainingACtx.createGain();
       osc.connect(gain); gain.connect(trainingACtx.destination);
       osc.frequency.value = 440;
-      gain.gain.setValueAtTime(0, when); gain.gain.linearRampToValueAtTime(0.18, when + 0.005);
+      gain.gain.setValueAtTime(0, when);
+      gain.gain.linearRampToValueAtTime(0.18, when + 0.005);
       gain.gain.exponentialRampToValueAtTime(0.001, when + 0.08);
       osc.start(when); osc.stop(when + 0.1);
     }
@@ -1736,24 +1899,32 @@ const OnboardingSession = (function() {
       if (!simStartTime) simStartTime = ts;
       const elapsed = ts - simStartTime;
       const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== canvas.clientWidth * dpr) { canvas.width = canvas.clientWidth * dpr; canvas.height = canvas.clientHeight * dpr; }
+      if (canvas.width !== canvas.clientWidth * dpr) {
+        canvas.width = canvas.clientWidth * dpr;
+        canvas.height = canvas.clientHeight * dpr;
+      }
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const WINDOW_MS = 3000, beatCount = Math.floor(elapsed / SIM_PERIOD_MS), beatsInWindow = Math.ceil(WINDOW_MS / SIM_PERIOD_MS) + 2;
+      const WINDOW_MS = 3000;
+      const beatCount = Math.floor(elapsed / SIM_PERIOD_MS);
+      const beatsInWindow = Math.ceil(WINDOW_MS / SIM_PERIOD_MS) + 2;
 
       ctx.strokeStyle = "rgba(142,142,147,0.45)"; ctx.lineWidth = 1.5 * dpr;
       for (let i = -1; i <= beatsInWindow; i++) {
         const beatTime = (beatCount - beatsInWindow + i) * SIM_PERIOD_MS;
-        const x = (1 - (elapsed - beatTime) / WINDOW_MS) * W;
+        const age = elapsed - beatTime;
+        const x = (1 - age / WINDOW_MS) * W;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
       }
 
       const toneOffset = (SIM_PERIOD_MS / 2) * knobValue;
       ctx.strokeStyle = "rgba(232,113,106,0.85)"; ctx.lineWidth = 2 * dpr;
       for (let i = -1; i <= beatsInWindow; i++) {
-        const toneTime = (beatCount - beatsInWindow + i) * SIM_PERIOD_MS + toneOffset;
-        const x = (1 - (elapsed - toneTime) / WINDOW_MS) * W;
+        const beatTime = (beatCount - beatsInWindow + i) * SIM_PERIOD_MS;
+        const toneTime = beatTime + toneOffset;
+        const age = elapsed - toneTime;
+        const x = (1 - age / WINDOW_MS) * W;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
       }
 
@@ -1768,44 +1939,66 @@ const OnboardingSession = (function() {
       if (isAligned) {
         if (!alignedSince) alignedSince = ts;
         const held = ts - alignedSince;
-        statusEl.textContent = held >= ALIGN_HOLD_MS ? "Aligned — well done!" : "Hold it there…";
-        statusEl.className = "training-status aligned";
+        if (statusEl) { statusEl.textContent = held >= ALIGN_HOLD_MS ? "Aligned — well done!" : "Hold it there…"; statusEl.className = "training-status aligned"; }
         if (held >= ALIGN_HOLD_MS && !gateUnlocked) { gateUnlocked = true; nextBtn.disabled = false; }
       } else {
         alignedSince = null;
-        statusEl.textContent = "Rotate the dial to align the tone with the beats";
-        statusEl.className = "training-status";
+        if (statusEl) { statusEl.textContent = "Rotate the dial to align the tone with the beats"; statusEl.className = "training-status"; }
       }
+
       animFrameId = requestAnimationFrame(draw);
     }
 
-    const observer = new MutationObserver(() => {
-      const active = document.getElementById("screen-ob-training").classList.contains("active");
-      if (active && !animFrameId) {
-        dialEl.style.transform = `rotate(${dialAngle}rad)`;
-        simStartTime = null; lastScheduledBeat = -1; animFrameId = requestAnimationFrame(draw);
-      } else if (!active && animFrameId) {
-        cancelAnimationFrame(animFrameId); animFrameId = null;
-      }
-    });
-    observer.observe(document.getElementById("screen-ob-training"), { attributes: true, attributeFilter: ["class"] });
+    const trainingScreen = document.getElementById("screen-ob-training");
+    if (trainingScreen) {
+      const observer = new MutationObserver(() => {
+        const active = trainingScreen.classList.contains("active");
+        if (active && !animFrameId) {
+          if (dialEl) dialEl.style.transform = `rotate(${dialAngle}rad)`;
+          simStartTime = null; lastScheduledBeat = -1; animFrameId = requestAnimationFrame(draw);
+        } else if (!active && animFrameId) {
+          cancelAnimationFrame(animFrameId); animFrameId = null;
+        }
+      });
+      observer.observe(trainingScreen, { attributes: true, attributeFilter: ["class"] });
+    }
 
     nextBtn.onclick = () => {
-      cancelAnimationFrame(animFrameId); animFrameId = null;
+      if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
       if (trainingACtx) { trainingACtx.close(); trainingACtx = null; }
       show("screen-ob-complete");
     };
   }
 
-
+  function initComplete() {
+    // ---- FIX: correct element ID is "ob-complete-pat" not "ob-complete" ----
+    const completeBtn = document.getElementById("ob-complete-pat");
+    if (completeBtn) {
+      completeBtn.onclick = () => {
+        // Hand off to the normal phase runner — onboarding is done,
+        // now run whatever phases are in sessionData.phases (if any),
+        // or just finalize if there are none.
+        sessionData.type = "onboarding_complete";
+        sessionData.completedOnboarding = new Date().toISOString();
+        // If ePAT is configured and enabled, kick off a fresh PAT-only run
+        if (config.modules?.epat && window.ePATCore && typeof ePAT !== 'undefined') {
+          sessionData.phases = ['epat'];
+          sessionData.currentPhase = 0;
+          runNextPhase();
+        } else {
+          advancePhase();
+        }
+      };
+    }
+  }
 
   return {
     start() {
-      initConsent(); initSchedule(); initDevice(); initTraining();
-      document.getElementById("ob-complete").onclick = () => {
-        sessionData.type = "pat_only"; sessionData.phases = ['pat'];
-        sessionData.currentPhase = 0; runNextPhase();
-      };
+      initConsent();
+      initSchedule();
+      initDevice();
+      initTraining();
+      initComplete();
       show("screen-ob-consent");
     }
   };
@@ -2308,27 +2501,48 @@ const EMA = (function() {
 const ePAT = (function() {
   const core = window.ePATCore;
   const NUM_TRIALS = config.modules?.epat?.trials || 20;
+  const NUM_PRACTICES = config.modules?.epat?.two_phase_practice ? 2 : 0;
   const IBI_CHANGE_THRESHOLD = 0.30;
   const SQI_GOOD = 0.008, SQI_WARN = 0.004;
+  const BODY_MAP_EVERY = config.modules?.epat?.body_map ? 4 : Infinity;
 
   let trialIP = [], trialAP = [], trialKS = [], trialCD = [], trialIE = [], trialRecordedHR = [], trialInstantBpms = [];
   let trialToneTimings = [], trialFingerLossEvents = [], trialInitialKnob = 0;
   let trialLastIbi = 0, trialCleanBeats = 0, trialFlaggedBeats = 0, trialIbiFlags = [];
   let trialSqiTimeSeries = [], trialSqiBadSeconds = 0, trialLastSqiCheckTime = 0, trialDicroticRejections = [];
   let currentInstantPeriod = 0, currentAveragePeriod = 0;
-  
+
   let baselineTimer = null, baselineBPMs = [], baselineStartTime = 0;
   let isFingerPresent = false, currentSqiValue = 0, lastBeatPerfTime = performance.now(), sensorCheckInterval = null;
   let dialEl, dialAngle = 0, dialDragging = false, dialCx = 0, dialCy = 0, lastAngle = 0;
-let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modules?.epat?.two_phase_practice ? -2 : 0;
+  let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = -(NUM_PRACTICES);
   let trialDetectorRunning = false, trialRunning = false;
 
+  // ----------------------------------------------------------
+  // DIAL INIT
+  // ----------------------------------------------------------
   function initDial() {
     dialEl = document.getElementById("rotary-dial");
     if (!dialEl) return;
+
+    // Generate tick marks
+    const tickContainer = document.getElementById("rotary-dial-ticks");
+    if (tickContainer && !tickContainer.dataset.built) {
+      tickContainer.dataset.built = "1";
+      for (let i = 0; i < 72; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'dial-tick';
+        tick.style.transform = `rotate(${i * 5}deg)`;
+        if (i % 2 === 0) tick.style.height = '10px';
+        if (i % 18 === 0) { tick.style.height = '14px'; tick.style.background = 'var(--fg-muted)'; }
+        tickContainer.appendChild(tick);
+      }
+    }
+
     dialEl.addEventListener("pointerdown", (e) => {
       e.preventDefault(); dialDragging = true;
-      const rect = dialEl.getBoundingClientRect(); dialCx = rect.left + rect.width / 2; dialCy = rect.top + rect.height / 2;
+      const rect = dialEl.getBoundingClientRect();
+      dialCx = rect.left + rect.width / 2; dialCy = rect.top + rect.height / 2;
       lastAngle = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
       dialEl.setPointerCapture(e.pointerId);
     }, { passive: false });
@@ -2336,8 +2550,8 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     window.addEventListener("pointermove", (e) => {
       if (!dialDragging) return; e.preventDefault();
       const a = Math.atan2(e.clientY - dialCy, e.clientX - dialCx);
-      let d = a - lastAngle; 
-      if (d > Math.PI) d -= 2 * Math.PI; 
+      let d = a - lastAngle;
+      if (d > Math.PI) d -= 2 * Math.PI;
       if (d < -Math.PI) d += 2 * Math.PI;
       dialAngle += d; lastAngle = a;
       dialEl.style.transform = `rotate(${dialAngle}rad)`;
@@ -2345,27 +2559,33 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
       let rawPhase = ((dialAngle + trialVisualOffset) / Math.PI) % 2;
       if (rawPhase > 1) rawPhase -= 2;
       if (rawPhase < -1) rawPhase += 2;
-      currentKnobValue = rawPhase; 
+      currentKnobValue = rawPhase;
       document.getElementById("confirm-trial-btn").disabled = false;
     }, { passive: false });
+
     window.addEventListener("pointerup", () => { dialDragging = false; });
   }
 
+  // ----------------------------------------------------------
+  // SENSOR WATCHDOG
+  // ----------------------------------------------------------
   function startSensorWatchdog() {
     if (sensorCheckInterval) clearInterval(sensorCheckInterval);
     lastBeatPerfTime = performance.now();
     sensorCheckInterval = setInterval(updateSensorWarning, 250);
   }
-  
+
   function stopSensorWatchdog() {
     if (sensorCheckInterval) clearInterval(sensorCheckInterval);
-    document.getElementById("sensor-warning-overlay").classList.remove("visible");
+    const overlay = document.getElementById("sensor-warning-overlay");
+    if (overlay) overlay.classList.remove("visible");
   }
 
   function updateSensorWarning() {
     const overlay = document.getElementById("sensor-warning-overlay");
     const text = document.getElementById("sensor-warning-text");
     const circle = document.getElementById("sensor-preview-circle");
+    if (!overlay) return;
 
     if (!isFingerPresent) {
       overlay.classList.add("visible");
@@ -2377,13 +2597,16 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
       circle.style.borderColor = "var(--accent-red)"; circle.style.boxShadow = "0 0 20px rgba(255, 69, 58, 0.3)";
     } else if (performance.now() - lastBeatPerfTime > 2500) {
       overlay.classList.add("visible");
-      text.innerHTML = "Acquiring signal...<br><span style='font-size:0.85rem;color:var(--fg-muted);font-weight:400;margin-top:6px;display:block;'>Hold completely still</span>";
+      text.innerHTML = "Acquiring signal…<br><span style='font-size:0.85rem;color:var(--fg-muted);font-weight:400;margin-top:6px;display:block;'>Hold completely still</span>";
       circle.style.borderColor = "var(--fg-muted)"; circle.style.boxShadow = "none";
     } else {
       overlay.classList.remove("visible");
     }
   }
 
+  // ----------------------------------------------------------
+  // IBI QUALITY TRACKING
+  // ----------------------------------------------------------
   function processIbi(beat) {
     const ibiMs = beat.instantPeriod * 1000;
     let flag = null;
@@ -2398,24 +2621,85 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     trialIbiFlags.push({ time: beat.time, ibiMs: Math.round(ibiMs * 10) / 10, flag });
   }
 
+  // ----------------------------------------------------------
+  // PRE-TRIAL INSTRUCTION SCREEN
+  // Shown after baseline completes and before every ePAT block.
+  // Uses screen-onboarding which already exists in the HTML shell.
+  // ----------------------------------------------------------
+  function showPreTrialInstructions(onContinue) {
+    show("screen-onboarding");
+    const container = document.getElementById("onboarding-container");
+    const nextBtn   = document.getElementById("onboarding-next-btn");
+
+    container.innerHTML = `
+      <div style="text-align:center; padding: 8px 0 32px;">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <h1 style="margin-bottom:12px;">Heartbeat Task</h1>
+        <p style="margin-bottom:32px;">Place your fingertip firmly over the <strong style="color:var(--fg);">rear camera and flashlight</strong>. You'll hear a tone — rotate the dial until the tone lands exactly on each heartbeat.</p>
+
+        <div style="width:100%; max-width:340px; margin: 0 auto 24px; text-align:left;">
+          <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:18px;">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--bg-elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem;">📷</div>
+            <div>
+              <div style="font-size:0.95rem; font-weight:600; color:var(--fg); margin-bottom:3px;">Camera + Flashlight</div>
+              <div style="font-size:0.85rem; color:var(--fg-muted); line-height:1.4;">Cover the lens closest to the flash completely. The circle on screen should glow solid red.</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:18px;">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--bg-elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem;">🎧</div>
+            <div>
+              <div style="font-size:0.95rem; font-weight:600; color:var(--fg); margin-bottom:3px;">Turn volume up</div>
+              <div style="font-size:0.85rem; color:var(--fg-muted); line-height:1.4;">You need to hear the tone clearly. Silent mode will block it.</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:14px;">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--bg-elevated); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem;">🤚</div>
+            <div>
+              <div style="font-size:0.95rem; font-weight:600; color:var(--fg); margin-bottom:3px;">Stay still</div>
+              <div style="font-size:0.85rem; color:var(--fg-muted); line-height:1.4;">Any movement affects the heart rate signal. Rest your elbow on a surface if possible.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    nextBtn.textContent = "I'm ready →";
+    nextBtn.disabled = false;
+    nextBtn.onclick = () => {
+      nextBtn.onclick = null;
+      onContinue();
+    };
+  }
+
+  // ----------------------------------------------------------
+  // BASELINE
+  // ----------------------------------------------------------
   async function startBaseline() {
     show("screen-baseline");
     baselineBPMs = []; baselineStartTime = Date.now();
-    currentTrialIndex = config.modules?.epat?.two_phase_practice ? -2 : 0;
+    currentTrialIndex = -(NUM_PRACTICES);
     initDial();
 
     const bpmEl = document.getElementById("baseline-bpm");
     const progressCircle = document.getElementById("baseline-progress-circle");
     const circ = 2 * Math.PI * 85;
-    const DUR = isPreview ? 3 : 120; // Fast-forward for preview
+    const DUR = isPreview ? 3 : 120;
 
     if (!core) {
-      // Fallback simulate if no core available
+      // Preview / no-core simulation
       let elapsed = 0;
       bpmEl.textContent = '65';
       baselineTimer = setInterval(() => {
-        elapsed += 1; progressCircle.style.strokeDashoffset = circ * (1 - Math.min(1, elapsed / DUR));
-        if (elapsed >= DUR) { clearInterval(baselineTimer); sessionData.data.push({ type: "baseline", ppgSampleRate: 30, finalSqi: 0.5 }); startTrial(); }
+        elapsed += 1;
+        progressCircle.style.strokeDashoffset = circ * (1 - Math.min(1, elapsed / DUR));
+        if (elapsed >= DUR) {
+          clearInterval(baselineTimer);
+          sessionData.data.push({ type: "baseline", ppgSampleRate: 30, finalSqi: 0.5 });
+          showPreTrialInstructions(() => startTrial());
+        }
       }, 1000);
       return;
     }
@@ -2427,10 +2711,14 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     document.getElementById("sensor-preview-circle").height = 120 * (window.devicePixelRatio || 1);
 
     startSensorWatchdog();
-    
+
     await core.BeatDetector.start({
       video: videoElement, canvas: document.getElementById("sampling-canvas"),
-      onBeatCb: (beat) => { baselineBPMs.push(beat.instantBPM); bpmEl.textContent = Math.round(beat.averageBPM); lastBeatPerfTime = performance.now(); },
+      onBeatCb: (beat) => {
+        baselineBPMs.push(beat.instantBPM);
+        bpmEl.textContent = Math.round(beat.averageBPM);
+        lastBeatPerfTime = performance.now();
+      },
       onFingerChangeCb: (p) => { isFingerPresent = p; updateSensorWarning(); },
       onSqiUpdateCb: (sqi) => { currentSqiValue = sqi; updateSensorWarning(); },
       onPPGSampleCb: () => {
@@ -2443,12 +2731,12 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     baselineTimer = setInterval(async () => {
       const elapsed = (Date.now() - baselineStartTime) / 1000, remaining = Math.max(0, DUR - elapsed);
       progressCircle.style.strokeDashoffset = circ * (1 - Math.min(1, elapsed / DUR));
-      
+
       if (remaining <= 0) {
         clearInterval(baselineTimer); stopSensorWatchdog();
         core.BeatDetector.setCallbacks({ onBeatCb: null, onFingerChangeCb: null, onPPGSampleCb: null, onSqiUpdateCb: null, onDicroticRejectCb: null });
-        trialDetectorRunning = true; 
-        
+        trialDetectorRunning = true;
+
         const diagnostics = core.BeatDetector.getDiagnostics();
         const finalSqi = core.BeatDetector.getSqi();
 
@@ -2458,38 +2746,55 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
           return;
         }
 
-        sessionData.data.push({ type: "baseline", recordedHR: baselineBPMs.map(Math.round), totalBeats: baselineBPMs.length, ppgSampleRate: core.BeatDetector.getActualFPS(), ppgDiagnostics: diagnostics, finalSqi: finalSqi });
-        startTrial();
+        sessionData.data.push({
+          type: "baseline", recordedHR: baselineBPMs.map(Math.round),
+          totalBeats: baselineBPMs.length, ppgSampleRate: core.BeatDetector.getActualFPS(),
+          ppgDiagnostics: diagnostics, finalSqi: finalSqi
+        });
+
+        // Show instructions before first trial
+        showPreTrialInstructions(() => startTrial());
       }
     }, 1000);
   }
 
+  // ----------------------------------------------------------
+  // TRIAL
+  // ----------------------------------------------------------
   async function startTrial() {
     show("screen-trial");
-    trialIP = []; trialAP = []; trialKS = []; trialCD = []; trialIE = []; trialRecordedHR = []; trialInstantBpms = [];
-    trialToneTimings = []; trialFingerLossEvents = []; trialLastIbi = 0; trialCleanBeats = 0; trialFlaggedBeats = 0; trialIbiFlags = [];
+    trialIP = []; trialAP = []; trialKS = []; trialCD = []; trialIE = [];
+    trialRecordedHR = []; trialInstantBpms = [];
+    trialToneTimings = []; trialFingerLossEvents = [];
+    trialLastIbi = 0; trialCleanBeats = 0; trialFlaggedBeats = 0; trialIbiFlags = [];
     trialSqiTimeSeries = []; trialSqiBadSeconds = 0; trialLastSqiCheckTime = 0; trialDicroticRejections = [];
     currentInstantPeriod = 0; currentAveragePeriod = 0;
-    
-    trialVisualOffset = (Math.random() * 2 - 1) * Math.PI; 
-    dialAngle = 0; if(dialEl) dialEl.style.transform = `rotate(0rad)`;
-    
+
+    // Randomize knob starting position per trial
+    trialVisualOffset = (Math.random() * 2 - 1) * Math.PI;
+    dialAngle = 0;
+    if (dialEl) dialEl.style.transform = `rotate(0rad)`;
+
     let rawPhase = ((dialAngle + trialVisualOffset) / Math.PI) % 2;
-    if (rawPhase > 1) rawPhase -= 2; if (rawPhase < -1) rawPhase += 2;
-    currentKnobValue = rawPhase; trialInitialKnob = currentKnobValue;
-    
+    if (rawPhase > 1) rawPhase -= 2;
+    if (rawPhase < -1) rawPhase += 2;
+    currentKnobValue = rawPhase;
+    trialInitialKnob = currentKnobValue;
+
     trialRunning = true;
-    document.getElementById("trial-label").textContent = currentTrialIndex < 0 ? `Practice Trial ${2 + currentTrialIndex + 1}` : `Trial ${currentTrialIndex + 1} of ${NUM_TRIALS}`;
+    document.getElementById("trial-label").textContent = currentTrialIndex < 0
+      ? `Practice Trial ${NUM_PRACTICES + currentTrialIndex + 1}`
+      : `Trial ${currentTrialIndex + 1} of ${NUM_TRIALS}`;
     document.getElementById("confirm-trial-btn").disabled = true;
 
-    if (!core) return; // Simulated
+    if (!core) return;
 
     core.MotionDetector.start();
     const videoElement = document.getElementById("video-feed");
     const previewCtx = document.getElementById("sensor-preview-circle").getContext("2d");
     document.getElementById("sensor-preview-circle").width = 120 * (window.devicePixelRatio || 1);
     document.getElementById("sensor-preview-circle").height = 120 * (window.devicePixelRatio || 1);
-    
+
     startSensorWatchdog();
 
     const beatCb = (beat) => {
@@ -2498,26 +2803,26 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
       currentInstantPeriod = beat.instantPeriod; currentAveragePeriod = beat.averagePeriod;
       trialIP.push(currentInstantPeriod); trialAP.push(currentAveragePeriod);
       trialKS.push(currentKnobValue); trialIE.push(prev - currentInstantPeriod);
-      
+
       const delay = (currentAveragePeriod / 2) * currentKnobValue;
       trialCD.push(delay); trialRecordedHR.push(beat.instantBPM); trialInstantBpms.push(beat.averageBPM);
       processIbi(beat);
-      
+
       const dNow = delay < 0 ? currentInstantPeriod + delay : delay;
       if (dNow > 0 && dNow < 3) {
         const timing = core.AudioEngine.scheduleAt(dNow);
         if (timing) trialToneTimings.push({ beatTime: beat.time, intendedDelay: dNow, scheduledAt: timing.scheduledAt, perfNow: timing.perfNow });
       }
-      
+
       if (core.MotionDetector.checkMovement()) {
         const w = document.getElementById("trial-movement-warning");
-        w.classList.add("visible"); clearTimeout(w._t); w._t = setTimeout(() => w.classList.remove("visible"), 2000);
+        if (w) { w.classList.add("visible"); clearTimeout(w._t); w._t = setTimeout(() => w.classList.remove("visible"), 2000); }
       }
     };
 
     const fCb = (p) => {
       isFingerPresent = p; updateSensorWarning();
-      if (!p) { trialFingerLossEvents.push({ lostAt: performance.now() }); } 
+      if (!p) { trialFingerLossEvents.push({ lostAt: performance.now() }); }
       else if (trialFingerLossEvents.length > 0 && !trialFingerLossEvents[trialFingerLossEvents.length - 1].restoredAt) {
         trialFingerLossEvents[trialFingerLossEvents.length - 1].restoredAt = performance.now();
       }
@@ -2532,61 +2837,57 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     };
 
     const ppgCb = () => {
-       if (videoElement && videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
-          previewCtx.drawImage(videoElement, 0, 0, 120 * (window.devicePixelRatio || 1), 120 * (window.devicePixelRatio || 1));
-       }
+      if (videoElement && videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+        previewCtx.drawImage(videoElement, 0, 0, 120 * (window.devicePixelRatio || 1), 120 * (window.devicePixelRatio || 1));
+      }
     };
 
     if (!trialDetectorRunning) {
       await core.BeatDetector.start({ video: videoElement, canvas: document.getElementById("sampling-canvas"), onBeatCb: beatCb, onFingerChangeCb: fCb, onSqiUpdateCb: sqiCb, onDicroticRejectCb: (info) => trialDicroticRejections.push(info), onPPGSampleCb: ppgCb });
       trialDetectorRunning = true;
-    } else { 
-      core.BeatDetector.setCallbacks({ onBeatCb: beatCb, onFingerChangeCb: fCb, onSqiUpdateCb: sqiCb, onDicroticRejectCb: (info) => trialDicroticRejections.push(info), onPPGSampleCb: ppgCb }); 
+    } else {
+      core.BeatDetector.setCallbacks({ onBeatCb: beatCb, onFingerChangeCb: fCb, onSqiUpdateCb: sqiCb, onDicroticRejectCb: (info) => trialDicroticRejections.push(info), onPPGSampleCb: ppgCb });
     }
   }
 
+  // ----------------------------------------------------------
+  // END TRIAL
+  // ----------------------------------------------------------
   function endTrial() {
-    trialRunning = false; 
+    trialRunning = false;
     if (core) {
       core.MotionDetector.stop(); stopSensorWatchdog();
       core.BeatDetector.setCallbacks({ onBeatCb: null, onFingerChangeCb: null, onSqiUpdateCb: null, onDicroticRejectCb: null, onPPGSampleCb: null });
     }
 
     const totalBeats = trialCleanBeats + trialFlaggedBeats;
-    const td = { 
-      type: "trial", isPractice: currentTrialIndex < 0, initialKnobValue: trialInitialKnob, visualOffset: trialVisualOffset, 
-      instantPeriods: [...trialIP], averagePeriods: [...trialAP], knobScales: [...trialKS], currentDelays: [...trialCD], instantErrs: [...trialIE], recordedHR: [...trialRecordedHR], instantBpms: [...trialInstantBpms], toneTimings: [...trialToneTimings], fingerLossEvents: [...trialFingerLossEvents], confidence: -1, bodyPos: -1, 
-      ppgDiagnostics: core ? core.BeatDetector.getDiagnostics() : null, ibiFlags: [...trialIbiFlags], sqiTimeSeries: [...trialSqiTimeSeries], dicroticRejections: [...trialDicroticRejections], 
-      qualitySummary: { totalBeats, cleanBeats: trialCleanBeats, flaggedBeats: trialFlaggedBeats, flagRate: totalBeats > 0 ? Math.round(trialFlaggedBeats / totalBeats * 10000) / 100 : 0, dicroticRejectsCount: trialDicroticRejections.length, sqiBadSeconds: Math.round(trialSqiBadSeconds * 10) / 10, sqiFinalValue: core ? Math.round(core.BeatDetector.getSqi() * 100000) / 100000 : 0 } 
+    const td = {
+      type: "trial", isPractice: currentTrialIndex < 0,
+      initialKnobValue: trialInitialKnob, visualOffset: trialVisualOffset,
+      instantPeriods: [...trialIP], averagePeriods: [...trialAP],
+      knobScales: [...trialKS], currentDelays: [...trialCD], instantErrs: [...trialIE],
+      recordedHR: [...trialRecordedHR], instantBpms: [...trialInstantBpms],
+      toneTimings: [...trialToneTimings], fingerLossEvents: [...trialFingerLossEvents],
+      confidence: -1, bodyPos: -1,
+      ppgDiagnostics: core ? core.BeatDetector.getDiagnostics() : {},
+      ibiFlags: [...trialIbiFlags], sqiTimeSeries: [...trialSqiTimeSeries],
+      dicroticRejections: [...trialDicroticRejections],
+      qualitySummary: {
+        totalBeats, cleanBeats: trialCleanBeats, flaggedBeats: trialFlaggedBeats,
+        flagRate: totalBeats > 0 ? Math.round(trialFlaggedBeats / totalBeats * 10000) / 100 : 0,
+        dicroticRejectsCount: trialDicroticRejections.length,
+        sqiBadSeconds: Math.round(trialSqiBadSeconds * 10) / 10,
+        sqiFinalValue: core ? Math.round(core.BeatDetector.getSqi() * 100000) / 100000 : 0,
+        ibiChangeThreshold: IBI_CHANGE_THRESHOLD, sqiGoodThreshold: SQI_GOOD, sqiWarnThreshold: SQI_WARN
+      }
     };
-    
-    if (core) {
-      td.audioDropLog = core.AudioEngine.getDropLog(); td.audioCtxState = core.AudioEngine.getState();
-      core.AudioEngine.clearDropLog(); core.AudioEngine.resetSchedulerState();
-    }
 
-    // Evaluate overlays
-    const needsConf = config.modules?.epat?.confidence_ratings && !td.isPractice;
-    const needsMap  = config.modules?.epat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % 4 === 0;
+    if (core) { td.audioDropLog = core.AudioEngine.getDropLog(); td.audioCtxState = core.AudioEngine.getState(); core.AudioEngine.clearDropLog(); core.AudioEngine.resetSchedulerState(); }
 
-    if (needsMap) {
-      show("screen-bodymap");
-      const parts = document.querySelectorAll(".body-part"), nb = document.getElementById("nowhere-btn"), cb = document.getElementById("confirm-bodymap-btn");
-      let sel = -1; cb.disabled = true;
-      parts.forEach(p => { p.classList.remove("selected"); p.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); nb.classList.remove("selected"); p.classList.add("selected"); sel = parseInt(p.dataset.value); cb.disabled = false; }; });
-      nb.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); nb.classList.add("selected"); sel = 8; cb.disabled = false; };
-      cb.onclick = () => { td.bodyPos = sel; finalizeTrialPayload(td, needsConf); };
-    } else {
-      finalizeTrialPayload(td, needsConf);
-    }
-  }
-
-  // The actual Confidence Rating implementation
-  function finalizeTrialPayload(td, needsConf) {
-    if (needsConf) {
+    // Confidence rating (if enabled)
+    if (config.modules?.epat?.confidence_ratings) {
       show("screen-ema");
       document.getElementById("ema-progress-fill").style.width = "100%";
-      document.getElementById("ema-greeting").textContent = "Confidence";
       const container = document.getElementById("ema-single-container");
       container.innerHTML = `
         <div class="ema-question">How confident are you that the sound matched your heartbeat?</div>
@@ -2599,18 +2900,34 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
       const sl = document.getElementById("conf-slider");
       const vd = document.getElementById("conf-val");
       const btn = document.getElementById("ema-next-btn");
-      
       btn.textContent = "Submit"; btn.disabled = true;
       sl.oninput = () => { vd.textContent = sl.value; btn.disabled = false; };
-      
-      // Override default click specifically for this screen
       btn.onclick = () => {
         td.confidence = parseInt(sl.value);
-        sessionData.data.push(td);
-        wrapTrial();
+        btn.onclick = null;
+        afterConfidence(td);
       };
     } else {
-      sessionData.data.push(td); 
+      afterConfidence(td);
+    }
+  }
+
+  function afterConfidence(td) {
+    // Body map (if enabled, every N trials)
+    if (config.modules?.epat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % BODY_MAP_EVERY === 0) {
+      show("screen-bodymap");
+      const parts = document.querySelectorAll(".body-part");
+      const nowhereBtn = document.getElementById("nowhere-btn");
+      const confirmBtn = document.getElementById("confirm-bodymap-btn");
+      let sel = -1; confirmBtn.disabled = true;
+      parts.forEach(p => {
+        p.classList.remove("selected");
+        p.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); if (nowhereBtn) nowhereBtn.classList.remove("selected"); p.classList.add("selected"); sel = parseInt(p.dataset.value); confirmBtn.disabled = false; };
+      });
+      if (nowhereBtn) { nowhereBtn.classList.remove("selected"); nowhereBtn.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); nowhereBtn.classList.add("selected"); sel = 8; confirmBtn.disabled = false; }; }
+      confirmBtn.onclick = () => { td.bodyPos = sel; confirmBtn.onclick = null; sessionData.data.push(td); wrapTrial(); };
+    } else {
+      sessionData.data.push(td);
       wrapTrial();
     }
   }

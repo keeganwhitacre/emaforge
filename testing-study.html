@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Interoception Study123</title>
-  <script>window.__CONFIG__ = {"schema_version":"1.3.0","study":{"name":"Interoception Study123","institution":" asdf","theme":"light","accent_color":"#0056d6","output_format":"csv","greetings":{"w1":"Good Morning123456","w2":"Check-In","w3":"Good Evening"}},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q11","type":"text","text":"testing","required":true,"condition":null,"block":"post","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Morning","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true}},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false}},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false}}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":2,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}}};</script>
+  <title>Testing</title>
+  <script>window.__CONFIG__ = {"schema_version":"1.4.0","study":{"name":"Testing","institution":"","theme":"dark","accent_color":"#ffa57d","output_format":"csv","completion_lock":true,"resume_enabled":true,"greetings":{"w1":"Good Morning","w2":"Check-In","w3":"Good Evening"}},"onboarding":{"enabled":true,"ask_schedule":true,"consent_text":"<h3>1. Purpose</h3>\n<p>This research investigates individual differences in how people perceive internal body signals such as heartbeats, and how this relates to mood and daily experience.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study. You will also complete a task where you adjust an auditory tone to match your heartbeat using a dial.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"},"ema":{"questions":[{"id":"q1","type":"slider","text":"Right now, my mood is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Unpleasant","Pleasant"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q11","type":"page_break","windows":null},{"id":"q2","type":"slider","text":"Right now, my energy level is…","min":0,"max":100,"step":1,"unit":null,"anchors":["Low / Calm","High / Activated"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q12","type":"page_break","windows":null},{"id":"q3","type":"choice","text":"What are you doing right now?","options":["Resting","Working / Studying","Socializing","Exercising","Eating","Commuting","Other"],"required":true,"condition":null,"block":"both","windows":null},{"id":"q13","type":"page_break","windows":null},{"id":"q14","type":"affect_grid","text":"Right now, how are you feeling?","valence_labels":["Unpleasant","Pleasant"],"arousal_labels":["Deactivated","Activated"],"show_quadrant_labels":true,"required":true,"condition":null,"block":"both","windows":null}],"scheduling":{"study_days":14,"daily_prompts":3,"days_of_week":[1,2,3,4,5],"windows":[{"id":"w1","label":"Morning","start":"08:00","end":"10:00","phases":{"pre":true,"task":"epat","post":true},"phase_sequence":[{"kind":"ema","block":"pre"},{"kind":"task","id":"epat"},{"kind":"ema","block":"post"}]},{"id":"w2","label":"Afternoon","start":"13:00","end":"15:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]},{"id":"w3","label":"Evening","start":"19:00","end":"21:00","phases":{"pre":true,"task":null,"post":false},"phase_sequence":[{"kind":"ema","block":"pre"}]}],"timing":{"expiry_minutes":60,"grace_minutes":10}}},"modules":{"epat":{"trials":2,"trial_duration_sec":30,"retry_budget":30,"sqi_threshold":0.3,"confidence_ratings":true,"two_phase_practice":true,"body_map":true}}};</script>
   <script>
 /* ============================================================
  * epat-core.js
@@ -642,7 +642,7 @@
 })();
 
 </script>
-  <style>:root{--accent: #0056d6; --accent-hover: #0042c2; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #f9f9fb; --bg-surface: #ffffff; --bg-elevated: #f0f0f4; --border: #e0e0e5; --fg: #1c1c1e; --fg-muted: #8e8e93;}
+  <style>:root{--accent: #ffa57d; --accent-hover: #eb9169; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace; --bg: #121212; --bg-surface: #1e1e1e; --bg-elevated: #2d2d2d; --border: #3d3d3d; --fg: #e0e0e0; --fg-muted: #9e9e9e;}
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 
@@ -759,7 +759,14 @@
     .body-part.selected { fill: var(--accent); }
     #nowhere-btn { padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg-muted); font-family: var(--font); font-size: 0.9rem; cursor: pointer; margin: 16px auto; display: block; }
     #nowhere-btn.selected { border-color: var(--accent); color: var(--accent); }
-  </style>
+
+    cconst AFFECT_GRID_CSS = 
+    /* ======== AFFECT GRID ======== */
+    .affect-grid-container { width: 100%; max-width: 360px; margin: 0 auto; }
+    /* Values and marker positioning are inline on the SVG — the container
+       just centers and spaces. SVG styles use CSS vars via inline style
+       attrs set in module-ema.js. */
+</style>
 </head>
 <body>
   <!-- Hidden Camera feeds -->
@@ -900,46 +907,50 @@
 
 // ==========================================================
 // EMA Studio — study-base.js (runtime)
-// v1.3.0
+// v1.4.0
 // ==========================================================
 //
-// Changes from v1.2:
+// Changes from v1.3:
 //
-// ROUTER (the big one):
-//   - Sessions are now resolved by looking up the window in config.ema.scheduling.windows
-//     and consuming its { pre, task, post } phase spec. Legacy string-matching on
-//     "pair_" and "ema" prefixes is gone. A session is identified by sessionId alone,
-//     which is always a window id (e.g. "w1") or the literal string "onboarding".
-//   - sessionData.phases now contains tokens of three shapes:
-//       "pre_<windowId>"   — EMA block before the task
-//       "post_<windowId>"  — EMA block after the task
-//       "<moduleId>"       — a task module (e.g. "epat")
-//   - runNextPhase() dispatches by token shape: pre_/post_ → EMA.start,
-//     any other token → look up in config.modules and invoke the registered handler.
+// PHASE SEQUENCE (forward-looking):
+//   - Router now prefers config.ema.scheduling.windows[i].phase_sequence
+//     when non-empty. Falls back to the legacy {pre, task, post} triple
+//     if phase_sequence is missing (old exports still work).
+//   - phase_sequence is an ordered array of:
+//       { kind: "ema",  block: "pre" | "post" }
+//       { kind: "task", id: "epat" | "stroop" | ... }
+//   - Multiple tasks per session are now a pure schema concern — the router
+//     just walks the array.
 //
-// MODULE NAMING:
-//   - Hardcoded 'pat' string literals are gone. Everywhere we look for ePAT config
-//     we now read config.modules.epat. Everywhere we dispatch we use the module id.
+// RESUME (study.resume_enabled):
+//   - After every phase transition (advancePhase) and at finalizeSession,
+//     we write sessionData to localStorage under a resume key built from
+//     (pid, day, sessionId-in-url). On load, if there's a saved state and
+//     status is "in_progress", we show a resume dialog: continue or restart.
+//   - Resume skips completed phases and picks up at sessionData.currentPhase.
+//     In-progress phase state (mid-EMA page, mid-trial) is NOT persisted —
+//     participants restart the current phase. This is the defensible boundary:
+//     resuming mid-trial for ePAT would require serialising PPG state which
+//     is too fragile. The phase restarts; the already-completed phases
+//     (and their data) survive.
 //
-// DATA CONTRACT (session output):
-//   - sessionData.schemaVersion    — stamped from config.schema_version
-//   - sessionData.studyName        — for downstream identification
-//   - Each ema_response entry in sessionData.data now has:
-//       .startedAt   — ISO timestamp when the phase first rendered
-//       .submittedAt — ISO timestamp when the phase was submitted
-//       .responses   — { [questionId]: { value, respondedAt } }
-//     The per-question .respondedAt enables response-latency analyses.
+// COMPLETION LOCK (study.completion_lock):
+//   - On finalizeSession, we stamp a completion record keyed on
+//     (pid, day, urlSession). On load, if a completion already exists,
+//     the start button is disabled and the screen explains why. Can be
+//     bypassed by adding ?force=1 to the URL (for researcher testing).
 //
-// UPLOAD:
-//   - Default output format is now CSV (long-format EMA responses) per
-//     config.study.output_format. JSON is opt-in.
-//   - When ePAT is present in the session, the task portion always downloads
-//     as JSON (signal data doesn't flatten). CSV export covers EMA only.
-//   - Filename convention: <study_slug>_<pid>_<sessionId>_<type>.<ext>
+// THEME HOT-LOAD (static bundle fix):
+//   - Runtime reads config.study.theme + accent_color and injects CSS
+//     variables into :root. This means the static-hosting bundle can
+//     change theme by editing config.json without re-exporting. For the
+//     single-file export, the CSS is already baked in, so this is a no-op.
 //
-// STORAGE HOOK:
-//   - (no change in this file — the auto-save fix lives in js/storage.js)
-//
+// KNOWN-GOOD FROM v1.3 (preserved):
+//   - Per-question response latency (emaResponses.responses[qid].respondedAt)
+//   - CSV as default output
+//   - Explicit module dispatch switch
+//   - Session output JSON/CSV contract
 // ==========================================================
 
 async function loadConfig() { return Promise.resolve(window.__CONFIG__); }
@@ -955,7 +966,6 @@ function show(id) {
 
 function evalCond(cond, responses) {
   if (!cond) return true;
-  // responses is { qid: { value, respondedAt } } — we compare against .value
   const rec = responses[cond.question_id];
   const val = rec && typeof rec === 'object' ? rec.value : rec;
   if (val === undefined || val === null || val === '') return false;
@@ -996,25 +1006,120 @@ function evalCond(cond, responses) {
 })();
 
 // ==========================================================
-// UPLOAD
+// RESUME MANAGER
 // ----------------------------------------------------------
-// Emits participant data. Format selection per config.study.output_format.
-//
-// CSV format (default): long-format EMA responses only.
-//   Columns: schema_version, study_name, participant_id, session_id,
-//            session_type, day, window_id, window_label, block,
-//            session_started_at, session_submitted_at,
-//            phase_started_at, phase_submitted_at,
-//            question_id, question_text, question_type,
-//            response_value, response_numeric, response_latency_ms
-//
-//   Multi-select questions: one row per response with semicolon-separated values.
-//   Non-numeric responses get NA in response_numeric.
-//
-// JSON format: full nested sessionData with all task signal data.
-//   This is also used when ePAT data is present, regardless of format setting,
-//   because signal arrays don't flatten to CSV meaningfully. In mixed sessions
-//   we emit BOTH files: _ema.csv (responses) and _task.json (signal data).
+// Keyed on a string built from pid + day + the session param from the URL.
+// Not the runtime-generated sessionData.sessionId, because that changes on
+// every reload — we want a stable key so reloads after a crash actually
+// find the saved state.
+// ==========================================================
+const ResumeManager = {
+  _prefix: 'ema_studio_resume_v1__',
+
+  _key(pid, day, urlSession) {
+    return this._prefix + [pid || 'anon', day || '0', urlSession || 'default'].join('|');
+  },
+
+  save(pid, day, urlSession, sessionData) {
+    if (isPreview) return;
+    try {
+      localStorage.setItem(this._key(pid, day, urlSession), JSON.stringify(sessionData));
+    } catch (e) {
+      // Quota exceeded — most likely ePAT signal data from prior sessions.
+      // Fail silently; losing resume capability is better than crashing.
+      console.warn('ResumeManager.save failed:', e);
+    }
+  },
+
+  load(pid, day, urlSession) {
+    if (isPreview) return null;
+    try {
+      const raw = localStorage.getItem(this._key(pid, day, urlSession));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  clear(pid, day, urlSession) {
+    try { localStorage.removeItem(this._key(pid, day, urlSession)); } catch (e) {}
+  }
+};
+
+// ==========================================================
+// COMPLETION LOCK
+// ----------------------------------------------------------
+// One completed session per (pid, day, urlSession). Client-side only —
+// a participant switching phones or clearing browser data bypasses this,
+// which is the best you can do without a server. For most EMA use cases
+// that's fine: the scenario you actually care about is the participant
+// accidentally opening the same link twice in a row.
+// ==========================================================
+const CompletionLock = {
+  _prefix: 'ema_studio_done_v1__',
+
+  _key(pid, day, urlSession) {
+    return this._prefix + [pid || 'anon', day || '0', urlSession || 'default'].join('|');
+  },
+
+  isLocked(pid, day, urlSession) {
+    if (isPreview) return false;
+    try {
+      return !!localStorage.getItem(this._key(pid, day, urlSession));
+    } catch (e) { return false; }
+  },
+
+  stamp(pid, day, urlSession) {
+    if (isPreview) return;
+    try {
+      localStorage.setItem(this._key(pid, day, urlSession), new Date().toISOString());
+    } catch (e) {}
+  }
+};
+
+// ==========================================================
+// THEME HOT-LOAD (for static bundle re-themeing via config.json edits)
+// ==========================================================
+function applyThemeFromConfig(cfg) {
+  // Only needed for the static bundle case where CSS is a separate file
+  // with baked theme vars. The single-file export already has the right
+  // vars inlined, so this is a no-op overwrite with the same values.
+  // Runs before any screen renders so there's no flash.
+  const study = cfg.study || {};
+  const accent = study.accent_color || '#e8716a';
+  const theme  = study.theme || 'oled';
+
+  const root = document.documentElement.style;
+  root.setProperty('--accent', accent);
+
+  // These color sets duplicate export.js getThemeCSS — kept in sync by hand.
+  // If you change one, change the other.
+  if (theme === 'light') {
+    root.setProperty('--bg',         '#f9f9fb');
+    root.setProperty('--bg-surface', '#ffffff');
+    root.setProperty('--bg-elevated','#f0f0f4');
+    root.setProperty('--border',     '#e0e0e5');
+    root.setProperty('--fg',         '#1c1c1e');
+    root.setProperty('--fg-muted',   '#8e8e93');
+  } else if (theme === 'dark') {
+    root.setProperty('--bg',         '#121212');
+    root.setProperty('--bg-surface', '#1e1e1e');
+    root.setProperty('--bg-elevated','#2d2d2d');
+    root.setProperty('--border',     '#3d3d3d');
+    root.setProperty('--fg',         '#e0e0e0');
+    root.setProperty('--fg-muted',   '#9e9e9e');
+  } else {
+    root.setProperty('--bg',         '#000000');
+    root.setProperty('--bg-surface', '#111111');
+    root.setProperty('--bg-elevated','#1c1c1e');
+    root.setProperty('--border',     '#2c2c2e');
+    root.setProperty('--fg',         '#ffffff');
+    root.setProperty('--fg-muted',   '#8e8e93');
+  }
+}
+
+// ==========================================================
+// UPLOAD (unchanged from v1.3 apart from the filename date fix)
 // ==========================================================
 const Upload = {
 
@@ -1032,8 +1137,6 @@ const Upload = {
     document.body.removeChild(a);
   },
 
-  // Coerce a response value to a number where possible. Returns '' for NA.
-  // Arrays (multi-select) never coerce — they're flagged with a sentinel.
   _toNumeric(val) {
     if (val === null || val === undefined || val === '') return '';
     if (Array.isArray(val)) return '';
@@ -1044,6 +1147,10 @@ const Upload = {
   _serializeValue(val) {
     if (val === null || val === undefined) return '';
     if (Array.isArray(val)) return val.join(';');
+    // Affect-grid values are {valence, arousal} objects — serialize as "v;a"
+    if (val && typeof val === 'object' && 'valence' in val && 'arousal' in val) {
+      return `${val.valence};${val.arousal}`;
+    }
     return String(val);
   },
 
@@ -1055,7 +1162,6 @@ const Upload = {
     return s;
   },
 
-  // Build a lookup of question metadata by id for CSV enrichment.
   _buildQuestionIndex(cfg) {
     const idx = {};
     (cfg.ema?.questions || []).forEach(q => {
@@ -1064,8 +1170,6 @@ const Upload = {
     return idx;
   },
 
-  // Flatten sessionData into long-format CSV rows (EMA responses only).
-  // Returns { header, rows } where rows is an array of arrays.
   _buildEmaCsv(sessionData, cfg) {
     const qIdx = this._buildQuestionIndex(cfg);
     const windows = cfg.ema?.scheduling?.windows || [];
@@ -1091,7 +1195,7 @@ const Upload = {
 
       Object.entries(entry.responses || {}).forEach(([qid, rec]) => {
         const q = qIdx[qid] || {};
-        const rawVal = (rec && typeof rec === 'object') ? rec.value : rec;
+        const rawVal = (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
         const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
         const latency = (phaseStartMs && respAt) ? (Date.parse(respAt) - phaseStartMs) : '';
 
@@ -1129,7 +1233,6 @@ const Upload = {
     return lines.join('\n');
   },
 
-  // Does this session contain any non-EMA task data that can't flatten to CSV?
   _hasTaskSignalData(sessionData) {
     return (sessionData.data || []).some(e =>
       e && (e.type === 'baseline' || e.type === 'trial')
@@ -1147,7 +1250,6 @@ const Upload = {
     const date = new Date().toISOString().slice(0, 10);
     const base = `${slug}_${pid}_${date}_${sid}`;
 
-    // Always emit JSON if format is json OR if there's task signal data
     const shouldEmitJson = format === 'json' || this._hasTaskSignalData(sessionData);
     const shouldEmitCsv  = format === 'csv';
 
@@ -1160,12 +1262,8 @@ const Upload = {
     }
 
     if (shouldEmitJson) {
-      // When CSV is selected but task data is present, emit task-only JSON
-      // to avoid duplicating EMA responses. When JSON is selected outright,
-      // emit the full session.
       const payload = (shouldEmitCsv && this._hasTaskSignalData(sessionData))
         ? {
-            // Task-only payload — EMA responses are in the CSV
             schemaVersion: sessionData.schemaVersion,
             studyName:     sessionData.studyName,
             sessionId:     sessionData.sessionId,
@@ -1213,6 +1311,10 @@ function collectDeviceMetadata() {
 // ==========================================================
 (async function() {
   const config = await loadConfig();
+
+  // Apply theme first so there's no flash of wrong-themed screen
+  applyThemeFromConfig(config);
+
   const params = new URLSearchParams(window.location.search);
 
   document.getElementById('study-title').textContent = config.study.name || 'Study';
@@ -1232,23 +1334,50 @@ function collectDeviceMetadata() {
   const pidInput = document.getElementById('pid-input');
   const startBtn = document.getElementById('start-btn');
 
-  if (params.get('id')) {
-    pidInput.value = params.get('id');
+  // Stable URL-derived identifiers for resume + completion lock.
+  // These are set before any session starts so we can check locks upfront.
+  const urlPid     = (params.get('id') || '').trim();
+  const urlDay     = params.get('day') || '';
+  const urlSession = sessionId;
+  const forceOverride = params.get('force') === '1';
+
+  if (urlPid) {
+    pidInput.value = urlPid;
     document.getElementById('participant-input-group').style.display = 'none';
+    startBtn.disabled = false;
   }
-  if (params.get('day')) {
+  if (urlDay) {
     const dl = document.getElementById('day-label');
-    dl.textContent = `Day ${params.get('day')}`;
+    dl.textContent = `Day ${urlDay}`;
     dl.style.display = 'block';
   }
   pidInput.addEventListener('input', () => { startBtn.disabled = !pidInput.value.trim(); });
 
+  // ---------------------------------------------------------------
+  // COMPLETION LOCK CHECK (before anything else)
+  // ---------------------------------------------------------------
+  if (config.study?.completion_lock && !forceOverride && urlPid) {
+    if (CompletionLock.isLocked(urlPid, urlDay, urlSession)) {
+      document.getElementById('task-subtitle').textContent = 'Already Completed';
+      const dayLabel = document.getElementById('day-label');
+      if (dayLabel) { dayLabel.textContent = 'Thank you'; dayLabel.style.display = 'block'; }
+      startBtn.disabled = true;
+      startBtn.textContent = 'Session already submitted';
+      document.getElementById('participant-input-group').style.display = 'none';
+      return;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Build a fresh sessionData template. The router below populates
+  // .type, .phases, and .counterbalance.
+  // ---------------------------------------------------------------
   let sessionData = {
     schemaVersion: config.schema_version || '',
     studyName:     config.study?.name || '',
     sessionId:     "ses_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
-    participantId: '',
-    day:           parseInt(params.get('day')) || null,
+    participantId: urlPid,
+    day:           parseInt(urlDay) || null,
     type:          "",
     phases:        [],
     currentPhase:  0,
@@ -1264,9 +1393,37 @@ function collectDeviceMetadata() {
   const dynamicWindows = config.ema?.scheduling?.windows || [];
   const enabledModules = config.modules || {};
 
-  // -----------------------------------------------------------------
-  // ROUTER — v1.3: consume window.phases instead of string-matching.
-  // -----------------------------------------------------------------
+  // ---------------------------------------------------------------
+  // ROUTER — v1.4: consume window.phase_sequence (preferred) OR the
+  // legacy {pre, task, post} triple (fallback).
+  // ---------------------------------------------------------------
+  function expandWindowToTokens(w) {
+    const seq = (Array.isArray(w.phase_sequence) && w.phase_sequence.length > 0)
+      ? w.phase_sequence
+      : legacyTripleToSequence(w.phases);
+
+    const tokens = [];
+    seq.forEach(step => {
+      if (step.kind === 'ema') {
+        const block = step.block === 'post' ? 'post' : 'pre';
+        tokens.push(`${block}_${w.id}`);
+      } else if (step.kind === 'task' && step.id && enabledModules[step.id]) {
+        tokens.push(step.id);
+      }
+      // Unknown kinds and disabled modules silently drop — degrade gracefully.
+    });
+    return tokens;
+  }
+
+  function legacyTripleToSequence(phases) {
+    const ph = phases || { pre: true, task: null, post: false };
+    const seq = [];
+    if (ph.pre)             seq.push({ kind: "ema",  block: "pre"  });
+    if (ph.task)            seq.push({ kind: "task", id:    ph.task });
+    if (ph.post && ph.task) seq.push({ kind: "ema",  block: "post" });
+    return seq;
+  }
+
   if (sessionId === 'onboarding') {
     sessionData.type = "onboarding";
     document.getElementById('task-subtitle').textContent = "Study Setup";
@@ -1274,8 +1431,6 @@ function collectDeviceMetadata() {
     const w = dynamicWindows.find(win => win.id === sessionId);
 
     if (!w) {
-      // Unknown session id — treat as a minimal EMA-only shot at whatever the
-      // first window is, so we degrade gracefully instead of blanking out.
       const fallback = dynamicWindows[0];
       if (fallback) {
         sessionData.type = "ema_only";
@@ -1289,44 +1444,62 @@ function collectDeviceMetadata() {
         return;
       }
     } else {
-      const ph = w.phases || { pre: true, task: null, post: false };
-      const taskId = ph.task && enabledModules[ph.task] ? ph.task : null;
+      let phaseTokens = expandWindowToTokens(w);
 
-      // Build phase token list in order
-      const phaseTokens = [];
-      if (ph.pre)  phaseTokens.push(`pre_${w.id}`);
-      if (taskId)  phaseTokens.push(taskId);
-      if (ph.post && taskId) phaseTokens.push(`post_${w.id}`);
-
-      // Apply counterbalancing if requested AND the window has task+pre (not post)
-      // Honored counterbalance values: 'task_first' (reverses pre,task → task,pre)
-      // Retained for backward compat: 'pat_first' (alias for task_first when task is epat)
-      if (cbParam && taskId && ph.pre) {
-        const wantTaskFirst = (cbParam === 'task_first') ||
-                              (cbParam === 'pat_first' && taskId === 'epat');
-        if (wantTaskFirst) {
-          // swap first two: [pre_w, task, ...] → [task, pre_w, ...]
-          [phaseTokens[0], phaseTokens[1]] = [phaseTokens[1], phaseTokens[0]];
-          sessionData.counterbalance = 'task_first';
-        } else {
-          sessionData.counterbalance = 'pre_first';
+      // Counterbalancing: swap first pair if the window has both an EMA pre-block
+      // and a task, and cb=task_first was requested. Kept narrow-scope — if you
+      // need arbitrary permutations you'd edit phase_sequence directly in config.
+      if (cbParam && phaseTokens.length >= 2) {
+        const firstIsPre  = phaseTokens[0].startsWith('pre_');
+        const secondIsTask = !phaseTokens[1].startsWith('pre_') && !phaseTokens[1].startsWith('post_');
+        if (firstIsPre && secondIsTask) {
+          const wantTaskFirst = (cbParam === 'task_first') ||
+                                (cbParam === 'pat_first' && phaseTokens[1] === 'epat');
+          if (wantTaskFirst) {
+            [phaseTokens[0], phaseTokens[1]] = [phaseTokens[1], phaseTokens[0]];
+            sessionData.counterbalance = 'task_first';
+          } else {
+            sessionData.counterbalance = 'pre_first';
+          }
         }
       }
 
-      sessionData.type = taskId ? (ph.post ? "pre_task_post" : "pre_task") : "ema_only";
+      // Categorize session type for downstream analyses.
+      const hasTask = phaseTokens.some(t => !t.startsWith('pre_') && !t.startsWith('post_'));
+      const hasPost = phaseTokens.some(t => t.startsWith('post_'));
+      sessionData.type = hasTask ? (hasPost ? "pre_task_post" : "pre_task") : "ema_only";
       sessionData.phases = phaseTokens;
 
       document.getElementById('task-subtitle').textContent = w.label || 'Check-In';
     }
   }
 
-  // Dynamic greeting based on window id — module-ema can also override at start
+  // Dynamic greeting based on window id
   const greetings = config.study?.greetings || {};
   const matchedWindow = dynamicWindows.find(w => w.id === sessionId);
   const greetingText = greetings[sessionId]
                     || (matchedWindow ? matchedWindow.label : 'Check-In');
   const greetingEl = document.getElementById('ema-greeting');
   if (greetingEl) greetingEl.textContent = greetingText;
+
+  // ---------------------------------------------------------------
+  // RESUME CHECK (offer to continue if a prior in-progress session exists)
+  // ---------------------------------------------------------------
+  let resumeOffer = null;
+  if (config.study?.resume_enabled && !isPreview && urlPid) {
+    const saved = ResumeManager.load(urlPid, urlDay, urlSession);
+    if (saved && saved.status === 'in_progress' && Array.isArray(saved.phases) && saved.phases.length) {
+      // Validate that the saved phase list is still consistent with the current
+      // config. If phases array differs (config was re-exported with different
+      // structure), we refuse to resume — start over is safer.
+      const sameShape = JSON.stringify(saved.phases) === JSON.stringify(sessionData.phases);
+      if (sameShape && typeof saved.currentPhase === 'number' && saved.currentPhase < saved.phases.length) {
+        resumeOffer = saved;
+      } else {
+        ResumeManager.clear(urlPid, urlDay, urlSession);
+      }
+    }
+  }
 
   // ==========================================================
 // ONBOARDING ENGINE
@@ -1639,31 +1812,48 @@ const OnboardingSession = (function() {
   };
 })();
 
+"use strict";
+
 // ==========================================================
-// EMA PAGINATION ENGINE — v1.3
+// EMA PAGINATION ENGINE — v1.4
 // ==========================================================
 //
-// Changes from v1.2:
+// Changes from v1.3:
 //
-// DATA CONTRACT:
-//   - emaResponses.startedAt — ISO timestamp when the phase first rendered
-//   - emaResponses.submittedAt — ISO timestamp when the phase was submitted
-//   - Each entry in emaResponses.responses is now an object:
-//       { value, respondedAt }
-//     instead of the bare value. This enables per-question response-latency
-//     analyses. evalCond() in study-base.js handles both shapes for
-//     backward compatibility with imported data, but new writes always
-//     use the object shape.
+// NEW QUESTION TYPE: affect_grid
+//   A 2D tap-target for core affect (valence × arousal). Based on the
+//   Russell circumplex / affect-grid tradition (Russell, Weiss, & Mendelsohn,
+//   1989 and the Yik et al. (2011) refinements). Captures valence and
+//   arousal as a joint {x, y} point in [-1, 1] rather than two independent
+//   sliders — which is the conceptually-correct way to measure core affect
+//   under a constructionist framework because it forces participants to
+//   commit to a single integrated location.
 //
-// ROUTER COMPAT:
-//   - The legacy "plain window id" phase token path is gone. v1.3 always
-//     sends "pre_<wid>" or "post_<wid>". If you see an unprefixed token,
-//     it's a bug in the router, not input to tolerate here.
+//   Config:
+//     {
+//       id: "q_affect",
+//       type: "affect_grid",
+//       text: "Right now, how are you feeling?",
+//       valence_labels:  ["Unpleasant", "Pleasant"],    // [low, high]
+//       arousal_labels:  ["Deactivated", "Activated"],  // [low, high]
+//       show_quadrant_labels: true,                     // optional
+//       required: true, condition, block, windows
+//     }
 //
-// GREETING:
-//   - study-base.js sets the greeting before calling EMA.start() — this
-//     module doesn't touch the element. Keeps one responsibility per file.
+//   Stored value: { valence: -1..1, arousal: -1..1 }
+//   CSV serialization: "valence;arousal" (see Upload._serializeValue)
+//   CSV response_numeric: '' (it's 2D — use valence/arousal columns in R)
 //
+//   For analysts: the valence/arousal values are already orthogonal and
+//   standardized to [-1, 1] so you can drop them straight into a
+//   circumplex plot or feed them into ILR/multilevel models without
+//   rescaling.
+//
+// PRESERVED from v1.3:
+//   - Per-question respondedAt timestamps
+//   - Skip-logic evaluation per page
+//   - Orphan page-break dropping
+//   - Prefixed phase tokens only (pre_<wid> / post_<wid>)
 // ==========================================================
 
 const EMA = (function() {
@@ -1672,15 +1862,7 @@ const EMA = (function() {
   let emaResponses     = null;
 
   // -----------------------------------------------------------------------
-  // buildPages(windowId, blockDir)
-  //
-  // Filtering logic:
-  //   Window filter: q.windows === null  → appears in all windows
-  //                  q.windows includes windowId → appears in this window
-  //   Block filter:  blockDir "pre"  → q.block is "pre" or "both"
-  //                  blockDir "post" → q.block is "post" or "both"
-  //
-  // Orphan page breaks (with nothing surviving on one side) are dropped.
+  // buildPages — unchanged from v1.3
   // -----------------------------------------------------------------------
   function buildPages(windowId, blockDir) {
     emaPages = [];
@@ -1712,10 +1894,6 @@ const EMA = (function() {
     if (currentBlock.length > 0) emaPages.push(currentBlock);
   }
 
-  // -----------------------------------------------------------------------
-  // Record a response with timestamp. This wraps the raw value in the
-  // v1.3 { value, respondedAt } envelope.
-  // -----------------------------------------------------------------------
   function recordResponse(qid, value) {
     emaResponses.responses[qid] = {
       value: value,
@@ -1723,9 +1901,6 @@ const EMA = (function() {
     };
   }
 
-  // -----------------------------------------------------------------------
-  // Get the bare value for a qid (for skip-logic evaluation during render).
-  // -----------------------------------------------------------------------
   function valueOf(qid) {
     const rec = emaResponses.responses[qid];
     if (rec === undefined) return undefined;
@@ -1733,8 +1908,194 @@ const EMA = (function() {
   }
 
   // -----------------------------------------------------------------------
-  // renderCurrentPage — builds DOM for the current page, advancing through
-  // any pages whose questions all fail skip-logic.
+  // Affect grid builder — builds an SVG tap-target and wires pointer events.
+  // Uses CSS variables for theming so it stays consistent across dark/light.
+  // -----------------------------------------------------------------------
+  function buildAffectGrid(q, wrapper) {
+    const cur = valueOf(q.id);
+    const initial = (cur && typeof cur === 'object' && 'valence' in cur && 'arousal' in cur)
+      ? cur
+      : null;
+
+    const vLabels = q.valence_labels || ['Unpleasant', 'Pleasant'];
+    const aLabels = q.arousal_labels || ['Deactivated', 'Activated'];
+    const showQuadrants = q.show_quadrant_labels !== false; // default true
+
+    const container = document.createElement('div');
+    container.className = 'affect-grid-container';
+    container.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;margin:0 auto;max-width:360px;width:100%;';
+
+    // Arousal high label (top)
+    const aHi = document.createElement('div');
+    aHi.textContent = aLabels[1];
+    aHi.style.cssText = 'font-size:0.82rem;color:var(--fg-muted);font-weight:500;';
+    container.appendChild(aHi);
+
+    // Row: [valence-low label] [grid] [valence-high label]
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;';
+
+    const vLo = document.createElement('div');
+    vLo.textContent = vLabels[0];
+    vLo.style.cssText = 'font-size:0.82rem;color:var(--fg-muted);font-weight:500;writing-mode:vertical-rl;transform:rotate(180deg);flex-shrink:0;';
+    row.appendChild(vLo);
+
+    // The grid itself — SVG so we get crisp rendering + easy hit testing
+    const gridWrap = document.createElement('div');
+    gridWrap.style.cssText = 'flex:1;aspect-ratio:1/1;position:relative;touch-action:none;user-select:none;';
+
+    const SIZE = 300;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+    svg.style.cssText = 'width:100%;height:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);display:block;cursor:crosshair;';
+
+    // Grid lines (3x3 reference lines)
+    for (let i = 1; i <= 3; i++) {
+      const x = (SIZE / 4) * i;
+      const lineV = document.createElementNS(svgNS, 'line');
+      lineV.setAttribute('x1', x); lineV.setAttribute('x2', x);
+      lineV.setAttribute('y1', 0); lineV.setAttribute('y2', SIZE);
+      lineV.setAttribute('stroke', 'var(--border)');
+      lineV.setAttribute('stroke-width', i === 2 ? '1.5' : '0.5');
+      lineV.setAttribute('stroke-dasharray', i === 2 ? '' : '2,3');
+      svg.appendChild(lineV);
+
+      const lineH = document.createElementNS(svgNS, 'line');
+      lineH.setAttribute('y1', x); lineH.setAttribute('y2', x);
+      lineH.setAttribute('x1', 0); lineH.setAttribute('x2', SIZE);
+      lineH.setAttribute('stroke', 'var(--border)');
+      lineH.setAttribute('stroke-width', i === 2 ? '1.5' : '0.5');
+      lineH.setAttribute('stroke-dasharray', i === 2 ? '' : '2,3');
+      svg.appendChild(lineH);
+    }
+
+    // Optional quadrant labels (faint)
+    if (showQuadrants) {
+      const quadLabels = [
+        { x: SIZE * 0.25, y: SIZE * 0.25, text: 'Tense'    },   // high arousal, low valence
+        { x: SIZE * 0.75, y: SIZE * 0.25, text: 'Excited'  },   // high arousal, high valence
+        { x: SIZE * 0.25, y: SIZE * 0.75, text: 'Depressed'},   // low arousal, low valence
+        { x: SIZE * 0.75, y: SIZE * 0.75, text: 'Calm'     }    // low arousal, high valence
+      ];
+      quadLabels.forEach(q => {
+        const txt = document.createElementNS(svgNS, 'text');
+        txt.setAttribute('x', q.x); txt.setAttribute('y', q.y);
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('dominant-baseline', 'middle');
+        txt.setAttribute('fill', 'var(--fg-muted)');
+        txt.setAttribute('font-size', '11');
+        txt.setAttribute('opacity', '0.5');
+        txt.textContent = q.text;
+        svg.appendChild(txt);
+      });
+    }
+
+    // The marker
+    const marker = document.createElementNS(svgNS, 'circle');
+    marker.setAttribute('r', '14');
+    marker.setAttribute('fill', 'var(--accent)');
+    marker.setAttribute('stroke', 'var(--bg)');
+    marker.setAttribute('stroke-width', '3');
+    marker.style.display = initial ? 'block' : 'none';
+    svg.appendChild(marker);
+
+    // "Tap to respond" hint, shown until first touch
+    const hint = document.createElementNS(svgNS, 'text');
+    hint.setAttribute('x', SIZE / 2);
+    hint.setAttribute('y', SIZE / 2 + 4);
+    hint.setAttribute('text-anchor', 'middle');
+    hint.setAttribute('fill', 'var(--fg-muted)');
+    hint.setAttribute('font-size', '13');
+    hint.textContent = 'Tap to place';
+    hint.style.pointerEvents = 'none';
+    if (initial) hint.style.display = 'none';
+    svg.appendChild(hint);
+
+    // ---- Coordinate math ----
+    // Screen → [-1, 1]:
+    //   valence = (x / SIZE) * 2 - 1         (left = -1, right = +1)
+    //   arousal = 1 - (y / SIZE) * 2         (top = +1, bottom = -1)
+    function svgPointFromClientPoint(clientX, clientY) {
+      const pt = svg.createSVGPoint();
+      pt.x = clientX; pt.y = clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function updateFromPoint(svgX, svgY) {
+      const x = Math.max(0, Math.min(SIZE, svgX));
+      const y = Math.max(0, Math.min(SIZE, svgY));
+      marker.setAttribute('cx', x);
+      marker.setAttribute('cy', y);
+      marker.style.display = 'block';
+      hint.style.display = 'none';
+
+      const valence = +((x / SIZE) * 2 - 1).toFixed(3);
+      const arousal = +(1 - (y / SIZE) * 2).toFixed(3);
+      recordResponse(q.id, { valence, arousal });
+      checkSubmitFn();
+    }
+
+    // Place initial marker if we had a prior value (resumption or going back)
+    if (initial) {
+      const x = ((initial.valence + 1) / 2) * SIZE;
+      const y = ((1 - initial.arousal) / 2) * SIZE;
+      marker.setAttribute('cx', x);
+      marker.setAttribute('cy', y);
+    }
+
+    // Unified pointer handling (works for mouse + touch + pen)
+    let dragging = false;
+    const onDown = e => {
+      dragging = true;
+      e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const pt = svgPointFromClientPoint(clientX, clientY);
+      updateFromPoint(pt.x, pt.y);
+    };
+    const onMove = e => {
+      if (!dragging) return;
+      e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const pt = svgPointFromClientPoint(clientX, clientY);
+      updateFromPoint(pt.x, pt.y);
+    };
+    const onUp = () => { dragging = false; };
+
+    svg.addEventListener('mousedown',  onDown);
+    svg.addEventListener('mousemove',  onMove);
+    window.addEventListener('mouseup', onUp);
+    svg.addEventListener('touchstart', onDown, { passive: false });
+    svg.addEventListener('touchmove',  onMove, { passive: false });
+    svg.addEventListener('touchend',   onUp);
+
+    gridWrap.appendChild(svg);
+    row.appendChild(gridWrap);
+
+    const vHi = document.createElement('div');
+    vHi.textContent = vLabels[1];
+    vHi.style.cssText = 'font-size:0.82rem;color:var(--fg-muted);font-weight:500;writing-mode:vertical-rl;flex-shrink:0;';
+    row.appendChild(vHi);
+
+    container.appendChild(row);
+
+    // Arousal low label (bottom)
+    const aLo = document.createElement('div');
+    aLo.textContent = aLabels[0];
+    aLo.style.cssText = 'font-size:0.82rem;color:var(--fg-muted);font-weight:500;';
+    container.appendChild(aLo);
+
+    wrapper.appendChild(container);
+  }
+
+  // Shared checkSubmit reference so affect-grid can call it.
+  // Set inside renderCurrentPage before any question builder runs.
+  let checkSubmitFn = () => {};
+
+  // -----------------------------------------------------------------------
+  // renderCurrentPage
   // -----------------------------------------------------------------------
   function renderCurrentPage() {
     const container = document.getElementById('ema-single-container');
@@ -1743,7 +2104,6 @@ const EMA = (function() {
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
       visibleQuestions = emaPages[currentPageIndex].filter(q => {
-        // Rewrap responses in the shape evalCond expects
         return evalCond(q.condition, emaResponses.responses);
       });
       if (visibleQuestions.length > 0) break;
@@ -1761,17 +2121,21 @@ const EMA = (function() {
     document.getElementById('ema-progress-fill').style.width = pct + '%';
     container.innerHTML = '';
 
-    // Tracks whether every required question on this page has been answered.
     function checkSubmit() {
       const allAnswered = visibleQuestions.every(q => {
         if (!q.required) return true;
         const v = valueOf(q.id);
         if (v === undefined || v === null || v === '') return false;
         if (Array.isArray(v) && v.length === 0) return false;
+        // affect_grid has an object shape — check for both coords
+        if (q.type === 'affect_grid') {
+          return v && typeof v === 'object' && 'valence' in v && 'arousal' in v;
+        }
         return true;
       });
       nextBtn.disabled = !allAnswered;
     }
+    checkSubmitFn = checkSubmit;  // share with builders
 
     visibleQuestions.forEach(q => {
       const wrapper = document.createElement('div');
@@ -1800,7 +2164,6 @@ const EMA = (function() {
         `;
         const slider = grp.querySelector('input');
         const disp   = grp.querySelector('.slider-val-display');
-        // Slider needs an explicit interaction before we count it as answered
         let touched = cur !== undefined && cur !== null && cur !== '';
         slider.addEventListener('input', () => {
           touched = true;
@@ -1809,7 +2172,6 @@ const EMA = (function() {
           recordResponse(q.id, v);
           checkSubmit();
         });
-        // If pre-filled (resumption case), record it
         if (touched && (cur !== valueOf(q.id))) {
           recordResponse(q.id, Number(defaultVal));
         }
@@ -1854,6 +2216,9 @@ const EMA = (function() {
         });
         wrapper.appendChild(grp);
 
+      } else if (q.type === 'affect_grid') {
+        buildAffectGrid(q, wrapper);
+
       } else {
         // Generic text / numeric input
         const grp = document.createElement('div');
@@ -1877,7 +2242,6 @@ const EMA = (function() {
 
     checkSubmit();
 
-    // Button label: "Submit" on last page of last phase, "Next" otherwise.
     const isLastPage  = currentPageIndex === emaPages.length - 1;
     const isLastPhase = sessionData.currentPhase === sessionData.phases.length - 1;
     nextBtn.textContent = (isLastPage && isLastPhase) ? 'Submit Check-In' : 'Next';
@@ -1888,10 +2252,6 @@ const EMA = (function() {
     setTimeout(() => container.classList.remove('fade-in'), 50);
   }
 
-  // Install the next-button handler inside start() instead of at module
-  // init time. This way each screen (EMA, ePAT confidence) owns the
-  // button freshly and there are no ghost listeners surviving across
-  // phase transitions.
   function installNextHandler() {
     document.getElementById('ema-next-btn').onclick = () => {
       const container = document.getElementById('ema-single-container');
@@ -1900,13 +2260,7 @@ const EMA = (function() {
     };
   }
 
-  // -----------------------------------------------------------------------
-  // Public API
-  // -----------------------------------------------------------------------
   return {
-    // phaseToken must be "pre_<wid>" or "post_<wid>". The v1.3 router
-    // never emits bare window ids. If you're calling this from new code,
-    // use the prefixed form.
     start(phaseToken) {
       let blockDir = 'pre';
       let windowId = null;
@@ -1918,8 +2272,6 @@ const EMA = (function() {
         blockDir = 'post';
         windowId = phaseToken.slice(5);
       } else {
-        // Legacy — should not occur from v1.3 router but we tolerate it
-        // to keep imports of older session data rendering in preview.
         console.warn('EMA.start received unprefixed phase token:', phaseToken);
         windowId = phaseToken;
       }
@@ -1938,7 +2290,6 @@ const EMA = (function() {
       currentPageIndex = 0;
 
       if (emaPages.length === 0) {
-        // Nothing to ask — mark submitted_at = started_at and move on
         emaResponses.submittedAt = emaResponses.startedAt;
         sessionData.data.push(emaResponses);
         advancePhase();
@@ -1951,7 +2302,6 @@ const EMA = (function() {
     }
   };
 })();
-
 
 // ==========================================================
 // PAT SENSOR LOGIC (Full Port)
@@ -2284,29 +2634,71 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
   return { startBaseline };
 })();
 
-  startBtn.addEventListener('click', () => {
-    sessionData.participantId = pidInput.value.trim();
-    sessionData.startedAt = new Date().toISOString();
-    sessionData.device = collectDeviceMetadata();
+  // ---------------------------------------------------------------
+  // START handler — either fresh start or resume
+  // ---------------------------------------------------------------
+  function doStart(resuming) {
+    if (!resuming) {
+      sessionData.participantId = pidInput.value.trim();
+      sessionData.startedAt = new Date().toISOString();
+      sessionData.device = collectDeviceMetadata();
+    } else {
+      // Adopt the resumed state, but stamp a new device record in case
+      // they switched devices (keep the original too).
+      Object.assign(sessionData, resumeOffer);
+      sessionData.resumedAt = new Date().toISOString();
+      const freshDevice = collectDeviceMetadata();
+      if (sessionData.device && sessionData.device.userAgent !== freshDevice.userAgent) {
+        sessionData.deviceOnResume = freshDevice;
+      }
+    }
 
     if (window.ePATCore) window.ePATCore.AudioEngine.init();
+
+    // Persist immediately so a crash between start and first advancePhase
+    // still has something to resume from.
+    persistResumeState();
 
     if (sessionData.type === 'onboarding' && config.onboarding?.enabled) {
       OnboardingSession.start();
     } else {
       runNextPhase();
     }
+  }
+
+  function persistResumeState() {
+    if (!config.study?.resume_enabled) return;
+    ResumeManager.save(sessionData.participantId, urlDay, urlSession, sessionData);
+  }
+
+  // If we have a resume offer, surface it by repurposing the start button
+  // and adding a "start over" link under it.
+  if (resumeOffer) {
+    startBtn.textContent = 'Resume Session';
+    startBtn.disabled = false;
+    // Add a small "start over" option next to/under the button.
+    const inputGroup = document.getElementById('participant-input-group');
+    const hint = document.createElement('button');
+    hint.textContent = 'Start over';
+    hint.style.cssText = 'margin-top:12px;background:none;border:none;color:var(--fg-muted);font-size:0.85rem;text-decoration:underline;cursor:pointer;';
+    hint.addEventListener('click', () => {
+      ResumeManager.clear(urlPid, urlDay, urlSession);
+      resumeOffer = null;
+      startBtn.textContent = 'Begin Session';
+      hint.remove();
+    });
+    if (startBtn.parentNode) startBtn.parentNode.appendChild(hint);
+  }
+
+  startBtn.addEventListener('click', () => {
+    doStart(!!resumeOffer);
   });
 
-  // -----------------------------------------------------------------
-  // PHASE DISPATCH — v1.3: token shape determines handler.
+  // ---------------------------------------------------------------
+  // PHASE DISPATCH — v1.4: token shape determines handler.
   //   "pre_<wid>" / "post_<wid>"  → EMA.start(token)
-  //   "<moduleId>"                → dispatch via module's global API
-  //
-  // Module dispatch table is intentionally explicit — when you add a new
-  // task module, add a case here. Keeping this explicit prevents accidental
-  // execution of code that happens to share a name with something else.
-  // -----------------------------------------------------------------
+  //   "<moduleId>"                → dispatch via explicit module switch
+  // ---------------------------------------------------------------
   function runNextPhase() {
     const phase = sessionData.phases[sessionData.currentPhase];
     if (!phase) { finalizeSession(); return; }
@@ -2325,7 +2717,11 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
           advancePhase();
         }
         break;
-      // case 'stroop': if (...) Stroop.start(); else advancePhase(); break;
+      // Future modules register here. Example:
+      // case 'stroop':
+      //   if (config.modules?.stroop && typeof Stroop !== 'undefined') Stroop.start();
+      //   else advancePhase();
+      //   break;
       default:
         console.warn(`Unknown phase token: ${phase}. Skipping.`);
         advancePhase();
@@ -2334,12 +2730,22 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
 
   function advancePhase() {
     sessionData.currentPhase++;
+    persistResumeState();  // snapshot after each phase completes
     runNextPhase();
   }
 
   function finalizeSession() {
     sessionData.status = "complete";
     sessionData.completedAt = new Date().toISOString();
+
+    // Stamp the completion lock BEFORE any UI work so even a partial crash
+    // after this point doesn't let the participant redo the session.
+    if (config.study?.completion_lock) {
+      CompletionLock.stamp(sessionData.participantId, urlDay, urlSession);
+    }
+
+    // Clear the resume state — session is done.
+    ResumeManager.clear(sessionData.participantId, urlDay, urlSession);
 
     if (isPreview) {
       document.getElementById('screen-end').querySelector('p').textContent = '✓ Preview complete.';
@@ -2350,7 +2756,7 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
     // Beat count vanity (ePAT-specific; harmless when absent)
     const totalBeats = sessionData.data.reduce((sum, entry) => {
       if (entry.type === "baseline") return sum + (entry.recordedHR ? entry.recordedHR.length : 0);
-      if (entry.type === "trial") return sum + (entry.qualitySummary ? entry.qualitySummary.totalBeats : 0);
+      if (entry.type === "trial")    return sum + (entry.qualitySummary ? entry.qualitySummary.totalBeats : 0);
       return sum;
     }, 0);
 
@@ -2371,9 +2777,9 @@ let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = config.modu
   // class of "works in this order but not that order" bugs.
   window.advancePhase = advancePhase;
   window.__sessionData = sessionData;
+  window.__persistResumeState = persistResumeState;
 
 })();
-
 </script>
 </body>
 </html>
