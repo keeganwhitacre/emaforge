@@ -3,7 +3,7 @@
 // ==========================================================
 const OnboardingSession = (function() {
 
-  function initConsent() {
+ function initConsent() {
     const scroll   = document.getElementById("ob-consent-scroll");
     const check    = document.getElementById("ob-consent-check");
     const nextBtn  = document.getElementById("ob-consent-next");
@@ -13,11 +13,25 @@ const OnboardingSession = (function() {
 
     scroll.innerHTML = config.onboarding.consent_text;
 
+    // Extract the unlock logic into a reusable function
+    const unlockConsent = () => {
+      if (checkRow) { checkRow.style.opacity = "1"; checkRow.style.pointerEvents = "auto"; }
+      if (initials) initials.disabled = false;
+      if (hint) hint.style.opacity = "0";
+    };
+
+    // 1. Check immediately if the text is short enough that scrolling isn't needed
+    // (Using a slight timeout to ensure the DOM has painted and scrollHeight is accurate)
+    setTimeout(() => {
+      if (scroll.scrollHeight <= scroll.clientHeight + 40) {
+        unlockConsent();
+      }
+    }, 50);
+
+    // 2. Keep the scroll listener for longer text
     scroll.addEventListener("scroll", () => {
       if (scroll.scrollHeight - scroll.scrollTop <= scroll.clientHeight + 40) {
-        if (checkRow) { checkRow.style.opacity = "1"; checkRow.style.pointerEvents = "auto"; }
-        if (initials) initials.disabled = false;
-        if (hint) hint.style.opacity = "0";
+        unlockConsent();
       }
     });
 
@@ -46,15 +60,22 @@ const OnboardingSession = (function() {
 
     const nextBtn = document.getElementById("ob-schedule-next");
     if (nextBtn) nextBtn.onclick = () => {
+      
+      // Dynamically read the start/end times for whatever windows exist in the config
+      const windowsData = {};
+      (config.ema?.scheduling?.windows || []).forEach(w => {
+        windowsData[w.id] = {
+          start: (document.getElementById(`ob-win-${w.id}-start`) || {}).value || w.start,
+          end:   (document.getElementById(`ob-win-${w.id}-end`) || {}).value || w.end
+        };
+      });
+
       sessionData.data.push({
         type: "schedule_pref",
         days: [...grid.querySelectorAll(".day-btn.selected")].map(b => b.dataset.day),
-        windows: {
-          morning:   { start: (document.getElementById("ob-am-start") || {}).value, end: (document.getElementById("ob-am-end") || {}).value },
-          afternoon: { start: (document.getElementById("ob-pm-start") || {}).value, end: (document.getElementById("ob-pm-end") || {}).value },
-          evening:   { start: (document.getElementById("ob-ev-start") || {}).value, end: (document.getElementById("ob-ev-end") || {}).value }
-        }
+        windows: windowsData
       });
+      
       if (config.modules?.epat && window.ePATCore) {
         show("screen-ob-device");
       } else {

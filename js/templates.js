@@ -11,33 +11,33 @@ const StarterTemplates = {
         name: "Daily Reflections", institution: "Department of Psychology", 
         theme: "light", accent_color: "#388bfd", output_format: "csv", 
         completion_lock: true, resume_enabled: true, 
-        greetings: { "w_morn": "Good Morning", "w_eve": "Good Evening" } 
+        greetings: { "w1": "Good Morning", "w2": "Good Evening" } 
       },
       onboarding: { enabled: true, ask_schedule: true, consent_text: "<h3>Welcome to Daily Reflections</h3><p>You will receive two prompts a day: a quick morning check-in and an evening reflection.</p>" },
-      modules: [], // Clean array! Future modules will show up normally but stay disabled.
+      modules: [], 
       ema: {
         randomize_questions: false,
         questions: [
           // Morning Only
-          { id: "q_sleep", type: "numeric", text: "How many hours of sleep did you get last night?", required: true, block: "both", windows: ["w_morn"] },
-          { id: "q_mood_m", type: "slider", text: "How are you feeling right now as you start your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w_morn"] },
+          { id: "q_sleep", type: "numeric", text: "How many hours of sleep did you get last night?", required: true, block: "both", windows: ["w1"] },
+          { id: "q_mood_m", type: "slider", text: "How are you feeling right now as you start your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w1"] },
           
           // Evening Only
-          { id: "q_mood_e", type: "slider", text: "Overall, how was your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w_eve"] },
-          { id: "q_stress", type: "slider", text: "How stressed did you feel today?", min: 0, max: 100, step: 1, anchors: ["Not at all", "Extremely"], required: true, block: "both", windows: ["w_eve"] },
+          { id: "q_mood_e", type: "slider", text: "Overall, how was your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w2"] },
+          { id: "q_stress", type: "slider", text: "How stressed did you feel today?", min: 0, max: 100, step: 1, anchors: ["Not at all", "Extremely"], required: true, block: "both", windows: ["w2"] },
           { id: "pb1", type: "page_break" },
           
           // Conditional Logic (Evening)
-          { id: "q_exercised", type: "choice", text: "Did you intentionally exercise today?", options: ["Yes", "No"], required: true, block: "both", windows: ["w_eve"] },
-          { id: "q_ex_type", type: "text", text: "What kind of exercise did you do?", required: false, condition: { logical_op: 'AND', rules: [{ question_id: "q_exercised", operator: "eq", value: "Yes" }] }, block: "both", windows: ["w_eve"] },
-          { id: "q_highlight", type: "text", text: "What was the highlight of your day?", required: false, block: "both", windows: ["w_eve"] }
+          { id: "q_exercised", type: "choice", text: "Did you intentionally exercise today?", options: ["Yes", "No"], required: true, block: "both", windows: ["w2"] },
+          { id: "q_ex_type", type: "text", text: "What kind of exercise did you do?", required: false, condition: { logical_op: 'AND', rules: [{ question_id: "q_exercised", operator: "eq", value: "Yes" }] }, block: "both", windows: ["w2"] },
+          { id: "q_highlight", type: "text", text: "What was the highlight of your day?", required: false, block: "both", windows: ["w2"] }
         ],
         scheduling: {
           study_days: 14, daily_prompts: 2, days_of_week: [1,2,3,4,5,6,7],
           timing: { expiry_minutes: 120, grace_minutes: 15 },
           windows: [
-            { id: "w_morn", label: "Morning", start: "08:00", end: "10:30", phase_sequence: [{ kind: "ema", block: "pre" }] },
-            { id: "w_eve", label: "Evening", start: "19:00", end: "21:30", phase_sequence: [{ kind: "ema", block: "pre" }] }
+            { id: "w1", label: "Morning", start: "08:00", end: "10:30", phase_sequence: [{ kind: "ema", block: "pre" }] },
+            { id: "w2", label: "Evening", start: "19:00", end: "21:30", phase_sequence: [{ kind: "ema", block: "pre" }] }
           ]
         }
       }

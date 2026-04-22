@@ -66,6 +66,17 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
 }
 
 function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, studyTag, cssTag }) {
+  
+  // Dynamically generate the time inputs based on the study's actual windows
+  const dynamicWindowsHtml = (cfg.ema?.scheduling?.windows || []).map(w => `
+    <div class="time-row">
+      <span class="time-row-label" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escH(w.label)}">${escH(w.label)}</span>
+      <input type="time" id="ob-win-${w.id}-start" value="${w.start}">
+      <span class="time-sep">–</span>
+      <input type="time" id="ob-win-${w.id}-end" value="${w.end}">
+    </div>
+  `).join('');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,9 +144,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     </div>
     <div class="schedule-section">
       <span class="schedule-label">Check-in time windows</span>
-      <div class="time-row"><span class="time-row-label">Morning</span><input type="time" id="ob-am-start" value="08:00"><span class="time-sep">–</span><input type="time" id="ob-am-end" value="10:00"></div>
-      <div class="time-row"><span class="time-row-label">Afternoon</span><input type="time" id="ob-pm-start" value="13:00"><span class="time-sep">–</span><input type="time" id="ob-pm-end" value="15:00"></div>
-      <div class="time-row"><span class="time-row-label">Evening</span><input type="time" id="ob-ev-start" value="19:00"><span class="time-sep">–</span><input type="time" id="ob-ev-end" value="21:00"></div>
+      ${dynamicWindowsHtml}
     </div>
     <div style="flex:1;min-height:16px;"></div>
     <button class="btn btn-primary btn-block" id="ob-schedule-next">Continue</button>

@@ -3,15 +3,6 @@
 // ---------------------------------------------------------------------------
 // EMA Forge — StorageManager
 // v1.4.0
-//
-// Changes from v1.3:
-//   - mergeState now checks schema_version on loaded data. If the saved
-//     backup is older than the current runtime, we log the migration at
-//     the console and still apply it (the merge is forward-compatible by
-//     design). If the saved backup is NEWER, we refuse to load and warn
-//     the user — blindly loading a newer schema can corrupt data.
-//   - New v1.4 study fields (completion_lock, resume_enabled) get
-//     default values on load if the backup predates them.
 // ---------------------------------------------------------------------------
 
 const StorageManager = {
@@ -30,57 +21,29 @@ const StorageManager = {
         }
 
         const saveBtn   = document.getElementById('btn-save-project');
-        const importModalBtn = document.getElementById('btn-import-modal');
-        const customImportBtn = document.getElementById('import-custom-file');
-        const importIn  = document.getElementById('import-file');
         const resetBtn  = document.getElementById('btn-reset');
+        
+        // Modal Elements
+        const importModalBtn = document.getElementById('btn-import-modal');
         const importModal = document.getElementById('import-modal');
         const importModalClose = document.getElementById('import-modal-close');
+        const customImportBtn = document.getElementById('import-custom-file');
+        const importIn  = document.getElementById('import-file');
 
         if (saveBtn)   saveBtn.addEventListener('click', () => this.saveProject());
         if (resetBtn)  resetBtn.addEventListener('click', () => this.resetProject());
         
-        // Modal logic
+        // Modal Logic
         if (importModalBtn) importModalBtn.addEventListener('click', () => importModal.classList.add('open'));
         if (importModalClose) importModalClose.addEventListener('click', () => importModal.classList.remove('open'));
         if (customImportBtn) customImportBtn.addEventListener('click', () => importIn && importIn.click());
         
         if (importIn)  importIn.addEventListener('change', e => {
-            importModal.classList.remove('open');
+            if (importModal) importModal.classList.remove('open');
             this.importProject(e);
         });
     },
 
-    loadTemplate(templateObj) {
-        if (!confirm("Loading a template will overwrite your current project. Continue?")) return;
-        
-        // 1. Clean slate: Turn off all known modules so we don't carry over user settings
-        if (Array.isArray(state.modules)) {
-            state.modules.forEach(m => m.enabled = false);
-        }
-
-        // 2. Deep copy the template so we don't mutate the original dictionary
-        const templateCopy = JSON.parse(JSON.stringify(templateObj));
-        
-        // 3. Let your robust merge logic handle the overlay!
-        // This safely replaces the study/ema questions but keeps the master modules array intact.
-        this.mergeState(templateCopy);
-        
-        this.saveLocalState();
-        this.triggerUIRefresh();
-        
-        const status = document.getElementById('save-status');
-        if (status) { 
-            status.textContent = 'Template loaded'; 
-            status.style.color = 'var(--accent)'; 
-        }
-        
-        document.getElementById('import-modal').classList.remove('open');
-    },
-
-    // -----------------------------------------------------------------------
-    // Schema version compare — returns -1 / 0 / 1 like strcmp for "a.b.c"
-    // -----------------------------------------------------------------------
     _compareVersions(a, b) {
         const pa = (a || '0.0.0').split('.').map(n => parseInt(n) || 0);
         const pb = (b || '0.0.0').split('.').map(n => parseInt(n) || 0);
@@ -91,12 +54,7 @@ const StorageManager = {
         return 0;
     },
 
-    // -----------------------------------------------------------------------
-    // mergeState — overlays saved data onto the live state object.
-    // Handles schema migrations forward; refuses to load backups from the future.
-    // -----------------------------------------------------------------------
     mergeState(saved) {
-        // Fallback to global SCHEMA_VERSION if defined, otherwise 1.0.0
         const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
         const savedVer = saved.schema_version || saved._schema_version || '1.0.0';
         const cmp = this._compareVersions(savedVer, currentVersion);
@@ -116,8 +74,6 @@ const StorageManager = {
             if (saved[key] !== undefined) state[key] = saved[key];
         });
 
-        // Modules: merge by id so new modules defined in state.js appear even
-        // in projects saved before they existed.
         if (Array.isArray(saved.modules)) {
             saved.modules.forEach(savedMod => {
                 const live = state.modules.find(m => m.id === savedMod.id);
@@ -128,7 +84,6 @@ const StorageManager = {
             });
         }
 
-        // Legacy (pre-1.2) compat: state.pat → state.modules.epat
         if (saved.pat && !Array.isArray(saved.modules)) {
             const epatMod = state.modules.find(m => m.id === 'epat');
             if (epatMod) {
@@ -145,7 +100,6 @@ const StorageManager = {
             }
         }
 
-        // v1.4 field defaults — fill in if missing
         if (state.study.completion_lock === undefined) state.study.completion_lock = true;
         if (state.study.resume_enabled  === undefined) state.study.resume_enabled  = true;
     },
@@ -158,8 +112,6 @@ const StorageManager = {
     saveLocalState() {
         try {
             const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
-            // Stamp the schema version into the saved state so future loads
-            // can version-check.
             const toSave = Object.assign({}, state, { schema_version: currentVersion });
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
             const status = document.getElementById('save-status');
@@ -209,6 +161,33 @@ const StorageManager = {
         }
     },
 
+    loadTemplate(templateObj) {
+        if (!confirm("Loading a template will overwrite your current project. Continue?")) return;
+        
+        // 1. Clean slate: Turn off all known modules so we don't carry over user settings
+        if (Array.isArray(state.modules)) {
+            state.modules.forEach(m => m.enabled = false);
+        }
+
+        // 2. Deep copy the template so we don't mutate the original dictionary
+        const templateCopy = JSON.parse(JSON.stringify(templateObj));
+        
+        // 3. Overlay the template state safely
+        this.mergeState(templateCopy);
+        
+        this.saveLocalState();
+        this.triggerUIRefresh();
+        
+        const status = document.getElementById('save-status');
+        if (status) { 
+            status.textContent = 'Template loaded'; 
+            status.style.color = 'var(--accent)'; 
+        }
+        
+        const modal = document.getElementById('import-modal');
+        if (modal) modal.classList.remove('open');
+    },
+
     triggerUIRefresh() {
         const el = id => document.getElementById(id);
 
@@ -216,6 +195,7 @@ const StorageManager = {
         if (el('study-name'))    el('study-name').value = state.study.name || '';
         if (el('institution'))   el('institution').value = state.study.institution || '';
         if (el('study-webhook')) el('study-webhook').value = state.study.webhook_url || '';
+        
         if (el('accent-color')) {
             el('accent-color').value = state.study.accent_color || '#e8716a';
             const sw = el('color-preview-swatch');
@@ -226,14 +206,15 @@ const StorageManager = {
             b.classList.toggle('active', b.dataset.fmt === state.study.output_format);
         });
 
-        // v1.4 study-level flags
         if (el('study-completion-lock')) el('study-completion-lock').checked = !!state.study.completion_lock;
         if (el('study-resume-enabled'))  el('study-resume-enabled').checked  = !!state.study.resume_enabled;
 
         // 2. Onboarding tab
         if (el('ob-toggle'))        el('ob-toggle').checked = !!state.onboarding.enabled;
         if (el('ob-schedule-toggle')) el('ob-schedule-toggle').checked = state.onboarding.ask_schedule !== false;
-        if (el('ob-consent-text'))  el('ob-consent-text').value = state.onboarding.consent_text || '';
+        
+        // FIX: contenteditable divs use innerHTML, not value!
+        if (el('ob-consent-text'))  el('ob-consent-text').innerHTML = state.onboarding.consent_text || '';
 
         // 3. Schedule tab numeric fields
         if (el('study-days'))      el('study-days').value    = state.ema.scheduling.study_days || 14;
