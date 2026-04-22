@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/studio.css">
 <script>
   // Apply theme immediately to prevent flashing
-  const savedTheme = localStorage.getItem('ema-forge-theme') || 
+  const savedTheme = localStorage.getItem('ema-forge-theme') ||
     (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
@@ -97,7 +97,7 @@
   }
 
   .docs-prose {
-    max-width: 720px;
+    max-width: 780px;
     margin: 0 auto;
     color: var(--fg);
     font-size: 15px;
@@ -144,6 +144,21 @@
     margin-bottom: 8px;
   }
 
+  .docs-prose strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  .docs-prose a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--accent);
+  }
+
+  .docs-prose a:hover {
+    border-bottom-style: solid;
+  }
+
   /* Inline Code */
   .docs-prose code {
     font-family: var(--font-mono);
@@ -164,13 +179,16 @@
     overflow-x: auto;
     margin: 24px 0;
   }
-  
+
   .docs-prose pre code {
     background: transparent;
     border: none;
     padding: 0;
     font-size: 13px;
     color: var(--fg-2);
+    line-height: 1.5;
+    display: block;
+    white-space: pre;
   }
 
   /* Callouts & Blockquotes */
@@ -181,7 +199,7 @@
     background: var(--accent-dim);
     border-radius: 0 var(--radius) var(--radius) 0;
   }
-  
+
   .docs-prose blockquote p {
     margin: 0;
     color: var(--fg);
@@ -209,6 +227,28 @@
     font-size: 14px;
     color: var(--fg-2);
   }
+  .docs-callout-content p + p {
+    margin-top: 8px;
+  }
+
+  /* Variant callouts */
+  .docs-callout.warn {
+    background: rgba(246,201,14,0.08);
+    border-color: rgba(246,201,14,0.25);
+  }
+  .docs-callout.warn svg { color: #f6c90e; }
+
+  .docs-callout.wip {
+    background: rgba(176, 120, 255, 0.08);
+    border-color: rgba(176, 120, 255, 0.25);
+  }
+  .docs-callout.wip svg { color: #b078ff; }
+
+  .docs-callout.danger {
+    background: rgba(255,69,58,0.08);
+    border-color: rgba(255,69,58,0.25);
+  }
+  .docs-callout.danger svg { color: var(--accent-red, #ff453a); }
 
   /* Table styling */
   .docs-prose table {
@@ -221,14 +261,182 @@
     border: 1px solid var(--border);
     padding: 10px 14px;
     text-align: left;
+    vertical-align: top;
   }
   .docs-prose th {
     background: var(--bg-1);
     font-weight: 600;
     color: var(--fg);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .docs-prose td {
     color: var(--fg-2);
+  }
+  .docs-prose td code {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* Status pills (for feature status, schema version, etc.) */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+    border: 1px solid;
+  }
+  .status-pill.stable {
+    background: rgba(50, 215, 75, 0.1);
+    border-color: rgba(50, 215, 75, 0.3);
+    color: #32d74b;
+  }
+  .status-pill.beta {
+    background: rgba(246, 201, 14, 0.1);
+    border-color: rgba(246, 201, 14, 0.3);
+    color: #f6c90e;
+  }
+  .status-pill.wip {
+    background: rgba(176, 120, 255, 0.1);
+    border-color: rgba(176, 120, 255, 0.3);
+    color: #b078ff;
+  }
+  .status-pill.planned {
+    background: var(--bg-2);
+    border-color: var(--border);
+    color: var(--fg-3);
+  }
+
+  /* Collapsible details */
+  .docs-prose details {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    margin: 20px 0;
+    transition: border-color 0.15s ease;
+  }
+  .docs-prose details[open] {
+    border-color: var(--border-hi, var(--accent));
+  }
+  .docs-prose details summary {
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    list-style: none;
+  }
+  .docs-prose details summary::-webkit-details-marker { display: none; }
+  .docs-prose details summary::before {
+    content: '▸';
+    font-size: 10px;
+    color: var(--accent);
+    transition: transform 0.15s ease;
+    display: inline-block;
+    width: 10px;
+  }
+  .docs-prose details[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .docs-prose details .details-body {
+    padding: 0 18px 18px 18px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 0;
+    font-size: 14px;
+  }
+  .docs-prose details .details-body > *:first-child { margin-top: 0; }
+  .docs-prose details .details-body > *:last-child { margin-bottom: 0; }
+
+  /* Feature matrix - compact grid */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .feature-item {
+    padding: 14px 16px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .feature-item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .feature-item-desc {
+    font-size: 12px;
+    color: var(--fg-3);
+    line-height: 1.5;
+  }
+
+  /* File tree */
+  .file-tree {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    color: var(--fg-2);
+    line-height: 1.7;
+    margin: 20px 0;
+  }
+  .file-tree .ft-dir { color: var(--accent); font-weight: 600; }
+  .file-tree .ft-comment { color: var(--fg-3); }
+
+  /* Credit card at the bottom */
+  .credit-card {
+    margin-top: 48px;
+    padding: 20px 22px;
+    background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .credit-card-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+  }
+  .credit-card-text {
+    font-size: 13px;
+    color: var(--fg-2);
+    line-height: 1.55;
+  }
+  .credit-card-text strong { color: var(--fg); }
+
+  /* Anchor offset for smooth scroll */
+  .docs-prose h2[id], .docs-prose h3[id] {
+    scroll-margin-top: 24px;
   }
 </style>
 </head>
@@ -250,7 +458,7 @@
       </div>
       EMA Forge
     </div>
-    
+
     <div class="topbar-actions">
       <!-- Theme Toggle -->
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
@@ -266,219 +474,974 @@
     <aside class="docs-sidebar">
       <div class="docs-nav-group">
         <div class="docs-nav-title">Introduction</div>
-        <a href="#overview" class="docs-nav-link active">Overview & Architecture</a>
+        <a href="#overview" class="docs-nav-link active">Overview &amp; Architecture</a>
         <a href="#why-serverless" class="docs-nav-link">Why Serverless?</a>
+        <a href="#feature-status" class="docs-nav-link">Feature Status Matrix</a>
+        <a href="#requirements" class="docs-nav-link">System Requirements</a>
+        <a href="#quickstart" class="docs-nav-link">Quick Start (5 min)</a>
       </div>
       <div class="docs-nav-group">
-        <div class="docs-nav-title">Core Workflow</div>
-        <a href="#building" class="docs-nav-link">Building the Study</a>
-        <a href="#deployment" class="docs-nav-link">Export & Deployment</a>
-        <a href="#routing" class="docs-nav-link">Participant Routing (URLs)</a>
+        <div class="docs-nav-title">Building a Study</div>
+        <a href="#study-tab" class="docs-nav-link">Study Tab</a>
+        <a href="#onboarding" class="docs-nav-link">Onboarding &amp; Consent</a>
+        <a href="#questions-tab" class="docs-nav-link">Questions Tab</a>
+        <a href="#schedule-tab" class="docs-nav-link">Schedule &amp; Phase Sequencing</a>
+        <a href="#tasks-tab" class="docs-nav-link">Tasks Tab</a>
+        <a href="#preview" class="docs-nav-link">Live Preview</a>
       </div>
       <div class="docs-nav-group">
-        <div class="docs-nav-title">Data & Privacy</div>
-        <a href="#data-format" class="docs-nav-link">Data Formats (CSV/JSON)</a>
-        <a href="#dashboard" class="docs-nav-link">Using the Dashboard</a>
+        <div class="docs-nav-title">Deployment</div>
+        <a href="#export" class="docs-nav-link">Export Options</a>
+        <a href="#hosting" class="docs-nav-link">Hosting</a>
+        <a href="#routing" class="docs-nav-link">Participant Routing</a>
+        <a href="#deployment-csv" class="docs-nav-link">Generating Links</a>
+        <a href="#notifications" class="docs-nav-link">Sending Prompts (WIP)</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Runtime Behavior</div>
+        <a href="#session-lifecycle" class="docs-nav-link">Session Lifecycle</a>
+        <a href="#expiry-grace" class="docs-nav-link">Expiry &amp; Grace Period</a>
+        <a href="#completion-lock" class="docs-nav-link">Session Locking</a>
         <a href="#crash-recovery" class="docs-nav-link">Crash Recovery</a>
+        <a href="#schema-versioning" class="docs-nav-link">Schema Versioning</a>
       </div>
       <div class="docs-nav-group">
-        <div class="docs-nav-title">Advanced Tasks</div>
-        <a href="#ppg-capture" class="docs-nav-link">WebRTC PPG Capture</a>
-        <a href="#epat" class="docs-nav-link">ePAT Integration</a>
+        <div class="docs-nav-title">Data</div>
+        <a href="#data-files" class="docs-nav-link">What Participants Save</a>
+        <a href="#csv-schema" class="docs-nav-link">CSV Schema</a>
+        <a href="#json-schema" class="docs-nav-link">JSON Schema</a>
+        <a href="#r-analysis" class="docs-nav-link">Analysis in R</a>
+        <a href="#dashboard" class="docs-nav-link">Dashboard</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Advanced Modules</div>
+        <a href="#ppg-capture" class="docs-nav-link">HR Capture (PPG)</a>
+        <a href="#epat" class="docs-nav-link">ePAT Task</a>
+        <a href="#conditional-tasks" class="docs-nav-link">Conditional Tasks</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Privacy &amp; IRB</div>
+        <a href="#privacy-model" class="docs-nav-link">Privacy Model</a>
+        <a href="#irb-language" class="docs-nav-link">IRB Boilerplate</a>
+        <a href="#limitations" class="docs-nav-link">Known Limitations</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Roadmap</div>
+        <a href="#roadmap" class="docs-nav-link">What's Coming</a>
+        <a href="#twilio-webhooks" class="docs-nav-link">Twilio &amp; Webhooks</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">For Developers</div>
+        <a href="#under-the-hood" class="docs-nav-link">Under the Hood</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Meta</div>
+        <a href="#credit" class="docs-nav-link">Credit &amp; Citation</a>
+        <a href="#license" class="docs-nav-link">License</a>
+        <a href="#acknowledgments" class="docs-nav-link">Acknowledgments</a>
       </div>
     </aside>
 
     <!-- ========== MAIN CONTENT ========== -->
     <main class="docs-main" id="docs-main">
-      
+
       <!-- DYNAMIC HERO BANNER -->
       <div class="docs-hero">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
           <defs>
-            <!-- Background Grid Pattern -->
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border)" stroke-width="1.5" opacity="0.8"/>
             </pattern>
-            
-            <!-- Glowing Accent Center -->
             <radialGradient id="glow" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
               <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15" />
               <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
             </radialGradient>
-    
-            <!-- Fade Grid at edges -->
-            <radialGradient id="maskGlow" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-            </radialGradient>
-            <mask id="gridMask">
-              <rect width="1200" height="630" fill="url(#maskGlow)" />
-            </mask>
           </defs>
-    
-          <!-- Base Background is handled by CSS -->
-          
-          <!-- Grid Overlay (Masked to fade out) -->
-          <rect width="1200" height="630" fill="url(#grid)" mask="url(#gridMask)" />
-    
-          <!-- Sleek Background Data Wave -->
-          <path d="M-100,315 C100,315 250,315 300,315 C330,315 340,220 360,220 C380,220 390,450 410,450 C430,450 440,280 460,280 C480,280 490,315 520,315 C600,315 800,315 1300,315" fill="none" stroke="var(--border-hi)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
-    
-          <!-- Center Glow -->
-          <circle cx="600" cy="200" r="400" fill="url(#glow)" />
-    
-          <!-- Proportional Logo Group -->
-          <g transform="translate(552, 110)">
-            <rect width="96" height="96" rx="22" fill="var(--accent)" />
-            <g transform="translate(20.5, 20.5) scale(2.3)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
-              <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14" />
-              <polyline points="4,6 8,6 10,3 13,9 15,6 20,6" />
-            </g>
-          </g>
-    
-          <!-- Main Title -->
-          <text x="600" y="290" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="64" fill="var(--fg)" text-anchor="middle" letter-spacing="4">
-            EMA FORGE
+
+          <rect width="1200" height="630" fill="var(--bg-1)"/>
+          <rect width="1200" height="630" fill="url(#grid)"/>
+          <rect width="1200" height="630" fill="url(#glow)"/>
+
+          <!-- Title -->
+          <text x="600" y="300" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="96" fill="var(--fg)" text-anchor="middle" letter-spacing="-3">EMA FORGE</text>
+          <text x="600" y="360" font-family="ui-monospace, monospace" font-weight="500" font-size="18" fill="var(--accent)" text-anchor="middle" letter-spacing="6">SERVERLESS · OPEN-SOURCE · PRIVACY-FIRST</text>
+          <text x="600" y="410" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22" fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
+            Build, preview, and deploy completely self-contained EMA studies.
           </text>
-    
-          <!-- Tagline -->
-          <text x="600" y="350" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22" fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
-            The open-source toolkit for Ecological Momentary Assessment.
-          </text>
-          <text x="600" y="384" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22" fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
-            Build, preview, and deploy completely self-contained studies.
-          </text>
-    
+
           <!-- Feature Pills Container -->
-          <g transform="translate(600, 480)">
-            
-            <!-- Pill 1: Deployment -->
+          <g transform="translate(600, 500)">
             <g transform="translate(-320, 0)">
               <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
               <circle cx="-85" cy="0" r="4" fill="var(--green)" />
               <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">Serverless Deployment</text>
             </g>
-    
-            <!-- Pill 2: Advanced Features -->
             <g transform="translate(0, 0)">
               <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
               <circle cx="-85" cy="0" r="4" fill="var(--accent)" />
-              <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">WebRTC PPG &amp; ePAT</text>
+              <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">Camera PPG &amp; ePAT</text>
             </g>
-    
-            <!-- Pill 3: Dashboard -->
             <g transform="translate(320, 0)">
               <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
               <circle cx="-85" cy="0" r="4" fill="var(--blue)" />
               <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">Integrated Dashboard</text>
             </g>
-    
           </g>
         </svg>
       </div>
 
       <div class="docs-prose">
-        
-        <h1 id="overview">Overview & Architecture</h1>
-        <p><strong>EMA Forge</strong> is an open-source, fully serverless toolkit designed for researchers conducting Ecological Momentary Assessment (EMA) and Digital Phenotyping studies.</p>
-        <p>Traditional EMA tools require setting up a backend server, configuring a database, managing user accounts, and navigating complex HIPAA/IRB compliance requirements regarding data transmission in transit. EMA Forge takes a completely different approach.</p>
-        
+
+        <!-- ========================================================= -->
+        <!-- INTRODUCTION                                                -->
+        <!-- ========================================================= -->
+
+        <h1 id="overview">Overview &amp; Architecture</h1>
+        <p><strong>EMA Forge</strong> is an open-source toolkit for building, deploying, and analyzing Ecological Momentary Assessment (EMA) and digital-phenotyping studies. It is <strong>end-to-end serverless</strong>: your study is compiled into a static web app, participants complete it in their mobile browser, and response data is generated, stored, and downloaded <em>entirely on the participant's device</em>.</p>
+
+        <p>There are three things you'll interact with as a researcher, and one thing your participants will interact with:</p>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-item-title">🛠 Study Builder</div>
+            <div class="feature-item-desc">Where you design the study — questions, schedule, tasks. Hosted at <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">📊 Analysis Dashboard</div>
+            <div class="feature-item-desc">Where you load participant data files for compliance checks and quick stats. Same site.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">📦 Exported Study Bundle</div>
+            <div class="feature-item-desc">What the Builder produces — a small set of files you host somewhere (e.g. GitHub Pages) so participants can reach it.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">📱 The Participant App</div>
+            <div class="feature-item-desc">What your participants actually open on their phone. Generated automatically from the bundle above; no install needed.</div>
+          </div>
+        </div>
+
         <div class="docs-callout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           <div class="docs-callout-content">
-            <p><strong>Core Concept:</strong> Your study is compiled into a single, static web app. Participants complete the study in their mobile browser. The data is generated, stored, and downloaded entirely <em>on their device</em>.</p>
+            <p><strong>You do not host the Builder yourself.</strong> Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>, design your study there, click Export, and host the resulting <em>bundle</em> for participants. The Builder runs entirely in your browser — nothing you type gets sent to the server — so using the hosted version does not compromise privacy in any way.</p>
+            <p>No user account, no database, no backend. The entire study lifecycle — build → export → host → distribute → collect → analyze — runs without a server component maintained by you.</p>
           </div>
         </div>
 
         <h2 id="why-serverless">Why Serverless?</h2>
-        <p>By eliminating the server, EMA Forge radically simplifies the IRB approval process and technical overhead:</p>
+        <p>Traditional EMA platforms require standing up a backend server, authenticating users, and handling data-in-transit through a database that becomes a named component of every IRB protocol. The tradeoffs EMA Forge makes to avoid that:</p>
         <ul>
-          <li><strong>Zero Backend Setup:</strong> Host your study for free on GitHub Pages, Vercel, or any static file server.</li>
-          <li><strong>Ultimate Privacy:</strong> No data is ever transmitted to a central server. Participants physically download their data or email it to the research team at the end of the study phase.</li>
-          <li><strong>Guaranteed Offline Capability:</strong> Once loaded in the browser, the study can function even if the participant loses cell service during a task.</li>
+          <li><strong>Zero backend infrastructure.</strong> Host on GitHub Pages, Netlify, Vercel, Cloudflare Pages, or any institutional static web server. No runtime, no DB, no SSL cert to renew.</li>
+          <li><strong>Data stays local until the participant hands it over.</strong> Response data is written to the participant's device as a file. You collect it via whatever channel your IRB has already approved for data return (secure email, REDCap upload, institutional SFTP, etc.).</li>
+          <li><strong>Offline-tolerant.</strong> Once the study app is loaded in the browser, it keeps functioning without network. Completed sessions queue locally and download when the participant taps "Save."</li>
+          <li><strong>Full transparency.</strong> Every line of runtime code is visible in the exported HTML. Reviewers, participants, and IRBs can inspect exactly what runs on a participant's device.</li>
         </ul>
 
-        <h2 id="building">Building the Study</h2>
-        <p>The <strong>Study Builder</strong> (<code>builder.html</code>) is your primary authoring environment. It operates entirely in your browser.</p>
-        <ol>
-          <li><strong>Study:</strong> Define global settings, colors, and crash-recovery rules.</li>
-          <li><strong>Questions:</strong> Construct your survey battery. You can insert page breaks to group questions and apply conditional logic.</li>
-          <li><strong>Schedule:</strong> Define the longitudinal nature of your study. Set days, daily prompt counts, and specific time windows.</li>
-          <li><strong>Tasks:</strong> Enable advanced cognitive or physiological tasks (e.g., ePAT, Camera HR) to be inserted into specific phases.</li>
-        </ol>
-        <p>As you build, the <code>config.json</code> file is generated under the hood. You can view this live by clicking the <strong>JSON</strong> button in the topbar.</p>
-
-        <h2 id="deployment">Export & Deployment</h2>
-        <p>When your study is ready, click <strong>Export</strong>. You will be given two choices:</p>
+        <p>Tradeoffs to be honest about (see <a href="#limitations">Known Limitations</a>):</p>
         <ul>
-          <li><strong>Single HTML File:</strong> A perfectly self-contained artifact. Every piece of logic, CSS, and styling is minified into one file. Easiest for quick pilots or emailing directly to a participant.</li>
-          <li><strong>Static-hosting Bundle (Recommended):</strong> A `.zip` containing your `index.html`, assets, and `config.json`. Extract this folder and upload it to GitHub Pages. If you need to fix a typo in a question, just edit the `config.json` directly—no need to re-export!</li>
+          <li>There is no central "dashboard" of live enrollment — data is only visible once files are returned to the researcher.</li>
+          <li>EMA Forge does not send notifications itself. You need an external scheduler/SMS service to deliver links at the right time. Twilio helpers are on the roadmap (see <a href="#twilio-webhooks">below</a>).</li>
+          <li>The static host can see request metadata (IP, timestamp of page load). This is the same constraint as any web page — it's not a data transmission, but it's not nothing.</li>
         </ul>
 
-        <h2 id="routing">Participant Routing (URLs)</h2>
-        <p>Since there is no server to "assign" a participant a prompt, EMA Forge uses <strong>URL Query Parameters</strong> to route participants to the correct session.</p>
-        <p>If your study is hosted at <code>https://your-lab.edu/study/</code>, a link texted to a participant would look like this:</p>
-        
-        <pre><code>https://your-lab.edu/study/?id=104&day=2&session=morning</code></pre>
+        <!-- ========================================================= -->
+        <!-- FEATURE STATUS                                              -->
+        <!-- ========================================================= -->
+
+        <h2 id="feature-status">Feature Status Matrix</h2>
+        <p>Keep this in front of you when planning a study. Anything marked <span class="status-pill beta">BETA</span> has shipped but hasn't yet been through external pilot validation; anything marked <span class="status-pill wip">WIP</span> or <span class="status-pill planned">PLANNED</span> is not yet usable.</p>
 
         <table>
           <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Description</th>
-            </tr>
+            <tr><th>Feature</th><th>Status</th><th>Notes</th></tr>
           </thead>
           <tbody>
+            <tr><td>Study Builder (questions, schedule, theme)</td><td><span class="status-pill stable">STABLE</span></td><td>Schema v1.5.0.</td></tr>
+            <tr><td>Single-file &amp; static-bundle export</td><td><span class="status-pill stable">STABLE</span></td><td>Both include <code>config.json</code>.</td></tr>
+            <tr><td>Onboarding / consent flow</td><td><span class="status-pill stable">STABLE</span></td><td>Rich-text consent, progress bar.</td></tr>
+            <tr><td>EMA question types (slider, choice, multi, text, number)</td><td><span class="status-pill stable">STABLE</span></td><td>See <a href="#questions-tab">Questions Tab</a>.</td></tr>
+            <tr><td>Affect Grid (valence × arousal)</td><td><span class="status-pill stable">STABLE</span></td><td>Stored as <code>{valence, arousal}</code> in [−1, 1].</td></tr>
+            <tr><td>Skip logic (compound AND/OR)</td><td><span class="status-pill stable">STABLE</span></td><td>Rules on any prior non-multi question.</td></tr>
+            <tr><td>Phase sequencing (multi-task windows)</td><td><span class="status-pill stable">STABLE</span></td><td>Arbitrary ordered EMA/Task/HR steps.</td></tr>
+            <tr><td>Conditional tasks (e.g. run ePAT only if HR &gt; 80)</td><td><span class="status-pill stable">STABLE</span></td><td>See <a href="#conditional-tasks">Conditional Tasks</a>.</td></tr>
+            <tr><td>Session locking + crash recovery</td><td><span class="status-pill stable">STABLE</span></td><td>LocalStorage per-phase resume.</td></tr>
+            <tr><td>Dashboard (compliance, watchlist, CSV export)</td><td><span class="status-pill stable">STABLE</span></td><td>Runs locally in browser.</td></tr>
+            <tr><td>Heart-rate capture question type (PPG)</td><td><span class="status-pill beta">BETA</span></td><td>Requires rear camera + torch. iOS works; desktop no.</td></tr>
+            <tr><td>ePAT task (heartbeat perception)</td><td><span class="status-pill beta">BETA</span></td><td>Shares PPG core with HR capture.</td></tr>
+            <tr><td>Response latency in Dashboard</td><td><span class="status-pill wip">WIP</span></td><td>Needs external prompt-delivery timestamps — see <a href="#notifications">Sending Prompts</a>.</td></tr>
+            <tr><td>Twilio SMS helpers</td><td><span class="status-pill wip">WIP</span></td><td>Planned; see <a href="#twilio-webhooks">Roadmap</a>.</td></tr>
+            <tr><td>Webhook auto-upload on session complete</td><td><span class="status-pill wip">WIP</span></td><td>Planned; POST to REDCap / S3 / custom endpoint.</td></tr>
+            <tr><td>Stroop / IAT / additional task modules</td><td><span class="status-pill planned">PLANNED</span></td><td>The task system is built to be extended; these are next in line.</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ========================================================= -->
+        <!-- REQUIREMENTS                                                -->
+        <!-- ========================================================= -->
+
+        <h2 id="requirements">System Requirements</h2>
+
+        <h3>For you (researcher)</h3>
+        <ul>
+          <li><strong>Any modern desktop browser.</strong> Chrome, Edge, Firefox, or Safari (from 2022 onward). The Builder and Dashboard run entirely in your browser at <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>.</li>
+          <li><strong>A way to host your exported study.</strong> GitHub Pages is the path of least resistance and free for researchers. Any institutional static-file server works too. (See <a href="#hosting">Hosting Your Study</a> — it is genuinely ten clicks.)</li>
+          <li><strong>A way to send participants links</strong> at the right times — an SMS service, institutional email scheduler, Twilio, or similar. EMA Forge generates the links; something else delivers them.</li>
+          <li><strong>R or Python (optional).</strong> The Dashboard handles most day-to-day compliance monitoring in the browser. You'll want R or Python for real analysis.</li>
+        </ul>
+
+        <h3>For participants</h3>
+        <ul>
+          <li><strong>iOS Safari 14.5+</strong> or <strong>Chrome for Android 90+</strong> (roughly anything from 2021 onward).</li>
+          <li>For the <strong>HR / ePAT modules only</strong>: a rear-facing camera with a controllable torch (flashlight). All modern iPhones and most Android devices qualify; tablets without rear cameras do not. Desktop browsers will refuse to launch these modules.</li>
+          <li>A working browser link. That's it — no app install, no account.</li>
+        </ul>
+
+        <div class="docs-callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="docs-callout-content">
+            <p><strong>iOS quirk worth flagging during onboarding:</strong> Camera/torch access on iOS requires the page to be launched from Safari (not from inside the Messages app preview or from an SMS link-preview bubble). Your participant instructions should explicitly say "tap the link to open it in Safari" for studies using HR or ePAT.</p>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- QUICK START                                                 -->
+        <!-- ========================================================= -->
+
+        <h2 id="quickstart">Quick Start — 5 minutes to a working pilot</h2>
+        <p>You do not need to install anything. The Builder and Dashboard are hosted and ready to use.</p>
+
+        <ol>
+          <li>Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener"><strong>emaforge.keeganwhitacre.com</strong></a> and click <strong>Builder</strong>.</li>
+          <li>In the <strong>Study</strong> tab, name your study.</li>
+          <li>In <strong>Questions</strong>, click <code>+ Slider</code> and add one mood item. Keep the default anchors.</li>
+          <li>In <strong>Schedule</strong>, set study length to <code>3</code> days and keep the default morning/afternoon/evening windows.</li>
+          <li>Click <strong>Export</strong> → <strong>Single HTML file</strong>. You'll get a file you can email to yourself.</li>
+          <li>Open that file on your phone with <code>?id=1&amp;day=1&amp;session=w1</code> appended. You're running a study.</li>
+          <li>When you finish the session, your phone downloads a CSV. Go back to <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>, open the <strong>Dashboard</strong>, import the folder, and you'll see your own compliance data.</li>
+        </ol>
+
+        <p>That round trip tells you whether your device can open sessions and whether your data is landing where you expect. Always do this before enrolling a participant.</p>
+
+        <div class="docs-callout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7.5L12 16l-6.5 4.5 2-7.5L2 9h7z"/></svg>
+          <div class="docs-callout-content">
+            <p><strong>Please use the hosted version at emaforge.keeganwhitacre.com rather than cloning and self-hosting the Builder.</strong> The hosted site is actively maintained and always on the current schema version. Everything happens in your browser — nothing you type into the Builder is transmitted to the server, so "hosted" here just means "the files are served from one canonical place." You'll still self-host the <em>exported</em> study (see <a href="#hosting">Hosting Your Study</a>), because that's the file participants actually open.</p>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- BUILDER TABS                                                -->
+        <!-- ========================================================= -->
+
+        <h2 id="study-tab">Study Tab</h2>
+        <p>Global study configuration. Set here:</p>
+        <ul>
+          <li><strong>Study name &amp; institution</strong> — appears in participant app title and CSV metadata.</li>
+          <li><strong>Theme &amp; accent color</strong> — OLED (pure black, recommended for battery), dark, or light. Accent color inherits into the participant app.</li>
+          <li><strong>Response format</strong> — CSV (one row per answered question) or JSON (full structured payload). Both are downloaded; JSON is always included when a session contains high-density signal data (PPG/ePAT).</li>
+          <li><strong>Greetings</strong> — per-window header text ("Good Morning", "Check-In", etc.).</li>
+          <li><strong>Completion lock &amp; crash recovery</strong> — see <a href="#completion-lock">Runtime Behavior</a>.</li>
+        </ul>
+
+        <h2 id="onboarding">Onboarding &amp; Consent</h2>
+        <p>The Onboarding flow runs exactly once per participant, on their first link (<code>?id=N&amp;session=onboarding</code>, Day 0). It covers:</p>
+        <ul>
+          <li>A progress-barred multi-screen intro.</li>
+          <li>A rich-text consent screen that <strong>requires scroll-to-bottom</strong> before the "I agree" checkbox activates. Consent text accepts HTML so you can paste in your IRB-approved language with headings.</li>
+          <li>An optional schedule-sanity screen letting the participant confirm they'll be available during each window.</li>
+          <li>For studies with ePAT enabled: a two-phase practice (tone-to-tone, then tone-to-heartbeat) before the real trials start.</li>
+        </ul>
+
+        <p>If onboarding is disabled, Day 0 is skipped entirely and participants land directly in their first EMA window.</p>
+
+        <!-- ========================================================= -->
+        <!-- QUESTIONS                                                   -->
+        <!-- ========================================================= -->
+
+        <h2 id="questions-tab">Questions Tab</h2>
+        <p>The Questions tab is where you write your survey items. Each question appears as a card — click to expand it, drag to reorder. Changes show up live in the phone preview as you type.</p>
+
+        <h3>Question types</h3>
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Stored as</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>slider</code></td><td>number</td><td>Min, max, step, unit, two anchor labels.</td></tr>
+            <tr><td><code>choice</code></td><td>string</td><td>Single-select from an option list.</td></tr>
+            <tr><td><code>checkbox</code></td><td>array of strings</td><td>Multi-select. Serialized as <code>a;b;c</code> in CSV.</td></tr>
+            <tr><td><code>text</code></td><td>string</td><td>Free-form text input.</td></tr>
+            <tr><td><code>numeric</code></td><td>number</td><td>Number input with keypad on mobile.</td></tr>
+            <tr><td><code>affect_grid</code></td><td><code>{valence, arousal}</code></td><td>2D tap target. Both axes in [−1, 1]. Serialized as <code>valence;arousal</code> in CSV.</td></tr>
+            <tr><td><code>heart_rate</code></td><td><code>{bpm, sqi, ibi_series}</code></td><td>Camera PPG for a configurable duration. The BPM number is what participates in skip logic and conditional tasks. See <a href="#ppg-capture">HR Capture</a>.</td></tr>
+            <tr><td><code>page_break</code></td><td>—</td><td>Splits questions onto separate screens. Not a question per se.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Per-question settings</h3>
+        <ul>
+          <li><strong>Show In (Phase):</strong> whether this question appears pre-task, post-task, or both within a phase-sequenced window.</li>
+          <li><strong>Active Sessions:</strong> restrict the question to specific time windows (e.g. only morning).</li>
+          <li><strong>Required:</strong> blocks advancement until answered.</li>
+          <li><strong>Skip Logic:</strong> compound AND/OR conditions on any prior question. Operators: <code>eq, neq, gt, gte, lt, lte, includes</code>. When a condition evaluates false, the question is silently skipped and not recorded.</li>
+          <li><strong>Response piping:</strong> insert <code>{{q_id}}</code> in a later question's text to substitute the participant's prior answer. Useful for contextualizing follow-ups ("You said your mood was <code>{{q1}}</code>. What was the cause?").</li>
+        </ul>
+
+        <details>
+          <summary>Skip logic semantics — edge cases worth knowing</summary>
+          <div class="details-body">
+            <p>Conditions reference the <strong>raw response value</strong>, which means:</p>
+            <ul>
+              <li>For sliders, comparisons are numeric. <code>q1 gt 70</code> works as expected.</li>
+              <li>For single-choice, comparisons are string equality against the option label (not index).</li>
+              <li>For checkbox (multi-select), comparisons use <code>includes</code>. <code>eq</code> on a multi-select will nearly always be false because the stored value is an array.</li>
+              <li>For Affect Grid, skip-logic is disabled in the UI (the value is a compound object, not a scalar).</li>
+              <li>For Heart Rate, comparisons hit the <code>bpm</code> field directly, so <code>q_hr_1 gt 80</code> does what you'd expect.</li>
+              <li>If a question referenced by a condition was itself skipped or not-yet-presented, the rule evaluates false. Design accordingly.</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- ========================================================= -->
+        <!-- SCHEDULE                                                    -->
+        <!-- ========================================================= -->
+
+        <h2 id="schedule-tab">Schedule &amp; Phase Sequencing</h2>
+        <p>A study consists of <em>N</em> days, each day containing <em>K</em> time windows, each window containing an ordered <strong>phase sequence</strong> of steps.</p>
+
+        <h3>Days &amp; windows</h3>
+        <ul>
+          <li><strong>Study length:</strong> 1–365 days.</li>
+          <li><strong>Days of week:</strong> restrict to weekdays only, etc.</li>
+          <li><strong>Windows:</strong> each has an ID, a display label, and a start/end time. The ID (e.g. <code>morning</code>) is what becomes the <code>session=</code> URL parameter.</li>
+        </ul>
+
+        <h3>Phase sequence</h3>
+        <p>Inside a window, you build an ordered list of <em>steps</em>. A step is one of:</p>
+        <table>
+          <thead><tr><th>Step kind</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>ema</code> (pre)</td><td>The pre-task EMA block: all questions whose "Show In" = Pre or Both.</td></tr>
+            <tr><td><code>ema</code> (post)</td><td>The post-task EMA block: all questions whose "Show In" = Post or Both.</td></tr>
+            <tr><td><code>task</code></td><td>A task module (currently: <code>epat</code>). Optionally gated by a condition.</td></tr>
+            <tr><td><code>hr</code></td><td>A standalone heart-rate capture step with configurable duration.</td></tr>
+          </tbody>
+        </table>
+
+        <p>Steps run top-to-bottom. The same task can appear multiple times; you can have Pre-EMA → HR → ePAT → Post-EMA, or two tasks sandwiched between three EMA blocks — whatever the protocol calls for.</p>
+
+        <div class="docs-callout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="docs-callout-content">
+            <p><strong>Response window timing:</strong> the <code>expiry_minutes</code> setting is enforced at runtime by comparing against a <code>t=</code> URL parameter (a millisecond timestamp added by your SMS/scheduler). If <code>t</code> is absent, links never expire — convenient for piloting, but turn this on before real enrollment.</p>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TASKS                                                       -->
+        <!-- ========================================================= -->
+
+        <h2 id="tasks-tab">Tasks Tab</h2>
+        <p>The Tasks tab is where you turn optional task modules on or off. Toggling a task makes it available to drop into your schedule — it doesn't insert it anywhere automatically; you still choose where in the session sequence it runs (see <a href="#schedule-tab">Schedule</a>).</p>
+        <p>Currently available: <strong>ePAT</strong>. Additional cognitive tasks (Stroop, IAT) are on the roadmap.</p>
+
+        <!-- ========================================================= -->
+        <!-- PREVIEW                                                     -->
+        <!-- ========================================================= -->
+
+        <h2 id="preview">Live Preview</h2>
+        <p>The right-hand iframe in the Builder is a fully functional participant app, re-stitched on every edit. It runs in <strong>preview mode</strong> (<code>__PREVIEW_MODE__ = true</code>), which disables link expiry and session locking so you can walk through the same session repeatedly. Clicking <strong>Reset</strong> clears the preview's local storage without touching your real project.</p>
+        <p>Preview is the fastest way to catch issues <em>before</em> you export anything. Touch-test it on your own phone by opening the Builder's URL on your device — the preview iframe works over any local network you're on.</p>
+
+        <!-- ========================================================= -->
+        <!-- EXPORT                                                      -->
+        <!-- ========================================================= -->
+
+        <h2 id="export">Export Options</h2>
+
+        <table>
+          <thead><tr><th>Option</th><th>What you get</th><th>When to use</th></tr></thead>
+          <tbody>
             <tr>
-              <td><code>id</code></td>
-              <td>Unique participant identifier (e.g., <code>104</code>)</td>
+              <td><strong>Single HTML file</strong></td>
+              <td>One self-contained <code>.html</code> with config, JS, and CSS inlined.</td>
+              <td>Pilots, QA, or emailing a direct file to one participant. <em>Config is baked in — any edit means re-exporting.</em></td>
             </tr>
             <tr>
-              <td><code>day</code></td>
-              <td>The current study day (e.g., <code>1</code> to <code>14</code>)</td>
-            </tr>
-            <tr>
-              <td><code>session</code></td>
-              <td>Matches the window name defined in the Schedule tab (e.g., <code>morning</code>)</td>
+              <td><strong>Static-hosting bundle</strong> <span class="status-pill stable">RECOMMENDED</span></td>
+              <td>A <code>.zip</code> containing <code>index.html</code>, <code>config.json</code>, <code>css/</code>, and <code>js/</code>.</td>
+              <td>Real deployment. <strong>Because <code>config.json</code> is separate, you can fix a typo in a question without re-exporting.</strong> Just edit the JSON on the host.</td>
             </tr>
           </tbody>
         </table>
 
-        <blockquote>
-          <p><strong>Pro-tip:</strong> Use the <strong>Deployment</strong> tab in the Builder. Provide your base URL, and EMA Forge will generate a massive CSV containing every single pre-formatted link for every participant, day, and session. You can drop this CSV straight into Qualtrics, Twilio, or your SMS scheduler.</p>
-        </blockquote>
+        <h2 id="hosting">Hosting Your Study</h2>
+        <p>This section is about hosting the <em>exported study bundle</em> — the thing participants will open. You are <strong>not</strong> hosting the Builder itself (that already lives at <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>).</p>
 
-        <h2 id="data-format">Data Formats</h2>
-        <p>When a participant finishes a session, their device automatically downloads the data. Depending on your configuration, this will be:</p>
-        <ul>
-          <li><strong>CSV (Default):</strong> One row per question answered. Extremely easy to concatenate across participants using R or Python.</li>
-          <li><strong>JSON:</strong> Included automatically if the session contained high-density signal data (like the PPG camera feed or ePAT reaction times).</li>
-        </ul>
-        <p>Files are automatically named securely: <code>ema_data_[ID]_[DAY]_[SESSION].csv</code></p>
+        <p>The simplest option for most academic labs is <strong>GitHub Pages</strong>. It is free, reliable, and requires no command-line work. The minimal path:</p>
 
-        <h2 id="dashboard">Using the Dashboard</h2>
-        <p>The <strong>Data Dashboard</strong> (<code>dashboard.html</code>) is your local command center. </p>
-        <p>Because EMA Forge has no database, you use the Dashboard by clicking <strong>Import Folder</strong> and selecting a local folder on your computer that contains all the collected participant JSON/CSV files. The dashboard runs local parsing algorithms to instantly calculate:</p>
-        <ul>
-          <li>Overall and per-participant compliance rates.</li>
-          <li>Signal noise and invalid response detection (e.g., speeding through questions &lt;30s).</li>
-          <li>Latency (time between receiving a link and opening it).</li>
-        </ul>
-
-        <h2 id="crash-recovery">Crash Recovery & Protection</h2>
-        <p>By default, EMA Forge enables two vital protections in the wild:</p>
         <ol>
-          <li><strong>Session Locking:</strong> A participant cannot accidentally submit the <code>day=2&session=morning</code> link twice. If they click it again, they see a "Session Complete" screen. <em>(Can be overridden by researchers using <code>?force=1</code>).</em></li>
-          <li><strong>Crash Recovery:</strong> If a participant accidentally closes Safari/Chrome halfway through a session, reopening the link instantly restores their progress. Completed modules are saved in local storage.</li>
+          <li>Create a free GitHub account if you don't have one.</li>
+          <li>Create a new repository (e.g. <code>my-ema-study</code>). Make it public or private — both work with GitHub Pages on free accounts.</li>
+          <li>Click <strong>Add file → Upload files</strong>, and drop in the entire contents of your extracted Export zip (the <code>index.html</code>, <code>config.json</code>, and the <code>css</code> / <code>js</code> folders).</li>
+          <li>Go to <strong>Settings → Pages</strong>. Under "Source," choose <strong>main branch, root folder</strong>.</li>
+          <li>Wait a minute. Your study is now live at <code>https://&lt;your-username&gt;.github.io/my-ema-study/</code>.</li>
         </ol>
 
-        <h2 id="ppg-capture">WebRTC PPG Capture</h2>
-        <p>EMA Forge includes a module to capture heart rate data using a smartphone camera (Photoplethysmography). It asks the user to place their finger over the rear camera and flashlight.</p>
-        <p>The module runs local WebRTC processing and bandpass filtering, extracting the color-intensity variance to map the blood pulse wave. This raw signal data is exported in the JSON payload.</p>
+        <p>That URL is the base you give to the Builder's Deployment tab to generate participant links. You're done.</p>
 
-        <h2 id="epat">ePAT Integration</h2>
-        <p>The <strong>Ecological Phase Adjustment Task (ePAT)</strong> is built natively into EMA Forge. If enabled in the Tasks tab, you can slot it into a phase sequence (e.g., complete the survey, then do the ePAT, then complete a post-survey).</p>
-        <p>The ePAT engine handles high-precision AudioContext scheduling to ensure stimulus timing remains perfectly accurate across different mobile browsers.</p>
+        <details>
+          <summary>Prefer the command line, or deploying via another host?</summary>
+          <div class="details-body">
+            <p>Any static host works unchanged — Netlify, Vercel, Cloudflare Pages, S3 + CloudFront, or an Apache/Nginx directory on institutional infrastructure. No build step, no server runtime.</p>
+            <p>The git-native GitHub Pages recipe:</p>
+            <pre><code># From your extracted bundle folder
+git init
+git add .
+git commit -m "study v1"
+git branch -M main
+git remote add origin https://github.com/your-lab/your-study.git
+git push -u origin main
+
+# Then in GitHub: Settings → Pages → Source = main branch, root
+# Your study is live at https://your-lab.github.io/your-study/</code></pre>
+          </div>
+        </details>
+
+        <!-- ========================================================= -->
+        <!-- ROUTING                                                     -->
+        <!-- ========================================================= -->
+
+        <h2 id="routing">Participant Routing</h2>
+        <p>Because there is no backend, the participant's session is entirely determined by the URL they open. Four query parameters drive this:</p>
+
+        <table>
+          <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>yes</td><td>Participant identifier (any string, usually numeric).</td></tr>
+            <tr><td><code>day</code></td><td>yes (except onboarding)</td><td>Study day, typically <code>1</code>–<code>N</code>.</td></tr>
+            <tr><td><code>session</code></td><td>yes</td><td>Window ID defined in the Schedule tab, or the literal string <code>onboarding</code> for Day 0.</td></tr>
+            <tr><td><code>t</code></td><td>recommended</td><td>Millisecond Unix timestamp of when the link was sent. Used for expiry enforcement. Your scheduler should inject this at send-time.</td></tr>
+            <tr><td><code>force</code></td><td>no</td><td>When set to <code>1</code>, overrides session locking. For researcher use only (QA, rescues). Do not put this in participant links.</td></tr>
+          </tbody>
+        </table>
+
+        <pre><code>https://your-lab.github.io/study/?id=104&amp;day=2&amp;session=morning&amp;t=1732812000000</code></pre>
+
+        <h2 id="deployment-csv">Generating Links in Bulk</h2>
+        <p>The Builder's <strong>Deployment</strong> tab takes a base URL and a participant-ID range, and emits a CSV with one row per (participant × day × session). Each row includes a <code>Phase_Sequence</code> column so you can eyeball at a glance what each link will do.</p>
+
+        <pre><code>Participant_ID,Day,Session,Phase_Sequence,URL
+104,0,Setup,Onboarding,https://.../?id=104&amp;session=onboarding
+104,1,Morning,Pre-EMA → ePAT → Post-EMA,https://.../?id=104&amp;day=1&amp;session=w1
+104,1,Evening,Pre-EMA,https://.../?id=104&amp;day=1&amp;session=w2
+...</code></pre>
+
+        <p>This CSV is the glue between EMA Forge and your delivery mechanism of choice — drop it into a Qualtrics contacts list, a Twilio scheduled-SMS campaign, an institutional email merge, or a lab-built scheduler. Your scheduler is responsible for appending a <code>t=</code> timestamp at send-time if you want expiry enforcement.</p>
+
+        <h2 id="notifications">Sending Prompts <span class="status-pill wip">WIP</span></h2>
+        <p>Delivery is currently out-of-scope — you bring your own SMS/email/push mechanism. The current recommendation is Twilio Programmable Messaging with scheduled-send. Native integration is on the <a href="#twilio-webhooks">roadmap</a>.</p>
+
+        <!-- ========================================================= -->
+        <!-- RUNTIME BEHAVIOR                                            -->
+        <!-- ========================================================= -->
+
+        <h2 id="session-lifecycle">Session Lifecycle</h2>
+        <p>When a participant opens a link, the runtime:</p>
+        <ol>
+          <li>Parses URL parameters.</li>
+          <li>Checks expiry (if <code>t</code> and <code>expiry_minutes</code> are both set).</li>
+          <li>Checks the completion lock — has this <code>(id, day, session)</code> tuple already been submitted on this device?</li>
+          <li>Checks for an in-progress resume state for this session.</li>
+          <li>Renders the first step of the session (usually a pre-task EMA block).</li>
+          <li>On each phase completion, writes the phase's responses to local storage and advances.</li>
+          <li>When the last phase finishes, the full session payload is assembled and the "Save Local Copy" screen appears. Tapping it triggers a file download.</li>
+        </ol>
+
+        <h2 id="expiry-grace">Expiry &amp; Grace Period</h2>
+        <ul>
+          <li><strong>Expiry window</strong> (default 60 min): after this many minutes past <code>t</code>, the link renders a "Link Expired" screen and the Start button is disabled. Recorded as a missed ping by the Dashboard.</li>
+          <li><strong>Grace period</strong>: a secondary buffer primarily used for downstream compliance calculations; the link remains functional during grace, but responses inside the grace window can be flagged during analysis.</li>
+        </ul>
+
+        <h2 id="completion-lock">Session Locking</h2>
+        <p>By default, a participant who completes a session and then re-clicks the same link sees a "Session Complete — thanks, come back at the next prompt" screen. This prevents accidental double-submissions.</p>
+        <p>Researchers can override with <code>?force=1</code> appended to the URL (useful for QA walkthroughs or for rescuing a participant whose submission didn't land). Do not include <code>force</code> in participant-facing links.</p>
+
+        <h2 id="crash-recovery">Crash Recovery</h2>
+        <p>If a participant's browser crashes mid-session (tab killed by iOS memory pressure, phone restart, app switch past timeout), reopening the same link will:</p>
+        <ul>
+          <li>Restore all <em>completed</em> phases (pre-EMA, finished task trials, etc.) — that data survives.</li>
+          <li>Restart the <em>current</em> phase from the beginning. Partial data within the phase is discarded to avoid ambiguity.</li>
+        </ul>
+
+        <p>This is intentionally conservative. A half-finished phase with an unknown number of missing questions is worse than a clean re-run.</p>
+
+        <h2 id="schema-versioning">Schema Versioning &amp; Migrations</h2>
+        <p>Every study carries a <strong>schema version</strong> (currently <code>1.5.0</code>). When the Builder loads a saved study — whether from your browser's local storage or a backup file you imported — it checks that version:</p>
+        <ul>
+          <li><strong>Equal</strong> → load as-is.</li>
+          <li><strong>Older</strong> → forward-migrate silently (new fields get sensible defaults).</li>
+          <li><strong>Newer</strong> → <em>refuse to load</em>. A newer schema might include fields this runtime doesn't know how to preserve; loading would silently corrupt them. Export a backup from the newer Builder or reset.</li>
+        </ul>
+
+        <p>This is worth knowing when rolling out an EMA Forge update mid-study: finish in-progress waves on the old version, then upgrade.</p>
+
+        <!-- ========================================================= -->
+        <!-- DATA                                                        -->
+        <!-- ========================================================= -->
+
+        <h2 id="data-files">What Participants Save</h2>
+        <p>Each completed session produces one or two files:</p>
+        <ul>
+          <li><strong><code>ema_data_[ID]_[DAY]_[SESSION].csv</code></strong> — long-format, one row per question answered. Default output when the session contains only standard EMA responses.</li>
+          <li><strong><code>ema_data_[ID]_[DAY]_[SESSION].json</code></strong> — full structured payload, included automatically whenever the session contains high-density signal data (PPG samples, ePAT trial-level data). Written alongside the CSV, not instead of it.</li>
+        </ul>
+        <p>Participants return these files via whatever channel your IRB approved. The Dashboard expects a folder of JSON files for analysis; a CSV-only workflow is also viable for simpler studies.</p>
+
+        <h2 id="csv-schema">CSV Schema (Dashboard export)</h2>
+        <p>When you use the <strong>Export Master CSV</strong> button in the Dashboard, you get one row per <code>(session, question)</code> pair in long format. The columns:</p>
+
+        <table>
+          <thead><tr><th>Column</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>participant_id</code></td><td>From the URL <code>?id=</code>.</td></tr>
+            <tr><td><code>day</code></td><td>From the URL <code>?day=</code>.</td></tr>
+            <tr><td><code>session_id</code></td><td>Unique per-session identifier generated by the runtime.</td></tr>
+            <tr><td><code>window_id</code></td><td>Matches the Schedule-tab window ID (e.g. <code>morning</code>).</td></tr>
+            <tr><td><code>window_label</code></td><td>Human-readable window label.</td></tr>
+            <tr><td><code>block</code></td><td><code>pre</code>, <code>post</code>, or blank. Which EMA block within the phase sequence the question belonged to.</td></tr>
+            <tr><td><code>session_started_at</code></td><td>ISO-8601 timestamp of session start.</td></tr>
+            <tr><td><code>session_submitted_at</code></td><td>ISO-8601 timestamp of final session save.</td></tr>
+            <tr><td><code>phase_started_at</code></td><td>ISO-8601 timestamp — when the block containing this question began.</td></tr>
+            <tr><td><code>phase_submitted_at</code></td><td>ISO-8601 timestamp — when the block was submitted.</td></tr>
+            <tr><td><code>question_id</code></td><td>Stable ID (e.g. <code>q1</code>, <code>q_hr_1</code>).</td></tr>
+            <tr><td><code>question_text</code></td><td>The question text at the time of export.</td></tr>
+            <tr><td><code>question_type</code></td><td>One of the types listed in <a href="#questions-tab">Questions Tab</a>.</td></tr>
+            <tr><td><code>presentation_order</code></td><td>1-indexed order the question was shown in, accounting for skip logic.</td></tr>
+            <tr><td><code>response_value</code></td><td>The raw response, serialized (checkbox as <code>a;b;c</code>, Affect Grid as <code>valence;arousal</code>).</td></tr>
+            <tr><td><code>response_numeric</code></td><td>Numeric cast of the response if possible; blank otherwise. Convenient for sliders.</td></tr>
+            <tr><td><code>response_latency_ms</code></td><td>Milliseconds from phase start to this response.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="json-schema">JSON Schema (per-session)</h2>
+        <p>The raw JSON payload is what the Dashboard reads and is the source of truth. Shape (abbreviated):</p>
+        <pre><code>{
+  "participantId": "104",
+  "sessionId": "s_a1b2c3",
+  "day": 2,
+  "type": "morning",
+  "status": "complete",
+  "startedAt": "2026-04-22T08:03:11Z",
+  "completedAt": "2026-04-22T08:06:48Z",
+  "data": [
+    {
+      "type": "ema_response",
+      "block": "pre",
+      "windowId": "w1",
+      "startedAt": "...",
+      "submittedAt": "...",
+      "presentationOrder": [["q1", "q2"], ["q3"]],
+      "responses": {
+        "q1":    { "value": 72,                        "respondedAt": "..." },
+        "q2":    { "value": "Working",                 "respondedAt": "..." },
+        "q3":    { "value": {"valence": 0.4,
+                             "arousal": -0.2},         "respondedAt": "..." },
+        "q_hr_1":{ "value": { "bpm": 74,
+                              "sqi": 0.82,
+                              "ibi_series": [810, 795, ...] },
+                   "respondedAt": "..." }
+      }
+    },
+    {
+      "type": "epat_response",
+      "trials": [ { "trial": 1, "phase_ms": 342, "confidence": 3, "sqi": 0.91 }, ... ],
+      "summary": { "valid_trials": 18, "mean_abs_phase_ms": 218, "..." }
+    }
+  ]
+}
+</code></pre>
+
+        <h2 id="r-analysis">Analysis in R</h2>
+        <p>Because the Dashboard's CSV export is long-format, getting from a folder of per-session files to a tidy dataset is short. A typical starter pipeline:</p>
+
+        <pre><code>library(tidyverse)
+library(jsonlite)
+
+# 1. Ingest a folder of per-session JSON files
+files &lt;- list.files("data/", pattern = "\\.json$", full.names = TRUE)
+sessions &lt;- map(files, ~ fromJSON(.x, simplifyVector = FALSE))
+
+# 2. Flatten to long format (or just use the Dashboard's master CSV)
+df &lt;- read_csv("ema_master_dataset_2026-04-22.csv")
+
+# 3. Compliance per participant
+compliance &lt;- df |&gt;
+  distinct(participant_id, day, session_id) |&gt;
+  count(participant_id) |&gt;
+  rename(sessions_completed = n)
+
+# 4. Mean mood by time-of-day, handling the long format
+mood &lt;- df |&gt;
+  filter(question_id == "q1") |&gt;
+  group_by(participant_id, window_label) |&gt;
+  summarize(mean_mood  = mean(response_numeric, na.rm = TRUE),
+            sd_mood    = sd(response_numeric,   na.rm = TRUE),
+            n          = n(),
+            .groups    = "drop")
+
+# 5. Affect Grid (stored as "valence;arousal" in response_value)
+affect &lt;- df |&gt;
+  filter(question_type == "affect_grid") |&gt;
+  separate(response_value, into = c("valence", "arousal"),
+           sep = ";", convert = TRUE)
+</code></pre>
+
+        <h2 id="dashboard">Dashboard</h2>
+        <p><code>dashboard.html</code> is a local analysis UI. Drop in a folder containing your study's <code>config.json</code> and all returned participant JSON files; it parses locally and renders:</p>
+
+        <h3>KPIs</h3>
+        <ul>
+          <li><strong>Avg. Compliance Rate</strong> — completed sessions / expected sessions, scoped by filters.</li>
+          <li><strong>Total Pings Delivered</strong> — expected sessions up to the current study day.</li>
+          <li><strong>Signal Noise / Invalid %</strong> — proportion of sessions flagged as "speeding" (total session duration &lt; 30 seconds). A rough heuristic; tune in your own analysis.</li>
+          <li><strong>Avg. Time to Complete</strong> — mean session duration.</li>
+        </ul>
+
+        <h3>Filters &amp; views</h3>
+        <ul>
+          <li><strong>Aggregate vs. Per-Participant</strong> segmented view.</li>
+          <li><strong>Date range</strong> (by study day).</li>
+          <li><strong>Exclude missed prompts</strong> toggle (affects denominator of compliance).</li>
+          <li><strong>Filter rapid responders (&lt;30s)</strong> toggle.</li>
+          <li><strong>Attention Required</strong> watchlist — participants whose compliance is below threshold, ready for a check-in text.</li>
+          <li><strong>Export Master CSV</strong> — flattens all imported sessions into one long-format file (<a href="#csv-schema">schema above</a>).</li>
+        </ul>
+
+        <div class="docs-callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="docs-callout-content">
+            <p><strong>Latency is currently placeholder.</strong> The Dashboard has fields for "latency" (time from prompt delivery to link open), but with no server, the runtime cannot know <em>when</em> the link was sent. This field is zero-filled until the Twilio/webhook integration lands, which will give the parser an external prompt-delivery timestamp to merge in.</p>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ADVANCED MODULES                                            -->
+        <!-- ========================================================= -->
+
+        <h2 id="ppg-capture">Heart-Rate Capture (Camera PPG)</h2>
+        <p>EMA Forge ships a lightweight photoplethysmography (PPG) pipeline that recovers heart rate from the participant's rear-facing smartphone camera, with the torch on as an illumination source. It powers two user-facing features:</p>
+        <ul>
+          <li>A <code>heart_rate</code> question type you can drop into an EMA block anywhere.</li>
+          <li>A standalone HR step in a window's phase sequence (identical capture, structural placement differs).</li>
+        </ul>
+
+        <details>
+          <summary>How the PPG pipeline works (click to expand)</summary>
+          <div class="details-body">
+            <p>The runtime's <code>ePATCore</code> module handles PPG end-to-end. In brief:</p>
+            <ol>
+              <li><strong>Camera acquisition.</strong> <code>getUserMedia</code> requests the rear camera with the torch constraint. A hidden <code>&lt;video&gt;</code> element receives the stream.</li>
+              <li><strong>Sampling.</strong> A hidden <code>&lt;canvas&gt;</code> draws each video frame at ~30 Hz, averaging pixel intensity (primarily the red channel) over a central region of interest. This produces a 1D time series of blood-volume-driven reflectance change.</li>
+              <li><strong>Filtering.</strong> The raw signal is high-pass filtered to remove slow drift (respiration, finger micro-shifts) and low-pass filtered to remove high-frequency sensor noise, leaving the cardiac band (roughly 0.7–3 Hz, i.e. 40–180 BPM).</li>
+              <li><strong>Signal-quality index (SQI).</strong> Each sliding window yields a perfusion-index estimate. The <code>sqi_threshold</code> setting (default 0.3) is the floor below which a trial/capture is rejected. This is what the Sensor Warning overlay enforces — if the finger lifts or lighting changes, SQI drops and the warning reappears.</li>
+              <li><strong>Beat detection.</strong> Peaks are identified in the filtered signal using a JavaScript port of the <strong>WABP algorithm</strong> (Zong et al., 2003) — originally designed for arterial blood pressure onset detection, which transfers cleanly to the PPG domain. Inter-beat intervals (IBIs) are the ms-differences between successive detected onsets. The camera acquisition approach follows the pattern established in Richard Moore's open-source web heart-rate-monitor. Full citations in <a href="#acknowledgments">Acknowledgments</a>.</li>
+              <li><strong>Output.</strong> BPM is <code>60000 / median(IBIs)</code> over the capture window. Stored alongside the full IBI series for downstream HRV analysis, plus the mean SQI as a quality annotation.</li>
+            </ol>
+            <p>This is not a medical-grade measurement. For research use where the construct is "participant's approximate HR at this moment under ecological conditions", the technique is well-established in the digital biomarker literature. For clinical interpretation, don't.</p>
+          </div>
+        </details>
+
+        <h2 id="epat">ePAT — Ecological Phase Assessment Task</h2>
+        <p>The <strong>ePAT</strong> is a cardiac interoceptive-accuracy task adapted for in-the-wild, mobile-first use. It is directly descended from the <strong>Phase Adjustment Task</strong> (PAT) and its refined successor <strong>PAT 2.0</strong> — see <a href="#acknowledgments">Acknowledgments &amp; Prior Work</a> for primary sources. Participants align an auditory tone with their own felt heartbeats by rotating a dial until the tone "feels like it's landing on" each beat. Their phase offset (in ms, relative to ground-truth peaks detected by the camera PPG) is the dependent measure.</p>
+
+        <details>
+          <summary>Task flow, trial by trial (click to expand)</summary>
+          <div class="details-body">
+            <ol>
+              <li><strong>Baseline calibration.</strong> 10–20 s of still finger-on-camera capture establishes the participant's current HR and verifies that SQI is above threshold before any trials begin.</li>
+              <li><strong>Two-phase practice</strong> (optional, default on). First, tone-to-tone alignment (no heartbeat involved — teaches the dial mechanic). Second, tone-to-heartbeat alignment at a slow scaffolded pace.</li>
+              <li><strong>Trial block.</strong> <code>trials</code> valid trials (default 20), each <code>trial_duration_sec</code> seconds long (default 30). During a trial:
+                <ul>
+                  <li>Live camera PPG streams in the background.</li>
+                  <li>A tone plays at a predicted time, offset by a randomized phase.</li>
+                  <li>The participant rotates the rotary dial to shift the tone earlier or later until it subjectively aligns with their beat.</li>
+                  <li>On "Confirm Timing", the offset is recorded relative to the ground-truth peak from the PPG.</li>
+                </ul>
+              </li>
+              <li><strong>Per-trial confidence</strong> (optional): 1–5 rating of how sure they were the tone matched their heartbeat.</li>
+              <li><strong>Body map</strong> (optional): after each trial, where did they feel the beat? Chest / fingers / neck / ears / abdomen / legs / head / nowhere.</li>
+              <li><strong>Retry budget.</strong> <code>retry_budget</code> (default 30) is the maximum number of attempts. A trial can fail for low SQI, excessive movement, or participant cancelation. Once <em>valid</em> trials hits the target, the task ends; if the budget exhausts first, the task ends with whatever valid trials were collected.</li>
+            </ol>
+            <p><strong>High-precision timing.</strong> Audio stimulus scheduling uses the Web Audio API's <code>AudioContext</code> (not <code>setTimeout</code>), which gives sample-accurate timing across browsers. This is the difference between a task that has &lt;2 ms jitter and one that has ~20 ms jitter, which matters a great deal when your DV is measured in milliseconds.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Configuration knobs (Builder → Tasks → ePAT)</summary>
+          <div class="details-body">
+            <table>
+              <thead><tr><th>Setting</th><th>Default</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td><code>trials</code></td><td>20</td><td>Target number of <em>valid</em> trials.</td></tr>
+                <tr><td><code>trial_duration_sec</code></td><td>30</td><td>Max seconds per trial before auto-cancel.</td></tr>
+                <tr><td><code>retry_budget</code></td><td>30</td><td>Hard cap on total attempts (valid + failed).</td></tr>
+                <tr><td><code>sqi_threshold</code></td><td>0.3</td><td>Minimum perfusion index for trial acceptance.</td></tr>
+                <tr><td><code>confidence_ratings</code></td><td>on</td><td>Ask for 1–5 confidence after each trial.</td></tr>
+                <tr><td><code>two_phase_practice</code></td><td>on</td><td>Include tone-to-tone + tone-to-heartbeat practice.</td></tr>
+                <tr><td><code>body_map</code></td><td>on</td><td>Show the post-trial body-location picker.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="docs-callout warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="docs-callout-content">
+            <p>ePAT is flagged <span class="status-pill beta">BETA</span>. The algorithm is stable and the task is usable, but the published-psychometrics validation of the <em>ecological</em> adaptation is still in progress. If you publish ePAT data collected via EMA Forge, please cite both the underlying PAT lineage (Plans et al., 2021; Palmer et al., 2025) and this repository — full citation list in <a href="#acknowledgments">Acknowledgments</a>.</p>
+          </div>
+        </div>
+
+        <h2 id="conditional-tasks">Conditional Tasks</h2>
+        <p>A task step in a window's phase sequence can carry a condition that gates whether it runs at all:</p>
+        <pre><code>{ kind: "task", id: "epat",
+  condition: { question_id: "q_hr_1", operator: "gt", value: 80 } }</code></pre>
+        <p>At runtime, EMA Forge evaluates the condition against the participant's responses collected <em>earlier in the same session</em>. If the condition is false, the step is silently skipped — as if it were never in the sequence. Typical use cases:</p>
+        <ul>
+          <li>"Only run ePAT if resting HR is elevated" — gate on a prior HR capture's BPM.</li>
+          <li>"Only show the post-task stress items if the participant reported feeling stressed beforehand" — gate on a slider threshold.</li>
+          <li>"Skip the cognitive task on the 3rd daily window" — gate on window ID.</li>
+        </ul>
+
+        <!-- ========================================================= -->
+        <!-- PRIVACY & IRB                                               -->
+        <!-- ========================================================= -->
+
+        <h2 id="privacy-model">Privacy Model</h2>
+        <p>Written plainly, because IRBs will ask you to restate this in your protocol:</p>
+        <ol>
+          <li><strong>Response data never transits a central server.</strong> It is generated, stored, and downloaded entirely on the participant's device. You receive it via whatever channel the participant uses to return files.</li>
+          <li><strong>The static host sees page-load requests.</strong> Your GitHub Pages / Netlify / institutional host will receive HTTP requests when the participant opens a link. These requests include timestamp, IP, User-Agent, and the full URL (<em>including</em> <code>?id=</code>). If participant ID alone is identifiable, choose an unlinkable ID (short opaque strings, not names or MRNs).</li>
+          <li><strong>No third-party analytics, no CDN fetches, no font-provider calls.</strong> The exported study has zero outbound network calls at runtime (after initial page load). You can verify this in Chrome DevTools → Network.</li>
+          <li><strong>Camera / microphone access</strong> (HR, ePAT) is handled entirely through the browser's <code>getUserMedia</code> permission prompt. The media stream never leaves the device; only the derived signal (BPM, IBIs, phase offsets) is stored.</li>
+          <li><strong>Consent is captured</strong> as a boolean plus a timestamp in the onboarding JSON payload. The full consent text as the participant saw it is logged alongside.</li>
+        </ol>
+
+        <h2 id="irb-language">IRB Boilerplate</h2>
+        <p>Language you can adapt for the "data management" section of your protocol:</p>
+
+        <blockquote>
+          <p>Participant response data will be collected via a custom web-based application (EMA Forge, an open-source static web tool). The application operates entirely in the participant's mobile browser: response data is generated and stored on the participant's device and is not transmitted to any central server in the course of normal operation. Participants return completed session files to the research team via [INSTITUTIONAL SECURE CHANNEL — e.g., REDCap file upload, institutional SFTP]. No protected health information or direct identifiers are included in the study data; participants are identified only by an opaque study ID. Physiological measurements (heart rate via photoplethysmography) are derived from the participant's smartphone camera locally; raw video is not stored or transmitted. The application source code is open and available for review at [YOUR REPO URL].</p>
+        </blockquote>
+
+        <h2 id="limitations">Known Limitations</h2>
+        <ul>
+          <li><strong>No live enrollment dashboard.</strong> Data is only visible once files are returned.</li>
+          <li><strong>Missed-ping detection is derived, not direct.</strong> The app cannot know a prompt was sent unless you record that externally.</li>
+          <li><strong>Device heterogeneity.</strong> HR/ePAT quality depends on camera sensor, torch brightness, and case thickness. Pilot across a range of devices before locking your protocol.</li>
+          <li><strong>Browser storage can be cleared.</strong> A participant who "clears website data" mid-study loses their in-progress resume state (but not already-downloaded session files). The completion lock also resets.</li>
+          <li><strong>Single-file exports don't let you patch typos.</strong> Use the static-hosting bundle if you anticipate edits after deployment.</li>
+          <li><strong>Accessibility is a work in progress.</strong> Screen-reader support for sliders and the affect grid is incomplete. Audit against your accessibility requirements before broad enrollment.</li>
+        </ul>
+
+        <!-- ========================================================= -->
+        <!-- ROADMAP                                                     -->
+        <!-- ========================================================= -->
+
+        <h2 id="roadmap">Roadmap</h2>
+
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-item-title">🔗 Webhook auto-upload <span class="status-pill wip">WIP</span></div>
+            <div class="feature-item-desc">Optional POST of the session JSON to a configured endpoint on save, so files land in REDCap / S3 / a custom ingest without participant action.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">📱 Twilio helpers <span class="status-pill wip">WIP</span></div>
+            <div class="feature-item-desc">Generate Twilio-ready scheduled-message batches directly from the Deployment CSV, with auto-injected <code>t=</code> timestamps.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">⏱ Live latency <span class="status-pill planned">PLANNED</span></div>
+            <div class="feature-item-desc">Once Twilio integration lands, the Dashboard will merge delivery timestamps to compute true ping-to-open latency.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">🧠 Stroop / IAT modules <span class="status-pill planned">PLANNED</span></div>
+            <div class="feature-item-desc">Additional cognitive tasks slotting into the existing module registry.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">♿ Accessibility pass <span class="status-pill planned">PLANNED</span></div>
+            <div class="feature-item-desc">Full ARIA landmarking, screen-reader-friendly slider + affect grid, text-scale respect.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-title">🔒 Optional AES-encrypted payloads <span class="status-pill planned">PLANNED</span></div>
+            <div class="feature-item-desc">Client-side encryption of returned files against a lab-held public key, so return-channel compromise is not a data exposure.</div>
+          </div>
+        </div>
+
+        <h2 id="twilio-webhooks">Twilio &amp; Webhooks <span class="status-pill wip">WIP</span></h2>
+        <p>These are the two most-requested integrations and are the next items on the build queue. A sketch of what's coming:</p>
+
+        <h3>Twilio integration</h3>
+        <ul>
+          <li>A new Deployment sub-tab that converts the routing CSV into a Twilio Messaging API batch (CSV or direct API call).</li>
+          <li>Auto-injection of <code>t=</code> at Twilio's scheduled send-time, so expiry enforcement just works.</li>
+          <li>Opt-in support for Twilio's <em>Scheduling</em> feature (up to 7 days ahead) or deferred to a lab-side cron for longer horizons.</li>
+          <li>Optional two-way SMS for unprompted "I want to check in now" responses, mapped to a designated emergency window.</li>
+        </ul>
+
+        <h3>Webhook auto-upload</h3>
+        <ul>
+          <li>A Study-tab field for a <strong>webhook URL</strong> the runtime POSTs the session JSON to when the participant taps "Save".</li>
+          <li>Fallback to local download if the POST fails — never drops data silently.</li>
+          <li>Templates planned for: raw REDCap File Repository, S3 presigned URLs, and generic JSON endpoints.</li>
+          <li>Crucially, this stays <em>optional</em>. The serverless guarantee is the headline feature and shouldn't be silently downgraded.</li>
+        </ul>
+
+        <div class="docs-callout wip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+          <div class="docs-callout-content">
+            <p>If you're planning a study that depends on either of these, reach out — usage patterns from real deployments shape what ships first.</p>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- UNDER THE HOOD                                              -->
+        <!-- ========================================================= -->
+
+        <h2 id="under-the-hood">Under the Hood</h2>
+        <p>You do not need any of this to run a study. It's here for the small subset of users who want to audit the code, contribute a new task module, or fork the project for a deeply custom use case.</p>
+
+        <details>
+          <summary>Repository layout</summary>
+          <div class="details-body">
+            <p>The repository is split into three concerns: (1) what the researcher uses (Builder + Dashboard), (2) what gets compiled into the participant's study (<code>templates/</code>), and (3) shared styling.</p>
+            <pre class="file-tree" style="margin-top:12px;"><span class="ft-dir">ema-forge/</span>
+├── <span class="ft-dir">index.html</span>             <span class="ft-comment"># Landing page</span>
+├── <span class="ft-dir">builder.html</span>           <span class="ft-comment"># Study authoring environment</span>
+├── <span class="ft-dir">dashboard.html</span>         <span class="ft-comment"># Local analysis dashboard</span>
+├── <span class="ft-dir">readme.html</span>            <span class="ft-comment"># This file</span>
+│
+├── <span class="ft-dir">css/</span>
+│   └── studio.css             <span class="ft-comment"># Shared design tokens + component styles</span>
+│
+├── <span class="ft-dir">js/</span>
+│   ├── state.js               <span class="ft-comment"># Central state + schema (SCHEMA_VERSION)</span>
+│   ├── storage.js             <span class="ft-comment"># LocalStorage + project import/export + migrations</span>
+│   ├── export.js              <span class="ft-comment"># Compiles study to HTML / zip bundle</span>
+│   ├── preview.js             <span class="ft-comment"># Live iframe preview</span>
+│   │
+│   ├── <span class="ft-dir">tabs/</span>                  <span class="ft-comment"># Builder tab controllers</span>
+│   │   ├── study.js
+│   │   ├── onboarding.js
+│   │   ├── questions.js
+│   │   ├── schedule.js        <span class="ft-comment"># Windows + phase_sequence editor</span>
+│   │   ├── tasks.js           <span class="ft-comment"># Pluggable module registry</span>
+│   │   └── deployment.js      <span class="ft-comment"># Routing CSV generator</span>
+│   │
+│   └── <span class="ft-dir">dashboard/</span>
+│       ├── parser.js          <span class="ft-comment"># Ingests participant JSON folder</span>
+│       └── dashboard.js       <span class="ft-comment"># Charts, filters, CSV export</span>
+│
+└── <span class="ft-dir">templates/</span>                <span class="ft-comment"># Source files stitched into the exported study</span>
+    ├── epat-core.js           <span class="ft-comment"># PPG pipeline + BeatDetector</span>
+    ├── study-base.js          <span class="ft-comment"># Runtime skeleton</span>
+    ├── module-onboarding.js
+    ├── module-ema.js          <span class="ft-comment"># EMA block + inline HR capture</span>
+    └── module-epat.js         <span class="ft-comment"># ePAT task</span>
+</pre>
+            <p style="margin-top:12px;"><strong>Key boundary:</strong> <code>js/</code> powers the Builder/Dashboard (what the researcher interacts with). <code>templates/</code> is the code that gets stitched into the <em>participant's</em> study by <code>js/export.js</code>. Never edit templates hoping to change Builder behavior, or vice versa.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Adding a new task module</summary>
+          <div class="details-body">
+            <p>The task registry in <code>js/tabs/tasks.js</code> exposes a <code>SETTINGS_RENDERERS</code> object. Each entry is <code>{ html(mod), bind(card, mod) }</code> — <code>html()</code> returns the settings-panel HTML for the Builder, <code>bind()</code> attaches event listeners. To register a module:</p>
+            <ol>
+              <li>Add an entry to <code>state.modules</code> in <code>js/state.js</code> with <code>id</code>, <code>label</code>, <code>desc</code>, <code>enabled</code>, and a <code>settings</code> object.</li>
+              <li>Add a matching renderer in <code>SETTINGS_RENDERERS</code> in <code>js/tabs/tasks.js</code>.</li>
+              <li>Create a runtime module file in <code>templates/module-&lt;id&gt;.js</code> that defines a lifecycle (<code>start</code>, <code>teardown</code>, <code>getData</code>) and push it into the export pipeline in <code>js/export.js</code>.</li>
+            </ol>
+            <p>ePAT is the reference implementation; use it as a template.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Self-hosting the Builder (not recommended)</summary>
+          <div class="details-body">
+            <p>The Builder is hosted at <a href="https://emaforge.keeganwhitacre.com" target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a> and that is the recommended way to use it. The hosted version is kept on the current schema and is always up to date; self-hosting introduces version-skew risk (see <a href="#schema-versioning">Schema Versioning</a>) that can corrupt saved projects across researchers working on the same study.</p>
+            <p>That said, if you need to self-host — institutional policy forbids external tools, you want to run an older schema version indefinitely, or you're developing against the code — clone the repo and serve it with any static-file server:</p>
+            <pre><code>git clone https://github.com/keeganwhitacre/emaforge.git
+cd emaforge
+python -m http.server 8000
+# then open http://localhost:8000</code></pre>
+            <p>Camera access requires HTTPS, so for HR/ePAT work you'll need a real certificate — <code>file://</code> and plain HTTP over non-localhost will both fail.</p>
+          </div>
+        </details>
+
+        <!-- ========================================================= -->
+        <!-- META                                                        -->
+        <!-- ========================================================= -->
+
+        <h2 id="credit">Credit &amp; Citation</h2>
+        <p>EMA Forge was created by <strong>Keegan Whitacre</strong> at the <strong>Affective Science Lab, The Ohio State University</strong>. If you use EMA Forge in a published study, please cite:</p>
+
+        <pre><code>Whitacre, K. (2026). EMA Forge: A serverless toolkit for
+ecological momentary assessment and digital phenotyping.
+Affective Science Lab, The Ohio State University.
+https://github.com/keeganwhitacre/emaforge</code></pre>
+
+        <p>For ePAT-specific methods, also describe the implementation (PPG pipeline + AudioContext-scheduled stimulus + dial-alignment response) in your Methods section. Issues, pull requests, and replication reports are welcome.</p>
+
+        <h2 id="license">License</h2>
+        <p>EMA Forge is released under the MIT License — free for academic and commercial use, modification, and redistribution. See <code>LICENSE</code> in the repository for the full text.</p>
+
+        <h2 id="acknowledgments">Acknowledgments &amp; Prior Work</h2>
+        <p>EMA Forge stands on a substantial body of prior work. The ePAT task in particular is not a novel invention but an ecological adaptation of an established psychophysical paradigm. Proper attribution here matters both scholarly and practically — if you publish using these modules, these are the citations your Methods section owes.</p>
+
+        <h3>The Phase Adjustment Task (PAT) lineage</h3>
+        <p>The core psychophysical logic of the ePAT — aligning an auditory tone to felt heartbeat via a continuous-adjustment response — is adapted from the Phase Adjustment Task developed by Plans, Ponzo, Morelli, Cairo, Ring, Keating, Cunningham, Catmur, Murphy &amp; Bird, with subsequent refinements in PAT 2.0.</p>
+
+        <ul>
+          <li>Plans, D., Ponzo, S., Morelli, D., Cairo, M., Ring, C., Keating, C. T., Cunningham, A. C., Catmur, C., Murphy, J., &amp; Bird, G. (2021). <strong>Measuring interoception: The phase adjustment task.</strong> <em>Biological Psychology</em>, 165, 108171.</li>
+          <li>Palmer, C., Murphy, J., Bird, G., et al. (2025). <strong>Refinements of the Phase Adjustment Task (PAT 2.0).</strong> Preprint. <a href="https://doi.org/10.31219/osf.io/4qtwv" target="_blank" rel="noopener">doi:10.31219/osf.io/4qtwv</a>.</li>
+          <li>Original reference implementation (Swift/iOS): <a href="https://github.com/huma-engineering/Phase-Adjustment-Task" target="_blank" rel="noopener">huma-engineering/Phase-Adjustment-Task</a>.</li>
+        </ul>
+
+        <p>The ePAT's contribution is specifically the <em>ecological</em> framing: porting the paradigm to a participant-owned smartphone, using camera PPG rather than a dedicated pulse oximeter, scheduling it within an EMA protocol rather than as a discrete lab session, and treating the resulting phase-offset trajectory as a time-varying individual-difference signal rather than a single-point measurement.</p>
+
+        <h3>Beat detection — WABP</h3>
+        <p>The PPG peak-detection routine is a JavaScript port of the <strong>WABP</strong> (Waveform Analysis for Blood Pressure) algorithm, originally developed for arterial blood pressure onset detection and released on PhysioNet. The algorithm generalizes well from arterial pressure to PPG because both signals share the characteristic upstroke-dominant morphology the algorithm was designed around.</p>
+
+        <ul>
+          <li>Zong, W., Heldt, T., Moody, G. B., &amp; Mark, R. G. (2003). <strong>An open-source algorithm to detect onset of arterial blood pressure pulses.</strong> <em>Computers in Cardiology</em>, 30, 259–262.</li>
+          <li>Reference C implementation: <a href="https://physionet.org/physiotools/wabp/wabp.c" target="_blank" rel="noopener">PhysioNet <code>wabp.c</code></a>.</li>
+        </ul>
+
+        <h3>Camera-based PPG acquisition</h3>
+        <p>The browser-side camera acquisition approach — sampling the red channel of a rear-camera video stream under torch illumination — was informed by Richard Moore's open-source demonstrator, which established the feasibility of the pattern in a pure web environment.</p>
+
+        <ul>
+          <li>Moore, R. <strong>heart-rate-monitor.</strong> <a href="https://github.com/richrd/heart-rate-monitor" target="_blank" rel="noopener">github.com/richrd/heart-rate-monitor</a>.</li>
+        </ul>
+
+        <h3>Conceptual framework</h3>
+        <p>The decision to operationalize interoceptive accuracy as an ecological, time-varying construct — and to embed it within a broader affective-science EMA protocol — is grounded in the <strong>Theory of Constructed Emotion</strong> and contemporary work on interoceptive predictive processing. The ePAT is one instrument within that larger program; it is not itself a complete theory.</p>
+
+        <div class="docs-callout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+          <div class="docs-callout-content">
+            <p><strong>If you use the ePAT in a published study</strong>, please cite the PAT and PAT 2.0 papers alongside EMA Forge. The ePAT is an implementation and ecological adaptation, not an independent paradigm — its validity inherits from that lineage.</p>
+          </div>
+        </div>
+
+        <div class="credit-card">
+          <div class="credit-card-icon">EF</div>
+          <div class="credit-card-text">
+            <strong>EMA Forge</strong> · Schema v1.5.0 · MIT License<br>
+            Maintained by Keegan Whitacre, OSU Affective Science Lab.
+          </div>
+        </div>
 
       </div>
     </main>
@@ -501,7 +1464,7 @@
   const navLinks = document.querySelectorAll('.docs-nav-link');
   const mainScroll = document.getElementById('docs-main');
 
-  // Simple intersection observer to highlight nav links as you scroll
+  // Intersection observer to highlight nav links as you scroll
   const observer = new IntersectionObserver((entries) => {
     let activeId = null;
     entries.forEach(entry => {
@@ -509,7 +1472,7 @@
         activeId = entry.target.id;
       }
     });
-    
+
     if (activeId) {
       navLinks.forEach(link => {
         link.classList.remove('active');
@@ -520,11 +1483,11 @@
     }
   }, { root: mainScroll, rootMargin: '0px 0px -80% 0px' });
 
-  // Observe all h1, h2
-  document.querySelectorAll('.docs-prose h1, .docs-prose h2').forEach(header => {
+  // Observe all h1, h2, h3 elements with IDs
+  document.querySelectorAll('.docs-prose h1[id], .docs-prose h2[id], .docs-prose h3[id]').forEach(header => {
     observer.observe(header);
   });
-  
+
   // Click handler for smooth scroll
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
