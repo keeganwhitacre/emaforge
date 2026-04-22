@@ -30,14 +30,52 @@ const StorageManager = {
         }
 
         const saveBtn   = document.getElementById('btn-save-project');
-        const importBtn = document.getElementById('btn-import');
+        const importModalBtn = document.getElementById('btn-import-modal');
+        const customImportBtn = document.getElementById('import-custom-file');
         const importIn  = document.getElementById('import-file');
         const resetBtn  = document.getElementById('btn-reset');
+        const importModal = document.getElementById('import-modal');
+        const importModalClose = document.getElementById('import-modal-close');
 
         if (saveBtn)   saveBtn.addEventListener('click', () => this.saveProject());
-        if (importBtn) importBtn.addEventListener('click', () => importIn && importIn.click());
-        if (importIn)  importIn.addEventListener('change', e => this.importProject(e));
         if (resetBtn)  resetBtn.addEventListener('click', () => this.resetProject());
+        
+        // Modal logic
+        if (importModalBtn) importModalBtn.addEventListener('click', () => importModal.classList.add('open'));
+        if (importModalClose) importModalClose.addEventListener('click', () => importModal.classList.remove('open'));
+        if (customImportBtn) customImportBtn.addEventListener('click', () => importIn && importIn.click());
+        
+        if (importIn)  importIn.addEventListener('change', e => {
+            importModal.classList.remove('open');
+            this.importProject(e);
+        });
+    },
+
+    loadTemplate(templateObj) {
+        if (!confirm("Loading a template will overwrite your current project. Continue?")) return;
+        
+        // 1. Clean slate: Turn off all known modules so we don't carry over user settings
+        if (Array.isArray(state.modules)) {
+            state.modules.forEach(m => m.enabled = false);
+        }
+
+        // 2. Deep copy the template so we don't mutate the original dictionary
+        const templateCopy = JSON.parse(JSON.stringify(templateObj));
+        
+        // 3. Let your robust merge logic handle the overlay!
+        // This safely replaces the study/ema questions but keeps the master modules array intact.
+        this.mergeState(templateCopy);
+        
+        this.saveLocalState();
+        this.triggerUIRefresh();
+        
+        const status = document.getElementById('save-status');
+        if (status) { 
+            status.textContent = 'Template loaded'; 
+            status.style.color = 'var(--accent)'; 
+        }
+        
+        document.getElementById('import-modal').classList.remove('open');
     },
 
     // -----------------------------------------------------------------------
