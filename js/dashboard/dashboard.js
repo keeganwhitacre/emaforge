@@ -1,5 +1,5 @@
 /**
- * EMA Studio - Dashboard Controller
+ * EMA Forge - Dashboard Controller
  * Handles UI interactions, file binding, and rendering Chart.js graphs.
  */
 

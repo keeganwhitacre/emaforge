@@ -1,17 +1,38 @@
 /* =============================================
    DESIGN TOKENS & LAYOUT
    ============================================= */
+/* =============================================
+   DESIGN TOKENS & LAYOUT
+   ============================================= */
 :root {
+  /* Dark Mode (Default) */
   --bg: #0d1117; --bg-1: #161b22; --bg-2: #21262d; --bg-3: #2d333b;
   --border: #30363d; --border-hi: #444c56;
   --fg: #e6edf3; --fg-2: #adbac7; --fg-3: #768390;
   --accent: #e8716a; --accent-dim: rgba(232,113,106,0.15); --accent-hover: #f08078;
-  --green: #3fb950; --yellow: #d29922; --blue: #388bfd;
+  --green: #3fb950; --green-dim: rgba(63,185,80,0.15);
+  --yellow: #d29922; --yellow-dim: rgba(210,153,34,0.15);
+  --blue: #388bfd; --blue-dim: rgba(56,139,253,0.15);
+  --red: #f85149; --red-dim: rgba(248,81,73,0.15);
   --font: "TX-02", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
   --radius: 6px; --radius-lg: 10px;
   --shadow: 0 8px 24px rgba(0,0,0,0.4);
   --transition: 0.15s ease;
+}
+
+/* Light Mode Overrides */
+[data-theme="light"] {
+  --bg: #ffffff; 
+  --bg-1: #f6f8fa; 
+  --bg-2: #eaeef2; 
+  --bg-3: #d0d7de;
+  --border: #d0d7de; 
+  --border-hi: #afb8c1;
+  --fg: #24292f; 
+  --fg-2: #57606a; 
+  --fg-3: #8c959f;
+  --shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; font-size: 14px; line-height: 1.5; }

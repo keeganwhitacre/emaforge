@@ -1,7 +1,7 @@
 "use strict";
 
 // ==========================================================
-// EMA Studio — export.js  v1.5.0
+// EMA Forge — export.js  v1.5.0
 // ==========================================================
 // Changes from v1.3.1:
 //   - Removed modHrCapture — HR capture is a question type handled inline

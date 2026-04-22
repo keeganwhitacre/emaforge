@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+  <script>
+  // Apply theme immediately on load to prevent flickering
+  const savedTheme = localStorage.getItem('ema-forge-theme') || 
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMA Studio</title>
+<title>EMA Forge</title>
 <link rel="stylesheet" href="css/studio.css">
 <style>
   /* ── Homepage-specific overrides ───────────────────────── */
@@ -186,18 +192,24 @@
   <header id="home-topbar">
     <div class="home-brand">
       <div class="home-logo">
-        <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="6.5" cy="6.5" r="2.5" fill="white"/>
-          <path d="M6.5 1v1.5M6.5 10.5V12M12 6.5h-1.5M2.5 6.5H1M10.3 2.7l-1 1M3.7 9.3l-1 1M10.3 10.3l-1-1M3.7 3.7l-1-1" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14" />
+  <polyline points="4,6 8,6 10,3 13,9 15,6 20,6" />
+</svg>
       </div>
-      EMA Studio
+      EMA Forge
+    </div>
+    <div class="home-topbar-right" style="display:flex; align-items:center; gap: 10px;">
+      <button class="btn-ghost" id="theme-toggle" style="background:transparent; border:none; color:var(--fg-3); cursor:pointer;" title="Toggle Light/Dark Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+      <span style="font-size: 11px; letter-spacing: 0.04em;">v1.2.0</span>
     </div>
   </header>
 
   <!-- ── Hero ──────────────────────────────────────────── -->
   <section id="hero">
-    <h1 class="hero-title">EMA Studio</h1>
+    <h1 class="hero-title">EMA Forge</h1>
     <p class="hero-sub">An open-source tool for building and deploying ecological momentary assessment studies. No server required.</p>
   </section>
 
@@ -266,7 +278,7 @@
       <div class="card-title">README</div>
       <div class="card-desc">
         Setup instructions, deployment guide, config schema reference,
-        and notes on extending EMA Studio with new task modules.
+        and notes on extending EMA Forge with new task modules.
       </div>
       <div class="card-footer card-footer-muted">
         Read the docs
@@ -278,10 +290,22 @@
 
   <!-- ── Footer ────────────────────────────────────────── -->
   <footer id="home-footer">
-    <span>EMA Studio — Keegan Whitacre</span>
+    <span>EMA Forge — Keegan Whitacre</span>
     <span class="footer-version">v1.2.0</span>
   </footer>
 
 </div>
+<script>
+  // Handle the toggle button click
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('ema-forge-theme', newTheme);
+    });
+  }
+</script>
 </body>
 </html>

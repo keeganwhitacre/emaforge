@@ -1,7 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// EMA Studio — state.js
+// EMA Forge — state.js
 // Schema v1.5.0
 //
 // Changes from v1.4.0:

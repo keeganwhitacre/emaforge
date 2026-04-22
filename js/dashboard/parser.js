@@ -1,5 +1,5 @@
 /**
- * EMA Studio - Data Parser Engine
+ * EMA Forge - Data Parser Engine
  * Handles ingesting a local folder of JSON files, separating the config
  * from the participant payloads, and calculating metadata KPIs.
  */

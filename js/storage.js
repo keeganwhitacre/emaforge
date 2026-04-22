@@ -1,7 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// EMA Studio — StorageManager
+// EMA Forge — StorageManager
 // v1.4.0
 //
 // Changes from v1.3:
@@ -25,7 +25,7 @@ const StorageManager = {
                 const parsed = JSON.parse(saved);
                 this.mergeState(parsed);
             } catch (e) {
-                console.warn('EMA Studio: could not parse saved state, using defaults.', e);
+                console.warn('EMA Forge: could not parse saved state, using defaults.', e);
             }
         }
 
@@ -64,14 +64,14 @@ const StorageManager = {
         const cmp = this._compareVersions(savedVer, currentVersion);
 
         if (cmp > 0) {
-            console.warn(`EMA Studio: saved project is schema v${savedVer}, runtime is v${currentVersion}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
+            console.warn(`EMA Forge: saved project is schema v${savedVer}, runtime is v${currentVersion}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Incompatible backup'; status.style.color = 'var(--accent-red)'; }
             return;
         }
 
         if (cmp < 0) {
-            console.info(`EMA Studio: migrating project from schema v${savedVer} to v${currentVersion}.`);
+            console.info(`EMA Forge: migrating project from schema v${savedVer} to v${currentVersion}.`);
         }
 
         ['study', 'onboarding', 'ema'].forEach(key => {
@@ -127,7 +127,7 @@ const StorageManager = {
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Up to date'; status.style.color = ''; }
         } catch (e) {
-            console.warn('EMA Studio: localStorage save failed.', e);
+            console.warn('EMA Forge: localStorage save failed.', e);
         }
     },
 
@@ -157,7 +157,7 @@ const StorageManager = {
                 const status = document.getElementById('save-status');
                 if (status) status.textContent = 'Project imported';
             } catch (err) {
-                alert("Error parsing JSON file. Please ensure it is a valid EMA Studio backup.");
+                alert("Error parsing JSON file. Please ensure it is a valid EMA Forge backup.");
             }
         };
         reader.readAsText(file);
