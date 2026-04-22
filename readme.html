@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation — EMA Forge</title>
+<link rel="stylesheet" href="css/studio.css">
+<script>
+  // Apply theme immediately to prevent flashing
+  const savedTheme = localStorage.getItem('ema-forge-theme') || 
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
+<style>
+  /* ── Documentation Layout ───────────────────────────────── */
+  #docs-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .docs-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  .docs-sidebar {
+    width: 260px;
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 0;
+    flex-shrink: 0;
+  }
+
+  .docs-nav-group {
+    margin-bottom: 24px;
+  }
+
+  .docs-nav-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-3);
+    padding: 0 24px;
+    margin-bottom: 8px;
+  }
+
+  .docs-nav-link {
+    display: block;
+    padding: 6px 24px;
+    font-size: 13px;
+    color: var(--fg-2);
+    text-decoration: none;
+    transition: color var(--transition), background var(--transition);
+  }
+
+  .docs-nav-link:hover {
+    color: var(--fg);
+    background: var(--bg-2);
+  }
+
+  .docs-nav-link.active {
+    color: var(--accent);
+    font-weight: 500;
+    border-right: 2px solid var(--accent);
+    background: linear-gradient(90deg, transparent, var(--accent-dim));
+  }
+
+  /* ── Main Content Area ──────────────────────────────────── */
+  .docs-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 60px 80px;
+    scroll-behavior: smooth;
+  }
+
+  .docs-hero {
+    max-width: 900px;
+    margin: 0 auto 48px auto;
+  }
+
+  .docs-hero svg {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--bg-1);
+    display: block;
+    box-shadow: var(--shadow);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .docs-prose {
+    max-width: 720px;
+    margin: 0 auto;
+    color: var(--fg);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* Typography formatting for the docs */
+  .docs-prose h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px 0;
+    color: var(--fg);
+  }
+
+  .docs-prose h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 48px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+  }
+
+  .docs-prose h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 32px 0 12px 0;
+    color: var(--fg);
+  }
+
+  .docs-prose p {
+    margin: 0 0 16px 0;
+    color: var(--fg-2);
+  }
+
+  .docs-prose ul, .docs-prose ol {
+    margin: 0 0 20px 0;
+    padding-left: 24px;
+    color: var(--fg-2);
+  }
+
+  .docs-prose li {
+    margin-bottom: 8px;
+  }
+
+  /* Inline Code */
+  .docs-prose code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--fg);
+  }
+
+  /* Code Blocks */
+  .docs-prose pre {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    overflow-x: auto;
+    margin: 24px 0;
+  }
+  
+  .docs-prose pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    color: var(--fg-2);
+  }
+
+  /* Callouts & Blockquotes */
+  .docs-prose blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    border-left: 4px solid var(--accent);
+    background: var(--accent-dim);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  
+  .docs-prose blockquote p {
+    margin: 0;
+    color: var(--fg);
+    font-size: 14px;
+  }
+
+  /* Info / Note boxes */
+  .docs-callout {
+    display: flex;
+    gap: 12px;
+    background: rgba(56,139,253,0.08);
+    border: 1px solid rgba(56,139,253,0.2);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin: 24px 0;
+  }
+  .docs-callout svg {
+    color: var(--blue);
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .docs-callout-content p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--fg-2);
+  }
+
+  /* Table styling */
+  .docs-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+  }
+  .docs-prose th, .docs-prose td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+  }
+  .docs-prose th {
+    background: var(--bg-1);
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .docs-prose td {
+    color: var(--fg-2);
+  }
+</style>
+</head>
+<body>
+
+<div id="docs-app">
+
+  <!-- ========== TOP BAR ========== -->
+  <header id="topbar" class="has-back">
+    <a href="index.html" class="topbar-back" title="Back to home">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12"><path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/></svg>
+    </a>
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14" />
+          <polyline points="4,6 8,6 10,3 13,9 15,6 20,6" />
+        </svg>
+      </div>
+      EMA Forge
+    </div>
+    
+    <div class="topbar-actions">
+      <!-- Theme Toggle -->
+      <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+      <div class="topbar-actions-sep"></div>
+      <a href="builder.html" class="btn-ghost" style="text-decoration:none;">Open Builder</a>
+    </div>
+  </header>
+
+  <div class="docs-container">
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="docs-sidebar">
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Introduction</div>
+        <a href="#overview" class="docs-nav-link active">Overview & Architecture</a>
+        <a href="#why-serverless" class="docs-nav-link">Why Serverless?</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Core Workflow</div>
+        <a href="#building" class="docs-nav-link">Building the Study</a>
+        <a href="#deployment" class="docs-nav-link">Export & Deployment</a>
+        <a href="#routing" class="docs-nav-link">Participant Routing (URLs)</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Data & Privacy</div>
+        <a href="#data-format" class="docs-nav-link">Data Formats (CSV/JSON)</a>
+        <a href="#dashboard" class="docs-nav-link">Using the Dashboard</a>
+        <a href="#crash-recovery" class="docs-nav-link">Crash Recovery</a>
+      </div>
+      <div class="docs-nav-group">
+        <div class="docs-nav-title">Advanced Tasks</div>
+        <a href="#ppg-capture" class="docs-nav-link">WebRTC PPG Capture</a>
+        <a href="#epat" class="docs-nav-link">ePAT Integration</a>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="docs-main" id="docs-main">
+      
+      <!-- DYNAMIC HERO BANNER -->
+      <div class="docs-hero">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+          <defs>
+            <!-- Background Grid Pattern -->
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border)" stroke-width="1.5" opacity="0.8"/>
+            </pattern>
+            
+            <!-- Glowing Accent Center -->
+            <radialGradient id="glow" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
+              <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15" />
+              <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+            </radialGradient>
+    
+            <!-- Fade Grid at edges -->
+            <radialGradient id="maskGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+            </radialGradient>
+            <mask id="gridMask">
+              <rect width="1200" height="630" fill="url(#maskGlow)" />
+            </mask>
+          </defs>
+    
+          <!-- Base Background is handled by CSS -->
+          
+          <!-- Grid Overlay (Masked to fade out) -->
+          <rect width="1200" height="630" fill="url(#grid)" mask="url(#gridMask)" />
+    
+          <!-- Sleek Background Data Wave -->
+          <path d="M-100,315 C100,315 250,315 300,315 C330,315 340,220 360,220 C380,220 390,450 410,450 C430,450 440,280 460,280 C480,280 490,315 520,315 C600,315 800,315 1300,315" fill="none" stroke="var(--border-hi)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+    
+          <!-- Center Glow -->
+          <circle cx="600" cy="200" r="400" fill="url(#glow)" />
+    
+          <!-- Proportional Logo Group -->
+          <g transform="translate(552, 110)">
+            <rect width="96" height="96" rx="22" fill="var(--accent)" />
+            <g transform="translate(20.5, 20.5) scale(2.3)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14" />
+              <polyline points="4,6 8,6 10,3 13,9 15,6 20,6" />
+            </g>
+          </g>
+    
+          <!-- Main Title -->
+          <text x="600" y="290" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="64" fill="var(--fg)" text-anchor="middle" letter-spacing="4">
+            EMA FORGE
+          </text>
+    
+          <!-- Tagline -->
+          <text x="600" y="350" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22" fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
+            The open-source toolkit for Ecological Momentary Assessment.
+          </text>
+          <text x="600" y="384" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22" fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
+            Build, preview, and deploy completely self-contained studies.
+          </text>
+    
+          <!-- Feature Pills Container -->
+          <g transform="translate(600, 480)">
+            
+            <!-- Pill 1: Deployment -->
+            <g transform="translate(-320, 0)">
+              <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
+              <circle cx="-85" cy="0" r="4" fill="var(--green)" />
+              <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">Serverless Deployment</text>
+            </g>
+    
+            <!-- Pill 2: Advanced Features -->
+            <g transform="translate(0, 0)">
+              <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
+              <circle cx="-85" cy="0" r="4" fill="var(--accent)" />
+              <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">WebRTC PPG &amp; ePAT</text>
+            </g>
+    
+            <!-- Pill 3: Dashboard -->
+            <g transform="translate(320, 0)">
+              <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)" stroke-width="1.5"/>
+              <circle cx="-85" cy="0" r="4" fill="var(--blue)" />
+              <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14" fill="var(--fg)" letter-spacing="0.3">Integrated Dashboard</text>
+            </g>
+    
+          </g>
+        </svg>
+      </div>
+
+      <div class="docs-prose">
+        
+        <h1 id="overview">Overview & Architecture</h1>
+        <p><strong>EMA Forge</strong> is an open-source, fully serverless toolkit designed for researchers conducting Ecological Momentary Assessment (EMA) and Digital Phenotyping studies.</p>
+        <p>Traditional EMA tools require setting up a backend server, configuring a database, managing user accounts, and navigating complex HIPAA/IRB compliance requirements regarding data transmission in transit. EMA Forge takes a completely different approach.</p>
+        
+        <div class="docs-callout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <div class="docs-callout-content">
+            <p><strong>Core Concept:</strong> Your study is compiled into a single, static web app. Participants complete the study in their mobile browser. The data is generated, stored, and downloaded entirely <em>on their device</em>.</p>
+          </div>
+        </div>
+
+        <h2 id="why-serverless">Why Serverless?</h2>
+        <p>By eliminating the server, EMA Forge radically simplifies the IRB approval process and technical overhead:</p>
+        <ul>
+          <li><strong>Zero Backend Setup:</strong> Host your study for free on GitHub Pages, Vercel, or any static file server.</li>
+          <li><strong>Ultimate Privacy:</strong> No data is ever transmitted to a central server. Participants physically download their data or email it to the research team at the end of the study phase.</li>
+          <li><strong>Guaranteed Offline Capability:</strong> Once loaded in the browser, the study can function even if the participant loses cell service during a task.</li>
+        </ul>
+
+        <h2 id="building">Building the Study</h2>
+        <p>The <strong>Study Builder</strong> (<code>builder.html</code>) is your primary authoring environment. It operates entirely in your browser.</p>
+        <ol>
+          <li><strong>Study:</strong> Define global settings, colors, and crash-recovery rules.</li>
+          <li><strong>Questions:</strong> Construct your survey battery. You can insert page breaks to group questions and apply conditional logic.</li>
+          <li><strong>Schedule:</strong> Define the longitudinal nature of your study. Set days, daily prompt counts, and specific time windows.</li>
+          <li><strong>Tasks:</strong> Enable advanced cognitive or physiological tasks (e.g., ePAT, Camera HR) to be inserted into specific phases.</li>
+        </ol>
+        <p>As you build, the <code>config.json</code> file is generated under the hood. You can view this live by clicking the <strong>JSON</strong> button in the topbar.</p>
+
+        <h2 id="deployment">Export & Deployment</h2>
+        <p>When your study is ready, click <strong>Export</strong>. You will be given two choices:</p>
+        <ul>
+          <li><strong>Single HTML File:</strong> A perfectly self-contained artifact. Every piece of logic, CSS, and styling is minified into one file. Easiest for quick pilots or emailing directly to a participant.</li>
+          <li><strong>Static-hosting Bundle (Recommended):</strong> A `.zip` containing your `index.html`, assets, and `config.json`. Extract this folder and upload it to GitHub Pages. If you need to fix a typo in a question, just edit the `config.json` directly—no need to re-export!</li>
+        </ul>
+
+        <h2 id="routing">Participant Routing (URLs)</h2>
+        <p>Since there is no server to "assign" a participant a prompt, EMA Forge uses <strong>URL Query Parameters</strong> to route participants to the correct session.</p>
+        <p>If your study is hosted at <code>https://your-lab.edu/study/</code>, a link texted to a participant would look like this:</p>
+        
+        <pre><code>https://your-lab.edu/study/?id=104&day=2&session=morning</code></pre>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>id</code></td>
+              <td>Unique participant identifier (e.g., <code>104</code>)</td>
+            </tr>
+            <tr>
+              <td><code>day</code></td>
+              <td>The current study day (e.g., <code>1</code> to <code>14</code>)</td>
+            </tr>
+            <tr>
+              <td><code>session</code></td>
+              <td>Matches the window name defined in the Schedule tab (e.g., <code>morning</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <blockquote>
+          <p><strong>Pro-tip:</strong> Use the <strong>Deployment</strong> tab in the Builder. Provide your base URL, and EMA Forge will generate a massive CSV containing every single pre-formatted link for every participant, day, and session. You can drop this CSV straight into Qualtrics, Twilio, or your SMS scheduler.</p>
+        </blockquote>
+
+        <h2 id="data-format">Data Formats</h2>
+        <p>When a participant finishes a session, their device automatically downloads the data. Depending on your configuration, this will be:</p>
+        <ul>
+          <li><strong>CSV (Default):</strong> One row per question answered. Extremely easy to concatenate across participants using R or Python.</li>
+          <li><strong>JSON:</strong> Included automatically if the session contained high-density signal data (like the PPG camera feed or ePAT reaction times).</li>
+        </ul>
+        <p>Files are automatically named securely: <code>ema_data_[ID]_[DAY]_[SESSION].csv</code></p>
+
+        <h2 id="dashboard">Using the Dashboard</h2>
+        <p>The <strong>Data Dashboard</strong> (<code>dashboard.html</code>) is your local command center. </p>
+        <p>Because EMA Forge has no database, you use the Dashboard by clicking <strong>Import Folder</strong> and selecting a local folder on your computer that contains all the collected participant JSON/CSV files. The dashboard runs local parsing algorithms to instantly calculate:</p>
+        <ul>
+          <li>Overall and per-participant compliance rates.</li>
+          <li>Signal noise and invalid response detection (e.g., speeding through questions &lt;30s).</li>
+          <li>Latency (time between receiving a link and opening it).</li>
+        </ul>
+
+        <h2 id="crash-recovery">Crash Recovery & Protection</h2>
+        <p>By default, EMA Forge enables two vital protections in the wild:</p>
+        <ol>
+          <li><strong>Session Locking:</strong> A participant cannot accidentally submit the <code>day=2&session=morning</code> link twice. If they click it again, they see a "Session Complete" screen. <em>(Can be overridden by researchers using <code>?force=1</code>).</em></li>
+          <li><strong>Crash Recovery:</strong> If a participant accidentally closes Safari/Chrome halfway through a session, reopening the link instantly restores their progress. Completed modules are saved in local storage.</li>
+        </ol>
+
+        <h2 id="ppg-capture">WebRTC PPG Capture</h2>
+        <p>EMA Forge includes a module to capture heart rate data using a smartphone camera (Photoplethysmography). It asks the user to place their finger over the rear camera and flashlight.</p>
+        <p>The module runs local WebRTC processing and bandpass filtering, extracting the color-intensity variance to map the blood pulse wave. This raw signal data is exported in the JSON payload.</p>
+
+        <h2 id="epat">ePAT Integration</h2>
+        <p>The <strong>Ecological Phase Adjustment Task (ePAT)</strong> is built natively into EMA Forge. If enabled in the Tasks tab, you can slot it into a phase sequence (e.g., complete the survey, then do the ePAT, then complete a post-survey).</p>
+        <p>The ePAT engine handles high-precision AudioContext scheduling to ensure stimulus timing remains perfectly accurate across different mobile browsers.</p>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // Handle Theme Toggle
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('ema-forge-theme', newTheme);
+    });
+  }
+
+  // Handle active state switching for sidebar links
+  const navLinks = document.querySelectorAll('.docs-nav-link');
+  const mainScroll = document.getElementById('docs-main');
+
+  // Simple intersection observer to highlight nav links as you scroll
+  const observer = new IntersectionObserver((entries) => {
+    let activeId = null;
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        activeId = entry.target.id;
+      }
+    });
+    
+    if (activeId) {
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${activeId}`) {
+          link.classList.add('active');
+        }
+      });
+    }
+  }, { root: mainScroll, rootMargin: '0px 0px -80% 0px' });
+
+  // Observe all h1, h2
+  document.querySelectorAll('.docs-prose h1, .docs-prose h2').forEach(header => {
+    observer.observe(header);
+  });
+  
+  // Click handler for smooth scroll
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        mainScroll.scrollTo({
+          top: targetElement.offsetTop - 40,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+</script>
+</body>
+</html>
