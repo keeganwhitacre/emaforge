@@ -24,42 +24,85 @@ const DataParser = {
     },
   
     async ingestFiles(fileList) {
-      this.resetState();
-      
-      const files = Array.from(fileList).filter(f => f.name.endsWith('.json'));
-      if (files.length === 0) throw new Error("No JSON files found in directory.");
+  this.resetState();
   
-      const readPromises = files.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const json = JSON.parse(e.target.result);
-              
-              // 1. Detect if this is the config.json file
-              if (json.schema_version && json.ema && json.ema.scheduling) {
-                this.state.studyConfig = json;
-              } 
-              // 2. Otherwise, treat it as a participant session payload
-              else if (json.participantId || json.sessionId) {
-                this.state.allSessions.push(this.normalizeSession(json));
-              }
-            } catch (err) {
-              console.warn(`Could not parse ${file.name}`);
+  // 1. Load config from browser storage if it exists (The "Just Once" feature)
+  const cachedConfig = localStorage.getItem('ema_forge_config');
+  if (cachedConfig) {
+    try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (e) {}
+  }
+
+  const files = Array.from(fileList).filter(f => f.name.endsWith('.json') || f.name.endsWith('.csv'));
+  if (files.length === 0) throw new Error("No JSON or CSV files found.");
+
+  const readPromises = files.map(file => {
+    return new Promise((resolve) => {
+      
+      // --- JSON HANDLING (Existing behavior + Config Caching) ---
+      if (file.name.endsWith('.json')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target.result);
+            if (json.schema_version && json.ema && json.ema.scheduling) {
+              this.state.studyConfig = json;
+              localStorage.setItem('ema_forge_config', e.target.result); // Cache for future visits
+            } else if (json.participantId || json.sessionId) {
+              this.state.allSessions.push(this.normalizeSession(json));
             }
-            resolve();
-          };
-          reader.readAsText(file);
-        });
-      });
-  
-      await Promise.all(readPromises);
+          } catch (err) {
+            console.warn(`Could not parse ${file.name}`);
+          }
+          resolve();
+        };
+        reader.readAsText(file);
+      } 
       
-      // Calculate initial metrics
-      this.state.allSessions.forEach(s => this.state.participants.add(s.participantId));
-      this.calculateMetrics({ excludeNoise: true, excludeMissed: false, day: 'all', participant: 'all' });
-      return this.state;
-    },
+      // --- CSV HANDLING (New Webhook/Google Sheets behavior) ---
+      else if (file.name.endsWith('.csv')) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            results.data.forEach(row => {
+              const rawJsonStr = row['Raw JSON']; // Targets your specific CSV column
+              if (rawJsonStr) {
+                try {
+                  const json = JSON.parse(rawJsonStr);
+                  
+                  if (json.schema_version && json.ema && json.ema.scheduling) {
+                    this.state.studyConfig = json;
+                    localStorage.setItem('ema_forge_config', rawJsonStr);
+                  } else if (json.participantId || json.sessionId) {
+                    this.state.allSessions.push(this.normalizeSession(json));
+                  }
+                } catch (err) {
+                  console.warn("Invalid JSON found in CSV row", row);
+                }
+              }
+            });
+            resolve();
+          },
+          error: (err) => {
+            console.error("CSV Parse Error:", err);
+            resolve();
+          }
+        });
+      }
+    });
+  });
+
+  await Promise.all(readPromises);
+  
+  if (!this.state.studyConfig && this.state.allSessions.length > 0) {
+      console.warn("No config loaded. Study layout might be incomplete.");
+  }
+
+  // Calculate initial metrics
+  this.state.allSessions.forEach(s => this.state.participants.add(s.participantId));
+  this.calculateMetrics({ excludeNoise: true, excludeMissed: false, day: 'all', participant: 'all' });
+  return this.state;
+},
   
     resetState() {
       this.state.studyConfig = null;

@@ -23,8 +23,28 @@ const AppUI = {
   },
 
   bindEvents() {
-    const importBtn = document.getElementById('btn-import-data');
-    const fileInput = document.getElementById('folder-import-input');
+    // In AppUI.bindEvents()
+const importBtn = document.getElementById('btn-import-data');
+const fileInput = document.getElementById('file-import-input'); // Updated ID
+
+importBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+      if (e.target.files.length === 0) return;
+      
+      this.setStatus("Processing...", "badge-warn");
+      try {
+        const data = await DataParser.ingestFiles(e.target.files);
+        this.populateDateDropdown(data.allSessions);
+        this.refreshData(); 
+        document.getElementById('empty-state').style.display = 'none';
+        this.setStatus("Synced Just Now", "badge-good");
+      } catch (err) {
+        console.error(err);
+        alert("Error parsing files. Make sure to provide your config.json and your EMA data (JSON or CSV).");
+        this.setStatus("Error", "badge-danger");
+    }
+    fileInput.value = ""; // Reset input
+    }); 
     const exportBtn = document.getElementById('export-csv-btn');
     
     // Filters & Toggles
