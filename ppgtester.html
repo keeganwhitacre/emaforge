@@ -1,154 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+  const savedTheme = localStorage.getItem('ema-forge-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', savedTheme);
+</script>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ePAT Validation</title>
+  <title>EMA Forge — PPG Tester</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="css/studio.css">
   <style>
+    /* ── Forge design tokens already loaded via studio.css ──
+       All sizing and color below uses those vars exclusively. */
+
+    /* Safe-area helpers for notched phones */
     :root {
-      --bg:          #000000;
-      --surface:     #111111;
-      --elevated:    #1c1c1e;
-      --border:      #2c2c2e;
-      --fg:          #ffffff;
-      --muted:       #636366;
-      --muted2:      #3a3a3c;
-      --green:       #32d74b;
-      --yellow:      #ffd60a;
-      --red:         #ff453a;
-      --purple:      #bf5af2;
-      --blue:        #0a84ff;
+      --safe-top:    env(safe-area-inset-top,    44px);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
-      --safe-top:    env(safe-area-inset-top, 44px);
-      --dock-h:      130px;
-      --font:        -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-      --mono:        ui-monospace, "SF Mono", monospace;
+      --topbar-h:    52px;
+      --dock-h:      120px; /* updated dynamically by JS if needed */
     }
 
-    *, *::before, *::after {
-      box-sizing: border-box; margin: 0; padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    /* Override studio.css body scroll lock for this page */
     html, body {
-      height: 100%; width: 100%;
-      font-family: var(--font);
-      background: var(--bg); color: var(--fg);
       overflow: hidden;
       touch-action: manipulation;
       user-select: none; -webkit-user-select: none;
     }
 
-    /* ── FLASH ── */
+    /* ── Beat flash overlay ── */
     #flash {
-      position: fixed; inset: 0; background: #fff;
-      z-index: 9999; opacity: 0; pointer-events: none;
+      position: fixed; inset: 0;
+      background: var(--accent);
+      opacity: 0; pointer-events: none;
+      z-index: 9999;
       transition: opacity 0.06s ease-out;
     }
-    #flash.on { opacity: 1; }
+    #flash.on { opacity: 0.18; }
 
-    /* ── HIDDEN CAMERA ELEMENTS ── */
+    /* ── Hidden camera elements ── */
     #video-feed, #sampling-canvas {
       position: fixed; top: -9999px; left: -9999px;
       width: 40px; height: 40px; opacity: 0; pointer-events: none;
     }
 
-    /* ── ROOT ── */
+    /* ══════════════════════════════════════════
+       TOPBAR — identical structure to builder.html / dashboard.html
+    ══════════════════════════════════════════ */
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding-top: var(--safe-top);
+      z-index: 50;
+    }
+    #topbar-inner {
+      height: var(--topbar-h);
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 10px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-back {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: transparent; color: var(--fg-3);
+      cursor: pointer; text-decoration: none;
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .topbar-back:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
+    .topbar-back svg { width: 11px; height: 11px; }
+
+    .topbar-brand {
+      display: flex; align-items: center; gap: 8px; flex: 1;
+    }
+    .topbar-logo {
+      width: 24px; height: 24px; background: var(--accent);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .topbar-logo svg { width: 13px; height: 13px; }
+    .topbar-wordmark {
+      display: flex; flex-direction: column; line-height: 1;
+    }
+    .topbar-title {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--fg);
+    }
+    .topbar-subtitle {
+      font-size: 10px; color: var(--fg-3);
+      letter-spacing: 0.04em; margin-top: 1px;
+    }
+    .topbar-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+    /* Theme toggle — same .btn-ghost from studio.css */
+    #theme-toggle { font-size: 12px; }
+
+    /* ══════════════════════════════════════════
+       MAIN APP SHELL
+    ══════════════════════════════════════════ */
     #app {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
-      padding-top: var(--safe-top);
+      /* push content below topbar */
+      padding-top: calc(var(--safe-top) + var(--topbar-h));
+      /* push content above dock */
       padding-bottom: calc(var(--dock-h) + var(--safe-bottom));
+      background: var(--bg);
     }
 
-    /* ── HEADER ── */
-    #header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 20px 6px;
-      flex-shrink: 0;
-    }
-    #header-left { display: flex; flex-direction: column; }
-    #app-title {
-      font-size: 0.68rem; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.1em;
-    }
-    #timer {
-      font-family: var(--mono); font-size: 1.55rem; font-weight: 300;
-      color: var(--fg); letter-spacing: -0.02em; line-height: 1.1;
-    }
-    #timer.running { color: var(--green); }
-
-    #header-right {
-      display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
-    }
-    #finger-status {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.78rem; font-weight: 500; color: var(--muted);
-    }
-    #finger-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted2); flex-shrink: 0;
-      transition: background 0.2s, box-shadow 0.2s;
-    }
-    #finger-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    #sqi-badge {
-      font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
-      padding: 2px 9px; border-radius: 20px;
-      border: 1px solid var(--border); color: var(--muted); background: var(--surface);
-      transition: color 0.3s, border-color 0.3s;
-    }
-    #sqi-badge.good { color: var(--green);  border-color: var(--green); }
-    #sqi-badge.warn { color: var(--yellow); border-color: var(--yellow); }
-    #sqi-badge.bad  { color: var(--red);    border-color: var(--red); }
-
-    /* ── WAVEFORM with camera overlay ── */
+    /* ── Waveform ── */
     #wave-wrap {
       flex-shrink: 0; height: 112px;
-      position: relative; margin: 2px 0;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
     }
     #wave-canvas { display: block; width: 100%; height: 100%; }
 
-    /* Camera preview — inset top-left corner of waveform */
+    /* Camera inset — top-left corner of waveform */
     #cam-preview {
       position: absolute; top: 8px; left: 12px;
-      width: 52px; height: 52px; border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: #000;
-      overflow: hidden;
-      z-index: 2;
+      width: 48px; height: 48px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--bg-3);
+      overflow: hidden; z-index: 2;
     }
-    #cam-canvas {
-      width: 100%; height: 100%;
-      display: block; object-fit: cover;
-    }
-    /* Dim the preview so it doesn't fight the waveform */
-    #cam-preview::after {
-      content: ''; position: absolute; inset: 0;
-      background: rgba(0,0,0,0.15); border-radius: 10px; pointer-events: none;
-    }
+    #cam-canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
 
     #beat-line {
-      position: absolute; top: 0; bottom: 0; width: 2px;
-      background: rgba(255,255,255,0.15); right: 0;
-      opacity: 0; transition: opacity 0.15s;
+      position: absolute; top: 0; bottom: 0; right: 0; width: 2px;
+      background: var(--accent); opacity: 0;
+      transition: opacity 0.08s ease-out;
     }
     #beat-line.flash { opacity: 1; }
 
-    /* ── BPM HERO ── */
+    /* ── BPM hero ── */
     #bpm-hero {
       text-align: center; flex-shrink: 0;
-      padding: 6px 20px 2px;
+      padding: 8px 20px 4px;
+      background: var(--bg);
     }
     #bpm-value {
-      font-family: var(--mono); font-size: 5.2rem; font-weight: 200;
-      letter-spacing: -0.05em; line-height: 1; color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 72px; font-weight: 200;
+      letter-spacing: -0.04em; line-height: 1;
+      color: var(--fg-3);
+      transition: color 0.3s ease;
     }
+    #bpm-value.live { color: var(--fg); }
     #bpm-label {
-      font-size: 0.68rem; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 0.12em; margin-top: 1px;
+      font-size: 9px; font-weight: 700; color: var(--fg-3);
+      text-transform: uppercase; letter-spacing: 0.12em; margin-top: 2px;
     }
 
-    /* ── STATS STRIP ── */
+    /* ── Stats strip — uses Forge border/bg tokens ── */
     #stats-strip {
       display: grid; grid-template-columns: repeat(5, 1fr);
       gap: 1px; background: var(--border);
@@ -156,238 +167,301 @@
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .sc {
-      background: var(--bg); text-align: center; padding: 9px 4px;
-    }
+    .sc { background: var(--bg); text-align: center; padding: 8px 4px; }
     .sc-val {
-      font-family: var(--mono); font-size: 1.1rem; font-weight: 500; line-height: 1;
+      font-family: var(--font-mono); font-size: 17px;
+      font-weight: 500; line-height: 1;
+      color: var(--fg);
     }
     .sc-lbl {
-      font-size: 0.58rem; font-weight: 700; color: var(--muted);
+      font-size: 9px; font-weight: 700; color: var(--fg-3);
       text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px;
     }
 
-    /* ── EVENT LOG ── */
-    #log-wrap {
-      flex: 1; overflow: hidden; position: relative;
+    /* ── Signal status row ── */
+    #status-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 14px;
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
+    #finger-status { display: flex; align-items: center; gap: 6px; }
+    #finger-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--border-hi); flex-shrink: 0;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    #finger-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+    #finger-text { font-size: 12px; font-weight: 500; color: var(--fg-3); }
+
+    #status-right { display: flex; align-items: center; gap: 8px; }
+
+    #sqi-badge {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--fg-3); background: transparent;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    #sqi-badge.good { color: var(--green);  border-color: var(--green); }
+    #sqi-badge.warn { color: var(--yellow); border-color: var(--yellow); }
+    #sqi-badge.bad  { color: var(--red);    border-color: var(--red); }
+
+    #timer {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 400;
+      color: var(--fg-3);
+      transition: color 0.3s;
+    }
+    #timer.running { color: var(--green); }
+
+    /* ── Event log ── */
+    #log-wrap { flex: 1; overflow: hidden; position: relative; }
     #log {
       position: absolute; inset: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
-      padding: 8px 16px;
-      font-family: var(--mono); font-size: 0.74rem;
-      line-height: 1.85; color: var(--muted);
+      padding: 6px 14px;
+      font-family: var(--font-mono); font-size: 11px;
+      line-height: 1.9; color: var(--fg-3);
     }
     #log:empty::before {
-      content: "Session events appear here…"; color: var(--muted2);
+      content: "Session events appear here…";
+      color: var(--fg-3); opacity: 0.5;
     }
     #log .ev-clean  { color: var(--green); }
     #log .ev-flag   { color: var(--yellow); }
-    #log .ev-dic    { color: var(--purple); }
+    #log .ev-dic    { color: #a371f7; }    /* purple — not in studio tokens, keep as-is */
     #log .ev-info   { color: var(--blue); }
     #log .ev-marker { color: var(--fg); font-weight: 700; }
     #log .ev-bad    { color: var(--red); }
 
-    /* ── MOTION WARNING ── */
+    /* ── Motion warning ── */
     #motion-warn {
-      position: absolute; left: 12px; right: 12px; bottom: 4px;
-      background: rgba(255,69,58,0.15); border: 1px solid rgba(255,69,58,0.35);
-      color: var(--red); border-radius: 10px; text-align: center;
-      font-size: 0.8rem; font-weight: 600; padding: 8px;
-      opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 10;
+      position: absolute; left: 10px; right: 10px; bottom: 4px;
+      background: var(--red-dim);
+      border: 1px solid rgba(248,81,73,0.35);
+      color: var(--red); border-radius: var(--radius-lg);
+      text-align: center; font-size: 11px; font-weight: 600;
+      padding: 7px; opacity: 0;
+      transition: opacity 0.2s; pointer-events: none; z-index: 10;
     }
     #motion-warn.on { opacity: 1; }
 
     /* ══════════════════════════════════════════
-       DOCK — scrollable pill row
+       DOCK — Forge-styled, not blurred black
     ══════════════════════════════════════════ */
     #dock {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(14,14,16,0.97);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      background: var(--bg-1);
       border-top: 1px solid var(--border);
-      z-index: 100;
+      z-index: 40;
       padding-bottom: var(--safe-bottom);
     }
 
-    /* IDLE STATE */
-    #dock-idle {
-      padding: 12px 20px;
-    }
+    /* IDLE state */
+    #dock-idle { padding: 10px 16px; display: flex; }
     #btn-start {
-      width: 100%; height: 52px; border-radius: 14px; border: none;
-      background: #fff; color: #000;
-      font-family: var(--font); font-size: 1rem; font-weight: 700;
-      letter-spacing: -0.01em; cursor: pointer;
-      box-shadow: 0 0 24px rgba(255,255,255,0.14);
-      transition: opacity 0.12s, transform 0.12s;
+      width: 100%; height: 44px;
+      border-radius: var(--radius-lg); border: none;
+      background: var(--accent); color: #fff;
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      letter-spacing: 0.02em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: background var(--transition), opacity var(--transition), transform 0.1s;
     }
-    #btn-start:active { opacity: 0.8; transform: scale(0.98); }
+    #btn-start:hover  { background: var(--accent-hover); }
+    #btn-start:active { opacity: 0.85; transform: scale(0.98); }
+    #btn-start svg { width: 13px; height: 13px; }
 
-    /* ACTIVE STATE — two rows */
+    /* ACTIVE state */
     #dock-active { display: none; flex-direction: column; }
     #dock-active.on { display: flex; }
 
-    /* Row 1: big primary actions */
-    #dock-row1 {
-      display: flex; gap: 10px; padding: 12px 16px 6px;
-    }
+    /* Row 1: primary action buttons */
+    #dock-row1 { display: flex; gap: 8px; padding: 10px 16px 6px; }
 
     #btn-sync {
-      flex: 2; height: 52px; border-radius: 14px; border: none;
-      background: #fff; color: #000;
-      font-family: var(--font); font-size: 0.95rem; font-weight: 800;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: transform 0.1s, background 0.1s;
-      box-shadow: 0 0 16px rgba(255,255,255,0.16);
+      flex: 2; height: 40px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--bg-2); color: var(--fg);
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all var(--transition);
     }
-    #btn-sync:active { transform: scale(0.96); }
+    #btn-sync:hover  { border-color: var(--border-hi); background: var(--bg-3); }
+    #btn-sync:active { transform: scale(0.97); }
+    #btn-sync svg { width: 13px; height: 13px; }
 
     #btn-stop {
-      flex: 1; height: 52px; border-radius: 14px;
-      border: 1px solid rgba(255,69,58,0.3);
-      background: rgba(255,69,58,0.1); color: var(--red);
-      font-family: var(--font); font-size: 0.82rem; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: transform 0.1s;
+      flex: 1; height: 40px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(248,81,73,0.3);
+      background: var(--red-dim); color: var(--red);
+      font-family: var(--font); font-size: 12px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: all var(--transition);
     }
-    #btn-stop:active { transform: scale(0.96); }
+    #btn-stop:hover  { border-color: var(--red); }
+    #btn-stop:active { transform: scale(0.97); }
+    #btn-stop svg { width: 11px; height: 11px; }
 
-    /* Row 2: horizontally scrollable secondary controls */
+    /* Row 2: scrollable pill controls */
     #dock-row2 {
-      display: flex; gap: 8px;
-      padding: 0 16px 10px;
+      display: flex; gap: 6px;
+      padding: 0 16px 8px;
       overflow-x: auto; -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
     #dock-row2::-webkit-scrollbar { display: none; }
 
     .dock-pill {
-      flex-shrink: 0;
-      height: 36px; border-radius: 10px;
+      flex-shrink: 0; height: 32px;
+      border-radius: var(--radius);
       border: 1px solid var(--border);
-      background: var(--elevated); color: var(--muted);
-      font-family: var(--font); font-size: 0.76rem; font-weight: 600;
-      padding: 0 14px; cursor: pointer;
-      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-2); color: var(--fg-3);
+      font-family: var(--font); font-size: 11px; font-weight: 600;
+      padding: 0 12px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
       white-space: nowrap;
-      transition: all 0.15s;
+      transition: all var(--transition);
     }
     .dock-pill:active { opacity: 0.7; transform: scale(0.97); }
-    .dock-pill.on {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.3);
-      color: var(--fg);
+    .dock-pill svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+    /* Active states using Forge token colors */
+    .dock-pill.on-green  {
+      background: var(--green-dim); border-color: var(--green); color: var(--green);
     }
-    .dock-pill.on-green  { background: rgba(50,215,75,0.12);  border-color: var(--green);  color: var(--green); }
-    .dock-pill.on-yellow { background: rgba(255,214,10,0.12); border-color: var(--yellow); color: var(--yellow); }
+    .dock-pill.on-yellow {
+      background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow);
+    }
 
-    /* Pill icon — small SVG wrapper */
-    .pill-icon { display: flex; align-items: center; flex-shrink: 0; }
-    .pill-icon svg { width: 13px; height: 13px; }
-
-    /* ── SESSION SHEET ── */
+    /* ══════════════════════════════════════════
+       SESSION SHEET — bottom sheet modal
+    ══════════════════════════════════════════ */
     #session-sheet {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.82);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      display: flex; align-items: flex-end;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: none; align-items: flex-end;
       padding-bottom: var(--safe-bottom);
     }
     #session-card {
-      background: var(--elevated); border-radius: 24px 24px 0 0;
-      width: 100%; padding: 28px 24px 20px;
+      background: var(--bg-2);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; padding: 24px 20px 16px;
       border-top: 1px solid var(--border);
     }
     #session-card h2 {
-      font-size: 1.25rem; font-weight: 700; text-align: center;
-      letter-spacing: -0.02em; margin-bottom: 6px;
+      font-size: 16px; font-weight: 700; color: var(--fg);
+      letter-spacing: -0.02em; margin-bottom: 4px;
     }
     #session-card p {
-      font-size: 0.84rem; color: var(--muted); text-align: center;
-      margin-bottom: 22px; line-height: 1.5;
+      font-size: 12px; color: var(--fg-3); margin-bottom: 16px; line-height: 1.5;
     }
     #session-id {
-      width: 100%; padding: 15px; border-radius: 12px;
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--fg); font-family: var(--mono); font-size: 0.95rem;
-      outline: none; margin-bottom: 10px; text-align: center;
+      width: 100%; padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--bg-1); border: 1px solid var(--border);
+      color: var(--fg); font-family: var(--font-mono); font-size: 13px;
+      outline: none; margin-bottom: 10px;
+      -webkit-appearance: none;
+      transition: border-color var(--transition);
     }
-    #session-id:focus { border-color: rgba(255,255,255,0.35); }
+    #session-id:focus { border-color: var(--accent); }
     #btn-begin {
-      width: 100%; padding: 16px; border-radius: 14px; border: none;
-      background: #fff; color: #000;
-      font-size: 1rem; font-weight: 700; cursor: pointer;
+      width: 100%; padding: 12px;
+      border-radius: var(--radius-lg); border: none;
+      background: var(--accent); color: #fff;
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background var(--transition);
     }
+    #btn-begin:hover  { background: var(--accent-hover); }
     #btn-begin:active { opacity: 0.85; }
     #btn-cancel {
-      width: 100%; padding: 13px; border-radius: 14px; border: none;
-      background: transparent; color: var(--muted);
-      font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 4px;
+      width: 100%; padding: 10px;
+      border-radius: var(--radius-lg); border: none;
+      background: transparent; color: var(--fg-3);
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      cursor: pointer; margin-top: 4px;
     }
 
-    /* ── KNOB SHEET ── */
+    /* ══════════════════════════════════════════
+       KNOB SHEET — phase adjustment overlay
+    ══════════════════════════════════════════ */
     #knob-sheet {
       position: fixed; inset: 0; z-index: 150;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
       display: none; align-items: flex-end;
       padding-bottom: var(--safe-bottom);
     }
     #knob-sheet.on { display: flex; }
     #knob-card {
-      background: var(--elevated); border-radius: 24px 24px 0 0;
-      width: 100%; padding: 18px 24px 22px;
+      background: var(--bg-2);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; padding: 16px 20px 18px;
       border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
     }
     #knob-handle {
-      width: 36px; height: 4px; border-radius: 2px; background: var(--border);
+      width: 32px; height: 3px; border-radius: 2px; background: var(--border-hi);
     }
     #knob-card h3 {
-      font-size: 0.95rem; font-weight: 700; letter-spacing: -0.02em;
+      font-size: 14px; font-weight: 700; color: var(--fg);
+      letter-spacing: -0.02em;
     }
     .knob-meta {
-      font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+      font-family: var(--font-mono); font-size: 11px; color: var(--fg-3);
       display: flex; gap: 16px;
     }
     #knob-phase-val { color: var(--fg); font-weight: 600; }
 
     #dial-wrap {
-      position: relative; width: 196px; height: 196px;
+      position: relative; width: 188px; height: 188px;
       display: flex; align-items: center; justify-content: center;
     }
     #dial-ticks { position: absolute; inset: 0; pointer-events: none; border-radius: 50%; }
     .dial-tick {
-      position: absolute; width: 2px; height: 6px; background: var(--border);
-      top: 6px; left: 50%; transform-origin: 50% 92px; margin-left: -1px;
+      position: absolute; width: 2px; height: 6px;
+      background: var(--border);
+      top: 6px; left: 50%; transform-origin: 50% 88px; margin-left: -1px;
     }
-    .dial-tick.major { height: 11px; background: var(--muted2); }
+    .dial-tick.major { height: 10px; background: var(--border-hi); }
     #dial {
-      width: 120px; height: 120px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #2a2a2e, #0d0d0f);
-      box-shadow: 8px 8px 20px rgba(0,0,0,0.9), -3px -3px 10px rgba(255,255,255,0.03),
-                  inset 0 2px 4px rgba(255,255,255,0.06);
+      width: 112px; height: 112px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--bg-3), var(--bg));
+      box-shadow: 6px 6px 18px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.05);
       border: 1px solid var(--border);
       position: relative; touch-action: none; cursor: grab; z-index: 2;
     }
     #dial:active { cursor: grabbing; }
     #dial-pip {
       position: absolute; top: 10px; left: 50%;
-      width: 4px; height: 16px; border-radius: 2px;
-      background: #fff; transform: translateX(-50%);
-      box-shadow: 0 0 8px rgba(255,255,255,0.45);
+      width: 3px; height: 14px; border-radius: 2px;
+      background: var(--accent); transform: translateX(-50%);
+      box-shadow: 0 0 6px var(--accent-dim);
     }
     #knob-labels {
-      display: flex; justify-content: space-between; width: 196px;
-      font-size: 0.7rem; font-weight: 700; color: var(--muted);
+      display: flex; justify-content: space-between; width: 188px;
+      font-size: 10px; font-weight: 700; color: var(--fg-3);
       text-transform: uppercase; letter-spacing: 0.05em;
     }
     #btn-close-knob {
-      width: 100%; padding: 13px; border-radius: 14px;
-      border: 1px solid var(--border); background: var(--surface);
-      color: var(--muted); font-size: 0.92rem; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 11px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border); background: var(--bg-1);
+      color: var(--fg-3); font-family: var(--font);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all var(--transition);
     }
+    #btn-close-knob:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
   </style>
 </head>
 <body>
@@ -395,6 +469,43 @@
 <div id="flash"></div>
 <video id="video-feed" playsinline muted></video>
 <canvas id="sampling-canvas"></canvas>
+
+<!-- ══════════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════════ -->
+<header id="topbar">
+  <div id="topbar-inner">
+    <a href="index.html" class="topbar-back" title="Back to home">
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/>
+      </svg>
+    </a>
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14"/>
+          <polyline points="4,6 8,6 10,3 13,9 15,6 20,6"/>
+        </svg>
+      </div>
+      <div class="topbar-wordmark">
+        <span class="topbar-title">EMA Forge</span>
+        <span class="topbar-subtitle">PPG Tester</span>
+      </div>
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" id="theme-toggle" title="Toggle light/dark mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
 
 <!-- SESSION SHEET -->
 <div id="session-sheet">
@@ -428,20 +539,6 @@
 <!-- MAIN APP -->
 <div id="app">
 
-  <div id="header">
-    <div id="header-left">
-      <span id="app-title">ePAT Validation</span>
-      <span id="timer">00:00</span>
-    </div>
-    <div id="header-right">
-      <div id="finger-status">
-        <div id="finger-dot"></div>
-        <span id="finger-text">No signal</span>
-      </div>
-      <span id="sqi-badge">SQI --</span>
-    </div>
-  </div>
-
   <!-- Waveform with camera inset -->
   <div id="wave-wrap">
     <canvas id="wave-canvas"></canvas>
@@ -451,13 +548,13 @@
     <div id="beat-line"></div>
   </div>
 
-  <!-- BPM -->
+  <!-- BPM hero -->
   <div id="bpm-hero">
     <div id="bpm-value">--</div>
     <div id="bpm-label">beats per minute</div>
   </div>
 
-  <!-- Stats -->
+  <!-- Stats strip -->
   <div id="stats-strip">
     <div class="sc">
       <div class="sc-val" id="s-beats">0</div>
@@ -472,7 +569,7 @@
       <div class="sc-lbl">Flagged</div>
     </div>
     <div class="sc">
-      <div class="sc-val" id="s-dic" style="color:var(--purple)">0</div>
+      <div class="sc-val" id="s-dic" style="color:#a371f7">0</div>
       <div class="sc-lbl">Dicrotic</div>
     </div>
     <div class="sc">
@@ -481,7 +578,19 @@
     </div>
   </div>
 
-  <!-- Log -->
+  <!-- Signal status row -->
+  <div id="status-row">
+    <div id="finger-status">
+      <div id="finger-dot"></div>
+      <span id="finger-text">No signal</span>
+    </div>
+    <div id="status-right">
+      <span id="sqi-badge">SQI --</span>
+      <span id="timer">00:00</span>
+    </div>
+  </div>
+
+  <!-- Event log -->
   <div id="log-wrap">
     <div id="log"></div>
     <div id="motion-warn">Motion detected — hold still</div>
@@ -492,61 +601,62 @@
 <!-- DOCK -->
 <div id="dock">
   <div id="dock-idle">
-    <button id="btn-start">Begin Validation Session</button>
+    <button id="btn-start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      Begin Validation Session
+    </button>
   </div>
 
   <div id="dock-active">
     <!-- Row 1: primary actions -->
     <div id="dock-row1">
       <button id="btn-sync">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+        </svg>
         Sync Marker
       </button>
       <button id="btn-stop">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+        </svg>
         Export
       </button>
     </div>
 
-    <!-- Row 2: scrollable pills -->
+    <!-- Row 2: scrollable pill controls -->
     <div id="dock-row2">
-
       <button class="dock-pill" id="btn-beep">
-        <span class="pill-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
         Pulse Beep
       </button>
 
       <button class="dock-pill" id="btn-tone">
-        <span class="pill-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-          </svg>
-        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
         Test Tone
       </button>
 
       <button class="dock-pill" id="btn-knob">
-        <span class="pill-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
-          </svg>
-        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+        </svg>
         PAT Knob
       </button>
 
       <button class="dock-pill" id="btn-lights">
-        <span class="pill-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
         Torch Flash
       </button>
-
     </div>
   </div>
 </div>
@@ -554,6 +664,17 @@
 <script src="templates/epat-core.js"></script>
 <script>
 "use strict";
+
+// ── Theme toggle ──
+const themeBtn = document.getElementById('theme-toggle');
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ema-forge-theme', next);
+  });
+}
 
 // ── Dial ticks ──
 (function() {
@@ -586,28 +707,35 @@ let knobDragging = false, knobCx = 0, knobCy = 0, knobLastAngle = 0;
 let avgPeriod = 0, instPeriod = 0;
 let validationData = {};
 let ibiFlags = [], sqiSeries = [], dicroticList = [], knobTimings = [], toneTs = [];
+let torchOn = false;
 
 // ── UI refs ──
 const $ = id => document.getElementById(id);
 const ui = {
-  flash: $('flash'),
+  flash:        $('flash'),
   sessionSheet: $('session-sheet'), sessionId: $('session-id'),
-  btnBegin: $('btn-begin'), btnCancel: $('btn-cancel'),
-  timer: $('timer'),
-  fingerDot: $('finger-dot'), fingerText: $('finger-text'),
-  sqiBadge: $('sqi-badge'),
-  waveCanvas: $('wave-canvas'), camCanvas: $('cam-canvas'), beatLine: $('beat-line'),
-  bpmVal: $('bpm-value'),
-  sBeats: $('s-beats'), sClean: $('s-clean'), sFlagged: $('s-flagged'),
-  sDic: $('s-dic'), sMarkers: $('s-markers'),
-  log: $('log'), motionWarn: $('motion-warn'),
-  dockIdle: $('dock-idle'), dockActive: $('dock-active'),
-  btnStart: $('btn-start'), btnSync: $('btn-sync'), btnStop: $('btn-stop'),
-  btnBeep: $('btn-beep'), btnTone: $('btn-tone'),
-  btnKnob: $('btn-knob'), btnLights: $('btn-lights'),
-  knobSheet: $('knob-sheet'), btnCloseKnob: $('btn-close-knob'),
-  dial: $('dial'), knobPhaseVal: $('knob-phase-val'), knobTonesVal: $('knob-tones-val'),
+  btnBegin:     $('btn-begin'),     btnCancel: $('btn-cancel'),
+  timer:        $('timer'),
+  fingerDot:    $('finger-dot'),   fingerText: $('finger-text'),
+  sqiBadge:     $('sqi-badge'),
+  waveCanvas:   $('wave-canvas'),  camCanvas:  $('cam-canvas'), beatLine: $('beat-line'),
+  bpmVal:       $('bpm-value'),
+  sBeats:       $('s-beats'),      sClean:     $('s-clean'),   sFlagged: $('s-flagged'),
+  sDic:         $('s-dic'),        sMarkers:   $('s-markers'),
+  log:          $('log'),          motionWarn: $('motion-warn'),
+  dockIdle:     $('dock-idle'),    dockActive: $('dock-active'),
+  btnStart:     $('btn-start'),    btnSync:    $('btn-sync'),   btnStop: $('btn-stop'),
+  btnBeep:      $('btn-beep'),     btnTone:    $('btn-tone'),
+  btnKnob:      $('btn-knob'),     btnLights:  $('btn-lights'),
+  knobSheet:    $('knob-sheet'),   btnCloseKnob: $('btn-close-knob'),
+  dial:         $('dial'),         knobPhaseVal: $('knob-phase-val'), knobTonesVal: $('knob-tones-val'),
 };
+
+// ── Sync dock height to CSS var ──
+function syncDockHeight() {
+  const dock = document.getElementById('dock');
+  if (dock) document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
+}
 
 // ── Waveform ──
 let camCtx = null;
@@ -630,9 +758,9 @@ function drawWave() {
   const pad = 10 * dpr, xStep = (W * dpr) / WAVE_MAX;
   const xOff = (WAVE_MAX - waveBuffer.length) * xStep;
 
-  // Glow
+  // Glow pass
   ctx.beginPath();
-  ctx.strokeStyle = 'rgba(255,69,58,0.22)';
+  ctx.strokeStyle = 'rgba(232,113,106,0.22)'; /* accent with low opacity */
   ctx.lineWidth = 7 * dpr; ctx.lineJoin = 'round';
   for (let i = 0; i < waveBuffer.length; i++) {
     const x = xOff + i * xStep;
@@ -641,10 +769,10 @@ function drawWave() {
   }
   ctx.stroke();
 
-  // Line
+  // Main line — accent color
   ctx.beginPath();
-  ctx.strokeStyle = '#ff453a';
-  ctx.lineWidth = 1.5 * dpr;
+  ctx.strokeStyle = '#e8716a'; /* var(--accent) */
+  ctx.lineWidth = 1.5 * dpr; ctx.lineJoin = 'round';
   for (let i = 0; i < waveBuffer.length; i++) {
     const x = xOff + i * xStep;
     const y = pad + ((mx - waveBuffer[i]) / range) * (H * dpr - pad * 2);
@@ -670,7 +798,7 @@ function updateTimer() {
   timerRaf = requestAnimationFrame(updateTimer);
 }
 
-// ── Flash ──
+// ── Beat flash ──
 function triggerFlash() {
   ui.flash.classList.add('on');
   setTimeout(() => ui.flash.classList.remove('on'), 80);
@@ -720,9 +848,10 @@ function handleBeat(beat) {
   ui.sClean.textContent = cleanBeats;
   ui.sFlagged.textContent = flaggedBeats;
   ui.bpmVal.textContent = Math.round(beat.averageBPM);
+  ui.bpmVal.classList.add('live');
 
   const elapsed = ((beat.time - sessionStartTime) / 1000).toFixed(1);
-  if (flag) logLine('ev-flag', `[${elapsed}s] ${Math.round(ibiMs)}ms  D${flag.magnitude}%  (${flag.prevIbi}->${flag.currentIbi})`);
+  if (flag) logLine('ev-flag', `[${elapsed}s] ${Math.round(ibiMs)}ms  D${flag.magnitude}%  (${flag.prevIbi}→${flag.currentIbi})`);
   else      logLine('ev-clean', `[${elapsed}s] ${Math.round(ibiMs)}ms  ok`);
 
   ui.beatLine.classList.add('flash');
@@ -758,147 +887,21 @@ function addMarker(type = 'manual') {
   logLine('ev-marker', `[${elapsed}s]  SYNC MARKER #${count}  (${type})`);
 }
 
-// ── Torch flash helper (for LightsOnOff-style tests) ──
-let torchOn = false;
+// ── Torch toggle ──
 async function toggleTorch() {
   if (!isRecording) return;
-  // Access the active track through BeatDetector diagnostics
-  // We flip torch via the captured stream track
   try {
-    const track = BeatDetector._track; // if exposed; otherwise addMarker only
+    const track = BeatDetector._track;
     if (track && track.getCapabilities && track.getCapabilities().torch) {
       torchOn = !torchOn;
       await track.applyConstraints({ advanced: [{ torch: torchOn }] });
     }
   } catch(e) {}
-  // Always drop a sync marker when torch is toggled
   addMarker('torch');
   ui.btnLights.classList.toggle('on-yellow', torchOn);
-  ui.btnLights.querySelector('.pill-icon + *') || null;
-  // Update label text node
-  const txt = ui.btnLights.lastChild;
-  if (txt && txt.nodeType === 3) txt.textContent = torchOn ? ' Torch ON' : ' Torch Flash';
-}
-
-// ── Start ──
-async function startRecording() {
-  const sid = ui.sessionId.value.trim() || `VALIDATE_${Date.now()}`;
-  validationData = {
-    sessionID: sid, browserTimeStart: 0,
-    beatTimestamps: [], syncMarkers: [], toneTimestamps: [],
-    pulseBeepTimestamps: [], knobToneTimings: [],
-    ibiFlags: [], sqiTimeSeries: [], dicroticRejections: [], qualitySummary: {}
-  };
-  ibiFlags = []; sqiSeries = []; dicroticList = []; knobTimings = []; toneTs = [];
-  waveBuffer = []; lastIbi = 0; cleanBeats = 0; flaggedBeats = 0;
-  currentSqi = 0; sqiBadSec = 0; lastSqiTime = 0;
-  pulseBeepOn = false; knobOn = false; knobValue = 0; knobAngle = 0;
-  avgPeriod = 0; instPeriod = 0; torchOn = false;
-
-  ui.bpmVal.textContent = '--';
-  ui.sBeats.textContent = ui.sClean.textContent = ui.sFlagged.textContent = ui.sDic.textContent = ui.sMarkers.textContent = '0';
-  ui.log.innerHTML = '';
-  ui.sqiBadge.textContent = 'SQI --'; ui.sqiBadge.className = '';
-  ui.fingerDot.classList.remove('on'); ui.fingerText.textContent = 'No signal';
-  ui.btnBeep.classList.remove('on', 'on-green');
-  ui.btnKnob.classList.remove('on', 'on-yellow');
-  ui.btnLights.classList.remove('on-yellow');
-  ui.dial.style.transform = '';
-  ui.knobPhaseVal.textContent = '0.000'; ui.knobTonesVal.textContent = '0 tones';
-
-  ui.sessionSheet.style.display = 'none';
-  ui.dockIdle.style.display = 'none';
-  ui.dockActive.classList.add('on');
-  ui.timer.classList.add('running');
-
-  AudioEngine.init(); AudioEngine.resume();
-  await MotionDetector.requestPermission();
-  await WakeLockCtrl.request();
-
-  MotionDetector.start(
-    () => {
-      ui.motionWarn.classList.add('on');
-      clearTimeout(ui.motionWarn._t);
-      ui.motionWarn._t = setTimeout(() => ui.motionWarn.classList.remove('on'), 2000);
-    },
-    () => addMarker('tap')
-  );
-  motionInterval = setInterval(() => { if (isRecording) MotionDetector.checkMovement(); }, 100);
-
-  sessionStartTime = performance.now();
-  validationData.browserTimeStart = sessionStartTime;
-  isRecording = true;
-  updateTimer();
-
-  videoEl = $('video-feed');
-  camCtx = ui.camCanvas.getContext('2d');
-
-  await BeatDetector.start({
-    video: videoEl,
-    canvas: $('sampling-canvas'),
-    onBeatCb: handleBeat,
-    onFingerChangeCb: (present) => {
-      ui.fingerDot.classList.toggle('on', present);
-      ui.fingerText.textContent = present ? 'Signal found' : 'No signal';
-      if (!present) ui.bpmVal.textContent = '--';
-    },
-    onPPGSampleCb: (sample) => {
-      waveBuffer.push(sample);
-      if (waveBuffer.length > WAVE_MAX) waveBuffer.shift();
-      drawWave();
-      drawCam();
-    },
-    onSqiUpdateCb: handleSqi,
-    onDicroticRejectCb: (info) => {
-      dicroticList.push(info);
-      ui.sDic.textContent = dicroticList.length;
-      const elapsed = ((info.time - sessionStartTime) / 1000).toFixed(1);
-      logLine('ev-dic', `[${elapsed}s] dicrotic x  ${Math.round(info.rejectedIbi)}ms  (exp ${Math.round(info.expectedPeriod)}ms)`);
-    },
-  });
-
-  logLine('ev-info', `started: ${sid}`);
-}
-
-// ── Stop & export ──
-async function stopAndExport() {
-  isRecording = false;
-  if (timerRaf) cancelAnimationFrame(timerRaf);
-  clearInterval(motionInterval);
-  MotionDetector.stop();
-  await BeatDetector.stop();
-  WakeLockCtrl.release();
-  torchOn = false;
-
-  ui.dockActive.classList.remove('on');
-  ui.dockIdle.style.display = 'flex';
-  ui.timer.classList.remove('running');
-  ui.fingerDot.classList.remove('on');
-  ui.fingerText.textContent = 'Stopped';
-
-  const total = cleanBeats + flaggedBeats;
-  validationData.ibiFlags = ibiFlags;
-  validationData.sqiTimeSeries = sqiSeries;
-  validationData.dicroticRejections = dicroticList;
-  validationData.knobToneTimings = knobTimings;
-  validationData.toneTimestamps = toneTs;
-  validationData.qualitySummary = {
-    totalBeats: total, cleanBeats, flaggedBeats,
-    flagRate: total > 0 ? Math.round(flaggedBeats / total * 10000) / 100 : 0,
-    dicroticRejectsCount: dicroticList.length,
-    sqiBadSeconds: Math.round(sqiBadSec * 10) / 10,
-    sqiFinalValue: Math.round(currentSqi * 100000) / 100000,
-    ibiChangeThreshold: IBI_THRESHOLD,
-    sqiGoodThreshold: SQI_GOOD, sqiWarnThreshold: SQI_WARN
-  };
-
-  const blob = new Blob([JSON.stringify(validationData, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `${validationData.sessionID}_CNAP_SYNC.json`;
-  a.click(); URL.revokeObjectURL(url);
-
-  logLine('ev-info', `exported: ${validationData.sessionID}`);
+  // Update label text
+  const txt = [...ui.btnLights.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+  if (txt) txt.textContent = torchOn ? ' Torch ON' : ' Torch Flash';
 }
 
 // ── Beep toggle ──
@@ -952,6 +955,129 @@ window.addEventListener('pointermove', (e) => {
 }, { passive: false });
 window.addEventListener('pointerup', () => { knobDragging = false; });
 
+// ── Start ──
+async function startRecording() {
+  const sid = ui.sessionId.value.trim() || `VALIDATE_${Date.now()}`;
+  validationData = {
+    sessionID: sid, browserTimeStart: 0,
+    beatTimestamps: [], syncMarkers: [], toneTimestamps: [],
+    pulseBeepTimestamps: [], knobToneTimings: [],
+    ibiFlags: [], sqiTimeSeries: [], dicroticRejections: [], qualitySummary: {}
+  };
+  ibiFlags = []; sqiSeries = []; dicroticList = []; knobTimings = []; toneTs = [];
+  waveBuffer = []; lastIbi = 0; cleanBeats = 0; flaggedBeats = 0;
+  currentSqi = 0; sqiBadSec = 0; lastSqiTime = 0;
+  pulseBeepOn = false; knobOn = false; knobValue = 0; knobAngle = 0;
+  avgPeriod = 0; instPeriod = 0; torchOn = false;
+
+  ui.bpmVal.textContent = '--'; ui.bpmVal.classList.remove('live');
+  ui.sBeats.textContent = ui.sClean.textContent = ui.sFlagged.textContent =
+    ui.sDic.textContent = ui.sMarkers.textContent = '0';
+  ui.log.innerHTML = '';
+  ui.sqiBadge.textContent = 'SQI --'; ui.sqiBadge.className = '';
+  ui.fingerDot.classList.remove('on'); ui.fingerText.textContent = 'No signal';
+  ui.btnBeep.classList.remove('on-green');
+  ui.btnKnob.classList.remove('on-yellow');
+  ui.btnLights.classList.remove('on-yellow');
+  ui.dial.style.transform = '';
+  ui.knobPhaseVal.textContent = '0.000'; ui.knobTonesVal.textContent = '0 tones';
+
+  ui.sessionSheet.style.display = 'none';
+  ui.dockIdle.style.display = 'none';
+  ui.dockActive.classList.add('on');
+  ui.timer.classList.add('running');
+  syncDockHeight();
+
+  AudioEngine.init(); AudioEngine.resume();
+  await MotionDetector.requestPermission();
+  await WakeLockCtrl.request();
+
+  MotionDetector.start(
+    () => {
+      ui.motionWarn.classList.add('on');
+      clearTimeout(ui.motionWarn._t);
+      ui.motionWarn._t = setTimeout(() => ui.motionWarn.classList.remove('on'), 2000);
+    },
+    () => addMarker('tap')
+  );
+  motionInterval = setInterval(() => { if (isRecording) MotionDetector.checkMovement(); }, 100);
+
+  sessionStartTime = performance.now();
+  validationData.browserTimeStart = sessionStartTime;
+  isRecording = true;
+  updateTimer();
+
+  videoEl = $('video-feed');
+  camCtx = ui.camCanvas.getContext('2d');
+
+  await BeatDetector.start({
+    video: videoEl,
+    canvas: $('sampling-canvas'),
+    onBeatCb: handleBeat,
+    onFingerChangeCb: (present) => {
+      ui.fingerDot.classList.toggle('on', present);
+      ui.fingerText.textContent = present ? 'Finger detected' : 'No signal';
+      if (!present) { ui.bpmVal.textContent = '--'; ui.bpmVal.classList.remove('live'); }
+    },
+    onPPGSampleCb: (sample) => {
+      waveBuffer.push(sample);
+      if (waveBuffer.length > WAVE_MAX) waveBuffer.shift();
+      drawWave(); drawCam();
+    },
+    onSqiUpdateCb: handleSqi,
+    onDicroticRejectCb: (info) => {
+      dicroticList.push(info);
+      ui.sDic.textContent = dicroticList.length;
+      const elapsed = ((info.time - sessionStartTime) / 1000).toFixed(1);
+      logLine('ev-dic', `[${elapsed}s] dicrotic ×  ${Math.round(info.rejectedIbi)}ms  (exp ${Math.round(info.expectedPeriod)}ms)`);
+    },
+  });
+
+  logLine('ev-info', `started: ${sid}`);
+}
+
+// ── Stop & export ──
+async function stopAndExport() {
+  isRecording = false;
+  if (timerRaf) cancelAnimationFrame(timerRaf);
+  clearInterval(motionInterval);
+  MotionDetector.stop();
+  await BeatDetector.stop();
+  WakeLockCtrl.release();
+  torchOn = false;
+
+  ui.dockActive.classList.remove('on');
+  ui.dockIdle.style.display = 'flex';
+  ui.timer.classList.remove('running');
+  ui.fingerDot.classList.remove('on');
+  ui.fingerText.textContent = 'Stopped';
+  syncDockHeight();
+
+  const total = cleanBeats + flaggedBeats;
+  validationData.ibiFlags = ibiFlags;
+  validationData.sqiTimeSeries = sqiSeries;
+  validationData.dicroticRejections = dicroticList;
+  validationData.knobToneTimings = knobTimings;
+  validationData.toneTimestamps = toneTs;
+  validationData.qualitySummary = {
+    totalBeats: total, cleanBeats, flaggedBeats,
+    flagRate: total > 0 ? Math.round(flaggedBeats / total * 10000) / 100 : 0,
+    dicroticRejectsCount: dicroticList.length,
+    sqiBadSeconds: Math.round(sqiBadSec * 10) / 10,
+    sqiFinalValue: Math.round(currentSqi * 100000) / 100000,
+    ibiChangeThreshold: IBI_THRESHOLD,
+    sqiGoodThreshold: SQI_GOOD, sqiWarnThreshold: SQI_WARN
+  };
+
+  const blob = new Blob([JSON.stringify(validationData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${validationData.sessionID}_CNAP_SYNC.json`;
+  a.click(); URL.revokeObjectURL(url);
+
+  logLine('ev-info', `exported: ${validationData.sessionID}`);
+}
+
 // ── Wire events ──
 ui.btnStart.addEventListener('click', () => {
   ui.sessionSheet.style.display = 'flex';
@@ -961,7 +1087,6 @@ ui.btnBegin.addEventListener('click', startRecording);
 ui.btnCancel.addEventListener('click', () => { ui.sessionSheet.style.display = 'none'; });
 ui.sessionId.addEventListener('keydown', (e) => { if (e.key === 'Enter') { ui.sessionId.blur(); startRecording(); } });
 
-// touchstart for zero-latency on sync button
 ui.btnSync.addEventListener('touchstart', (e) => { e.preventDefault(); addMarker('manual'); }, { passive: false });
 ui.btnSync.addEventListener('click', () => addMarker('manual'));
 
@@ -979,7 +1104,10 @@ ui.btnCloseKnob.addEventListener('click', closeKnob);
 ui.btnLights.addEventListener('touchstart', (e) => { e.preventDefault(); toggleTorch(); }, { passive: false });
 ui.btnLights.addEventListener('click', toggleTorch);
 
-window.addEventListener('resize', () => { if (waveBuffer.length > 0) drawWave(); });
+window.addEventListener('resize', () => { if (waveBuffer.length > 0) drawWave(); syncDockHeight(); });
+
+// Initial dock height sync
+syncDockHeight();
 </script>
 </body>
 </html>
