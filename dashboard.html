@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <link rel="stylesheet" href="css/studio.css">
+<link rel="stylesheet" href="css/content-view.css">
 <style>
 /* =============================================
    DESIGN TOKENS & LAYOUT
@@ -170,6 +171,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       <button class="tab-btn" data-target="view-compliance">Compliance</button>
       <button class="tab-btn" data-target="view-signals">Signals & Noise</button>
       <button class="tab-btn" data-target="view-participants">Participants</button>
+      <button class="tab-btn" data-target="view-content">Items</button>
     </nav>
     <div class="topbar-actions">
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
@@ -384,11 +386,44 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       </div>
     </div>
 
+<!-- VIEW: CONTENT / ITEMS -->
+<div id="view-content" class="dashboard-view">
+  <!-- Headline KPI strip, populated by ContentView -->
+  <div class="kpi-grid" id="content-kpi-row"></div>
+
+  <!-- Composite score builder -->
+  <div class="composite-wrap">
+    <div class="composite-panel">
+      <div class="composite-panel-title">Build a Composite Score</div>
+      <div class="composite-panel-sub">Select numeric items (sliders, number inputs) to compute a per-session mean or sum — for quick subscale checks. Flag items as reverse-scored to invert on the fly. Listwise-complete scoring is used.</div>
+      <div class="composite-method-row">
+        <label for="composite-method">Method:</label>
+        <select id="composite-method">
+          <option value="mean">Mean</option>
+          <option value="sum">Sum</option>
+        </select>
+      </div>
+      <div id="composite-picker"></div>
+    </div>
+    <div class="composite-panel">
+      <div class="composite-panel-title">Score Distribution</div>
+      <div class="composite-panel-sub">Summary across all filtered sessions.</div>
+      <div id="composite-output"></div>
+    </div>
+  </div>
+
+  <!-- Per-question stat cards -->
+  <div class="q-stat-grid" id="content-cards"></div>
+</div>
+
   </main>
 </div>
 
 <!-- Scripts -->
 <script src="js/dashboard/parser.js"></script>
+<script src="js/dashboard/parser-csv-patch.js"></script>
+<script src="js/dashboard/content-stats.js"></script>
+<script src="js/dashboard/content-view.js"></script>
 <script src="js/dashboard/dashboard.js"></script>
 <script>
   // Handle the toggle button click

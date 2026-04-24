@@ -148,6 +148,7 @@ fileInput.addEventListener('change', async (e) => {
 
     DataParser.calculateMetrics(filters);
     this.updateDashboard(DataParser.state);
+    if (typeof ContentView !== 'undefined') ContentView.render();
   },
 
   populateDateDropdown(sessions) {
@@ -260,7 +261,7 @@ fileInput.addEventListener('change', async (e) => {
       });
     });
 
-    const csvString = rows.join('\n');
+    const csvString = rows.join('\r\n') + '\r\n';
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     

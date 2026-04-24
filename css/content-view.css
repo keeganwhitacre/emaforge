@@ -1,0 +1,262 @@
+/* =================================================================
+   EMA Forge - Content View Styles
+   Add this block to dashboard.html inside the existing <style> tag,
+   or load it as a separate stylesheet. Uses the same design tokens
+   as the rest of the dashboard (--bg-1, --accent, etc.) so it auto-
+   adapts to light/dark mode.
+   ================================================================= */
+
+/* Grid of per-question cards */
+.q-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.q-stat-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+}
+
+.q-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.q-stat-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.q-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.q-stat-id {
+  font-size: 10px;
+  color: var(--fg-3);
+  font-family: var(--font-mono, monospace);
+}
+
+.q-stat-type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-3);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.q-stat-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+}
+
+.q-stat-big {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+.q-stat-unit {
+  font-size: 11px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.q-stat-dim {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-left: auto;
+  text-align: right;
+}
+
+.q-stat-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+.q-stat-meta strong {
+  color: var(--fg-2);
+  font-weight: 600;
+}
+
+.q-stat-chart {
+  position: relative;
+  height: 120px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.content-empty {
+  background: var(--bg-1);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 13px;
+}
+
+/* Composite score builder */
+.composite-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .composite-wrap { grid-template-columns: 1fr; }
+}
+
+.composite-panel {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.composite-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.composite-panel-sub {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-bottom: 14px;
+}
+
+.composite-method-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.composite-method-row select {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: var(--font, inherit);
+}
+
+.composite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.composite-row:last-child { border-bottom: none; }
+
+.composite-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.composite-row-text {
+  flex: 1;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composite-row-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: var(--fg-3);
+  flex-shrink: 0;
+}
+
+.composite-reverse {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--fg-3);
+  flex: 0 0 auto !important;
+}
+.composite-reverse input[type="checkbox"]:disabled + span {
+  opacity: 0.4;
+}
+
+.composite-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.composite-summary > div {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.composite-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-3);
+  font-weight: 600;
+}
+.composite-value {
+  font-size: 16px;
+  font-family: var(--font-mono, monospace);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.composite-note {
+  font-size: 10px;
+  color: var(--fg-3);
+  margin-top: 8px;
+  font-style: italic;
+}
