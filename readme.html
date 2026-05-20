@@ -2734,119 +2734,691 @@ iat_trials &lt;- sessions |&gt;
             </div>
           </div>
 
-          <h3 id="webhook-google">Google Sheets via Apps Script (recommended starting point)</h3>
+         <!-- ==========================================================
+     WEBHOOK RECIPES — drop-in replacement for the existing
+     #webhook-google, #webhook-redcap, #webhook-microsoft sections.
+     Place after the existing #webhook-payload section and before
+     #webhook-cautions.
+     ========================================================== -->
 
-          <p>This is the fastest path to a working pipeline — no server, no billing, no institutional sign-off needed
-            beyond your existing Google account. It gives you a live Google Sheet that fills in automatically as
-            participants complete sessions.</p>
+<h3 id="webhook-recipes">Webhook recipes by receiver</h3>
 
-          <details>
-            <summary>Full step-by-step setup (click to expand)</summary>
-            <div class="details-body">
+<p>EMA Forge's webhook is a plain HTTPS POST with a JSON body. Anything that
+  can accept that and respond with a 2xx works. The table below summarises the
+  recipes documented in this section; pick the one whose tradeoffs match your
+  IRB, your IT environment, and your willingness to do setup work.</p>
 
-              <ol>
-                <li>Open <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> and
-                  create a new blank spreadsheet. Name it whatever you want your study data labeled as.</li>
-                <li>From the menu bar, click <strong>Extensions → Apps Script</strong>. A script editor tab opens.</li>
-                <li>Delete the placeholder <code>function myFunction() {}</code> and paste the script below.</li>
-                <li>Click the disk icon to save. It will ask you to name the project — anything works.</li>
-                <li>Click <strong>Deploy → New deployment</strong>. In the gear next to "Select type," choose
-                  <strong>Web app</strong>.
-                </li>
-                <li>Set <strong>Execute as:</strong> <em>Me</em>, and <strong>Who has access:</strong> <em>Anyone</em>.
-                  (This is necessary — the exported study has no Google credentials. Your endpoint URL is essentially
-                  the credential; treat it as a secret.)</li>
-                <li>Click <strong>Deploy</strong>. Google will prompt you to authorize — accept. Copy the resulting
-                  <strong>Web app URL</strong> (it starts with <code>https://script.google.com/macros/s/...</code>).
-                </li>
-                <li>Paste that URL into the <em>Webhook URL</em> field in EMA Forge's Builder → Study tab.</li>
-                <li>Re-export your study. Test it end-to-end with a dummy participant ID.</li>
-              </ol>
+<table>
+  <thead>
+    <tr>
+      <th>Receiver</th>
+      <th>Cost</th>
+      <th>Setup</th>
+      <th>When to pick it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="#webhook-google">Google Apps Script → Sheets</a></td>
+      <td>Free</td>
+      <td>~5 min</td>
+      <td>Default starting point. Personal Google account is the only requirement.</td>
+    </tr>
+    <tr>
+      <td><a href="#webhook-cloudflare">Cloudflare Worker → R2</a></td>
+      <td>Free up to 100k req/day</td>
+      <td>~15 min</td>
+      <td>One file per session, no row-size limits, no Google account, no cold starts.</td>
+    </tr>
+    <tr>
+      <td><a href="#webhook-azure">Azure Function → SharePoint</a></td>
+      <td>Free (consumption tier)</td>
+      <td>~30 min + IT signoff</td>
+      <td>Institutional Microsoft 365 mandate. Strongest IRB story for university-managed tenants.</td>
+    </tr>
+    <tr>
+      <td><a href="#webhook-power-automate">Power Automate → Excel</a></td>
+      <td>Premium licence required</td>
+      <td>~10 min</td>
+      <td>You already have Power Automate Premium. Simpler than the Azure path if you do.</td>
+    </tr>
+    <tr>
+      <td><a href="#webhook-redcap">PHP proxy → REDCap</a></td>
+      <td>Free (uses existing lab server)</td>
+      <td>~30 min + lab IT</td>
+      <td>IRB requires data stay on institutional infrastructure end-to-end.</td>
+    </tr>
+    <tr>
+      <td><a href="#webhook-aws">AWS Lambda → S3</a></td>
+      <td>≈$0–3/month</td>
+      <td>~45 min</td>
+      <td>Lab is standardised on AWS, or you want presigned-URL access patterns.</td>
+    </tr>
+  </tbody>
+</table>
 
-              <p><strong>The script:</strong></p>
-              <pre><code>function doPost(e) {
+<!-- ==========================================================
+     GOOGLE APPS SCRIPT
+     ========================================================== -->
+
+<h3 id="webhook-google">Google Sheets via Apps Script <span class="status-pill stable">STABLE</span></h3>
+
+<p>The fastest path to a working pipeline — no server, no billing, no
+  institutional signoff beyond your existing Google account. Sessions
+  fill a Google Sheet one row at a time as participants complete them.</p>
+
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <ol>
+      <li>Open <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> and create
+        a new blank spreadsheet. Name it whatever you want your study data labelled as.</li>
+      <li>From the menu bar, <strong>Extensions → Apps Script</strong>.</li>
+      <li>Delete the placeholder <code>function myFunction() {}</code> and paste the script below.</li>
+      <li>Save. Name the project anything.</li>
+      <li><strong>Deploy → New deployment</strong>. Choose type <strong>Web app</strong>.</li>
+      <li>Set <strong>Execute as:</strong> <em>Me</em>, <strong>Who has access:</strong> <em>Anyone</em>.
+        Necessary because the exported study has no Google credentials. Your endpoint URL is effectively the
+        credential — treat it as a secret.</li>
+      <li>Click <strong>Deploy</strong>. Authorize when prompted. Copy the Web app URL
+        (starts with <code>https://script.google.com/macros/s/...</code>).</li>
+      <li>Paste into EMA Forge's Builder → Study tab → Webhook URL field.</li>
+      <li>Re-export. Test end-to-end with a dummy participant ID.</li>
+    </ol>
+
+    <pre><code>function doPost(e) {
   try {
-    // 1. Parse the incoming text/plain payload from EMA Forge
-    const data = JSON.parse(e.postData.contents);
+    const data  = JSON.parse(e.postData.contents);
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-    // 2. Create headers if the sheet is completely empty
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(['Timestamp', 'Participant ID', 'Day', 'Window', 'Raw JSON']);
       sheet.getRange(1, 1, 1, 5).setFontWeight("bold");
       sheet.setFrozenRows(1);
     }
 
-    // 3. Append the new row of data
     sheet.appendRow([
       new Date(),
       data.participant_id || 'Unknown',
-      data.day || 'Unknown',
-      data.window_id || 'Unknown',
+      data.day            || 'Unknown',
+      data.window_id      || 'Unknown',
       JSON.stringify(data.session_data || data)
     ]);
 
-    // 4. Tell the EMA Forge app that the upload was successful
-    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+    return ContentService
+      .createTextOutput(JSON.stringify({status: 'success'}))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({"error": error.message}))
+    return ContentService
+      .createTextOutput(JSON.stringify({error: error.message}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }</code></pre>
 
-              <p>Every completed session becomes one row with the full session JSON in column E. For day-to-day
-                monitoring, use Sheets' built-in filters on the Participant ID / Day / Window columns. For actual
-                analysis, download the sheet as CSV and feed it to the Dashboard or process column E directly in R (e.g.
-                <code>purrr::map(json_col, jsonlite::fromJSON)</code>).
-              </p>
+    <p><strong>When editing,</strong> redeploy via <strong>Manage deployments → Edit → New version</strong>
+      (keeps the same URL).</p>
 
-              <p><strong>When you edit the script,</strong> you must redeploy — either create a new deployment (new
-                URL), or use <strong>Manage deployments → Edit → New version</strong> (keeps the same URL). The latter
-                is the sane default once you're in production.</p>
+    <p><strong>Apps Script rate limits</strong> are generous (~1000 sessions/day before issues). Beyond
+      that, switch to Cloudflare or Azure.</p>
+  </div>
+</details>
 
-              <p><strong>If you want separate columns per question</strong> instead of one "Raw JSON" blob, extend the
-                script to walk <code>data.session_data.data</code> and append rows per <code>ema_response</code>. The
-                current version is intentionally minimal so it works for any study regardless of question count.</p>
+<!-- ==========================================================
+     CLOUDFLARE WORKER → R2
+     ========================================================== -->
 
-            </div>
-          </details>
+<h3 id="webhook-cloudflare">Cloudflare Worker → R2 object storage <span class="status-pill stable">STABLE</span></h3>
 
-          <h3 id="webhook-redcap">REDCap, institutional endpoints, and other receivers</h3>
+<p>Cloudflare Workers are free up to 100,000 requests per day. R2 (Cloudflare's
+  S3-compatible object storage) is free up to 10 GB stored with no egress
+  fees. This combination scales further than Apps Script, stores one full
+  JSON per session (so signal-heavy ePAT sessions don't bump against any
+  row-size cap), and has no cold-start latency.</p>
 
-          <p>Any HTTPS endpoint that accepts a POST of text/JSON works. The only requirement is that your endpoint
-            either (a) doesn't require a CORS preflight, or (b) is configured to respond <code>200 OK</code> to an
-            OPTIONS request with appropriate CORS headers.</p>
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <ol>
+      <li>Create a free Cloudflare account at <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener">cloudflare.com</a>.</li>
+      <li>Install <code>wrangler</code> CLI: <code>npm install -g wrangler</code>.</li>
+      <li><code>wrangler login</code> to authenticate.</li>
+      <li><code>wrangler r2 bucket create ema-forge-sessions</code></li>
+      <li>Create a directory <code>ema-receiver/</code> with <code>wrangler.toml</code>:
+        <pre><code>name = "ema-receiver"
+main = "worker.js"
+compatibility_date = "2025-01-01"
 
-          <p>Patterns that are known to work:</p>
-          <ul>
-            <li><strong>Google Apps Script</strong> — documented above.</li>
-            <li><strong>A small AWS Lambda or Cloudflare Worker</strong> behind a public URL, forwarding into S3,
-              DynamoDB, or an institutional SFTP. Trivial to write; roughly 30 lines.</li>
-            <li><strong>A thin institutional proxy</strong> — a single PHP / Node / Python endpoint on your lab's server
-              that accepts the POST and writes to disk or REDCap's API. This is the path most IRBs prefer because the
-              data never leaves institutional infrastructure.</li>
-            <li><strong>REDCap's File Repository</strong> via a tiny forwarding script. Direct browser-to-REDCap POST is
-              blocked by CORS on most REDCap installations, so a one-hop institutional proxy is the realistic path.</li>
-          </ul>
+[[r2_buckets]]
+binding = "EMA_BUCKET"
+bucket_name = "ema-forge-sessions"
 
-          <h3 id="webhook-microsoft">Microsoft / SharePoint / OneDrive</h3>
+[vars]
+AUTH_SECRET = "" # optional — set to a random string to require ?auth= on POSTs</code></pre>
+      </li>
+      <li>Create <code>worker.js</code> with the code below.</li>
+      <li><code>wrangler deploy</code>. Copy the workers.dev URL it prints.</li>
+      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+    </ol>
 
-          <p>Microsoft has a direct analogue to Apps Script called <strong>Power Automate</strong> (formerly Flow). You
-            can build a flow whose trigger is "When an HTTP request is received" and whose actions write to an Excel
-            workbook, SharePoint list, or OneDrive file. The flow exposes a URL that accepts POSTs — paste that URL into
-            the Builder's webhook field, same as with Apps Script.</p>
+    <pre><code>export default {
+  async fetch(request, env) {
+    const cors = {
+      'Access-Control-Allow-Origin':  '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
 
-          <p>There's one catch: the "When an HTTP request is received" trigger is a <em>Premium</em> Power Automate
-            connector, which many institutional Microsoft 365 licenses do not include. Before investing time in this
-            path, check with your IT whether your account has Premium flows enabled. If not, the typical workaround is
-            an Azure Function (free tier is generous) that writes to the same SharePoint/OneDrive location — same end
-            result, different billing model.</p>
+    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+    if (request.method !== 'POST')    return new Response('POST only', { status: 405, headers: cors });
 
-          <p>A paste-and-go Power Automate template is on the <a href="#roadmap">roadmap</a>. In the interim, the
-            generic pattern (trigger = HTTP request, action = write to Excel) is straightforward enough that a lab IT
-            contact can stand one up in under an hour.</p>
+    const url = new URL(request.url);
+    if (env.AUTH_SECRET &amp;&amp; url.searchParams.get('auth') !== env.AUTH_SECRET) {
+      return new Response('unauthorized', { status: 401, headers: cors });
+    }
+
+    let body;
+    try { body = await request.json(); }
+    catch {
+      return new Response(JSON.stringify({error: 'bad json'}), {
+        status: 400, headers: { ...cors, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const pid = String(body.participant_id || 'unknown');
+    const day = String(body.day || '0');
+    const win = String(body.window_id || 'na');
+    const ts  = new Date().toISOString().replace(/[:.]/g, '-');
+    const key = `sessions/${pid}/day-${day}/${win}_${ts}.json`;
+
+    await env.EMA_BUCKET.put(key, JSON.stringify(body), {
+      httpMetadata:   { contentType: 'application/json' },
+      customMetadata: { pid, day, win }
+    });
+
+    return new Response(JSON.stringify({status: 'success', key}), {
+      status: 200, headers: { ...cors, 'Content-Type': 'application/json' }
+    });
+  }
+};</code></pre>
+
+    <p><strong>To pull data for analysis</strong>, R2 speaks S3 API. From R:</p>
+    <pre><code>library(aws.s3)
+
+Sys.setenv(
+  AWS_ACCESS_KEY_ID     = "&lt;your R2 access key&gt;",
+  AWS_SECRET_ACCESS_KEY = "&lt;your R2 secret key&gt;",
+  AWS_S3_ENDPOINT       = "&lt;account_id&gt;.r2.cloudflarestorage.com"
+)
+
+# Sync entire bucket to local
+files &lt;- get_bucket_df(bucket = "ema-forge-sessions", region = "auto")
+for (key in files$Key) {
+  save_object(key, bucket = "ema-forge-sessions",
+              file = file.path("data", basename(key)))
+}</code></pre>
+
+    <p>Generate R2 API tokens at Cloudflare dashboard → R2 → Manage R2 API Tokens.</p>
+  </div>
+</details>
+
+<!-- ==========================================================
+     AZURE FUNCTION → SHAREPOINT
+     ========================================================== -->
+
+<h3 id="webhook-azure">Azure Function → SharePoint List <span class="status-pill stable">STABLE</span></h3>
+
+<p>The institutional Microsoft path. Best fit when your university mandates
+  Microsoft 365 for research data storage, when your IRB prefers data stay
+  inside the institutional tenant, or when your IT contact will resist
+  approving non-Microsoft cloud services. Azure Functions on the
+  consumption plan are free up to 1 million executions per month, which
+  is well above any plausible EMA workload.</p>
+
+<p>This recipe requires a one-time app registration in Azure AD, which
+  typically means asking your central IT to grant the
+  <code>Sites.ReadWrite.All</code> application permission. Most university
+  IT shops process this routinely.</p>
+
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <h4>One-time Azure AD setup</h4>
+    <ol>
+      <li>Azure Portal → <strong>App Registrations → New registration</strong>.
+        Name: <code>EMA-Forge-Receiver</code>. Account type: single tenant. Click Register.</li>
+      <li>From the new app's overview, copy <strong>Application (client) ID</strong> and
+        <strong>Directory (tenant) ID</strong>.</li>
+      <li><strong>Certificates &amp; secrets → New client secret</strong>. Copy the
+        secret <em>Value</em> immediately — it's never shown again.</li>
+      <li><strong>API permissions → Add a permission → Microsoft Graph →
+        Application permissions → Sites.ReadWrite.All</strong>. Add. Then
+        <strong>Grant admin consent</strong> (your IT will need to do this
+        click; the rest you can do yourself).</li>
+    </ol>
+
+    <h4>SharePoint list setup</h4>
+    <ol>
+      <li>In your team's SharePoint site, create a new <strong>List</strong>
+        called <code>EMA Sessions</code>.</li>
+      <li>Add columns:
+        <ul>
+          <li><code>Participant</code> — Single line of text</li>
+          <li><code>Day</code> — Number</li>
+          <li><code>Window</code> — Single line of text</li>
+          <li><code>SessionJSON</code> — Multiple lines of text, plain text,
+            <em>increase limit to 250,000 characters</em></li>
+          <li><code>ReceivedAt</code> — Date and Time</li>
+        </ul>
+      </li>
+      <li>Get the site ID and list ID via <a href="https://developer.microsoft.com/en-us/graph/graph-explorer"
+        target="_blank" rel="noopener">Graph Explorer</a>:
+        <ul>
+          <li>Site ID: <code>GET https://graph.microsoft.com/v1.0/sites/&lt;tenant&gt;.sharepoint.com:/sites/&lt;site-name&gt;</code></li>
+          <li>List ID: <code>GET https://graph.microsoft.com/v1.0/sites/&lt;site-id&gt;/lists</code> — find your list by displayName</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h4>Azure Function deployment</h4>
+    <ol>
+      <li>Install Azure Functions Core Tools and the Azure CLI.</li>
+      <li>Create a new function project:
+        <pre><code>func init ema-receiver --javascript --model V4
+cd ema-receiver
+func new --name SaveSession --template "HTTP trigger" --authlevel "function"</code></pre>
+      </li>
+      <li>Replace <code>src/functions/SaveSession.js</code> with:</li>
+    </ol>
+
+    <pre><code>const { app } = require('@azure/functions');
+const { Client } = require('@microsoft/microsoft-graph-client');
+const { ClientSecretCredential } = require('@azure/identity');
+require('isomorphic-fetch');
+
+app.http('SaveSession', {
+  methods: ['POST', 'OPTIONS'],
+  authLevel: 'function',
+  handler: async (req, ctx) => {
+    const cors = {
+      'Access-Control-Allow-Origin':  '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+    if (req.method === 'OPTIONS') return { status: 200, headers: cors };
+
+    try {
+      const raw  = await req.text();
+      const data = JSON.parse(raw);
+
+      const credential = new ClientSecretCredential(
+        process.env.TENANT_ID,
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET
+      );
+      const graph = Client.initWithMiddleware({
+        authProvider: {
+          getAccessToken: async () =>
+            (await credential.getToken('https://graph.microsoft.com/.default')).token
+        }
+      });
+
+      const siteId = process.env.SHAREPOINT_SITE_ID;
+      const listId = process.env.SHAREPOINT_LIST_ID;
+
+      await graph
+        .api(`/sites/${siteId}/lists/${listId}/items`)
+        .post({
+          fields: {
+            Title:        `${data.participant_id}_D${data.day}_${data.window_id}`,
+            Participant:  String(data.participant_id || ''),
+            Day:          Number(data.day) || 0,
+            Window:       String(data.window_id || ''),
+            ReceivedAt:   new Date().toISOString(),
+            SessionJSON:  JSON.stringify(data.session_data || {}).slice(0, 250000)
+          }
+        });
+
+      return {
+        status: 200,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'success' })
+      };
+    } catch (err) {
+      ctx.error(err);
+      return {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: err.message })
+      };
+    }
+  }
+});</code></pre>
+
+    <pre><code>npm install @azure/functions @azure/identity @microsoft/microsoft-graph-client isomorphic-fetch</code></pre>
+
+    <ol start="4">
+      <li>Deploy:
+        <pre><code>az login
+az functionapp create --resource-group &lt;rg&gt; --consumption-plan-location &lt;region&gt; \
+  --runtime node --runtime-version 20 --functions-version 4 \
+  --name ema-receiver-&lt;you&gt; --storage-account &lt;storage&gt;
+
+func azure functionapp publish ema-receiver-&lt;you&gt;</code></pre>
+      </li>
+      <li>Set environment variables in the Function App Configuration:
+        <code>TENANT_ID</code>, <code>CLIENT_ID</code>, <code>CLIENT_SECRET</code>,
+        <code>SHAREPOINT_SITE_ID</code>, <code>SHAREPOINT_LIST_ID</code>.</li>
+      <li>Get the function URL (includes a <code>?code=</code> key acting as a shared secret):
+        Azure Portal → your Function → Functions → SaveSession → Get Function Url.
+      </li>
+      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+    </ol>
+
+    <h4>For Ohio State users specifically</h4>
+    <p>OSU permits use of the university-configured Azure tenant for non-medical-center
+      research data classified at S3 (Private) or below. Behavioural EMA data
+      with coded participant IDs and no PHI is S3. The OSU Azure tenant
+      lives under the university's Microsoft enterprise agreement and meets
+      OSU's Information Security Standard for S3 data without requiring a
+      separate Information Security Risk Assessment. Email your college
+      Security Coordinator before submitting your IRB protocol to confirm
+      the setup matches their expectations for your specific data.</p>
+  </div>
+</details>
+
+<!-- ==========================================================
+     POWER AUTOMATE → EXCEL
+     ========================================================== -->
+
+<h3 id="webhook-power-automate">Power Automate → Excel <span class="status-pill stable">STABLE</span></h3>
+
+<p>Simpler than the Azure Function path, but the "When an HTTP request is
+  received" trigger is a <em>Premium</em> Power Automate connector that
+  most institutional Microsoft 365 plans do not include. Before
+  investing time, check with IT whether your Microsoft 365 plan has
+  Premium Power Automate. If not, use the
+  <a href="#webhook-azure">Azure Function path</a> instead.</p>
+
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <h4>Prepare the Excel destination</h4>
+    <ol>
+      <li>Create a new Excel file in OneDrive for Business: <code>EMA-Forge-Data.xlsx</code>.</li>
+      <li>Add headers in row 1: <code>Timestamp | Participant_ID | Day | Window | Raw_JSON</code>.</li>
+      <li>Select the range and press <strong>Ctrl+T</strong> to format as a table.
+        Name the table <code>SessionData</code>. Power Automate's Excel connector cannot
+        see unformatted ranges — the table step is required.</li>
+    </ol>
+
+    <h4>Build the flow</h4>
+    <ol>
+      <li>Go to <a href="https://make.powerautomate.com" target="_blank" rel="noopener">make.powerautomate.com</a>.
+        New flow → Instant cloud flow → "When an HTTP request is received".</li>
+      <li>In the trigger, paste this Request Body JSON Schema:
+        <pre><code>{
+  "type": "object",
+  "properties": {
+    "participant_id": {"type": "string"},
+    "day":            {"type": "integer"},
+    "window_id":      {"type": "string"},
+    "session_data":   {"type": "object"}
+  }
+}</code></pre>
+      </li>
+      <li>Add action: <strong>Compose</strong>. Inputs:
+        <code>@{string(triggerBody()?['session_data'])}</code>.
+        This stringifies the nested session data so Excel can store it as a single cell.</li>
+      <li>Add action: <strong>Excel Online (Business) → Add a row into a table</strong>.
+        <ul>
+          <li>Location: OneDrive for Business</li>
+          <li>Document Library: OneDrive</li>
+          <li>File: <code>/EMA-Forge-Data.xlsx</code></li>
+          <li>Table: <code>SessionData</code></li>
+          <li>Row fields:
+            <ul>
+              <li>Timestamp: <code>@{utcNow()}</code></li>
+              <li>Participant_ID: <code>@{triggerBody()?['participant_id']}</code></li>
+              <li>Day: <code>@{triggerBody()?['day']}</code></li>
+              <li>Window: <code>@{triggerBody()?['window_id']}</code></li>
+              <li>Raw_JSON: <code>@{outputs('Compose')}</code></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>Add action: <strong>Response</strong>. Status code: 200. Body:
+        <code>{"status": "success"}</code>. <em>Must be the final action.</em></li>
+      <li>Save the flow. Click back into the trigger card — the
+        <strong>HTTP POST URL</strong> field now contains the endpoint URL.
+        Copy it.</li>
+      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+    </ol>
+
+    <p><strong>Performance caveat:</strong> Power Automate must return the
+      Response within 120 seconds or the flow runs asynchronously and the
+      runtime can't tell whether the save succeeded. For standard EMA
+      payloads this is never a problem; for sessions with raw PPG samples
+      (~MB-scale), monitor for timeouts during pilot.</p>
+  </div>
+</details>
+
+<!-- ==========================================================
+     REDCAP via PHP proxy
+     ========================================================== -->
+
+<h3 id="webhook-redcap">REDCap via institutional PHP proxy <span class="status-pill stable">STABLE</span></h3>
+
+<p>Direct browser-to-REDCap POSTs are blocked by CORS on most REDCap
+  installations. The realistic path is a one-file PHP proxy hosted on
+  your lab's institutional web server, which accepts the POST from the
+  participant's phone and forwards it to REDCap's API using your project
+  token. This is the path most IRBs prefer because the data path is
+  institutional end-to-end — the participant's phone hits a university
+  domain, which forwards to a university REDCap instance, with no
+  external cloud services involved.</p>
+
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <h4>REDCap project setup</h4>
+    <ol>
+      <li>In your REDCap project, enable the API via Project Setup → API.</li>
+      <li>User Rights → assign yourself API rights → generate an API token.
+        Copy it — you'll need it in the PHP file. Treat as a credential.</li>
+      <li>Online Designer → create a repeatable instrument called
+        <code>session</code>. Add fields:
+        <ul>
+          <li><code>session_day</code> — Text Box</li>
+          <li><code>session_window</code> — Text Box</li>
+          <li><code>session_json</code> — Notes Box (long text — verify your REDCap install allows &gt;30k chars per field)</li>
+          <li><code>session_received</code> — Text Box with date/time validation</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h4>PHP proxy</h4>
+    <p>Drop this on your lab's Apache/nginx server. Most psych departments
+      have one — ask your IT contact. The file is dependency-free
+      vanilla PHP and works on any version &ge;7.4.</p>
+
+    <pre><code>&lt;?php
+// ema-forge-redcap-proxy.php
+// Forwards EMA Forge sessions into a REDCap project's repeatable instrument.
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+$REDCAP_URL    = getenv('REDCAP_URL')   ?: 'https://redcap.your-uni.edu/api/';
+$REDCAP_TOKEN  = getenv('REDCAP_TOKEN') ?: 'PASTE_YOUR_TOKEN_HERE';
+$SHARED_SECRET = getenv('EMA_SECRET')   ?: '';  // optional, recommended
+
+if ($SHARED_SECRET &amp;&amp; ($_GET['auth'] ?? '') !== $SHARED_SECRET) {
+    http_response_code(401);
+    echo json_encode(['error' =&gt; 'unauthorized']);
+    exit;
+}
+
+$body = file_get_contents('php://input');
+$data = json_decode($body, true);
+if (!$data) {
+    http_response_code(400);
+    echo json_encode(['error' =&gt; 'invalid JSON']);
+    exit;
+}
+
+$record = [[
+    'record_id'                =&gt; $data['participant_id'] ?? 'unknown',
+    'redcap_event_name'        =&gt; 'ema_arm_1',           // edit to match your project
+    'redcap_repeat_instrument' =&gt; 'session',
+    'redcap_repeat_instance'   =&gt; 'new',                  // REDCap auto-assigns
+    'session_day'              =&gt; $data['day'] ?? '',
+    'session_window'           =&gt; $data['window_id'] ?? '',
+    'session_json'             =&gt; json_encode($data['session_data'] ?? []),
+    'session_received'         =&gt; date('Y-m-d H:i:s'),
+]];
+
+$payload = http_build_query([
+    'token'             =&gt; $REDCAP_TOKEN,
+    'content'           =&gt; 'record',
+    'format'            =&gt; 'json',
+    'type'              =&gt; 'flat',
+    'data'              =&gt; json_encode($record),
+    'overwriteBehavior' =&gt; 'normal',
+    'forceAutoNumber'   =&gt; 'false',
+    'returnContent'     =&gt; 'count',
+]);
+
+$ch = curl_init($REDCAP_URL);
+curl_setopt_array($ch, [
+    CURLOPT_POST           =&gt; true,
+    CURLOPT_POSTFIELDS     =&gt; $payload,
+    CURLOPT_RETURNTRANSFER =&gt; true,
+    CURLOPT_SSL_VERIFYPEER =&gt; true,
+    CURLOPT_TIMEOUT        =&gt; 30,
+]);
+$result = curl_exec($ch);
+$code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($code &gt;= 200 &amp;&amp; $code &lt; 300) {
+    http_response_code(200);
+    echo json_encode(['status' =&gt; 'success']);
+} else {
+    http_response_code(502);
+    echo json_encode(['error' =&gt; 'redcap rejected', 'code' =&gt; $code]);
+}</code></pre>
+
+    <ol>
+      <li>Have lab IT place the file behind HTTPS at e.g.
+        <code>https://yourlab.dept.osu.edu/ema-proxy.php</code>.</li>
+      <li>Set environment variables (Apache: <code>SetEnv</code> in the vhost config;
+        nginx + PHP-FPM: <code>env[REDCAP_TOKEN] = ...</code> in pool config).</li>
+      <li>Paste <code>https://yourlab.dept.osu.edu/ema-proxy.php?auth=&lt;shared-secret&gt;</code>
+        into EMA Forge's Webhook URL field.</li>
+      <li>Re-export. Test end-to-end.</li>
+    </ol>
+
+    <p><strong>Edit the <code>redcap_event_name</code></strong> to match your project's
+      arm/event scheme — REDCap will reject the record otherwise.</p>
+  </div>
+</details>
+
+<!-- ==========================================================
+     AWS LAMBDA → S3
+     ========================================================== -->
+
+<h3 id="webhook-aws">AWS Lambda → S3 <span class="status-pill stable">STABLE</span></h3>
+
+<p>For labs standardised on AWS. Cost is roughly $0–3 per month at EMA
+  scale: Lambda's free tier covers ~1M requests/month indefinitely, and
+  S3 storage runs about $0.023 per GB-month. Output shape mirrors the
+  Cloudflare R2 recipe (one JSON file per session, partitioned by
+  participant/day), so analysis pipelines are interchangeable.</p>
+
+<details>
+  <summary>Full step-by-step setup (click to expand)</summary>
+  <div class="details-body">
+    <ol>
+      <li>Create an S3 bucket: <code>aws s3 mb s3://ema-forge-sessions-&lt;you&gt;</code>.</li>
+      <li>Block all public access on the bucket (default is correct).</li>
+      <li>Create a Lambda function (Node.js 20.x runtime) with this code:</li>
+    </ol>
+
+    <pre><code>import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+const s3     = new S3Client({ region: process.env.AWS_REGION });
+const BUCKET = process.env.BUCKET_NAME;
+
+export const handler = async (event) =&gt; {
+  const cors = {
+    'Access-Control-Allow-Origin':  '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  if (event.requestContext?.http?.method === 'OPTIONS') {
+    return { statusCode: 200, headers: cors };
+  }
+
+  try {
+    const body = JSON.parse(event.body);
+    const pid  = String(body.participant_id || 'unknown');
+    const day  = String(body.day || '0');
+    const win  = String(body.window_id || 'na');
+    const ts   = Date.now();
+    const key  = `sessions/${pid}/day-${day}/${win}_${ts}.json`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket:      BUCKET,
+      Key:         key,
+      Body:        JSON.stringify(body),
+      ContentType: 'application/json',
+      Metadata:    { participantid: pid, day, windowid: win }
+    }));
+
+    return {
+      statusCode: 200,
+      headers:    { ...cors, 'Content-Type': 'application/json' },
+      body:       JSON.stringify({ status: 'success', key })
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      headers:    { ...cors, 'Content-Type': 'application/json' },
+      body:       JSON.stringify({ error: err.message })
+    };
+  }
+};</code></pre>
+
+    <ol start="4">
+      <li>Lambda execution role: attach an inline policy allowing
+        <code>s3:PutObject</code> on <code>arn:aws:s3:::ema-forge-sessions-&lt;you&gt;/*</code>.</li>
+      <li>Environment variables: <code>BUCKET_NAME</code>.</li>
+      <li>Add an API Gateway HTTP API trigger (not REST API — HTTP API is
+        cheaper and simpler). Configure a default route <code>POST /</code>.</li>
+      <li>Enable CORS on the API: allow origin <code>*</code>, methods
+        <code>POST, OPTIONS</code>, headers <code>Content-Type</code>.</li>
+      <li>Copy the invoke URL. Paste into EMA Forge's Webhook URL field.</li>
+    </ol>
+
+    <p><strong>For analysis</strong>, sync via aws-cli or
+      <code>aws.s3::save_object()</code> in R. The bucket layout
+      (<code>sessions/&lt;pid&gt;/day-&lt;n&gt;/&lt;window&gt;_&lt;ts&gt;.json</code>)
+      makes per-participant or per-day pulls trivial.</p>
+  </div>
+</details>
+
+<!-- ==========================================================
+     CAUTIONS (KEEP THE EXISTING SECTION — JUST MOVE IT HERE)
+     ========================================================== -->
 
           <h3 id="webhook-cautions">Cautions and gotchas</h3>
           <ul>
