@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>IDT Tester — Interoceptive Drift Task</title>
+
+<!--
+================================================================================
+  INTEROCEPTIVE DRIFT TASK (IDT) — standalone tester / paradigm sandbox
+  Placeholder name. Slots next to HCT / HDT / PAT. Rename freely.
+
+  Lets you feel the participant experience and inspect the data contract BEFORE
+  committing it to a Forge module. Deliberately not a module.
+
+  WIRED AGAINST THE REAL epat-core CONTRACT (read from templates/epat-core.js):
+    - core.BeatDetector.start({ video, canvas, onBeatCb, onSqiUpdateCb,
+        onFingerChangeCb, ... })  -- async, owns the camera + torch.
+    - onBeatCb(beat) where beat = { instantBPM, averageBPM, instantPeriod,
+        averagePeriod, time }. instantPeriod/averagePeriod are SECONDS;
+        time is a performance.now()-domain ms stamp. (readme: all beat stamps
+        use performance.now().)
+    - onSqiUpdateCb(sqiRed, sqiGreen, activeChannel) every ~1s; we keep the
+        ACTIVE channel's value. Scale matches your modules: SQI_WARN = 0.004,
+        SQI_GOOD = 0.008 (filtered peak-to-peak).
+    - Detector emits beats only once fingerPresent && calPhase==='locked', so
+        the acquisition gate just waits for the first few real beats.
+    - Camera stays alive for the whole session; the trial<->idle handoff is a
+        callback swap (here via a single dispatcher), NOT a stop/start.
+
+  THE ONE THING I COULD NOT see: the namespace HANDLE epat-core exports its
+  parts under. resolveCore() below probes window.core, a few likely globals,
+  and bare lexical globals (BeatDetector/AudioEngine), since ppgtester.html
+  references AudioEngine/BeatDetector bare. If the live source fails to find
+  the core, that resolver is the single place to fix -- tell me the real handle
+  and I'll hard-wire it.
+
+  Beat scheduling: tones lock to the real beat TIME but use the rolling MEDIAN
+  ibi (not instant) to predict the next beat -- so a single missed/extra beat
+  can't masquerade as drift (the phantom-drift guard we discussed). flaggedBeats
+  counts >30% IBI jumps (your IBI_CHANGE_THRESHOLD); meanSQI/sqiBadSecs annotate
+  quality so you can see the validity threat in the data.
+================================================================================
+-->
+<script src="/templates/epat-core.js" onerror="window.__epatCoreLoadError=true"></script>
+
+<style>
+  :root{
+    --bg:#0d0f12; --panel:#14181d; --panel-2:#1b2027; --line:#272d36;
+    --ink:#e7ecf2; --ink-dim:#8b95a3; --ink-faint:#5b6573;
+    --accent:#5ec8c0; --accent-2:#e0a85e; --bad:#d6675f; --good:#6fbf73;
+    --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --sans:'Spline Sans','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-family:var(--mono);font-weight:600;font-size:18px;letter-spacing:.06em;margin:0 0 2px;text-transform:uppercase}
+  .sub{color:var(--ink-dim);font-size:13px;margin-bottom:24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 18px 6px;margin-bottom:16px}
+  .card h2{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 14px;font-weight:600}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+  .fld label{font-size:12px;color:var(--ink-dim)}
+  .fld .hint{font-size:11px;color:var(--ink-faint);line-height:1.35}
+  input[type=number],select,input[type=text]{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:9px 10px;font-family:var(--mono);font-size:13px;width:100%}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:13px;letter-spacing:.04em;cursor:pointer;background:var(--accent);color:#06120f;border:none;border-radius:8px;padding:12px 22px;font-weight:600;transition:filter .15s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--accent)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--ink-dim);margin-left:8px}
+  .pill.ok{color:var(--good);border-color:#2c4730}
+  .pill.warn{color:var(--accent-2);border-color:#4a3c22}
+  .pill.err{color:var(--bad);border-color:#4a2a27}
+
+  #runScreen{position:fixed;inset:0;background:#070809;display:none;z-index:50;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+  #runScreen.show{display:flex}
+  .stage-msg{max-width:540px}
+  .stage-msg .big{font-size:22px;font-weight:500;margin-bottom:14px;line-height:1.35}
+  .stage-msg .small{color:var(--ink-dim);font-size:14px}
+  .acq-dot{width:14px;height:14px;border-radius:50%;background:var(--ink-faint);margin:22px auto;transition:background .2s, transform .12s}
+  .acq-bar{width:240px;height:4px;border-radius:3px;background:#1b1f24;margin:18px auto;overflow:hidden}
+  .acq-bar > i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+
+  #listen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column}
+  #listen.show{display:flex}
+  .fixation{width:8px;height:8px;border-radius:50%;background:#3a424c}
+  .listen-hint{position:absolute;bottom:46px;left:0;right:0;color:#4a525c;font-size:13px;font-family:var(--mono);letter-spacing:.03em}
+  #tapTarget{position:absolute;inset:0;cursor:pointer}
+  #visualBox{width:120px;height:120px;border-radius:14px;background:#222933;opacity:.25;transition:opacity .04s, transform .04s;display:none}
+  #visualBox.on{opacity:1;background:var(--accent);transform:scale(1.06)}
+
+  #conf{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#070809}
+  #conf.show{display:flex}
+  #conf .q{font-size:18px;margin-bottom:8px}
+  #conf input[type=range]{width:320px;max-width:80vw;accent-color:var(--accent)}
+  #conf .scale{display:flex;justify-content:space-between;width:320px;max-width:80vw;color:var(--ink-faint);font-size:11px;font-family:var(--mono);margin-top:6px}
+  #conf .val{font-family:var(--mono);font-size:30px;color:var(--accent);margin:14px 0 18px}
+
+  .feedback{font-family:var(--mono);font-size:13px;color:var(--ink-dim);margin-top:10px;min-height:18px}
+  .progress{position:absolute;top:22px;left:0;right:0;color:var(--ink-faint);font-family:var(--mono);font-size:12px;letter-spacing:.08em}
+  .abort{position:absolute;top:18px;right:18px}
+
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+  th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--ink-dim);font-weight:500;letter-spacing:.04em}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media(max-width:620px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px}
+  .stat .k{font-size:11px;color:var(--ink-dim);font-family:var(--mono);letter-spacing:.05em}
+  .stat .v{font-size:22px;font-family:var(--mono);margin-top:4px}
+  .note{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:6px}
+  .tablewrap{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  svg text{font-family:var(--mono);font-size:10px;fill:var(--ink-dim)}
+</style>
+</head>
+<body>
+
+<!-- ===================== CONFIG / OPERATOR ===================== -->
+<div class="wrap" id="configScreen">
+  <h1>Interoceptive Drift Task<span class="pill" id="corePill">core: checking…</span></h1>
+  <div class="sub">Paradigm sandbox · method-of-limits on cardiac–audio phase · not a Forge module yet</div>
+
+  <div class="card">
+    <h2>Beat source</h2>
+    <div class="grid">
+      <div class="fld">
+        <label>Source</label>
+        <select id="cfgSource">
+          <option value="synthetic">synthetic — simulated heart (runs anywhere)</option>
+          <option value="yoked">yoked — replayed train, open-loop (exteroceptive control)</option>
+          <option value="visual">visual box — audiovisual feasibility ceiling</option>
+          <option value="epatcore">epat-core — live camera PPG (Forge only)</option>
+        </select>
+        <span class="hint">synthetic/yoked/visual need no camera. epat-core uses the live BeatDetector.</span>
+      </div>
+      <div class="fld">
+        <label>Synthetic mean HR (bpm)</label>
+        <input type="number" id="cfgBpm" value="68" min="40" max="120" step="1">
+        <span class="hint">Ignored for live PPG.</span>
+      </div>
+      <div class="fld">
+        <label>RSA jitter SD (ms, beat-to-beat)</label>
+        <input type="number" id="cfgJitter" value="35" min="0" max="120" step="1">
+        <span class="hint">Bounded, mean-reverting wobble. Drift must be picked out from this.</span>
+      </div>
+      <div class="fld">
+        <label>Baseline felt-beat offset (ms)</label>
+        <input type="number" id="cfgBaseline" value="0" min="-300" max="400" step="10">
+        <span class="hint">Stand-in for perceived-systole / PTT. Cancels out of a relative threshold. (0 for visual.)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trial structure</h2>
+    <div class="grid">
+      <div class="fld"><label>Drift trials per rate</label><input type="number" id="cfgPerRate" value="3" min="1" max="20" step="1"></div>
+      <div class="fld"><label>Drift rates (ms / s, comma-sep)</label><input type="text" id="cfgRates" value="6, 12, 24"><span class="hint">Multiple rates ⇒ test rate-invariance of Phi_detect.</span></div>
+      <div class="fld"><label>Catch trials (no drift)</label><input type="number" id="cfgCatch" value="4" min="0" max="40" step="1"><span class="hint">Taps on these = false alarms.</span></div>
+      <div class="fld"><label>Drift onset (ms into trial)</label><input type="number" id="cfgOnset" value="5000" min="0" max="20000" step="500"><span class="hint">Locked baseline before the ramp begins.</span></div>
+      <div class="fld"><label>Max trial length (ms)</label><input type="number" id="cfgMaxTrial" value="30000" min="5000" max="90000" step="1000"></div>
+      <div class="fld"><label>Assumed RT for Phi correction (ms)</label><input type="number" id="cfgRT" value="0" min="0" max="1500" step="50"><span class="hint">Linear ramp ⇒ Phi_corrected = Phi_raw − rate·RT.</span></div>
+    </div>
+    <div class="row" style="margin-bottom:14px"><label style="font-size:12px;color:var(--ink-dim)"><input type="checkbox" id="cfgFeedback"> show post-trial feedback (debug only)</label></div>
+  </div>
+
+  <div class="card">
+    <h2>Tone</h2>
+    <div class="grid">
+      <div class="fld"><label>Frequency (Hz)</label><input type="number" id="cfgFreq" value="1000" min="200" max="4000" step="50"></div>
+      <div class="fld"><label>Duration (ms)</label><input type="number" id="cfgDur" value="55" min="20" max="200" step="5"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn" id="startBtn">Begin session</button>
+    <span class="hint" style="color:var(--ink-faint)">Headphones. Sit still for live PPG. Space or tap = "drifting".</span>
+  </div>
+</div>
+
+<!-- ===================== RUN / PARTICIPANT ===================== -->
+<div id="runScreen">
+  <div class="progress" id="progress"></div>
+  <button class="btn ghost abort" id="abortBtn">Abort</button>
+
+  <div class="stage-msg" id="stage">
+    <div class="big" id="stageBig">Place your fingertip gently over the camera.</div>
+    <div class="acq-dot" id="acqDot"></div>
+    <div class="acq-bar"><i id="acqFill"></i></div>
+    <div class="small" id="stageSmall">Acquiring a stable pulse…</div>
+  </div>
+
+  <div id="listen">
+    <div id="visualBox"></div>
+    <div class="fixation" id="fixation"></div>
+    <div class="listen-hint" id="listenHint">Tap anywhere the moment the tones drift out of time.</div>
+    <div id="tapTarget"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div id="conf">
+    <div class="q">How sure are you that the tones drifted?</div>
+    <div class="val" id="confVal">50</div>
+    <input type="range" id="confRange" min="0" max="100" value="50">
+    <div class="scale"><span>not at all</span><span>completely</span></div>
+    <button class="btn" id="confNext" style="margin-top:26px">Next</button>
+  </div>
+
+  <!-- hidden capture surface for live epat-core -->
+  <video id="video-feed" playsinline muted style="display:none"></video>
+  <canvas id="sampling-canvas" style="display:none"></canvas>
+</div>
+
+<!-- ===================== RESULTS ===================== -->
+<div class="wrap" id="resultsScreen" style="display:none">
+  <h1>Session results</h1>
+  <div class="sub" id="resSub"></div>
+  <div class="card">
+    <h2>Summary</h2>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="note" id="sdtNote"></div>
+  </div>
+  <div class="card">
+    <h2>Drift rate × Phi at detection</h2>
+    <div id="scatter"></div>
+    <div class="note">Flat across rate ⇒ phase-threshold-limited (the interpretation you want). Rising with rate ⇒ RT / temporal-integration limited.</div>
+  </div>
+  <div class="card">
+    <h2>Trials</h2>
+    <div class="tablewrap"><table id="trialTable"></table></div>
+  </div>
+  <div class="row">
+    <button class="btn" id="exportJson">Export JSON</button>
+    <button class="btn ghost" id="exportCsv">Export CSV</button>
+    <button class="btn ghost" id="restart">New session</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const now = () => performance.now();
+const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+const r1 = x => Math.round(x*10)/10;
+const randn = () => { let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+const uid = () => 'idt_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+const median = a => { if(!a.length) return 0; const s=[...a].sort((x,y)=>x-y); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const SQI_WARN = 0.004;   // matches epat-core / module thresholds
+const IBI_JUMP  = 0.30;   // matches IBI_CHANGE_THRESHOLD
+
+/* resolve the epat-core namespace however it is exported */
+function resolveCore(){
+  try { if (typeof core !== 'undefined' && core && core.BeatDetector) return core; } catch(e){}
+  if (window.core && window.core.BeatDetector) return window.core;
+  for (const k of ['EPATCore','ePATCore','epatCore','EpatCore']) if (window[k] && window[k].BeatDetector) return window[k];
+  try {
+    if (typeof BeatDetector !== 'undefined' && BeatDetector) {
+      return { BeatDetector, AudioEngine:(typeof AudioEngine!=='undefined'?AudioEngine:null) };
+    }
+  } catch(e){}
+  return null;
+}
+(function(){
+  const pill=$('#corePill');
+  const c = !window.__epatCoreLoadError && resolveCore();
+  if (c){ pill.textContent='core: loaded'; pill.className='pill ok'; }
+  else { pill.textContent='core: not loaded (synthetic ok)'; pill.className='pill warn'; }
+})();
+
+/* ---------- beat sources: start(onBeat{t,ibi,sqi}) / stop() ---------- */
+class SyntheticBeatSource {
+  constructor({bpm=68,jitterSD=35}={}){ this.meanIbi=60000/bpm; this.jitterSD=jitterSD; this._ph=0; }
+  start(onBeat){
+    this.onBeat=onBeat; this._stopped=false;
+    const tick=()=>{ if(this._stopped) return;
+      this._ph += 2*Math.PI*0.25*(this.meanIbi/1000);
+      const ibi=clamp(this.meanIbi+Math.sin(this._ph)*this.jitterSD*0.8+randn()*this.jitterSD*0.3,400,1600);
+      this.onBeat({t:now(),ibi,sqi:0.5});
+      this._timer=setTimeout(tick,ibi);
+    };
+    this._timer=setTimeout(()=>{ this.onBeat({t:now(),ibi:this.meanIbi,sqi:0.5}); tick(); },600);
+  }
+  stop(){ this._stopped=true; clearTimeout(this._timer); }
+}
+class RecordedBeatSource {
+  constructor(seq){ this.seq=seq.slice(); this.i=0; }
+  static generate(n=120,bpm=68,jitterSD=35){ const mean=60000/bpm,out=[]; let ph=0;
+    for(let k=0;k<n;k++){ ph+=2*Math.PI*0.25*(mean/1000); out.push(clamp(mean+Math.sin(ph)*jitterSD*0.8+randn()*jitterSD*0.3,400,1600)); } return out; }
+  start(onBeat){ this.onBeat=onBeat; this._stopped=false;
+    const tick=()=>{ if(this._stopped) return; const ibi=this.seq[this.i%this.seq.length]; this.i++;
+      this.onBeat({t:now(),ibi,sqi:null}); this._timer=setTimeout(tick,ibi); };
+    this._timer=setTimeout(()=>{ this.onBeat({t:now(),ibi:this.seq[0],sqi:null}); this.i=1; tick(); },600);
+  }
+  stop(){ this._stopped=true; clearTimeout(this._timer); }
+}
+class EpatCoreBeatSource {
+  async start(onBeat){
+    const core=resolveCore();
+    if(!core || !core.BeatDetector) throw new Error('epat-core namespace not found — see resolveCore()');
+    this.core=core;
+    const video=$('#video-feed'), canvas=$('#sampling-canvas');
+    await core.BeatDetector.start({
+      video, canvas,
+      onBeatCb:(beat)=> onBeat({ t:beat.time, ibi:beat.instantPeriod*1000, sqi:null }),  // period is SECONDS
+      onSqiUpdateCb:(sqiRed,sqiGreen,active)=>{ const s=(active==='green')?sqiGreen:sqiRed; State.curSqi=s; if(State.onSqi)State.onSqi(s); },
+      onFingerChangeCb:(p)=>{ State.fingerPresent=p; }
+    });
+  }
+  stop(){ try{ this.core && this.core.BeatDetector.stop(); }catch(e){} }
+}
+
+/* ---------- tone scheduler (audio-clock scheduled) ---------- */
+class ToneScheduler {
+  constructor(){ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }
+  resume(){ if(this.ctx.state==='suspended') return this.ctx.resume(); }
+  atPerf(targetPerfMs,{freq=1000,durMs=55,gain=0.22}={}){
+    const lead=(targetPerfMs-now())/1000;
+    const when=this.ctx.currentTime+Math.max(0.004,lead);
+    const osc=this.ctx.createOscillator(),g=this.ctx.createGain();
+    osc.type='sine'; osc.frequency.value=freq; osc.connect(g); g.connect(this.ctx.destination);
+    const a=0.006,d=durMs/1000;
+    g.gain.setValueAtTime(0,when);
+    g.gain.linearRampToValueAtTime(gain,when+a);
+    g.gain.exponentialRampToValueAtTime(0.0001,when+a+d);
+    osc.start(when); osc.stop(when+a+d+0.03);
+  }
+}
+function scheduleTone(targetPerf){ State.scheduler.atPerf(targetPerf,{freq:State.cfg.freq,durMs:State.cfg.dur}); }
+function flashBox(targetPerf){ const box=$('#visualBox'); const lead=Math.max(0,targetPerf-now());
+  setTimeout(()=>{ box.classList.add('on'); setTimeout(()=>box.classList.remove('on'),70); },lead); }
+
+/* ---------- session state ---------- */
+const State = { cfg:null, scheduler:null, source:null, sessionId:null, startedAt:null,
+  trials:[], plan:[], idx:0, cur:null, active:false, dispatch:null, onSqi:null, curSqi:null, fingerPresent:false };
+
+function readConfig(){
+  const rates=$('#cfgRates').value.split(',').map(s=>parseFloat(s.trim())).filter(x=>!isNaN(x)&&x>0);
+  const source=$('#cfgSource').value;
+  return { source, bpm:+$('#cfgBpm').value, jitter:+$('#cfgJitter').value, baseline:+$('#cfgBaseline').value,
+    perRate:+$('#cfgPerRate').value, rates:rates.length?rates:[12], catch:+$('#cfgCatch').value,
+    onset:+$('#cfgOnset').value, maxTrial:+$('#cfgMaxTrial').value, rt:+$('#cfgRT').value,
+    feedback:$('#cfgFeedback').checked, freq:+$('#cfgFreq').value, dur:+$('#cfgDur').value, visual:source==='visual' };
+}
+function buildPlan(cfg){ const plan=[];
+  cfg.rates.forEach(rate=>{ for(let k=0;k<cfg.perRate;k++) plan.push({type:'drift',rate,sign:(Math.random()<0.5?-1:1)}); });
+  for(let k=0;k<cfg.catch;k++) plan.push({type:'catch',rate:0,sign:1});
+  return shuffle(plan);
+}
+function makeSource(cfg){
+  if(cfg.source==='synthetic'||cfg.source==='visual') return new SyntheticBeatSource({bpm:cfg.bpm,jitterSD:cfg.jitter});
+  if(cfg.source==='yoked') return new RecordedBeatSource(RecordedBeatSource.generate(120,cfg.bpm,cfg.jitter));
+  if(cfg.source==='epatcore') return new EpatCoreBeatSource();
+}
+
+/* ---------- lifecycle ---------- */
+async function startSession(){
+  const cfg=readConfig(); State.cfg=cfg;
+  State.sessionId=uid(); State.startedAt=new Date().toISOString();
+  State.trials=[]; State.idx=0; State.plan=buildPlan(cfg);
+  State.scheduler=new ToneScheduler(); await State.scheduler.resume();
+  State.dispatch=null; State.curSqi=(cfg.source==='epatcore')?null:0.5; State.fingerPresent=false;
+
+  $('#configScreen').style.display='none'; $('#resultsScreen').style.display='none';
+  $('#runScreen').classList.add('show');
+
+  $('#listenHint').textContent = cfg.visual ? 'Tap anywhere the moment the tone drifts out of the box.'
+    : (cfg.source==='yoked' ? 'Tap anywhere the moment the tones drift out of time.'
+      : 'Tap anywhere the moment the tones drift out of time with your heartbeat.');
+  $('#visualBox').style.display = cfg.visual?'block':'none';
+  $('#fixation').style.display = cfg.visual?'none':'block';
+
+  // single source for the whole session; a dispatcher routes each beat
+  State.source = makeSource(cfg);
+  const onBeat = (b)=>{ if(b.sqi!=null) State.curSqi=b.sqi; if(State.dispatch) State.dispatch(b); };
+  try { const r=State.source.start(onBeat); if(r&&r.then) r.catch(acqFail); }
+  catch(e){ return acqFail(e); }
+
+  beginAcquisition();
+}
+
+function acqFail(err){
+  showStage('acq');
+  $('#stageBig').textContent='Could not start the beat source.';
+  $('#stageSmall').textContent=(err&&err.message)||'Try the synthetic source.';
+}
+
+function beginAcquisition(){
+  showStage('acq');
+  const cfg=State.cfg;
+  $('#stageBig').textContent = cfg.source==='epatcore' ? 'Place your fingertip gently over the camera.'
+    : (cfg.visual ? 'Watch the box. Listen for the tone.' : 'Get ready. Headphones on.');
+  $('#stageSmall').textContent = cfg.source==='epatcore' ? 'Acquiring a stable pulse…' : 'Acquiring rhythm…';
+  const fill=$('#acqFill'), dot=$('#acqDot'); let beats=0;
+  State.dispatch = (b)=>{
+    beats++;
+    dot.style.background='var(--accent)'; dot.style.transform='scale(1.5)';
+    setTimeout(()=>dot.style.transform='scale(1)',90);
+    fill.style.width=clamp(beats/6*100,0,100)+'%';
+    if(beats>=6){ State.dispatch=null; setTimeout(startNextTrial,500); }
+  };
+  State.onSqi = (s)=>{ if(s!=null && s<SQI_WARN && State.cfg.source==='epatcore') $('#stageSmall').textContent='Press a little firmer…'; };
+}
+
+function startNextTrial(){
+  if(State.idx>=State.plan.length) return finishSession();
+  const spec=State.plan[State.idx], cfg=State.cfg;
+  showStage('listen'); $('#feedback').textContent='';
+  $('#progress').textContent=`trial ${State.idx+1} / ${State.plan.length}`;
+
+  State.cur = { index:State.idx, type:spec.type, rate:spec.rate, sign:spec.sign, onsetMs:cfg.onset,
+    beats:[], tones:[], sqi:[], recentIbis:[], lastIbi:0, flaggedBeats:0,
+    trialStart:null, tapLatencyMs:null, phiRawAtTap:null, detected:false, startedAt:new Date().toISOString() };
+  State.active=true;
+  State.dispatch = trialBeat;
+  State._timeout = setTimeout(()=>endTrial(false), cfg.maxTrial);
+}
+
+function trialBeat(b){
+  const c=State.cur; if(!c||!State.active) return;
+  if(c.trialStart==null) c.trialStart=b.t;
+  c.beats.push({t:Math.round(b.t-c.trialStart),ibi:Math.round(b.ibi)});
+  if(c.lastIbi>0 && Math.abs(b.ibi-c.lastIbi)/c.lastIbi>IBI_JUMP) c.flaggedBeats++;
+  c.lastIbi=b.ibi;
+  c.recentIbis.push(b.ibi); if(c.recentIbis.length>10) c.recentIbis.shift();
+  if(State.curSqi!=null) c.sqi.push(State.curSqi);
+
+  const medIbi = median(c.recentIbis) || b.ibi;        // robust prediction (phantom-drift guard)
+  const predictedNext = b.t + medIbi;
+  const elapsedS = (predictedNext - c.trialStart)/1000;
+  let phi=0;
+  if(c.type==='drift' && elapsedS*1000 > c.onsetMs) phi = c.sign * c.rate * (elapsedS - c.onsetMs/1000);
+
+  if(State.cfg.visual){ flashBox(predictedNext); scheduleTone(predictedNext+phi); }
+  else scheduleTone(predictedNext + State.cfg.baseline + phi);
+  c.tones.push({t:Math.round(predictedNext-c.trialStart),phi:r1(phi)});
+}
+
+function onTap(){
+  if(!State.active) return;
+  const c=State.cur; if(c.trialStart==null) return;
+  const elapsed=now()-c.trialStart;
+  c.tapLatencyMs=Math.round(elapsed); c.detected=true;
+  c.phiRawAtTap = (c.type==='drift' && elapsed>c.onsetMs) ? r1(c.sign*c.rate*((elapsed-c.onsetMs)/1000)) : 0;
+  endTrial(true);
+}
+
+function endTrial(detected){
+  if(!State.active) return;
+  State.active=false; clearTimeout(State._timeout); State.dispatch=null;
+  const c=State.cur; c.detected=detected;
+  if(State.cfg.feedback){
+    let msg = c.type==='catch' ? (detected?'false alarm (no drift present)':'correct — no drift')
+            : (detected?`detected · |Phi|≈${Math.abs(c.phiRawAtTap)}ms · ${c.tapLatencyMs}ms`:'missed');
+    $('#feedback').textContent=msg;
+  }
+  setTimeout(askConfidence, State.cfg.feedback?900:200);
+}
+
+function askConfidence(){ showStage('conf'); $('#confRange').value=50; $('#confVal').textContent='50'; }
+function commitConfidence(){
+  State.cur.confidence=+$('#confRange').value;
+  State.trials.push(State.cur); State.idx++;
+  showStage('listen'); setTimeout(startNextTrial,350);
+}
+function abortSession(){ State.active=false; clearTimeout(State._timeout); State.dispatch=null;
+  State.source&&State.source.stop(); if(State.trials.length) finishSession(); else resetToConfig(); }
+
+function showStage(which){
+  $('#stage').style.display = which==='acq'?'block':'none';
+  $('#listen').classList.toggle('show',which==='listen');
+  $('#conf').classList.toggle('show',which==='conf');
+}
+
+/* ---------- analysis + results ---------- */
+function summarize(){
+  const t=State.trials;
+  const drift=t.filter(x=>x.type==='drift'), catch_=t.filter(x=>x.type==='catch');
+  const hits=drift.filter(x=>x.detected).length, misses=drift.length-hits;
+  const fa=catch_.filter(x=>x.detected).length, cr=catch_.length-fa;
+  const hitRate=drift.length?hits/drift.length:null, faRate=catch_.length?fa/catch_.length:null;
+  const sens=(hitRate!=null&&faRate!=null)?hitRate-faRate:null;
+  const det=drift.filter(x=>x.detected&&x.phiRawAtTap!=null);
+  const meanPhi=det.length?det.reduce((a,x)=>a+Math.abs(x.phiRawAtTap),0)/det.length:null;
+  const meanLat=det.length?det.reduce((a,x)=>a+x.tapLatencyMs,0)/det.length:null;
+  const byRate={}; det.forEach(x=>{(byRate[x.rate]=byRate[x.rate]||[]).push(Math.abs(x.phiRawAtTap));});
+  return {hits,misses,fa,cr,hitRate,faRate,sens,meanPhi,meanLat,byRate,det};
+}
+function renderResults(){
+  const s=summarize(), cfg=State.cfg;
+  $('#resSub').textContent=`${State.sessionId} · source: ${cfg.source} · ${State.trials.length} trials · ${State.startedAt}`;
+  const stat=(k,v)=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  $('#statGrid').innerHTML =
+    stat('hit rate', s.hitRate!=null?(s.hitRate*100).toFixed(0)+'%':'—') +
+    stat('false-alarm rate', s.faRate!=null?(s.faRate*100).toFixed(0)+'%':'—') +
+    stat('sensitivity (H−FA)', s.sens!=null?s.sens.toFixed(2):'—') +
+    stat('mean Phi@detect', s.meanPhi!=null?Math.round(s.meanPhi)+' ms':'—');
+  $('#sdtNote').innerHTML = `Hits = drift trials detected; FA = taps on catch trials. The real sensitivity test is coupled (heart-locked) vs yoked (open-loop) on the same drift set — run both and compare.` +
+    (cfg.rt>0?` RT-corrected Phi subtracts rate·${cfg.rt}ms.`:` Set an assumed RT to see RT-corrected Phi.`);
+  renderScatter(s,cfg); renderTable(cfg);
+}
+function renderScatter(s,cfg){
+  const W=560,H=240,m={l:48,r:16,t:14,b:34};
+  const pts=s.det.map(x=>({x:x.rate,y:Math.abs(x.phiRawAtTap)}));
+  if(!pts.length){ $('#scatter').innerHTML='<div class="note">No detected drift trials to plot.</div>'; return; }
+  const xs=cfg.rates, xmin=Math.min(...xs)*0.6, xmax=Math.max(...xs)*1.15;
+  const ymax=Math.max(50,Math.max(...pts.map(p=>p.y))*1.15);
+  const px=v=>m.l+(v-xmin)/(xmax-xmin)*(W-m.l-m.r), py=v=>H-m.b-(v/ymax)*(H-m.t-m.b);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+  svg+=`<line x1="${m.l}" y1="${H-m.b}" x2="${W-m.r}" y2="${H-m.b}" stroke="#272d36"/><line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${H-m.b}" stroke="#272d36"/>`;
+  for(let i=0;i<=4;i++){ const yv=ymax*i/4; svg+=`<text x="${m.l-8}" y="${py(yv)+3}" text-anchor="end">${Math.round(yv)}</text><line x1="${m.l}" y1="${py(yv)}" x2="${W-m.r}" y2="${py(yv)}" stroke="#1b2027"/>`; }
+  Object.keys(s.byRate).forEach(r=>{ const arr=s.byRate[r],mean=arr.reduce((a,b)=>a+b,0)/arr.length; svg+=`<line x1="${px(+r)-16}" y1="${py(mean)}" x2="${px(+r)+16}" y2="${py(mean)}" stroke="#e0a85e" stroke-width="2"/>`; });
+  pts.forEach(p=>{ svg+=`<circle cx="${px(p.x)}" cy="${py(p.y)}" r="4" fill="#5ec8c0" opacity="0.85"/>`; });
+  xs.forEach(r=>{ svg+=`<text x="${px(r)}" y="${H-m.b+16}" text-anchor="middle">${r}</text>`; });
+  svg+=`<text x="${W/2}" y="${H-4}" text-anchor="middle">drift rate (ms/s)</text><text x="14" y="${H/2}" transform="rotate(-90 14 ${H/2})" text-anchor="middle">|Phi| at detection (ms)</text></svg>`;
+  $('#scatter').innerHTML=svg;
+}
+function renderTable(cfg){
+  const head=`<tr><th>#</th><th>type</th><th>rate</th><th>dir</th><th>det?</th><th>lat (ms)</th><th>Phi raw</th><th>Phi −RT</th><th>conf</th><th>flag</th><th>SQĪ</th></tr>`;
+  const rows=State.trials.map(t=>{
+    const dir=t.type==='catch'?'—':(t.sign<0?'delay':'advance');
+    const phiC=(t.type==='drift'&&t.detected&&t.phiRawAtTap!=null)?Math.round(Math.abs(t.phiRawAtTap)-t.rate*cfg.rt/1000):'—';
+    const sqiMean=t.sqi.length?(t.sqi.reduce((a,b)=>a+b,0)/t.sqi.length).toFixed(4):'—';
+    return `<tr><td>${t.index+1}</td><td>${t.type}</td><td>${t.rate||'—'}</td><td>${dir}</td><td>${t.detected?'yes':'no'}</td><td>${t.tapLatencyMs??'—'}</td><td>${t.type==='drift'?(t.phiRawAtTap!=null?Math.abs(t.phiRawAtTap):'—'):'—'}</td><td>${phiC}</td><td>${t.confidence??'—'}</td><td>${t.flaggedBeats}</td><td>${sqiMean}</td></tr>`;
+  }).join('');
+  $('#trialTable').innerHTML=head+rows;
+}
+
+function buildExport(){
+  const s=summarize();
+  return { task:'IDT', version:'tester-0.2', sessionId:State.sessionId, startedAt:State.startedAt, config:State.cfg,
+    summary:{ hits:s.hits,misses:s.misses,falseAlarms:s.fa,correctRejections:s.cr,hitRate:s.hitRate,faRate:s.faRate,
+      sensitivity:s.sens,meanPhiAtDetectMs:s.meanPhi,meanDetectLatencyMs:s.meanLat,
+      byRateMeanPhi:Object.fromEntries(Object.entries(s.byRate).map(([k,v])=>[k,v.reduce((a,b)=>a+b,0)/v.length])) },
+    trials:State.trials };
+}
+function download(name,text,type){ const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u;a.download=name;a.click(); setTimeout(()=>URL.revokeObjectURL(u),1500); }
+function exportJson(){ download(`${State.sessionId}.json`,JSON.stringify(buildExport(),null,2),'application/json'); }
+function exportCsv(){
+  const cfg=State.cfg;
+  const cols=['index','type','rate','direction','detected','tapLatencyMs','phiRawAtTap','phiRTcorrected','confidence','flaggedBeats','meanSQI','nBeats','nTones'];
+  const lines=[cols.join(',')];
+  State.trials.forEach(t=>{ const dir=t.type==='catch'?'':(t.sign<0?'delay':'advance');
+    const phiC=(t.type==='drift'&&t.detected&&t.phiRawAtTap!=null)?(Math.abs(t.phiRawAtTap)-t.rate*cfg.rt/1000):'';
+    const sqiMean=t.sqi.length?(t.sqi.reduce((a,b)=>a+b,0)/t.sqi.length):'';
+    lines.push([t.index+1,t.type,t.rate||'',dir,t.detected?1:0,t.tapLatencyMs??'',(t.type==='drift'&&t.phiRawAtTap!=null)?Math.abs(t.phiRawAtTap):'',phiC,t.confidence??'',t.flaggedBeats,sqiMean,t.beats.length,t.tones.length].join(',')); });
+  download(`${State.sessionId}.csv`,lines.join('\n'),'text/csv');
+}
+function finishSession(){ State.active=false; State.source&&State.source.stop(); $('#runScreen').classList.remove('show'); $('#resultsScreen').style.display='block'; renderResults(); window.scrollTo(0,0); }
+function resetToConfig(){ $('#runScreen').classList.remove('show'); $('#resultsScreen').style.display='none'; $('#configScreen').style.display='block'; }
+
+/* ---------- wiring ---------- */
+$('#startBtn').addEventListener('click',startSession);
+$('#abortBtn').addEventListener('click',abortSession);
+$('#confRange').addEventListener('input',e=>$('#confVal').textContent=e.target.value);
+$('#confNext').addEventListener('click',commitConfidence);
+$('#exportJson').addEventListener('click',exportJson);
+$('#exportCsv').addEventListener('click',exportCsv);
+$('#restart').addEventListener('click',resetToConfig);
+$('#tapTarget').addEventListener('pointerdown',e=>{e.preventDefault();onTap();});
+window.addEventListener('keydown',e=>{ if(e.code==='Space'&&State.active){e.preventDefault();onTap();} });
+</script>
+</body>
+</html>
