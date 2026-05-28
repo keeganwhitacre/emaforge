@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase-Drift Interoception Task</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Ensure this points to your existing epat-core.js file -->
+  <script src="epat-core.js"></script>
+  <style>
+    /* Pulse animation for the preview circle to show it's working */
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulse-active { animation: pulse-ring 1s infinite; }
+    
+    /* Giant invisible tap target */
+    #tap-target {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 flex flex-col h-screen overflow-hidden font-sans">
+
+  <!-- Header -->
+  <header class="p-4 bg-gray-900 border-b border-gray-800 flex justify-between items-center z-10 relative">
+    <h1 class="text-lg font-bold text-gray-200">Phase-Drift Paradigm</h1>
+    <div id="trial-counter" class="text-sm text-gray-400 font-mono">Trial 0 / 0</div>
+  </header>
+
+  <!-- Main Interaction Area (The Giant Button) -->
+  <main id="tap-target" class="flex-1 flex flex-col items-center justify-center relative cursor-pointer active:bg-gray-900 transition-colors">
+    
+    <!-- Status Text -->
+    <div id="status-display" class="text-center mb-8 px-6 z-10 pointer-events-none">
+      <h2 id="primary-instruction" class="text-2xl font-bold mb-2">Ready to Start</h2>
+      <p id="secondary-instruction" class="text-gray-400">Press the button below to initialize.</p>
+    </div>
+
+    <!-- Camera Preview Circle -->
+    <div class="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-700 bg-black z-10 pointer-events-none transition-colors duration-300" id="preview-container">
+      <!-- Hidden video element for core -->
+      <video id="video-feed" playsinline autoplay muted class="hidden"></video>
+      <!-- Canvas for visual feedback -->
+      <canvas id="preview-canvas" width="120" height="120" class="w-full h-full object-cover"></canvas>
+    </div>
+
+    <!-- Hidden canvas for ePAT Core sampling -->
+    <canvas id="sampling-canvas" class="hidden"></canvas>
+
+    <!-- Action Button (Starts context/trials) -->
+    <button id="action-btn" class="mt-12 px-8 py-3 bg-red-600 hover:bg-red-500 rounded-full font-bold shadow-lg z-20 transition-transform active:scale-95">
+      Initialize Sensor & Audio
+    </button>
+  </main>
+
+  <!-- Output Console (The Data) -->
+  <footer class="h-1/3 bg-gray-900 border-t border-gray-800 p-4 flex flex-col z-10 relative">
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-xs uppercase tracking-wider text-gray-500 font-bold">Data Output Log</h3>
+      <div id="sqi-badge" class="text-xs px-2 py-1 bg-gray-800 rounded text-gray-400 font-mono">SQI: ---</div>
+    </div>
+    <div id="console-log" class="flex-1 overflow-y-auto text-sm font-mono text-gray-300 space-y-1 pb-4">
+      <!-- Logs go here -->
+    </div>
+  </footer>
+
+  <script>
+    // --- Configuration ---
+    const DRIFT_STEP_MS = 15;        // How many ms the tone drifts per beat
+    const STABILIZATION_BEATS = 8;   // Beats at 0ms delay before drift starts
+    const MAX_ACTIVE_BEATS = 45;     // Max beats before trial times out
+
+    // --- State Machine ---
+    let core = window.ePATCore;
+    let state = 'IDLE'; // IDLE, STABILIZING, ACTIVE, FINISHED
+    let trialCount = 0;
+    
+    // Trial Variables
+    let isDriftTrial = false;
+    let currentDriftMs = 0;
+    let beatCounter = 0;
+    let isFingerPresent = false;
+
+    // --- DOM Elements ---
+    const primaryText = document.getElementById('primary-instruction');
+    const secondaryText = document.getElementById('secondary-instruction');
+    const actionBtn = document.getElementById('action-btn');
+    const tapTarget = document.getElementById('tap-target');
+    const consoleLog = document.getElementById('console-log');
+    const sqiBadge = document.getElementById('sqi-badge');
+    const previewContainer = document.getElementById('preview-container');
+    const previewCtx = document.getElementById('preview-canvas').getContext('2d');
+    const videoEl = document.getElementById('video-feed');
+
+    // --- Logging Utility ---
+    function logOutput(msg, type = 'info') {
+      const entry = document.createElement('div');
+      const time = new Date().toISOString().substring(11, 19);
+      let colorClass = 'text-gray-300';
+      if (type === 'success') colorClass = 'text-green-400';
+      if (type === 'error') colorClass = 'text-red-400';
+      if (type === 'warn') colorClass = 'text-yellow-400';
+      
+      entry.innerHTML = `<span class="text-gray-600">[${time}]</span> <span class="${colorClass}">${msg}</span>`;
+      consoleLog.appendChild(entry);
+      consoleLog.scrollTop = consoleLog.scrollHeight;
+    }
+
+    // --- Initialization ---
+    async function initSystem() {
+      if (!core) {
+        logOutput("ERROR: epat-core.js not found! Ensure it is in the same directory.", "error");
+        return;
+      }
+      
+      try {
+        logOutput("Initializing AudioEngine...");
+        core.AudioEngine.init();
+        
+        logOutput("Requesting Camera Permissions...");
+        await core.BeatDetector.start({
+          video: videoEl,
+          canvas: document.getElementById('sampling-canvas'),
+          onBeatCb: handleBeat,
+          onFingerChangeCb: handleFingerChange,
+          onSqiUpdateCb: handleSqi,
+          onPPGSampleCb: updatePreview
+        });
+
+        actionBtn.style.display = 'none';
+        logOutput("System Ready.", "success");
+        startNewTrial();
+
+      } catch (err) {
+        logOutput(`Camera Error: ${err.message}`, "error");
+      }
+    }
+
+    // --- Trial Flow ---
+    function startNewTrial() {
+      trialCount++;
+      document.getElementById('trial-counter').innerText = `Trial ${trialCount}`;
+      
+      // 75% chance of Drift, 25% chance of Catch trial
+      isDriftTrial = Math.random() < 0.75; 
+      currentDriftMs = 0;
+      beatCounter = 0;
+      state = 'STABILIZING';
+
+      primaryText.innerText = "Cover Camera & Flash";
+      secondaryText.innerText = "Wait for the pulse to stabilize...";
+      previewContainer.classList.remove('border-red-500', 'pulse-active');
+      previewContainer.classList.add('border-gray-700');
+      
+      logOutput(`--- Starting Trial ${trialCount} [Type: ${isDriftTrial ? 'DRIFT' : 'CATCH'}] ---`, 'info');
+    }
+
+    // --- Core Callbacks ---
+    function handleFingerChange(present) {
+      isFingerPresent = present;
+      if (!present && (state === 'STABILIZING' || state === 'ACTIVE')) {
+        logOutput("Finger lost! Please cover the lens.", "warn");
+        primaryText.innerText = "Finger Lost!";
+        secondaryText.innerText = "Cover the lens completely to resume.";
+        previewContainer.classList.remove('border-red-500', 'pulse-active');
+        previewContainer.classList.add('border-gray-700');
+      }
+    }
+
+    function handleSqi(sqiRed, sqiGreen, activeChan) {
+      const sqiVal = activeChan === 'red' ? sqiRed : sqiGreen;
+      sqiBadge.innerText = `SQI: ${sqiVal.toFixed(4)} (${activeChan})`;
+    }
+
+    function updatePreview() {
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        previewCtx.drawImage(videoEl, 0, 0, 120, 120);
+      }
+    }
+
+    function handleBeat(beat) {
+      if (!isFingerPresent) return;
+
+      if (state === 'STABILIZING') {
+        // Play tone perfectly in sync
+        core.AudioEngine.scheduleAt(0);
+        beatCounter++;
+        
+        // UI Feedback
+        previewContainer.classList.add('border-red-500', 'pulse-active');
+        primaryText.innerText = "Stabilizing...";
+        secondaryText.innerText = `Beat ${beatCounter} / ${STABILIZATION_BEATS}`;
+
+        if (beatCounter >= STABILIZATION_BEATS) {
+          state = 'ACTIVE';
+          beatCounter = 0; // Reset for active phase
+          primaryText.innerText = "Focus on your pulse";
+          secondaryText.innerText = "Tap ANYWHERE if the beep drifts out of sync!";
+          logOutput("Stabilized. Active phase began.");
+        }
+      } 
+      else if (state === 'ACTIVE') {
+        beatCounter++;
+        
+        // Apply Drift (if it is a drift trial)
+        if (isDriftTrial) {
+          currentDriftMs += DRIFT_STEP_MS;
+        }
+
+        // Schedule Tone (convert ms to seconds for AudioEngine)
+        core.AudioEngine.scheduleAt(currentDriftMs / 1000);
+
+        // Timeout check (if they never tap)
+        if (beatCounter >= MAX_ACTIVE_BEATS) {
+          endTrial(false, "TIMEOUT");
+        }
+      }
+    }
+
+    // --- Tap Detection ---
+    tapTarget.addEventListener('pointerdown', (e) => {
+      // Ignore clicks on the start/next buttons
+      if (e.target.tagName === 'BUTTON') return;
+
+      if (state === 'STABILIZING') {
+        logOutput("Tapped too early (still stabilizing).", "warn");
+      } 
+      else if (state === 'ACTIVE') {
+        endTrial(true, "TAP");
+      }
+    });
+
+    // --- End Trial Logic ---
+    function endTrial(userTapped, reason) {
+      state = 'FINISHED';
+      previewContainer.classList.remove('pulse-active');
+
+      if (userTapped) {
+        if (isDriftTrial) {
+          logOutput(`HIT! Detected at ${currentDriftMs}ms drift. (Beat ${beatCounter})`, "success");
+          primaryText.innerText = "Great job!";
+          secondaryText.innerText = `You noticed a ${currentDriftMs}ms delay.`;
+        } else {
+          logOutput(`FALSE ALARM! It was a catch trial (0ms drift).`, "error");
+          primaryText.innerText = "Oops!";
+          secondaryText.innerText = "That was a catch trial. The rhythm never changed.";
+        }
+      } else {
+        if (isDriftTrial) {
+          logOutput(`MISS. Drift reached ${currentDriftMs}ms but no tap.`, "error");
+          primaryText.innerText = "Missed it.";
+          secondaryText.innerText = "The beep drifted significantly without detection.";
+        } else {
+          logOutput(`CORRECT REJECTION. Did not tap on catch trial.`, "success");
+          primaryText.innerText = "Perfect.";
+          secondaryText.innerText = "You correctly ignored a catch trial.";
+        }
+      }
+
+      // Show Next button
+      actionBtn.innerText = "Start Next Trial";
+      actionBtn.style.display = 'block';
+      actionBtn.onclick = () => {
+        actionBtn.style.display = 'none';
+        startNewTrial();
+      };
+    }
+
+    // Bind initial start button
+    actionBtn.onclick = initSystem;
+
+  </script>
+</body>
+</html>
