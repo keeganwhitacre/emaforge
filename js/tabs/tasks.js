@@ -46,8 +46,8 @@ const SETTINGS_RENDERERS = {
           </div>
           <div class="field-group">
             <label class="field-label">SQI Threshold</label>
-            <input type="number" class="ms-sqi" value="${s.sqi_threshold}" min="0.1" max="1.0" step="0.05">
-            <div class="field-hint">Perfusion index floor for trial acceptance.</div>
+            <input type="number" class="ms-sqi" value="${s.sqi_threshold}" min="0.001" max="0.05" step="0.001">
+            <div class="field-hint">ePATCore signal-quality floor for trial acceptance.</div>
           </div>
         </div>
         <div class="toggle-row">

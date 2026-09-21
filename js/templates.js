@@ -6,7 +6,7 @@ const StarterTemplates = {
     // Features: Morning vs Evening windows, simple skip logic
     // ---------------------------------------------------------
     diary: {
-      schema_version: "1.5.0",
+      schema_version: "1.6.0",
       study: { 
         name: "Daily Reflections", institution: "Department of Psychology", 
         theme: "light", accent_color: "#388bfd", output_format: "csv", 
@@ -48,7 +48,7 @@ const StarterTemplates = {
     // Features: HR Capture, Affect Grid, Text Piping, Conditional Task Step
     // ---------------------------------------------------------
     physio: {
-      schema_version: "1.5.0",
+      schema_version: "1.6.0",
       study: { 
         name: "Cardiac Interoception & Affect", institution: "Cognitive Neuroscience Lab", 
         theme: "oled", accent_color: "#ff453a", output_format: "csv", 
@@ -58,7 +58,7 @@ const StarterTemplates = {
       onboarding: { enabled: true, ask_schedule: false, consent_text: "<h3>Overview</h3><p>This study uses your phone's camera to measure resting heart rate and tests interoceptive accuracy.</p>" },
       modules: [
         // We only mention the module we want to enable & modify
-        { id: "epat", enabled: true, settings: { trials: 15, trial_duration_sec: 30, retry_budget: 30, sqi_threshold: 0.3, confidence_ratings: true, two_phase_practice: true, body_map: true } }
+        { id: "epat", enabled: true, settings: { trials: 15, trial_duration_sec: 30, retry_budget: 30, sqi_threshold: 0.008, confidence_ratings: true, two_phase_practice: true, body_map: true } }
       ],
       ema: {
         randomize_questions: false,
@@ -90,7 +90,7 @@ const StarterTemplates = {
     // Features: Weekdays only, Deep Piping, and Multi-rule Skip Logic
     // ---------------------------------------------------------
     workplace: {
-      schema_version: "1.5.0",
+      schema_version: "1.6.0",
       study: { 
         name: "Workplace Flow Experience", institution: "Organizational Behavior Group", 
         theme: "dark", accent_color: "#32d74b", output_format: "csv", 

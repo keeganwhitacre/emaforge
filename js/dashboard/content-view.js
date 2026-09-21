@@ -106,17 +106,17 @@ const ContentView = {
     }[s.type] || s.type;
 
     const headline = this._cardHeadline(s);
-    const canvasId = `qchart-${s.id}`;
+    const canvasId = `qchart-${this._domId(s.id)}`;
     const showChart = ['slider', 'numeric', 'choice', 'checkbox', 'heart_rate', 'affect_grid'].includes(s.type);
 
     return `
-      <div class="q-stat-card" data-qid="${s.id}">
+      <div class="q-stat-card" data-qid="${this._esc(s.id)}">
         <div class="q-stat-head">
           <div class="q-stat-title">
             <span class="q-stat-label">${this._esc(s.text)}</span>
-            <span class="q-stat-id">${s.id}</span>
+            <span class="q-stat-id">${this._esc(s.id)}</span>
           </div>
-          <span class="q-stat-type">${typeLabel}</span>
+          <span class="q-stat-type">${this._esc(typeLabel)}</span>
         </div>
         <div class="q-stat-headline">${headline}</div>
         <div class="q-stat-meta">
@@ -186,7 +186,7 @@ const ContentView = {
   },
 
   _bindCardChart(s) {
-    const canvas = document.getElementById(`qchart-${s.id}`);
+    const canvas = document.getElementById(`qchart-${this._domId(s.id)}`);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
@@ -428,6 +428,9 @@ const ContentView = {
   // Utilities
   _esc(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  },
+  _domId(s) {
+    return encodeURIComponent(String(s ?? '')).replace(/%/g, '_');
   },
   _fmtPct(v) {
     if (v === null || v === undefined || Number.isNaN(v)) return '--';

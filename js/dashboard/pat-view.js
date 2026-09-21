@@ -138,14 +138,17 @@ const PATView = (() => {
             if (!rr_ms) rr_ms = 800;
           }
 
-          const phase_ms = typeof t.phase_ms === 'number' ? t.phase_ms :
-                           (typeof t.visualOffset === 'number' ? t.visualOffset : null);
+          // Older exports sometimes contain visualOffset, but that is the
+          // randomized starting position rather than the participant's final
+          // response. Never substitute it for phase_ms.
+          const phase_ms = typeof t.phase_ms === 'number' ? t.phase_ms : null;
           if (phase_ms === null) continue;
 
           const angle_rad = toAngle(phase_ms, rr_ms);
           const confidence = typeof t.confidence === 'number' && t.confidence >= 0 ? t.confidence : null;
           const sqi = typeof t.sqi === 'number' ? t.sqi :
                       (t.qualitySummary ? t.qualitySummary.sqiFinalValue : null);
+          const sqiThreshold = t.qualitySummary?.sqiGoodThreshold ?? null;
           const bodyPos = typeof t.bodyPos === 'number' ? t.bodyPos : -1;
 
           trials.push({
@@ -160,7 +163,7 @@ const PATView = (() => {
             confidence,
             sqi,
             bodyPos,
-            valid: sqi === null || sqi >= 0.3
+            valid: t.valid !== false && (sqiThreshold === null || sqi === null || sqi >= sqiThreshold)
           });
         }
       }
@@ -184,7 +187,12 @@ const PATView = (() => {
 
         // Use embedded summary if present, otherwise recompute
         const s = entry.summary || {};
-        const trialArr = (entry.trials || []).filter(t => !t.isPractice);
+        const trialArr = (entry.trials || []).filter(t => {
+          if (t.isPractice || t.valid === false) return false;
+          const sqi = typeof t.sqi === 'number' ? t.sqi : (t.qualitySummary?.sqiFinalValue ?? null);
+          const threshold = t.qualitySummary?.sqiGoodThreshold ?? null;
+          return threshold === null || sqi === null || sqi >= threshold;
+        });
         if (trialArr.length === 0) continue;
 
         let sessionBpm = null;
@@ -203,8 +211,7 @@ const PATView = (() => {
         const sqis = [];
 
         for (const t of trialArr) {
-          const pm = typeof t.phase_ms === 'number' ? t.phase_ms :
-                     (typeof t.visualOffset === 'number' ? t.visualOffset : null);
+          const pm = typeof t.phase_ms === 'number' ? t.phase_ms : null;
           if (pm === null) continue;
 
           let rr_ms = 800;
@@ -258,6 +265,10 @@ const PATView = (() => {
   function fmt(v, dec = 0) {
     if (v === null || v === undefined || isNaN(v)) return '--';
     return Number(v).toFixed(dec);
+  }
+
+  function esc(value) {
+    return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
   function fmtMs(v) {
     if (v === null || v === undefined || isNaN(v)) return '--';
@@ -869,7 +880,7 @@ const PATView = (() => {
         <div class="chart-card">
           <div class="chart-header">
             <span class="chart-title">Signal Quality Index Distribution</span>
-            <span class="badge badge-neutral">SQI threshold = 0.3</span>
+            <span class="badge badge-neutral">Per-trial acquisition threshold</span>
           </div>
           <div class="chart-container" style="height:200px">
             <canvas id="pat-sqi-agg"></canvas>
@@ -956,11 +967,11 @@ const PATView = (() => {
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
         <span class="section-title" style="margin:0">Participant</span>
         <select id="pat-pid-select" style="width:180px;font-size:12px;padding:5px 8px">
-          ${pids.map(p => `<option value="${p}" ${p === pid ? 'selected' : ''}>${p}</option>`).join('')}
+          ${pids.map(p => `<option value="${esc(p)}" ${p === pid ? 'selected' : ''}>${esc(p)}</option>`).join('')}
         </select>
         <span class="section-title" style="margin:0">Session</span>
         <select id="pat-sid-select" style="width:200px;font-size:12px;padding:5px 8px">
-          ${pidSummaries.map(s => `<option value="${s.sessionId}" ${s.sessionId === selectedSid ? 'selected' : ''}>Day ${s.day} · ${s.date} (${s.validTrials} trials)</option>`).join('')}
+          ${pidSummaries.map(s => `<option value="${esc(s.sessionId)}" ${s.sessionId === selectedSid ? 'selected' : ''}>Day ${s.day} · ${esc(s.date)} (${s.validTrials} trials)</option>`).join('')}
         </select>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span class="badge ${cs.p_rayleigh < 0.05 ? 'badge-danger' : 'badge-neutral'}" title="Rayleigh test p-value">

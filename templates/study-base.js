@@ -59,39 +59,7 @@ function show(id) {
 }
 
 function evalCond(cond, responses) {
-  if (!cond) return true;
-
-  // 1. Handle new Compound Logic (AND / OR)
-  if (cond.logical_op && Array.isArray(cond.rules)) {
-    if (cond.rules.length === 0) return true;
-    if (cond.logical_op === 'OR') {
-      return cond.rules.some(rule => evalCond(rule, responses));
-    } else {
-      // Default to AND
-      return cond.rules.every(rule => evalCond(rule, responses));
-    }
-  }
-
-  // 2. Handle legacy/single condition parsing
-  const rec = responses[cond.question_id];
-  const val = rec && typeof rec === 'object' ? rec.value : rec;
-  if (val === undefined || val === null || val === '') return false;
-
-  const cv = cond.value;
-  switch (cond.operator) {
-    case 'eq': return val == cv;
-    case 'neq': return val != cv;
-    case 'gt': return Number(val) > Number(cv);
-    case 'gte': return Number(val) >= Number(cv);
-    case 'lt': return Number(val) < Number(cv);
-    case 'lte': return Number(val) <= Number(cv);
-    case 'includes': {
-      const arr = Array.isArray(cv) ? cv : [cv];
-      const ans = Array.isArray(val) ? val : [val];
-      return arr.some(v => ans.includes(v));
-    }
-    default: return true;
-  }
+  return EMAForgeRuntimeUtils.evaluateCondition(cond, responses);
 }
 
 // Dial tick generation for ePAT visual aesthetics
@@ -182,6 +150,41 @@ const CompletionLock = {
     try {
       localStorage.setItem(this._key(pid, day, urlSession), new Date().toISOString());
     } catch (e) { }
+  }
+};
+
+// Completed sessions remain recoverable until either the webhook acknowledges
+// storage or the participant explicitly saves the canonical local record.
+const SubmissionManager = {
+  _prefix: 'ema_forge_pending_submission_v1__',
+
+  _key(pid, day, urlSession) {
+    return this._prefix + [pid || 'anon', day || '0', urlSession || 'default'].join('|');
+  },
+
+  save(pid, day, urlSession, sessionData) {
+    if (isPreview) return false;
+    try {
+      localStorage.setItem(this._key(pid, day, urlSession), JSON.stringify(sessionData));
+      return true;
+    } catch (error) {
+      console.warn('SubmissionManager.save failed:', error);
+      return false;
+    }
+  },
+
+  load(pid, day, urlSession) {
+    if (isPreview) return null;
+    try {
+      const raw = localStorage.getItem(this._key(pid, day, urlSession));
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  clear(pid, day, urlSession) {
+    try { localStorage.removeItem(this._key(pid, day, urlSession)); } catch (error) { }
   }
 };
 
@@ -287,7 +290,7 @@ const Upload = {
       'session_started_at', 'session_submitted_at',
       'phase_started_at', 'phase_submitted_at',
       'question_id', 'question_text', 'question_type',
-      'presentation_order',
+      'presentation_order', 'response_status', 'skip_reason',
       'response_value', 'response_numeric', 'response_latency_ms'
     ];
 
@@ -302,7 +305,13 @@ const Upload = {
       const phaseSubmit = entry.submittedAt || '';
       const phaseStartMs = phaseStart ? Date.parse(phaseStart) : null;
 
-      Object.entries(entry.responses || {}).forEach(([qid, rec]) => {
+      const presented = entry.presentationOrder ? entry.presentationOrder.flat() : [];
+      const eligible = Array.isArray(entry.eligibleQuestionIds) && entry.eligibleQuestionIds.length
+        ? entry.eligibleQuestionIds
+        : Array.from(new Set([...presented, ...Object.keys(entry.responses || {})]));
+
+      eligible.forEach(qid => {
+        const rec = (entry.responses || {})[qid];
         const q = qIdx[qid] || {};
         const rawVal = (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
         const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
@@ -311,10 +320,14 @@ const Upload = {
         // Flatten the 2D layout and find exactly where this question appeared
         let presOrder = '';
         if (entry.presentationOrder) {
-          const flatLayout = entry.presentationOrder.flat();
-          const idx = flatLayout.indexOf(qid);
+          const idx = presented.indexOf(qid);
           if (idx !== -1) presOrder = idx + 1; // 1-indexed for easy reading
         }
+        const skip = (entry.skippedQuestions || []).find(item => item.questionId === qid);
+        const answered = rec !== undefined && rawVal !== undefined && rawVal !== null && rawVal !== '';
+        const responseStatus = skip && !presented.includes(qid)
+          ? 'skipped_condition'
+          : (answered ? 'answered' : 'unanswered');
 
         rows.push([
           sessionData.schemaVersion || '',
@@ -333,7 +346,9 @@ const Upload = {
           qid,
           q.text || '',
           q.type || '',
-          presOrder, // <--- ADD THIS HERE
+          presOrder,
+          responseStatus,
+          skip?.reason || '',
           Upload._serializeValue(rawVal),
           Upload._toNumeric(rawVal),
           latency
@@ -351,12 +366,6 @@ const Upload = {
     return lines.join('\n');
   },
 
-  _hasTaskSignalData(sessionData) {
-    return (sessionData.data || []).some(e =>
-      e && (e.type === 'baseline' || e.type === 'trial')
-    );
-  },
-
   send(sessionData, cb) {
     if (isPreview) { if (cb) cb(); return; }
 
@@ -368,7 +377,6 @@ const Upload = {
     const date = new Date().toISOString().slice(0, 10);
     const base = `${slug}_${pid}_${date}_${sid}`;
 
-    const shouldEmitJson = format === 'json' || this._hasTaskSignalData(sessionData);
     const shouldEmitCsv = format === 'csv';
 
     if (shouldEmitCsv) {
@@ -379,31 +387,13 @@ const Upload = {
       );
     }
 
-    if (shouldEmitJson) {
-      const payload = (shouldEmitCsv && this._hasTaskSignalData(sessionData))
-        ? {
-          schemaVersion: sessionData.schemaVersion,
-          studyName: sessionData.studyName,
-          sessionId: sessionData.sessionId,
-          participantId: sessionData.participantId,
-          day: sessionData.day,
-          type: sessionData.type,
-          phases: sessionData.phases,
-          counterbalance: sessionData.counterbalance,
-          startedAt: sessionData.startedAt,
-          completedAt: sessionData.completedAt,
-          device: sessionData.device,
-          status: sessionData.status,
-          data: (sessionData.data || []).filter(e => e && e.type !== 'ema_response')
-        }
-        : sessionData;
-
-      const suffix = (shouldEmitCsv && this._hasTaskSignalData(sessionData)) ? '_task' : '';
-      this._downloadBlob(
-        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
-        `${base}${suffix}.json`
-      );
-    }
+    // JSON is the canonical, lossless research record. CSV is an optional
+    // analysis-friendly companion and must never be the only copy of a
+    // completed physiological or experimental session.
+    this._downloadBlob(
+      new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' }),
+      `${base}.json`
+    );
 
     if (cb) cb();
   }
@@ -472,17 +462,6 @@ function collectDeviceMetadata() {
     startBtn.disabled = false;
   }
 
-  // Enable the start button whenever there's a usable PID, covering all cases:
-  //   1. URL supplied ?id=  (real participant link)
-  //   2. Preview mode       (no URL params, no one typing)
-  //   3. ?session=onboarding (PID collected later during consent)
-  if (pidInput.value.trim() || isPreview || sessionId === 'onboarding') {
-    if (isPreview) pidInput.value = pidInput.value.trim() || 'preview';
-    document.getElementById('participant-input-group').style.display = 'none';
-    startBtn.disabled = false;
-  }
-
-
   // ---------------------------------------------------------------
   // COMPLETION LOCK CHECK (before anything else)
   // ---------------------------------------------------------------
@@ -510,6 +489,7 @@ function collectDeviceMetadata() {
     day: parseInt(urlDay) || null,
     type: "",
     phases: [],
+    phasePlan: [],
     currentPhase: 0,
     counterbalance: null,
     startedAt: null,
@@ -518,6 +498,7 @@ function collectDeviceMetadata() {
     data: [],
     status: "in_progress"
   };
+  const pendingSubmission = SubmissionManager.load(urlPid, urlDay, urlSession);
 
   const cbParam = params.get('cb');
   const dynamicWindows = config.ema?.scheduling?.windows || [];
@@ -527,69 +508,7 @@ function collectDeviceMetadata() {
   // ROUTER — v1.4: consume window.phase_sequence (preferred) OR the
   // legacy {pre, task, post} triple (fallback).
   // ---------------------------------------------------------------
-  function expandWindowToTokens(w) {
-    const seq = (Array.isArray(w.phase_sequence) && w.phase_sequence.length > 0)
-      ? w.phase_sequence
-      : legacyTripleToSequence(w.phases);
-
-    // Collect already-submitted EMA responses for condition evaluation.
-    // At this point sessionData.data may contain ema_response entries from
-    // phases that already ran in this session.
-    function getCollectedResponses() {
-      const merged = {};
-      (sessionData.data || []).forEach(entry => {
-        if (entry.type === 'ema_response' && entry.responses) {
-          Object.assign(merged, entry.responses);
-        }
-        // HR captures are stored as hr_capture entries with a bpm field
-        if (entry.type === 'hr_capture') {
-          merged[entry.question_id] = { value: entry.bpm, respondedAt: entry.capturedAt };
-        }
-      });
-      return merged;
-    }
-
-    const tokens = [];
-    let emaBlockCounter = { pre: 0, post: 0 };
-
-    seq.forEach(step => {
-      if (step.kind === 'ema') {
-        const block = step.block === 'post' ? 'post' : 'pre';
-        // Allow multiple EMA blocks of the same type by appending a suffix
-        // for the 2nd, 3rd, etc. — e.g. post_w1, post2_w1
-        const count = emaBlockCounter[block]++;
-        const prefix = count === 0 ? block : `${block}${count + 1}`;
-        tokens.push(`${prefix}_${w.id}`);
-
-      } else if (step.kind === 'task' && step.id && enabledModules[step.id]) {
-        // Evaluate optional condition
-        if (step.condition && step.condition.question_id) {
-          const responses = getCollectedResponses();
-          if (!evalCond(step.condition, responses)) {
-            return; // condition false — skip this task
-          }
-        }
-        tokens.push(step.id);
-
-      } else if (step.kind === 'hr') {
-        // HR capture is its own phase token: 'hr:<store_as>:<duration_sec>'
-        const storeAs = step.store_as || 'hr_result';
-        const duration = step.duration_sec || 30;
-        tokens.push(`hr:${storeAs}:${duration}`);
-      }
-      // Unknown kinds and disabled modules silently drop.
-    });
-    return tokens;
-  }
-
-  function legacyTripleToSequence(phases) {
-    const ph = phases || { pre: true, task: null, post: false };
-    const seq = [];
-    if (ph.pre) seq.push({ kind: "ema", block: "pre" });
-    if (ph.task) seq.push({ kind: "task", id: ph.task });
-    if (ph.post && ph.task) seq.push({ kind: "ema", block: "post" });
-    return seq;
-  }
+  let runtimePhasePlan = [];
 
   if (sessionId === 'onboarding') {
     sessionData.type = "onboarding";
@@ -601,7 +520,11 @@ function collectDeviceMetadata() {
       const fallback = dynamicWindows[0];
       if (fallback) {
         sessionData.type = "ema_only";
-        sessionData.phases = [`pre_${fallback.id}`];
+        runtimePhasePlan = EMAForgeRuntimeUtils.buildPhasePlan(fallback, enabledModules)
+          .filter(phase => phase.kind === 'ema')
+          .slice(0, 1);
+        sessionData.phases = runtimePhasePlan.map(phase => phase.token);
+        sessionData.phasePlan = runtimePhasePlan;
         document.getElementById('task-subtitle').textContent = fallback.label || 'Check-In';
       } else {
         sessionData.type = "error";
@@ -611,19 +534,19 @@ function collectDeviceMetadata() {
         return;
       }
     } else {
-      let phaseTokens = expandWindowToTokens(w);
+      runtimePhasePlan = EMAForgeRuntimeUtils.buildPhasePlan(w, enabledModules);
 
       // Counterbalancing: swap first pair if the window has both an EMA pre-block
       // and a task, and cb=task_first was requested. Kept narrow-scope — if you
       // need arbitrary permutations you'd edit phase_sequence directly in config.
-      if (cbParam && phaseTokens.length >= 2) {
-        const firstIsPre = phaseTokens[0].startsWith('pre_');
-        const secondIsTask = !phaseTokens[1].startsWith('pre_') && !phaseTokens[1].startsWith('post_');
+      if (cbParam && runtimePhasePlan.length >= 2) {
+        const firstIsPre = runtimePhasePlan[0].kind === 'ema' && runtimePhasePlan[0].block === 'pre';
+        const secondIsTask = runtimePhasePlan[1].kind === 'task';
         if (firstIsPre && secondIsTask) {
           const wantTaskFirst = (cbParam === 'task_first') ||
-            (cbParam === 'pat_first' && phaseTokens[1] === 'epat');
+            (cbParam === 'pat_first' && runtimePhasePlan[1].moduleId === 'epat');
           if (wantTaskFirst) {
-            [phaseTokens[0], phaseTokens[1]] = [phaseTokens[1], phaseTokens[0]];
+            [runtimePhasePlan[0], runtimePhasePlan[1]] = [runtimePhasePlan[1], runtimePhasePlan[0]];
             sessionData.counterbalance = 'task_first';
           } else {
             sessionData.counterbalance = 'pre_first';
@@ -632,10 +555,11 @@ function collectDeviceMetadata() {
       }
 
       // Categorize session type for downstream analyses.
-      const hasTask = phaseTokens.some(t => !t.startsWith('pre_') && !t.startsWith('post_'));
-      const hasPost = phaseTokens.some(t => t.startsWith('post_'));
+      const hasTask = runtimePhasePlan.some(phase => phase.kind === 'task');
+      const hasPost = runtimePhasePlan.some(phase => phase.kind === 'ema' && phase.block === 'post');
       sessionData.type = hasTask ? (hasPost ? "pre_task_post" : "pre_task") : "ema_only";
-      sessionData.phases = phaseTokens;
+      sessionData.phases = runtimePhasePlan.map(phase => phase.token);
+      sessionData.phasePlan = runtimePhasePlan;
 
       document.getElementById('task-subtitle').textContent = w.label || 'Check-In';
     }
@@ -669,6 +593,17 @@ function collectDeviceMetadata() {
   }
 
   // {{MODULES_INJECT}}
+  let deliveryInFlight = false;
+
+  // A prior attempt completed but was never acknowledged. Restore the exact
+  // immutable record and retry delivery instead of asking the participant to
+  // repeat an assessment or silently locking them out.
+  if (pendingSubmission && pendingSubmission.sessionId) {
+    sessionData = pendingSubmission;
+    runtimePhasePlan = Array.isArray(sessionData.phasePlan) ? sessionData.phasePlan : [];
+    deliverCompletedSession();
+    return;
+  }
 
   // ---------------------------------------------------------------
   // START handler — either fresh start or resume
@@ -704,7 +639,7 @@ function collectDeviceMetadata() {
 
   function persistResumeState() {
     if (!config.study?.resume_enabled) return;
-    ResumeManager.save(sessionData.participantId, urlDay, urlSession, sessionData);
+    ResumeManager.save(urlPid, urlDay, urlSession, sessionData);
   }
 
   // If we have a resume offer, surface it by repurposing the start button
@@ -739,7 +674,25 @@ function collectDeviceMetadata() {
     const phase = sessionData.phases[sessionData.currentPhase];
     if (!phase) { finalizeSession(); return; }
 
-    if (phase.startsWith('pre_') || phase.startsWith('post_')) {
+    const phasePlan = runtimePhasePlan[sessionData.currentPhase] || { token: phase };
+    if (phasePlan.kind === 'task' && phasePlan.condition) {
+      const responses = EMAForgeRuntimeUtils.collectResponses(sessionData.data);
+      if (!evalCond(phasePlan.condition, responses)) {
+        sessionData.data.push({
+          type: 'phase_event',
+          phase: phase,
+          stepIndex: phasePlan.stepIndex,
+          status: 'skipped',
+          reason: 'condition_false',
+          condition: phasePlan.condition,
+          evaluatedAt: new Date().toISOString()
+        });
+        advancePhase();
+        return;
+      }
+    }
+
+    if (EMAForgeRuntimeUtils.parseEmaPhaseToken(phase)) {
       EMA.start(phase);
       return;
     }
@@ -804,17 +757,41 @@ function collectDeviceMetadata() {
   function finalizeSession() {
     sessionData.status = "complete";
     sessionData.completedAt = new Date().toISOString();
-
-    if (config.study?.completion_lock) {
-      CompletionLock.stamp(sessionData.participantId, urlDay, urlSession);
-    }
-    ResumeManager.clear(sessionData.participantId, urlDay, urlSession);
+    sessionData.submission = {
+      id: sessionData.sessionId,
+      state: 'pending',
+      attempts: 0,
+      lastAttemptAt: null,
+      acknowledgedAt: null,
+      method: null
+    };
 
     if (isPreview) {
       document.getElementById('screen-end').querySelector('p').textContent = '✓ Preview complete.';
       show('screen-end');
       return;
     }
+
+    SubmissionManager.save(urlPid, urlDay, urlSession, sessionData);
+    deliverCompletedSession();
+  }
+
+  function acknowledgeSubmission(method) {
+    sessionData.submission = {
+      ...(sessionData.submission || {}),
+      state: 'acknowledged',
+      method,
+      acknowledgedAt: new Date().toISOString()
+    };
+    SubmissionManager.clear(urlPid, urlDay, urlSession);
+    ResumeManager.clear(urlPid, urlDay, urlSession);
+    if (config.study?.completion_lock && urlPid) {
+      CompletionLock.stamp(urlPid, urlDay, urlSession);
+    }
+  }
+
+  function deliverCompletedSession() {
+    if (deliveryInFlight) return;
 
     const totalBeats = sessionData.data.reduce((sum, entry) => {
       if (entry.type === "baseline") return sum + (entry.recordedHR ? entry.recordedHR.length : 0);
@@ -838,11 +815,19 @@ function collectDeviceMetadata() {
     }
 
     const downloadBtn = document.getElementById("download-btn");
-    downloadBtn.onclick = () => Upload.send(sessionData);
+    downloadBtn.style.display = 'block';
+    downloadBtn.onclick = () => {
+      acknowledgeSubmission('local_download');
+      Upload.send(sessionData);
+      if (statusText) {
+        statusText.style.color = "var(--accent-green)";
+        statusText.textContent = "✓ Local research record saved. You can close this page.";
+      }
+      downloadBtn.style.display = 'none';
+    };
     show('screen-end');
 
-    // --- NEW WEBHOOK LOGIC ---
-    if (config.study.webhook_url && config.study.webhook_url.trim() !== "") {
+    if (config.study?.webhook_url && config.study.webhook_url.trim() !== "") {
 
       downloadBtn.style.display = 'none'; // Hide manual download button
 
@@ -853,11 +838,21 @@ function collectDeviceMetadata() {
 
       // Prepare payload
       const payload = {
+        submission_id: sessionData.sessionId,
         participant_id: sessionData.participantId,
         day: sessionData.day,
         window_id: urlSession,
         session_data: sessionData
       };
+
+      sessionData.submission = {
+        ...(sessionData.submission || {}),
+        state: 'pending',
+        attempts: (sessionData.submission?.attempts || 0) + 1,
+        lastAttemptAt: new Date().toISOString()
+      };
+      SubmissionManager.save(urlPid, urlDay, urlSession, sessionData);
+      deliveryInFlight = true;
 
       fetch(config.study.webhook_url, {
         method: 'POST',
@@ -866,6 +861,7 @@ function collectDeviceMetadata() {
       })
         .then(response => {
           if (response.ok) {
+            acknowledgeSubmission('webhook');
             statusText.style.color = "var(--accent-green)";
             statusText.textContent = "✓ Data uploaded successfully. You can close this page.";
           } else {
@@ -877,7 +873,8 @@ function collectDeviceMetadata() {
           statusText.style.color = "var(--accent-red)";
           statusText.textContent = "Upload failed (No internet?). Please save a local copy.";
           downloadBtn.style.display = 'block';
-        });
+        })
+        .finally(() => { deliveryInFlight = false; });
     }
   }
 

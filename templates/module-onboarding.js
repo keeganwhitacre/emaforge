@@ -11,7 +11,7 @@ const OnboardingSession = (function() {
     const hint     = document.getElementById("ob-consent-hint");
     const checkRow = document.getElementById("ob-consent-check-row");
 
-    scroll.innerHTML = config.onboarding.consent_text;
+    scroll.innerHTML = EMAForgeRuntimeUtils.sanitizeStudyHtml(config.onboarding.consent_text);
 
     // Extract the unlock logic into a reusable function
     const unlockConsent = () => {

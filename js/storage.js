@@ -63,7 +63,7 @@ const StorageManager = {
             console.warn(`EMA Forge: saved project is schema v${savedVer}, runtime is v${currentVersion}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Incompatible backup'; status.style.color = 'var(--accent-red)'; }
-            return;
+            return false;
         }
 
         if (cmp < 0) {
@@ -102,6 +102,12 @@ const StorageManager = {
 
         if (state.study.completion_lock === undefined) state.study.completion_lock = true;
         if (state.study.resume_enabled  === undefined) state.study.resume_enabled  = true;
+        state.onboarding.consent_text = sanitizeConsentHtml(state.onboarding.consent_text);
+        const epat = state.modules.find(module => module.id === 'epat');
+        if (epat && Number(epat.settings.sqi_threshold) > 0.05) {
+            epat.settings.sqi_threshold = 0.008;
+        }
+        return true;
     },
 
     debouncedSave() {
@@ -141,7 +147,7 @@ const StorageManager = {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                this.mergeState(imported);
+                if (!this.mergeState(imported)) throw new Error('Incompatible schema version');
                 this.saveLocalState();
                 this.triggerUIRefresh();
                 const status = document.getElementById('save-status');

@@ -1,7 +1,7 @@
 "use strict";
 
 // ==========================================================
-// EMA Forge — export.js  v1.5.0
+// EMA Forge — export.js  v1.6.0
 // ==========================================================
 // Changes from v1.3.1:
 //   - Removed modHrCapture — HR capture is a question type handled inline
@@ -12,12 +12,13 @@
 // ==========================================================
 
 let templates = {
-    epatCore: null, studyBase: null,
+    epatCore: null, runtimeUtils: null, studyBase: null,
     modOnboarding: null, modEma: null, modEpat: null, modHct: null, modIat: null
   };
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js').then(r => r.text());
   if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js').then(r => r.text());
   if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js').then(r => r.text());
   if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js').then(r => r.text());
@@ -27,7 +28,8 @@ async function loadTemplates() {
 }
 
 function getThemeCSS(theme, accent) {
-  let css = `--accent: ${accent}; --accent-hover: ${darkenHex(accent, 20)}; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;`;
+  const safeAccent = /^#[0-9a-f]{6}$/i.test(accent || '') ? accent : '#e8716a';
+  let css = `--accent: ${safeAccent}; --accent-hover: ${darkenHex(safeAccent, 20)}; --accent-red: #ff453a; --accent-green: #32d74b; --radius: 14px; --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;`;
   if (theme === 'light') css += ` --bg: #f9f9fb; --bg-surface: #ffffff; --bg-elevated: #f0f0f4; --border: #e0e0e5; --fg: #1c1c1e; --fg-muted: #8e8e93;`;
   else if (theme === 'dark') css += ` --bg: #121212; --bg-surface: #1e1e1e; --bg-elevated: #2d2d2d; --border: #3d3d3d; --fg: #e0e0e0; --fg-muted: #9e9e9e;`;
   else css += ` --bg: #000000; --bg-surface: #111111; --bg-elevated: #1c1c1e; --border: #2c2c2e; --fg: #ffffff; --fg-muted: #8e8e93;`;
@@ -53,7 +55,7 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
     ? `const sessionId = ${JSON.stringify(_ps || fallbackSession)};`
     : `const sessionId = params.get('session') || ${JSON.stringify(fallbackSession)};`;
 
-  let studyJs = templates.studyBase;
+  let studyJs = templates.runtimeUtils + '\n\n' + templates.studyBase;
   studyJs = studyJs.replace('// {{CONFIG_LOADER}}', () => configLoader + '\n' + previewFlag);
   studyJs = studyJs.replace('// {{EXPIRY_CHECK}}', () => expiryCheck);
   studyJs = studyJs.replace('// {{PREVIEW_SESSION_FORCE}}', () => previewSessionForce);
@@ -76,9 +78,9 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
   const dynamicWindowsHtml = (cfg.ema?.scheduling?.windows || []).map(w => `
     <div class="time-row">
       <span class="time-row-label" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${escH(w.label)}">${escH(w.label)}</span>
-      <input type="time" id="ob-win-${w.id}-start" value="${w.start}">
+      <input type="time" id="ob-win-${escH(w.id)}-start" value="${escH(w.start)}">
       <span class="time-sep">–</span>
-      <input type="time" id="ob-win-${w.id}-end" value="${w.end}">
+      <input type="time" id="ob-win-${escH(w.id)}-end" value="${escH(w.end)}">
     </div>
   `).join('');
 
@@ -392,7 +394,8 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
   const themeCSS = getThemeCSS(cfg.study.theme, cfg.study.accent_color);
   const runtimeCss = getRuntimeCss();
   const studyJs = stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps });
-  const configTag = configInline ? `<script>window.__CONFIG__ = ${JSON.stringify(cfg)};<\/script>` : '';
+  const inlineConfig = JSON.stringify(cfg).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  const configTag = configInline ? `<script>window.__CONFIG__ = ${inlineConfig};<\/script>` : '';
   const needsCore = cfg.modules?.epat || cfg.modules?.hct || cfg.modules?.hr_capture;
   const coreTag = needsCore ? `<script>\n${templates.epatCore}\n<\/script>` : '';
   const cssTag = `<style>:root{${themeCSS}}${runtimeCss}</style>`;

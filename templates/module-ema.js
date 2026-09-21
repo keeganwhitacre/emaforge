@@ -58,6 +58,18 @@ const EMA = (function() {
     }
   }
 
+  function canRandomize(block) {
+    return !block.some(question => question.condition || /\{\{[^}]+\}\}/.test(question.text || ''));
+  }
+
+  function conditionReferencesQuestion(condition, questionId) {
+    if (!condition) return false;
+    if (Array.isArray(condition.rules)) {
+      return condition.rules.some(rule => conditionReferencesQuestion(rule, questionId));
+    }
+    return condition.question_id === questionId;
+  }
+
   function buildPages(windowId, blockDir) {
     emaPages = [];
     let currentBlock = [];
@@ -66,7 +78,7 @@ const EMA = (function() {
       if (q.type === 'page_break') {
         if (currentBlock.length > 0) {
           // Shuffle the block if the config allows it
-          if (config.ema.randomize_questions) shuffleArray(currentBlock);
+          if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
           emaPages.push(currentBlock);
           currentBlock = [];
         }
@@ -88,7 +100,7 @@ const EMA = (function() {
     });
 
     if (currentBlock.length > 0) {
-      if (config.ema.randomize_questions) shuffleArray(currentBlock);
+      if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
       emaPages.push(currentBlock);
     }
   }
@@ -281,7 +293,7 @@ function interpolate(text, responses) {
       const pt = svgPointFromClientPoint(clientX, clientY);
       updateFromPoint(pt.x, pt.y);
     };
-    const onUp = () => { dragging = false; };
+    const onUp = () => { dragging = false; refreshConditionalFn(q.id); };
 
     svg.addEventListener('mousedown',  onDown);
     svg.addEventListener('mousemove',  onMove);
@@ -504,6 +516,7 @@ function interpolate(text, responses) {
   // Shared checkSubmit reference so affect-grid can call it.
   // Set inside renderCurrentPage before any question builder runs.
   let checkSubmitFn = () => {};
+  let refreshConditionalFn = () => {};
 
   // -----------------------------------------------------------------------
   // renderCurrentPage
@@ -514,8 +527,23 @@ function interpolate(text, responses) {
 
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
-      visibleQuestions = emaPages[currentPageIndex].filter(q => {
+      const pageQuestions = emaPages[currentPageIndex];
+      visibleQuestions = pageQuestions.filter(q => {
         return evalCond(q.condition, emaResponses.responses);
+      });
+      emaResponses.presentationOrder[currentPageIndex] = visibleQuestions.map(q => q.id);
+      const pageIds = new Set(pageQuestions.map(q => q.id));
+      emaResponses.skippedQuestions = emaResponses.skippedQuestions.filter(item => !pageIds.has(item.questionId));
+      pageQuestions.forEach(q => {
+        if (visibleQuestions.includes(q)) return;
+        if (!emaResponses.skippedQuestions.some(item => item.questionId === q.id)) {
+          emaResponses.skippedQuestions.push({
+            questionId: q.id,
+            page: currentPageIndex + 1,
+            reason: 'condition_false',
+            evaluatedAt: new Date().toISOString()
+          });
+        }
       });
       if (visibleQuestions.length > 0) break;
       currentPageIndex++;
@@ -547,6 +575,32 @@ function interpolate(text, responses) {
       nextBtn.disabled = !allAnswered;
     }
     checkSubmitFn = checkSubmit;  // share with builders
+    refreshConditionalFn = changedQuestionId => {
+      const pageQuestions = emaPages[currentPageIndex] || [];
+      if (!pageQuestions.some(question => conditionReferencesQuestion(question.condition, changedQuestionId))) {
+        checkSubmit();
+        return;
+      }
+      const nextVisible = pageQuestions.filter(question => evalCond(question.condition, emaResponses.responses));
+      const currentIds = visibleQuestions.map(question => question.id).join('|');
+      const nextIds = nextVisible.map(question => question.id).join('|');
+      if (currentIds !== nextIds) {
+        const nextIdSet = new Set(nextVisible.map(question => question.id));
+        visibleQuestions.forEach(question => {
+          if (!nextIdSet.has(question.id) && emaResponses.responses[question.id] !== undefined) {
+            emaResponses.invalidatedResponses.push({
+              questionId: question.id,
+              response: emaResponses.responses[question.id],
+              reason: 'condition_became_false',
+              invalidatedAt: new Date().toISOString()
+            });
+            delete emaResponses.responses[question.id];
+          }
+        });
+        renderCurrentPage();
+      }
+      else checkSubmit();
+    };
 
     visibleQuestions.forEach(q => {
       const wrapper = document.createElement('div');
@@ -583,6 +637,7 @@ function interpolate(text, responses) {
           recordResponse(q.id, v);
           checkSubmit();
         });
+        slider.addEventListener('change', () => refreshConditionalFn(q.id));
         if (touched && (cur !== valueOf(q.id))) {
           recordResponse(q.id, Number(defaultVal));
         }
@@ -600,7 +655,7 @@ function interpolate(text, responses) {
             grp.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             recordResponse(q.id, opt);
-            checkSubmit();
+            refreshConditionalFn(q.id);
           });
           if (valueOf(q.id) === opt) btn.classList.add('selected');
           grp.appendChild(btn);
@@ -621,7 +676,7 @@ function interpolate(text, responses) {
             if (selected.has(opt)) { selected.delete(opt); btn.classList.remove('selected'); }
             else { selected.add(opt); btn.classList.add('selected'); }
             recordResponse(q.id, Array.from(selected));
-            checkSubmit();
+            refreshConditionalFn(q.id);
           });
           grp.appendChild(btn);
         });
@@ -647,6 +702,7 @@ function interpolate(text, responses) {
           recordResponse(q.id, v);
           checkSubmit();
         });
+        inp.addEventListener('change', () => refreshConditionalFn(q.id));
         grp.appendChild(inp);
         wrapper.appendChild(grp);
       }
@@ -676,16 +732,11 @@ function interpolate(text, responses) {
 
   return {
     start(phaseToken) {
-      let blockDir = 'pre';
-      let windowId = null;
+      const parsedPhase = EMAForgeRuntimeUtils.parseEmaPhaseToken(phaseToken);
+      let blockDir = parsedPhase?.block || 'pre';
+      let windowId = parsedPhase?.windowId || null;
 
-      if (phaseToken.startsWith('pre_')) {
-        blockDir = 'pre';
-        windowId = phaseToken.slice(4);
-      } else if (phaseToken.startsWith('post_')) {
-        blockDir = 'post';
-        windowId = phaseToken.slice(5);
-      } else {
+      if (!parsedPhase) {
         console.warn('EMA.start received unprefixed phase token:', phaseToken);
         windowId = phaseToken;
       }
@@ -697,15 +748,16 @@ function interpolate(text, responses) {
         block:       blockDir,
         startedAt:   new Date().toISOString(),
         submittedAt: null,
-        responses:   {}
+        responses:   {},
+        presentationOrder: [],
+        eligibleQuestionIds: [],
+        skippedQuestions: [],
+        invalidatedResponses: []
       };
 
       buildPages(windowId, blockDir);
       currentPageIndex = 0;
-      
-      // Take a snapshot of the exact 2D array layout of questions 
-      // so researchers know the visual order if randomized.
-      emaResponses.presentationOrder = emaPages.map(page => page.map(q => q.id));
+      emaResponses.eligibleQuestionIds = emaPages.flat().map(q => q.id);
 
       if (emaPages.length === 0) {
         emaResponses.submittedAt = emaResponses.startedAt;

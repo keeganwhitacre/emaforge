@@ -1,0 +1,10 @@
+{
+  "name": "ema-forge",
+  "version": "1.6.0",
+  "private": true,
+  "description": "Configuration-driven physiological EMA study builder and participant runtime",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "check": "node scripts/check-javascript.cjs && node scripts/check-html.cjs && npm test"
+  }
+}

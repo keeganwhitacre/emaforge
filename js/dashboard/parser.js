@@ -1,236 +1,273 @@
+"use strict";
+
 /**
- * EMA Forge - Data Parser Engine
- * Handles ingesting a local folder of JSON files, separating the config
- * from the participant payloads, and calculating metadata KPIs.
+ * Local dashboard ingestion and normalization.
+ *
+ * Compliance is intentionally unavailable unless a future import supplies a
+ * participant roster plus scheduled/delivery events. Completed-session files
+ * alone cannot reveal participants or prompts that produced no file.
  */
-
 const DataParser = {
-    state: {
-      studyConfig: null,
-      allSessions: [],       // Source of truth for all imported data
-      filteredSessions: [],  // The data currently being viewed/analyzed
-      participants: new Set(),
-      metrics: {
-        totalExpectedPings: 0,
-        totalDelivered: 0,
-        totalCompleted: 0,
-        totalMissed: 0,
-        totalNoise: 0, 
-        avgTimeMs: 0,
-        avgLatencyMs: 0,
-        complianceByDay: {}, 
-        latencyByDay: {}
-      }
-    },
-  
-    async ingestFiles(fileList) {
-  this.resetState();
-  
-  // 1. Load config from browser storage if it exists (The "Just Once" feature)
-  const cachedConfig = localStorage.getItem('ema_forge_config');
-  if (cachedConfig) {
-    try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (e) {}
-  }
+  state: {
+    studyConfig: null,
+    allSessions: [],
+    filteredSessions: [],
+    participants: new Set(),
+    warnings: [],
+    metrics: {}
+  },
 
-  const files = Array.from(fileList).filter(f => f.name.endsWith('.json') || f.name.endsWith('.csv'));
-  if (files.length === 0) throw new Error("No JSON or CSV files found.");
+  resetState() {
+    this.state.studyConfig = null;
+    this.state.allSessions = [];
+    this.state.filteredSessions = [];
+    this.state.participants = new Set();
+    this.state.warnings = [];
+    this.state.metrics = this.emptyMetrics();
+  },
 
-  const readPromises = files.map(file => {
-    return new Promise((resolve) => {
-      
-      // --- JSON HANDLING (Existing behavior + Config Caching) ---
-      if (file.name.endsWith('.json')) {
+  emptyMetrics() {
+    return {
+      complianceAvailable: false,
+      latencyAvailable: false,
+      totalExpectedPings: null,
+      totalDelivered: null,
+      totalCompleted: 0,
+      totalMissed: null,
+      totalRapid: 0,
+      avgTimeMs: null,
+      avgLatencyMs: null,
+      observedByDay: {},
+      latencyByDay: {}
+    };
+  },
+
+  async ingestFiles(fileList) {
+    this.resetState();
+    const cachedConfig = localStorage.getItem("ema_forge_config");
+    if (cachedConfig) {
+      try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (error) { }
+    }
+
+    const files = Array.from(fileList).filter(file => /\.(?:json|csv)$/i.test(file.name));
+    if (!files.length) throw new Error("No JSON or CSV files found.");
+
+    await Promise.all(files.map(file => this._ingestFile(file)));
+    this._deduplicateSessions();
+    this.state.allSessions.forEach(session => this.state.participants.add(session.participantId));
+    this.calculateMetrics({ excludeRapid: false, day: "all", participant: "all" });
+    if (!this.state.studyConfig && this.state.allSessions.length) {
+      this.state.warnings.push("No config.json was imported; question labels and study structure may be incomplete.");
+    }
+    return this.state;
+  },
+
+  _ingestFile(file) {
+    return new Promise(resolve => {
+      if (/\.json$/i.test(file.name)) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const json = JSON.parse(e.target.result);
-            if (json.schema_version && json.ema && json.ema.scheduling) {
-              this.state.studyConfig = json;
-              localStorage.setItem('ema_forge_config', e.target.result); // Cache for future visits
-            } else if (json.participantId || json.sessionId) {
-              this.state.allSessions.push(this.normalizeSession(json));
-            }
-          } catch (err) {
-            console.warn(`Could not parse ${file.name}`);
-          }
+        reader.onload = event => {
+          try { this._routeJson(JSON.parse(event.target.result), event.target.result, file.name); }
+          catch (error) { this.state.warnings.push(`Could not parse ${file.name}.`); }
           resolve();
         };
+        reader.onerror = () => { this.state.warnings.push(`Could not read ${file.name}.`); resolve(); };
         reader.readAsText(file);
-      } 
-      
-      // --- CSV HANDLING (New Webhook/Google Sheets behavior) ---
-      else if (file.name.endsWith('.csv')) {
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            results.data.forEach(row => {
-              const rawJsonStr = row['Raw JSON']; // Targets your specific CSV column
-              if (rawJsonStr) {
-                try {
-                  const json = JSON.parse(rawJsonStr);
-                  
-                  if (json.schema_version && json.ema && json.ema.scheduling) {
-                    this.state.studyConfig = json;
-                    localStorage.setItem('ema_forge_config', rawJsonStr);
-                  } else if (json.participantId || json.sessionId) {
-                    this.state.allSessions.push(this.normalizeSession(json));
-                  }
-                } catch (err) {
-                  console.warn("Invalid JSON found in CSV row", row);
-                }
-              }
-            });
-            resolve();
-          },
-          error: (err) => {
-            console.error("CSV Parse Error:", err);
-            resolve();
-          }
+        return;
+      }
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: results => { this._routeCsv(results, file.name); resolve(); },
+        error: () => { this.state.warnings.push(`Could not parse ${file.name}.`); resolve(); }
+      });
+    });
+  },
+
+  _routeJson(json, raw, filename) {
+    if (json.schema_version && json.ema?.scheduling) {
+      this.state.studyConfig = json;
+      localStorage.setItem("ema_forge_config", raw);
+    } else if (json.participantId || json.sessionId) {
+      this.state.allSessions.push(this.normalizeSession(json));
+    } else {
+      this.state.warnings.push(`${filename} is not a recognized EMA Forge config or session.`);
+    }
+  },
+
+  _routeCsv(results, filename) {
+    const rows = results.data || [];
+    if (!rows.length) return;
+    const columns = results.meta?.fields || Object.keys(rows[0] || {});
+
+    if (columns.includes("Raw JSON")) {
+      rows.forEach(row => {
+        if (!row["Raw JSON"]) return;
+        try { this._routeJson(JSON.parse(row["Raw JSON"]), row["Raw JSON"], filename); }
+        catch (error) { this.state.warnings.push(`Invalid Raw JSON row in ${filename}.`); }
+      });
+      return;
+    }
+
+    if (columns.includes("question_id") && columns.includes("session_id")) {
+      this._ingestLongFormat(rows);
+      return;
+    }
+    this.state.warnings.push(`${filename} does not match a supported EMA Forge CSV schema.`);
+  },
+
+  _ingestLongFormat(rows) {
+    const sessions = new Map();
+    rows.forEach(row => {
+      if (!row.session_id) return;
+      if (!sessions.has(row.session_id)) {
+        sessions.set(row.session_id, {
+          participantId: row.participant_id || "Unknown",
+          sessionId: row.session_id,
+          day: Number.parseInt(row.day, 10) || 1,
+          type: row.session_type || row.window_id || "unknown",
+          status: "complete",
+          startedAt: row.session_started_at || null,
+          completedAt: row.session_submitted_at || null,
+          phaseMap: new Map()
         });
       }
+
+      const session = sessions.get(row.session_id);
+      const phaseKey = [row.window_id, row.block, row.phase_started_at].join("::");
+      if (!session.phaseMap.has(phaseKey)) {
+        session.phaseMap.set(phaseKey, {
+          type: "ema_response",
+          block: row.block || "",
+          windowId: row.window_id || "",
+          startedAt: row.phase_started_at || null,
+          submittedAt: row.phase_submitted_at || null,
+          presentationOrder: [[]],
+          eligibleQuestionIds: [],
+          skippedQuestions: [],
+          responses: {},
+          _order: []
+        });
+      }
+
+      const phase = session.phaseMap.get(phaseKey);
+      const questionId = row.question_id;
+      if (!questionId) return;
+      phase.eligibleQuestionIds.push(questionId);
+      const order = Number.parseInt(row.presentation_order, 10);
+      if (Number.isFinite(order)) phase._order.push([questionId, order]);
+      if (row.response_status === "skipped_condition") {
+        phase.skippedQuestions.push({ questionId, reason: row.skip_reason || "condition_false" });
+        return;
+      }
+      if (row.response_status === "unanswered" || (row.response_value === "" && row.response_numeric === "")) return;
+
+      const value = this._parseCsvValue(row.question_type, row.response_value, row.response_numeric);
+      const startMs = row.phase_started_at ? Date.parse(row.phase_started_at) : NaN;
+      const latencyMs = Number(row.response_latency_ms);
+      const respondedAt = Number.isFinite(startMs) && Number.isFinite(latencyMs)
+        ? new Date(startMs + latencyMs).toISOString()
+        : null;
+      phase.responses[questionId] = { value, respondedAt };
     });
-  });
 
-  await Promise.all(readPromises);
-  
-  if (!this.state.studyConfig && this.state.allSessions.length > 0) {
-      console.warn("No config loaded. Study layout might be incomplete.");
-  }
-
-  // Calculate initial metrics
-  this.state.allSessions.forEach(s => this.state.participants.add(s.participantId));
-  this.calculateMetrics({ excludeNoise: true, excludeMissed: false, day: 'all', participant: 'all' });
-  return this.state;
-},
-  
-    resetState() {
-      this.state.studyConfig = null;
-      this.state.allSessions = [];
-      this.state.filteredSessions = [];
-      this.state.participants.clear();
-      this.state.metrics = {
-        totalExpectedPings: 0, totalDelivered: 0, totalCompleted: 0,
-        totalMissed: 0, totalNoise: 0, avgTimeMs: 0, avgLatencyMs: 0,
-        complianceByDay: {}, latencyByDay: {}
-      };
-    },
-  
-    normalizeSession(json) {
-      const start = new Date(json.startedAt || Date.now()).getTime();
-      const end = new Date(json.completedAt || Date.now()).getTime();
-  
-      const durationMs = end - start;
-      
-      // Note: Latency (time from SMS delivery to app open) requires backend logs.
-      // For pure client-side data, we leave it at 0 until external notification data is merged.
-      const latencyMs = 0; 
-  
-      return {
-      participantId: json.participantId || 'Unknown',
-      sessionId:     json.sessionId     || '',
-      startedAt:     json.startedAt     || null,
-      completedAt:   json.completedAt   || null,
-      day: parseInt(json.day || 1, 10),
-      sessionType: json.type || 'unknown',
-      durationMs: durationMs > 0 ? durationMs : 0,
-      latencyMs: latencyMs,
-      isCompleted: json.status === "complete",
-      isNoise: durationMs < 30000,
-      data: json.data || []
-    };
-    },
-  
-    /**
-     * Recalculates all math based on ALL active UI filters
-     */
-    calculateMetrics(filters = { excludeNoise: false, excludeMissed: false, day: 'all', participant: 'all' }) {
-      let sessions = this.state.allSessions;
-      
-      // 1. Apply Scope Filters (Date & Participant)
-      if (filters.day !== 'all') {
-        sessions = sessions.filter(s => s.day === parseInt(filters.day, 10));
-      }
-      if (filters.participant !== 'all') {
-        sessions = sessions.filter(s => s.participantId === filters.participant);
-      }
-
-      // Calculate Total Noise strictly based on Date/Participant scope 
-      this.state.metrics.totalNoise = sessions.filter(s => s.isNoise).length;
-
-      // 2. Apply Quality Filters
-      if (filters.excludeNoise) {
-        sessions = sessions.filter(s => !s.isNoise);
-      }
-      this.state.filteredSessions = sessions;
-  
-      // 3. Base Expected Math
-      let pCount = filters.participant !== 'all' ? 1 : (this.state.participants.size || 1);
-      let expectedPerDay = this.state.studyConfig?.ema?.scheduling?.windows?.length || 3; 
-      
-      // Calculate based on the CURRENT day, not the total future length of the study
-      let currentDay = Math.max(...this.state.allSessions.map(s => s.day), 1);
-      
-      if (filters.day !== 'all') {
-        this.state.metrics.totalExpectedPings = pCount * expectedPerDay;
-      } else {
-        this.state.metrics.totalExpectedPings = pCount * currentDay * expectedPerDay;
-      }
-
-      this.state.metrics.totalCompleted = sessions.length;
-      
-      // Handle the "Exclude Missed" toggle logic
-      if (filters.excludeMissed) {
-          this.state.metrics.totalExpectedPings = this.state.metrics.totalCompleted;
-          this.state.metrics.totalMissed = 0;
-      } else {
-          this.state.metrics.totalMissed = Math.max(0, this.state.metrics.totalExpectedPings - this.state.metrics.totalCompleted);
-      }
-
-      this.state.metrics.totalDelivered = this.state.metrics.totalExpectedPings; 
-  
-      let totalDuration = 0;
-      let totalLatency = 0;
-      this.state.metrics.complianceByDay = {};
-      this.state.metrics.latencyByDay = {};
-  
-      // Setup day buckets based on filter (ONLY track up to currentDay)
-      const daysToTrack = filters.day !== 'all' ? [parseInt(filters.day, 10)] : Array.from({length: currentDay}, (_, i) => i + 1);
-      daysToTrack.forEach(d => {
-        this.state.metrics.complianceByDay[d] = { 
-            completed: 0, 
-            missed: filters.excludeMissed ? 0 : pCount * expectedPerDay, 
-            latencies: [] 
-        };
+    sessions.forEach(session => {
+      const data = Array.from(session.phaseMap.values()).map(phase => {
+        phase.presentationOrder = [phase._order.sort((a, b) => a[1] - b[1]).map(item => item[0])];
+        delete phase._order;
+        phase.eligibleQuestionIds = Array.from(new Set(phase.eligibleQuestionIds));
+        return phase;
       });
-  
-      // 4. Crunch the final filtered sessions
-      sessions.forEach(s => {
-        totalDuration += s.durationMs;
-        totalLatency += s.latencyMs;
-  
-        if (this.state.metrics.complianceByDay[s.day]) {
-           this.state.metrics.complianceByDay[s.day].completed++;
-           
-           if (!filters.excludeMissed) {
-             this.state.metrics.complianceByDay[s.day].missed = Math.max(0, this.state.metrics.complianceByDay[s.day].missed - 1);
-           }
-           this.state.metrics.complianceByDay[s.day].latencies.push(s.latencyMs);
-        }
-      });
-  
-      if (sessions.length > 0) {
-        this.state.metrics.avgTimeMs = totalDuration / sessions.length;
-        this.state.metrics.avgLatencyMs = totalLatency / sessions.length;
-      } else {
-        this.state.metrics.avgTimeMs = 0;
-        this.state.metrics.avgLatencyMs = 0;
-      }
-  
-      // Calculate Average Latency per day
-      Object.keys(this.state.metrics.complianceByDay).forEach(day => {
-        const lats = this.state.metrics.complianceByDay[day].latencies;
-        this.state.metrics.latencyByDay[day] = lats.length > 0 ? (lats.reduce((a,b)=>a+b,0) / lats.length) : 0;
-      });
+      const { phaseMap, ...sessionRecord } = session;
+      this.state.allSessions.push(this.normalizeSession({ ...sessionRecord, data }));
+    });
+  },
+
+  _parseCsvValue(type, raw, numeric) {
+    if (type === "checkbox") return String(raw || "").split(";").filter(Boolean);
+    if (type === "affect_grid") {
+      const [valence, arousal] = String(raw || "").split(";").map(Number);
+      return Number.isFinite(valence) && Number.isFinite(arousal) ? { valence, arousal } : raw;
     }
-  };
+    if (type === "heart_rate") {
+      const bpm = Number(numeric !== "" ? numeric : raw);
+      return Number.isFinite(bpm) ? { bpm, sqi: null } : null;
+    }
+    if (type === "slider" || type === "numeric") {
+      const value = Number(numeric !== "" ? numeric : raw);
+      return Number.isFinite(value) ? value : null;
+    }
+    return raw;
+  },
+
+  normalizeSession(json) {
+    const startMs = json.startedAt ? Date.parse(json.startedAt) : NaN;
+    const endMs = json.completedAt ? Date.parse(json.completedAt) : NaN;
+    const durationMs = Number.isFinite(startMs) && Number.isFinite(endMs) && endMs >= startMs ? endMs - startMs : null;
+    return {
+      ...json,
+      participantId: json.participantId || "Unknown",
+      sessionId: json.sessionId || "",
+      startedAt: json.startedAt || null,
+      completedAt: json.completedAt || null,
+      day: Number.parseInt(json.day, 10) || 1,
+      sessionType: json.type || "unknown",
+      durationMs,
+      latencyMs: Number.isFinite(json.notificationLatencyMs) ? json.notificationLatencyMs : null,
+      isCompleted: json.status === "complete" || json.status === "submitted",
+      isRapid: durationMs !== null && durationMs < 30000,
+      data: Array.isArray(json.data) ? json.data : []
+    };
+  },
+
+  _deduplicateSessions() {
+    const byId = new Map();
+    this.state.allSessions.forEach(session => {
+      const key = session.sessionId || `${session.participantId}|${session.day}|${session.startedAt}`;
+      const existing = byId.get(key);
+      if (!existing || Date.parse(session.completedAt || 0) >= Date.parse(existing.completedAt || 0)) byId.set(key, session);
+    });
+    this.state.allSessions = Array.from(byId.values());
+  },
+
+  calculateMetrics(filters = {}) {
+    let sessions = this.state.allSessions;
+    if (filters.day && filters.day !== "all") sessions = sessions.filter(session => session.day === Number(filters.day));
+    if (filters.participant && filters.participant !== "all") sessions = sessions.filter(session => session.participantId === filters.participant);
+
+    const totalRapid = sessions.filter(session => session.isRapid).length;
+    if (filters.excludeRapid) sessions = sessions.filter(session => !session.isRapid);
+    this.state.filteredSessions = sessions;
+
+    const completed = sessions.filter(session => session.isCompleted);
+    const durations = completed.map(session => session.durationMs).filter(Number.isFinite);
+    const latencies = completed.map(session => session.latencyMs).filter(Number.isFinite);
+    const observedByDay = {};
+    completed.forEach(session => {
+      if (!observedByDay[session.day]) observedByDay[session.day] = { completed: 0, latencies: [] };
+      observedByDay[session.day].completed += 1;
+      if (Number.isFinite(session.latencyMs)) observedByDay[session.day].latencies.push(session.latencyMs);
+    });
+
+    const latencyByDay = {};
+    Object.entries(observedByDay).forEach(([day, values]) => {
+      latencyByDay[day] = values.latencies.length
+        ? values.latencies.reduce((sum, value) => sum + value, 0) / values.latencies.length
+        : null;
+    });
+
+    this.state.metrics = {
+      ...this.emptyMetrics(),
+      latencyAvailable: latencies.length > 0,
+      totalCompleted: completed.length,
+      totalRapid,
+      avgTimeMs: durations.length ? durations.reduce((sum, value) => sum + value, 0) / durations.length : null,
+      avgLatencyMs: latencies.length ? latencies.reduce((sum, value) => sum + value, 0) / latencies.length : null,
+      observedByDay,
+      latencyByDay
+    };
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = DataParser;

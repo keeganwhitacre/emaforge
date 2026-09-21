@@ -23,28 +23,8 @@ const AppUI = {
   },
 
   bindEvents() {
-    // In AppUI.bindEvents()
-const importBtn = document.getElementById('btn-import-data');
-const fileInput = document.getElementById('file-import-input'); // Updated ID
-
-importBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async (e) => {
-      if (e.target.files.length === 0) return;
-      
-      this.setStatus("Processing...", "badge-warn");
-      try {
-        const data = await DataParser.ingestFiles(e.target.files);
-        this.populateDateDropdown(data.allSessions);
-        this.refreshData(); 
-        document.getElementById('empty-state').style.display = 'none';
-        this.setStatus("Synced Just Now", "badge-good");
-      } catch (err) {
-        console.error(err);
-        alert("Error parsing files. Make sure to provide your config.json and your EMA data (JSON or CSV).");
-        this.setStatus("Error", "badge-danger");
-    }
-    fileInput.value = ""; // Reset input
-    }); 
+    const importBtn = document.getElementById('btn-import-data');
+    const fileInput = document.getElementById('file-import-input');
     const exportBtn = document.getElementById('export-csv-btn');
     
     // Filters & Toggles
@@ -68,7 +48,7 @@ fileInput.addEventListener('change', async (e) => {
         this.populateDateDropdown(data.allSessions);
         this.refreshData(); 
         document.getElementById('empty-state').style.display = 'none';
-        this.setStatus("Synced Just Now", "badge-good");
+        this.setStatus(data.warnings.length ? `Imported with ${data.warnings.length} warning(s)` : "Imported locally", data.warnings.length ? "badge-warn" : "badge-good");
       } catch (err) {
         console.error(err);
         alert("Error parsing folder. Make sure it contains EMA JSON exports.");
@@ -91,7 +71,13 @@ fileInput.addEventListener('change', async (e) => {
             const mode = e.target.textContent.trim();
             if (mode === 'Per Participant') {
                 const pList = Array.from(DataParser.state.participants).sort();
-                filterCohort.innerHTML = pList.map(p => `<option value="${p}">${p}</option>`).join('');
+                filterCohort.replaceChildren();
+                pList.forEach(participantId => {
+                  const option = document.createElement('option');
+                  option.value = participantId;
+                  option.textContent = participantId;
+                  filterCohort.appendChild(option);
+                });
             } else {
                 filterCohort.innerHTML = `<option value="all">All Participants (n=${DataParser.state.participants.size})</option>`;
             }
@@ -140,8 +126,7 @@ fileInput.addEventListener('change', async (e) => {
     if (DataParser.state.allSessions.length === 0) return;
     
     const filters = {
-        excludeNoise: document.getElementById('toggle-filter-rapid').checked,
-        excludeMissed: document.getElementById('toggle-exclude-missed').checked,
+        excludeRapid: document.getElementById('toggle-filter-rapid').checked,
         day: document.getElementById('filter-date').value,
         participant: document.getElementById('filter-cohort').value || 'all'
     };
@@ -206,6 +191,7 @@ fileInput.addEventListener('change', async (e) => {
       'session_started_at', 'session_submitted_at',
       'phase_started_at', 'phase_submitted_at',
       'question_id', 'question_text', 'question_type', 'presentation_order',
+      'response_status', 'skip_reason',
       'response_value', 'response_numeric', 'response_latency_ms'
     ];
 
@@ -224,7 +210,13 @@ fileInput.addEventListener('change', async (e) => {
         const phaseSubmit = entry.submittedAt || '';
         const phaseStartMs = phaseStart ? Date.parse(phaseStart) : null;
 
-        Object.entries(entry.responses || {}).forEach(([qid, rec]) => {
+        const presented = entry.presentationOrder ? entry.presentationOrder.flat() : [];
+        const eligible = Array.isArray(entry.eligibleQuestionIds) && entry.eligibleQuestionIds.length
+          ? entry.eligibleQuestionIds
+          : Array.from(new Set([...presented, ...Object.keys(entry.responses || {})]));
+
+        eligible.forEach(qid => {
+          const rec = (entry.responses || {})[qid];
           const q = qIdx[qid] || {};
           const rawVal = (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
           const respAt = (rec && typeof rec === 'object') ? rec.respondedAt : null;
@@ -232,10 +224,14 @@ fileInput.addEventListener('change', async (e) => {
 
           let presOrder = '';
           if (entry.presentationOrder) {
-            const flatLayout = entry.presentationOrder.flat();
-            const idx = flatLayout.indexOf(qid);
+            const idx = presented.indexOf(qid);
             if (idx !== -1) presOrder = idx + 1;
           }
+          const skip = (entry.skippedQuestions || []).find(item => item.questionId === qid);
+          const answered = rec !== undefined && rawVal !== undefined && rawVal !== null && rawVal !== '';
+          const responseStatus = skip && !presented.includes(qid)
+            ? 'skipped_condition'
+            : (answered ? 'answered' : 'unanswered');
 
           const rowData = [
             sessionData.participantId,
@@ -252,6 +248,8 @@ fileInput.addEventListener('change', async (e) => {
             q.text || '',
             q.type || '',
             presOrder,
+            responseStatus,
+            skip?.reason || '',
             this._serializeValue(rawVal),
             this._toNumeric(rawVal),
             latency
@@ -281,7 +279,7 @@ fileInput.addEventListener('change', async (e) => {
         plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
         scales: {
           x: { grid: { display: false } },
-          y: { beginAtZero: true, max: 100, grid: gridConfig, ticks: { callback: v => v + '%' } }
+          y: { beginAtZero: true, grid: gridConfig, ticks: { precision: 0 } }
         }
       }
     });
@@ -295,7 +293,7 @@ fileInput.addEventListener('change', async (e) => {
         plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
         scales: {
           x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, beginAtZero: true, max: 100, grid: gridConfig, ticks: { callback: v => v + '%' } }
+          y: { stacked: true, beginAtZero: true, grid: gridConfig, ticks: { precision: 0 } }
         }
       }
     });
@@ -341,7 +339,7 @@ fileInput.addEventListener('change', async (e) => {
         ? `Local File Analysis — ${data.participants.size} Active Participants`
         : `Local File Analysis — Isolating Participant ${cohortFilter}`;
     
-    const studyDays = data.studyConfig?.ema?.scheduling?.study_days || Object.keys(data.metrics.complianceByDay).length;
+    const studyDays = data.studyConfig?.ema?.scheduling?.study_days || Object.keys(data.metrics.observedByDay).length || 1;
     
     const currentDay = Math.max(...data.allSessions.map(s => s.day), 1);
     const pct = Math.round((currentDay / studyDays) * 100);
@@ -352,26 +350,23 @@ fileInput.addEventListener('change', async (e) => {
   },
 
   updateKPIs(m) {
-    const fmtPct = (num, den) => den === 0 ? "0%" : Math.round((num / den) * 100) + "%";
     const fmtMsToMinSec = (ms) => {
-        if(ms === 0) return "--m --s";
+        if(!Number.isFinite(ms)) return "Unavailable";
         const mins = Math.floor(ms / 60000);
         const secs = Math.floor((ms % 60000) / 1000);
         return `${mins}m ${secs}s`;
     };
 
-    const compliancePct = m.totalExpectedPings === 0 ? 0 : (m.totalCompleted / m.totalExpectedPings) * 100;
-    document.getElementById('kpi-compliance').textContent = fmtPct(m.totalCompleted, m.totalExpectedPings);
-    this.setCardStatus('card-compliance', compliancePct >= 80 ? 'good' : (compliancePct >= 60 ? 'warn' : 'danger'));
+    document.getElementById('kpi-compliance').textContent = "Unavailable";
+    document.getElementById('trend-compliance').textContent = "Requires roster + prompt events";
+    this.setCardStatus('card-compliance', '');
 
-    document.getElementById('kpi-pings').textContent = m.totalDelivered;
-    
-    const isExcludingNoise = document.getElementById('toggle-filter-rapid').checked;
-    const baseTotal = isExcludingNoise ? (m.totalCompleted + m.totalNoise) : m.totalCompleted;
-    const noisePct = baseTotal === 0 ? 0 : (m.totalNoise / baseTotal) * 100;
-    
-    document.getElementById('kpi-noise').textContent = fmtPct(m.totalNoise, baseTotal);
-    this.setCardStatus('card-noise', noisePct < 5 ? 'good' : (noisePct < 15 ? 'warn' : 'danger'));
+    document.getElementById('kpi-pings').textContent = "Unavailable";
+    document.getElementById('trend-pings').textContent = "Requires delivery events";
+
+    document.getElementById('kpi-noise').textContent = String(m.totalRapid);
+    document.getElementById('trend-noise').textContent = "Review flag; not automatic exclusion";
+    this.setCardStatus('card-noise', m.totalRapid === 0 ? 'good' : 'warn');
 
     document.getElementById('kpi-time').textContent = fmtMsToMinSec(m.avgTimeMs);
   },
@@ -382,26 +377,14 @@ fileInput.addEventListener('change', async (e) => {
   },
 
   updateCharts(m) {
-    const days = Object.keys(m.complianceByDay).sort((a,b)=>a-b);
+    const days = Object.keys(m.observedByDay).sort((a,b)=>a-b);
     const labels = days.map(d => `Day ${d}`);
-    
-    const completedData = days.map(d => m.complianceByDay[d].completed);
-    const missedData = days.map(d => m.complianceByDay[d].missed);
-    
-    const compPctData = completedData.map((val, i) => {
-        const total = val + missedData[i];
-        return total === 0 ? 0 : Math.round((val/total)*100);
-    });
-    const missPctData = missedData.map((val, i) => {
-        const total = completedData[i] + val;
-        return total === 0 ? 0 : Math.round((val/total)*100);
-    });
+    const completedData = days.map(d => m.observedByDay[d].completed);
 
     this.charts.compliance.data = {
       labels: labels,
       datasets: [
-        { label: 'Completed', data: compPctData, backgroundColor: '#3fb950', borderRadius: 4, barPercentage: 0.6 },
-        { label: 'Missed', data: missPctData, backgroundColor: '#2d333b', borderRadius: 4, barPercentage: 0.6 }
+        { label: 'Observed completed sessions', data: completedData, backgroundColor: '#3fb950', borderRadius: 4, barPercentage: 0.6 }
       ]
     };
     this.charts.compliance.update();
@@ -410,8 +393,8 @@ fileInput.addEventListener('change', async (e) => {
     this.charts.overview.data = {
       labels: labels,
       datasets: [{
-        label: 'Daily Compliance %',
-        data: compPctData,
+        label: 'Observed completed sessions',
+        data: completedData,
         borderColor: '#3fb950',
         backgroundColor: 'rgba(63,185,80,0.1)',
         borderWidth: 2, tension: 0.4, fill: true,
@@ -420,20 +403,19 @@ fileInput.addEventListener('change', async (e) => {
     };
     this.charts.overview.update();
 
-    const isExcludingNoise = document.getElementById('toggle-filter-rapid').checked;
-    const valid = m.totalCompleted - (isExcludingNoise ? 0 : m.totalNoise);
+    const valid = Math.max(0, m.totalCompleted - m.totalRapid);
     
     this.charts.disposition.data = {
-      labels: ['Valid Data', 'Missed', 'Speeding (Noise)'],
+      labels: ['Not rapid-flagged', 'Rapid review flag'],
       datasets: [{
-        data: [valid, m.totalMissed, m.totalNoise],
-        backgroundColor: ['#3fb950', '#2d333b', '#e8716a'],
+        data: [valid, m.totalRapid],
+        backgroundColor: ['#3fb950', '#e8716a'],
         borderWidth: 0, hoverOffset: 4
       }]
     };
     this.charts.disposition.update();
 
-    const latencyDataMins = days.map(d => Math.round(m.latencyByDay[d] / 60000));
+    const latencyDataMins = days.map(d => Number.isFinite(m.latencyByDay[d]) ? Math.round(m.latencyByDay[d] / 60000) : null);
     this.charts.latency.data = {
       labels: labels,
       datasets: [{
@@ -447,8 +429,9 @@ fileInput.addEventListener('change', async (e) => {
     };
     this.charts.latency.update();
 
-    const overallLatMin = Math.round(m.avgLatencyMs / 60000);
-    document.getElementById('latency-median-badge').textContent = `Avg: ${overallLatMin}m`;
+    document.getElementById('latency-median-badge').textContent = Number.isFinite(m.avgLatencyMs)
+      ? `Avg: ${Math.round(m.avgLatencyMs / 60000)}m`
+      : 'Unavailable — no delivery timestamps';
   },
 
   updateTable(data) {
@@ -461,38 +444,25 @@ fileInput.addEventListener('change', async (e) => {
       pStats[s.participantId].completed++;
     });
 
-    const currentDayFilter = document.getElementById('filter-date').value;
-    const isExcludeMissed = document.getElementById('toggle-exclude-missed').checked;
-    const expectedPerDay = data.studyConfig?.ema?.scheduling?.windows?.length || 3;
-    
-    // Evaluate against current day, not total study days
-    const currentDay = Math.max(...data.allSessions.map(s => s.day), 1);
-    const expectedPerP = currentDayFilter === 'all' ? (currentDay * expectedPerDay) : expectedPerDay;
-
     const rows = Object.keys(pStats).map(pId => {
-      const comp = pStats[pId].completed;
-      const denominator = isExcludeMissed ? comp : expectedPerP;
-      const pct = denominator === 0 ? 0 : Math.round((comp / denominator) * 100);
-      return { id: pId, pct: Math.min(100, pct) };
+      return { id: pId, completed: pStats[pId].completed };
     });
 
-    rows.sort((a,b) => a.pct - b.pct);
+    rows.sort((a,b) => a.id.localeCompare(b.id));
 
     rows.forEach(r => {
       const tr = document.createElement('tr');
       
-      let color = 'var(--green)';
-      let badgeClass = 'badge-good';
-      let status = 'Good';
-
-      if (r.pct < 50) { color = 'var(--red)'; badgeClass = 'badge-danger'; status = 'Critical'; }
-      else if (r.pct < 75) { color = 'var(--yellow)'; badgeClass = 'badge-warn'; status = 'At Risk'; }
-
-      tr.innerHTML = `
-        <td>${r.id}</td>
-        <td><span style="color:${color}; font-weight:600;">${r.pct}%</span></td>
-        <td><span class="badge ${badgeClass}">${status}</span></td>
-      `;
+      const idCell = document.createElement('td');
+      idCell.textContent = r.id;
+      const countCell = document.createElement('td');
+      countCell.textContent = String(r.completed);
+      const statusCell = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-neutral';
+      badge.textContent = 'Observed only';
+      statusCell.appendChild(badge);
+      tr.append(idCell, countCell, statusCell);
       tbody.appendChild(tr);
     });
 
@@ -500,21 +470,14 @@ fileInput.addEventListener('change', async (e) => {
     const overviewTbody = document.getElementById('overview-watchlist-body');
     overviewTbody.innerHTML = '';
     
-    const criticalRows = rows.filter(r => r.pct < 60);
-    document.getElementById('overview-critical-count').textContent = criticalRows.length;
-
-    if (criticalRows.length === 0) {
-        overviewTbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--fg-3); padding-top: 24px;">No critical participants</td></tr>';
-    } else {
-        criticalRows.slice(0, 5).forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="font-weight: 500;">${r.id}</td>
-                <td><span style="color: var(--red); font-weight:600;">${r.pct}%</span></td>
-            `;
-            overviewTbody.appendChild(tr);
-        });
-    }
+    document.getElementById('overview-critical-count').textContent = 'N/A';
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 2;
+    cell.style.cssText = 'text-align:center;color:var(--fg-3);padding-top:24px;';
+    cell.textContent = 'A roster and prompt-event log are required to identify missed sessions.';
+    row.appendChild(cell);
+    overviewTbody.appendChild(row);
   }
 };
 

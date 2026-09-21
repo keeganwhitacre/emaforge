@@ -5,8 +5,14 @@ const ePAT = (function() {
   const core = window.ePATCore;
   const NUM_TRIALS = config.modules?.epat?.trials || 20;
   const NUM_PRACTICES = config.modules?.epat?.two_phase_practice ? 2 : 0;
+  const TRIAL_DURATION_MS = Math.max(15, config.modules?.epat?.trial_duration_sec || 30) * 1000;
+  const MAX_ATTEMPTS = Math.max(NUM_TRIALS, config.modules?.epat?.retry_budget || NUM_TRIALS);
+  const configuredSqiThreshold = Number(config.modules?.epat?.sqi_threshold);
   const IBI_CHANGE_THRESHOLD = 0.30;
-  const SQI_GOOD = 0.008, SQI_WARN = 0.004;
+  const SQI_GOOD = configuredSqiThreshold > 0 && configuredSqiThreshold <= 0.05
+    ? configuredSqiThreshold
+    : 0.008;
+  const SQI_WARN = SQI_GOOD / 2;
   const BODY_MAP_EVERY = config.modules?.epat?.body_map ? 4 : Infinity;
 
   let trialIP = [], trialAP = [], trialKS = [], trialCD = [], trialIE = [], trialRecordedHR = [], trialInstantBpms = [];
@@ -15,11 +21,11 @@ const ePAT = (function() {
   let trialSqiTimeSeries = [], trialSqiBadSeconds = 0, trialLastSqiCheckTime = 0, trialDicroticRejections = [];
   let currentInstantPeriod = 0, currentAveragePeriod = 0;
 
-  let baselineTimer = null, baselineBPMs = [], baselineStartTime = 0;
+  let baselineTimer = null, baselineBPMs = [], baselineStartTime = 0, baselineAttempts = 0;
   let isFingerPresent = false, currentSqiValue = 0, lastBeatPerfTime = performance.now(), sensorCheckInterval = null;
   let dialEl, dialAngle = 0, dialDragging = false, dialCx = 0, dialCy = 0, lastAngle = 0;
   let trialVisualOffset = 0, currentKnobValue = 0, currentTrialIndex = -(NUM_PRACTICES);
-  let trialDetectorRunning = false, trialRunning = false;
+  let trialDetectorRunning = false, trialRunning = false, trialTimer = null, totalAttempts = 0;
 
   // ----------------------------------------------------------
   // DIAL INIT
@@ -184,6 +190,7 @@ const ePAT = (function() {
     show("screen-baseline");
     baselineBPMs = []; baselineStartTime = Date.now();
     currentTrialIndex = -(NUM_PRACTICES);
+    totalAttempts = 0;
     initDial();
 
     const bpmEl = document.getElementById("baseline-bpm");
@@ -245,10 +252,25 @@ const ePAT = (function() {
 
         if (!isPreview && (baselineBPMs.length < 80 || diagnostics.clipRate > 20 || finalSqi < 0.002)) {
           await core.BeatDetector.stop(); trialDetectorRunning = false;
-          setTimeout(() => startBaseline(), 4000); // Silent restart
+          baselineAttempts++;
+          sessionData.data.push({
+            type: 'phase_event', phase: 'epat', status: 'baseline_failed',
+            attempt: baselineAttempts, diagnostics, sqi: finalSqi,
+            evaluatedAt: new Date().toISOString()
+          });
+          if (baselineAttempts >= 3) {
+            sessionData.data.push({
+              type: 'epat_failure', stage: 'baseline', reason: 'signal_quality',
+              attempts: baselineAttempts, recordedAt: new Date().toISOString()
+            });
+            advancePhase();
+          } else {
+            setTimeout(() => startBaseline(), 4000);
+          }
           return;
         }
 
+        baselineAttempts = 0;
         sessionData.data.push({
           type: "baseline", recordedHR: baselineBPMs.map(Math.round),
           totalBeats: baselineBPMs.length, ppgSampleRate: core.BeatDetector.getActualFPS(),
@@ -287,10 +309,13 @@ const ePAT = (function() {
     trialRunning = true;
     document.getElementById("trial-label").textContent = currentTrialIndex < 0
       ? `Practice Trial ${NUM_PRACTICES + currentTrialIndex + 1}`
-      : `Trial ${currentTrialIndex + 1} of ${NUM_TRIALS}`;
+      : `Valid Trial ${currentTrialIndex + 1} of ${NUM_TRIALS} · Attempt ${totalAttempts + 1} of ${MAX_ATTEMPTS}`;
     document.getElementById("confirm-trial-btn").disabled = true;
 
     if (!core) return;
+
+    clearTimeout(trialTimer);
+    trialTimer = setTimeout(() => endTrial('timeout'), TRIAL_DURATION_MS);
 
     core.MotionDetector.start();
     const videoElement = document.getElementById("video-feed");
@@ -356,8 +381,10 @@ const ePAT = (function() {
   // ----------------------------------------------------------
   // END TRIAL
   // ----------------------------------------------------------
-  function endTrial() {
+  function endTrial(completionReason = 'confirmed') {
+    if (!trialRunning) return;
     trialRunning = false;
+    clearTimeout(trialTimer);
     if (core) {
       core.MotionDetector.stop(); stopSensorWatchdog();
       core.BeatDetector.setCallbacks({ onBeatCb: null, onFingerChangeCb: null, onSqiUpdateCb: null, onDicroticRejectCb: null, onPPGSampleCb: null });
@@ -367,11 +394,12 @@ const ePAT = (function() {
     const td = {
       type: "trial", isPractice: currentTrialIndex < 0,
       initialKnobValue: trialInitialKnob, visualOffset: trialVisualOffset,
+      finalKnobValue: currentKnobValue,
       instantPeriods: [...trialIP], averagePeriods: [...trialAP],
       knobScales: [...trialKS], currentDelays: [...trialCD], instantErrs: [...trialIE],
       recordedHR: [...trialRecordedHR], instantBpms: [...trialInstantBpms],
       toneTimings: [...trialToneTimings], fingerLossEvents: [...trialFingerLossEvents],
-      confidence: -1, bodyPos: -1,
+      confidence: -1, bodyPos: -1, completionReason,
       ppgDiagnostics: core ? core.BeatDetector.getDiagnostics() : {},
       ibiFlags: [...trialIbiFlags], sqiTimeSeries: [...trialSqiTimeSeries],
       dicroticRejections: [...trialDicroticRejections],
@@ -384,11 +412,19 @@ const ePAT = (function() {
         ibiChangeThreshold: IBI_CHANGE_THRESHOLD, sqiGoodThreshold: SQI_GOOD, sqiWarnThreshold: SQI_WARN
       }
     };
+    td.valid = td.isPractice || (
+      completionReason === 'confirmed' &&
+      totalBeats > 0 &&
+      td.qualitySummary.sqiFinalValue >= SQI_GOOD
+    );
+    td.invalidReason = td.valid
+      ? null
+      : (completionReason === 'timeout' ? 'trial_timeout' : (totalBeats === 0 ? 'no_detected_beats' : 'low_sqi'));
 
     if (core) { td.audioDropLog = core.AudioEngine.getDropLog(); td.audioCtxState = core.AudioEngine.getState(); core.AudioEngine.clearDropLog(); core.AudioEngine.resetSchedulerState(); }
 
     // Confidence rating (if enabled)
-    if (config.modules?.epat?.confidence_ratings) {
+    if (config.modules?.epat?.confidence_ratings && td.valid) {
       show("screen-ema");
       document.getElementById("ema-progress-fill").style.width = "100%";
       const container = document.getElementById("ema-single-container");
@@ -417,7 +453,7 @@ const ePAT = (function() {
 
   function afterConfidence(td) {
     // Body map (if enabled, every N trials)
-    if (config.modules?.epat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % BODY_MAP_EVERY === 0) {
+    if (td.valid && config.modules?.epat?.body_map && currentTrialIndex >= 0 && (currentTrialIndex + 1) % BODY_MAP_EVERY === 0) {
       show("screen-bodymap");
       const parts = document.querySelectorAll(".body-part");
       const nowhereBtn = document.getElementById("nowhere-btn");
@@ -428,16 +464,21 @@ const ePAT = (function() {
         p.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); if (nowhereBtn) nowhereBtn.classList.remove("selected"); p.classList.add("selected"); sel = parseInt(p.dataset.value); confirmBtn.disabled = false; };
       });
       if (nowhereBtn) { nowhereBtn.classList.remove("selected"); nowhereBtn.onclick = () => { parts.forEach(pp => pp.classList.remove("selected")); nowhereBtn.classList.add("selected"); sel = 8; confirmBtn.disabled = false; }; }
-      confirmBtn.onclick = () => { td.bodyPos = sel; confirmBtn.onclick = null; sessionData.data.push(td); wrapTrial(); };
+      confirmBtn.onclick = () => { td.bodyPos = sel; confirmBtn.onclick = null; sessionData.data.push(td); wrapTrial(td); };
     } else {
       sessionData.data.push(td);
-      wrapTrial();
+      wrapTrial(td);
     }
   }
 
-  async function wrapTrial() {
-    currentTrialIndex++;
-    if (currentTrialIndex >= NUM_TRIALS) {
+  async function wrapTrial(completedTrial) {
+    if (currentTrialIndex < 0) {
+      currentTrialIndex++;
+    } else {
+      totalAttempts++;
+      if (completedTrial.valid) currentTrialIndex++;
+    }
+    if (currentTrialIndex >= NUM_TRIALS || totalAttempts >= MAX_ATTEMPTS) {
       if (core) {
         trialDetectorRunning = false;
         await core.BeatDetector.stop();
@@ -452,7 +493,8 @@ const ePAT = (function() {
       // will only ever be one set.
       const rawEntries  = sessionData.data.filter(e => e && (e.type === 'baseline' || e.type === 'trial'));
       const baseline    = rawEntries.find(e => e.type === 'baseline') || null;
-      const trialObjs   = rawEntries.filter(e => e.type === 'trial' && !e.isPractice);
+      const trialObjs   = rawEntries.filter(e => e.type === 'trial' && !e.isPractice && e.valid !== false);
+      const failedTrialObjs = rawEntries.filter(e => e.type === 'trial' && !e.isPractice && e.valid === false);
       const practiceObjs= rawEntries.filter(e => e.type === 'trial' &&  e.isPractice);
  
       // Derive a session-level median RR from the baseline recordedHR array.
@@ -468,26 +510,14 @@ const ePAT = (function() {
       }
       const sessionRR = medianRR(baseline?.recordedHR);
  
-      // Convert a trial's visualOffset (radians) to phase_ms.
-      // visualOffset is the knob position scaled to [-π, π], where the full
-      // range maps to one RR interval. So phase_ms = (visualOffset / π) * (RR/2).
-      // Equivalently: phase_ms = visualOffset * RR / (2π).
-      // We wrap to [-RR/2, +RR/2] so early and late are symmetric around the peak.
-      function offsetToMs(visualOffset, rrMs) {
-        const raw = (visualOffset / (2 * Math.PI)) * rrMs;
-        // Wrap to ±(RR/2)
-        const half = rrMs / 2;
-        return ((raw % rrMs) + rrMs + half) % rrMs - half;
-      }
- 
       // Build the normalised trial array. Each entry keeps all original fields
       // and adds `phase_ms` and `rr_ms` for downstream consumers.
       function buildTrialEntry(t) {
         // Per-trial RR: prefer the trial's own recordedHR, fall back to session.
         const trialRR = medianRR(t.recordedHR) || sessionRR;
-        const phase_ms = typeof t.visualOffset === 'number'
-          ? offsetToMs(t.visualOffset, trialRR)
-          : null;
+        // finalKnobValue includes both the randomized starting position and
+        // the participant's adjustment. visualOffset alone is only the start.
+        const phase_ms = EMAForgeRuntimeUtils.phaseMsFromKnob(t.finalKnobValue, trialRR);
         // sqi: use final SQI value from qualitySummary if present
         const sqi = t.qualitySummary?.sqiFinalValue ?? null;
         return { ...t, phase_ms, rr_ms: trialRR, sqi };
@@ -506,6 +536,10 @@ const ePAT = (function() {
  
       const summary = {
         valid_trials:       normTrials.length,
+        failed_trials:      failedTrialObjs.length,
+        attempts_used:      totalAttempts,
+        attempt_budget:     MAX_ATTEMPTS,
+        target_reached:     normTrials.length >= NUM_TRIALS,
         practice_trials:    practiceObjs.length,
         mean_abs_phase_ms:  meanAbsPhase,
         mean_confidence:    meanConf,
@@ -519,6 +553,7 @@ const ePAT = (function() {
         type:           'epat_response',
         startedAt:      baseline?.recordedAt ?? null,    // set if baseline stamps it; else null
         trials:         normTrials,
+        failedTrials:   failedTrialObjs.map(buildTrialEntry),
         practices:      practiceObjs.map(buildTrialEntry),
         baseline:       baseline,
         summary,
@@ -543,7 +578,7 @@ const ePAT = (function() {
 
   document.getElementById("confirm-trial-btn").addEventListener('click', () => {
     if (core) core.AudioEngine.resume();
-    endTrial();
+    endTrial('confirmed');
   });
 
   return { startBaseline };

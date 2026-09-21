@@ -12,7 +12,6 @@
 <title>EMA Forge - Dashboard</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <link rel="stylesheet" href="css/studio.css">
 <link rel="stylesheet" href="css/content-view.css">
@@ -307,16 +306,16 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div>
       <span class="section-title">Quality Controls (Recalculates charts)</span>
       <div class="toggle-row">
-        <span class="toggle-label">Exclude missed prompts</span>
+        <span class="toggle-label">Missed-prompt filtering unavailable without a roster/event log</span>
         <label class="toggle">
-          <input type="checkbox" id="toggle-exclude-missed">
+          <input type="checkbox" id="toggle-exclude-missed" disabled>
           <span class="toggle-track"></span>
         </label>
       </div>
       <div class="toggle-row">
-        <span class="toggle-label">Filter rapid responders (&lt;30s)</span>
+        <span class="toggle-label">Exclude rapid sessions (&lt;30s review flag)</span>
         <label class="toggle">
-          <input type="checkbox" id="toggle-filter-rapid" checked>
+          <input type="checkbox" id="toggle-filter-rapid">
           <span class="toggle-track"></span>
         </label>
       </div>
@@ -353,19 +352,19 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div id="view-overview" class="dashboard-view active">
       <div class="kpi-grid">
         <div class="kpi-card" id="card-compliance">
-          <span class="kpi-title">Avg. Compliance Rate</span>
+          <span class="kpi-title">Compliance Rate</span>
           <span class="kpi-value" id="kpi-compliance">--%</span>
           <div class="kpi-trend trend-neutral" id="trend-compliance">Awaiting data</div>
         </div>
         <div class="kpi-card" id="card-pings">
-          <span class="kpi-title">Total Pings Delivered</span>
+          <span class="kpi-title">Prompts Delivered</span>
           <span class="kpi-value" id="kpi-pings">--</span>
           <div class="kpi-trend trend-neutral" id="trend-pings">Awaiting data</div>
         </div>
         <div class="kpi-card" id="card-noise">
-          <span class="kpi-title">Signal Noise / Invalid</span>
+          <span class="kpi-title">Rapid Session Flags</span>
           <span class="kpi-value" id="kpi-noise">--%</span>
-          <div class="kpi-trend trend-neutral" id="trend-noise">Speeding or partials</div>
+          <div class="kpi-trend trend-neutral" id="trend-noise">Review flag; not an exclusion</div>
         </div>
         <div class="kpi-card" id="card-time">
           <span class="kpi-title">Avg. Time to Complete</span>
@@ -378,7 +377,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       <div class="chart-grid">
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">Study Health Trend (Daily Compliance)</span>
+            <span class="chart-title">Observed Completed Sessions by Day</span>
           </div>
           <div class="chart-container">
             <canvas id="overviewChart"></canvas>
@@ -412,7 +411,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div id="view-compliance" class="dashboard-view">
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">Daily Compliance Trend</span>
+          <span class="chart-title">Observed Completed Sessions</span>
         </div>
         <div class="chart-container chart-container-lg">
           <canvas id="complianceChart"></canvas>
@@ -425,7 +424,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       <div class="chart-grid chart-grid-halves">
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">Response Dispositions</span>
+            <span class="chart-title">Rapid-Duration Review Flags</span>
           </div>
           <div class="chart-container">
             <canvas id="dispositionChart"></canvas>
@@ -454,8 +453,8 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
             <thead>
               <tr>
                 <th>Participant ID</th>
-                <th>Overall Compliance</th>
-                <th>Status</th>
+                <th>Observed Completed Sessions</th>
+                <th>Interpretation</th>
               </tr>
             </thead>
             <tbody id="participant-table-body">
@@ -508,24 +507,11 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
   </div>
 </div>
  
-  <!-- Aggregate sub-view -->
-  <div id="pat-aggregate" style="display:flex;flex-direction:column;gap:20px">
-    <div class="pat-empty-inner">Loading…</div>
-  </div>
- 
-  <!-- Per-participant sub-view -->
-  <div id="pat-per-participant" style="display:none;flex-direction:column;gap:20px">
-    <div class="pat-empty-inner">Loading…</div>
-  </div>
- 
-</div>
-
   </main>
 </div>
 
 <!-- Scripts -->
 <script src="js/dashboard/parser.js"></script>
-<script src="js/dashboard/parser-csv-patch.js"></script>
 <script src="js/dashboard/content-stats.js"></script>
 <script src="js/dashboard/content-view.js"></script>
 <script src="js/dashboard/dashboard.js"></script>

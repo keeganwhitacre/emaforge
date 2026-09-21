@@ -2,7 +2,7 @@
 
 // ---------------------------------------------------------------------------
 // EMA Forge — state.js
-// Schema v1.5.0
+// Schema v1.6.0
 //
 // Changes from v1.4.0:
 //
@@ -27,11 +27,12 @@
 // CONDITIONAL TASKS:
 //   A task step in phase_sequence can carry a condition:
 //     { kind: "task", id: "epat", condition: { question_id: "q_hr_1", operator: "gt", value: 80 } }
-//   expandWindowToTokens() evaluates this against collected ema_response data
-//   before emitting the token. False → step is silently skipped.
+//   The participant runtime preserves this condition in its phase plan and
+//   evaluates it only when execution reaches the task. False → a documented
+//   phase_event is recorded and the task is skipped.
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = "1.5.0";
+const SCHEMA_VERSION = "1.6.0";
 
 let state = {
   study: {
@@ -49,7 +50,7 @@ let state = {
   onboarding: {
     enabled: true,
     ask_schedule: true,
-    consent_text: "<h3>1. Purpose</h3>\n<p>This research investigates daily experiences and mood in real-world settings.</p>\n<h3>2. What You Will Do</h3>\n<p>You will complete brief daily check-ins for the duration of the study.</p>\n<h3>3. Confidentiality</h3>\n<p>All data are stored under a participant ID number with no identifying information.</p>\n<h3>4. Contact</h3>\n<p>For questions about this study, contact the research team.</p>"
+    consent_text: "<h3>Consent template — researcher action required</h3>\n<p>Replace this placeholder with the exact consent language approved for your study before deployment.</p>\n<h3>Data collection</h3>\n<p>Describe every element your configuration collects, including participant identifiers, initials, device metadata, questionnaire responses, physiological measurements, and any linkage to phone numbers or scheduling records.</p>\n<h3>Storage and access</h3>\n<p>Describe where data are transmitted and stored, who can access them, retention and deletion procedures, foreseeable risks, and the research-team contact approved by your institution.</p>"
   },
 
   modules: [
@@ -63,7 +64,7 @@ let state = {
     trials: 20,
     trial_duration_sec: 30,
     retry_budget: 30,
-    sqi_threshold: 0.3,
+    sqi_threshold: 0.008,
     confidence_ratings: true,
     two_phase_practice: true,
     body_map: true
@@ -108,8 +109,8 @@ let state = {
 {
     id: "iat",
     label: "Implicit Association Task",
-    desc: "Greenwald et al. (2003) IAT with D-score scoring. Mobile-optimized tap response — no camera required.",
-    badge: null,
+    desc: "Development module pending independent procedure, scoring, counterbalancing, and device-timing validation. Do not use for confirmatory research yet.",
+    badge: "Experimental",
     enabled: false,
     settings: {
       target_a_label:  "Flowers",
@@ -190,6 +191,28 @@ function escH(str) {
   return (str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function sanitizeConsentHtml(html) {
+  const allowedTags = new Set(['H1', 'H2', 'H3', 'H4', 'P', 'UL', 'OL', 'LI', 'STRONG', 'EM', 'A', 'BR']);
+  const template = document.createElement('template');
+  template.innerHTML = String(html || '');
+  Array.from(template.content.querySelectorAll('*')).forEach(element => {
+    if (!allowedTags.has(element.tagName)) {
+      element.replaceWith(document.createTextNode(element.textContent || ''));
+      return;
+    }
+    Array.from(element.attributes).forEach(attribute => {
+      if (element.tagName !== 'A' || attribute.name !== 'href') element.removeAttribute(attribute.name);
+    });
+    if (element.tagName === 'A') {
+      const href = element.getAttribute('href') || '';
+      if (!/^(?:https?:|mailto:)/i.test(href)) element.removeAttribute('href');
+      element.setAttribute('rel', 'noopener noreferrer');
+      element.setAttribute('target', '_blank');
+    }
+  });
+  return template.innerHTML;
+}
+
 // ---------------------------------------------------------------------------
 // phasesToSequence(w) — canonical expansion from legacy triple or explicit array.
 // phase_sequence on the window is always used verbatim if present and non-empty.
@@ -220,6 +243,7 @@ function buildConfig() {
 
   if (cfg.study.completion_lock === undefined) cfg.study.completion_lock = true;
   if (cfg.study.resume_enabled  === undefined) cfg.study.resume_enabled  = true;
+  cfg.onboarding.consent_text = sanitizeConsentHtml(cfg.onboarding.consent_text);
 
   // Always emit phase_sequence — runtime prefers this over legacy triple
   (cfg.ema?.scheduling?.windows || []).forEach(w => {
