@@ -60,6 +60,11 @@ const OnboardingSession = (function() {
 
     const nextBtn = document.getElementById("ob-schedule-next");
     if (nextBtn) nextBtn.onclick = () => {
+      const selectedDays = [...grid.querySelectorAll(".day-btn.selected")].map(b => b.dataset.day);
+      if (selectedDays.length === 0) {
+        alert("Choose at least one available day.");
+        return;
+      }
       
       // Dynamically read the start/end times for whatever windows exist in the config
       const windowsData = {};
@@ -70,11 +75,9 @@ const OnboardingSession = (function() {
         };
       });
 
-      sessionData.data.push({
-        type: "schedule_pref",
-        days: [...grid.querySelectorAll(".day-btn.selected")].map(b => b.dataset.day),
-        windows: windowsData
-      });
+      const schedulePreferences = { days: selectedDays, windows: windowsData };
+      sessionData.schedulePreferences = schedulePreferences;
+      sessionData.data.push({ type: "schedule_pref", ...schedulePreferences });
       
       if (config.modules?.epat && window.ePATCore) {
         show("screen-ob-device");

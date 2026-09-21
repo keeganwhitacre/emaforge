@@ -246,7 +246,9 @@ function buildConfig() {
   cfg.onboarding.consent_text = sanitizeConsentHtml(cfg.onboarding.consent_text);
 
   // Always emit phase_sequence — runtime prefers this over legacy triple
-  (cfg.ema?.scheduling?.windows || []).forEach(w => {
+  const configuredWindows = cfg.ema?.scheduling?.windows || [];
+  if (cfg.ema?.scheduling) cfg.ema.scheduling.daily_prompts = configuredWindows.length;
+  configuredWindows.forEach(w => {
     w.phase_sequence = phasesToSequence(w);
   });
 

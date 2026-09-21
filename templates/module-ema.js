@@ -724,6 +724,13 @@ function interpolate(text, responses) {
 
   function installNextHandler() {
     document.getElementById('ema-next-btn').onclick = () => {
+      if (window.isResponseWindowExpired && window.isResponseWindowExpired()) {
+        emaResponses.submittedAt = new Date().toISOString();
+        emaResponses.status = 'expired_in_progress';
+        sessionData.data.push(emaResponses);
+        window.expireResponseWindow();
+        return;
+      }
       const container = document.getElementById('ema-single-container');
       container.classList.add('fade-out');
       setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);

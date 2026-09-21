@@ -116,6 +116,28 @@
     return finalKnobValue * rrMs / 2;
   }
 
+  function buildResponseWindowPolicy(sentAtValue, timing) {
+    const rawSentAt = String(sentAtValue || "").trim();
+    const sentAtMs = /^\d+$/.test(rawSentAt) ? Number(rawSentAt) : NaN;
+    const expiryMinutes = Number(timing && timing.expiry_minutes) || 0;
+    const graceMinutes = Number(timing && timing.grace_minutes) || 0;
+    const hasTimestamp = Number.isFinite(sentAtMs);
+    return {
+      enforced: hasTimestamp && expiryMinutes > 0,
+      sentAtMs,
+      expiresAtMs: hasTimestamp ? sentAtMs + expiryMinutes * 60000 : null,
+      graceUntilMs: hasTimestamp ? sentAtMs + (expiryMinutes + graceMinutes) * 60000 : null
+    };
+  }
+
+  function canStartResponseWindow(policy, nowMs) {
+    return !policy?.enforced || nowMs <= policy.expiresAtMs;
+  }
+
+  function isResponseWindowHardExpired(policy, nowMs) {
+    return !!policy?.enforced && nowMs > policy.graceUntilMs;
+  }
+
   function sanitizeStudyHtml(html) {
     if (typeof document === "undefined") return String(html || "");
     const allowedTags = new Set(["H1", "H2", "H3", "H4", "P", "UL", "OL", "LI", "STRONG", "EM", "A", "BR"]);
@@ -148,6 +170,9 @@
     parseEmaPhaseToken,
     collectResponses,
     phaseMsFromKnob,
+    buildResponseWindowPolicy,
+    canStartResponseWindow,
+    isResponseWindowHardExpired,
     sanitizeStudyHtml
   };
 });

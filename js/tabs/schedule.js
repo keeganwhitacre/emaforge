@@ -24,7 +24,6 @@ function bindScheduleTab() {
     if (el) el.addEventListener('input', () => { setter(parseInt(el.value)||0); schedulePreview(); });
   };
   bindNum('study-days',    v => state.ema.scheduling.study_days = v);
-  bindNum('daily-prompts', v => state.ema.scheduling.daily_prompts = v);
   bindNum('window-expiry', v => state.ema.scheduling.timing.expiry_minutes = v);
   bindNum('grace-period',  v => state.ema.scheduling.timing.grace_minutes = v);
 
@@ -64,10 +63,18 @@ function bindScheduleTab() {
 function renderWindows() {
   const list = document.getElementById('window-list');
   list.innerHTML = '';
+  syncDailyPromptCount();
   state.ema.scheduling.windows.forEach((w, i) => {
     migrateWindow(w);
     list.appendChild(buildWindowCard(w, i));
   });
+}
+
+function syncDailyPromptCount() {
+  const count = state.ema.scheduling.windows.length;
+  state.ema.scheduling.daily_prompts = count;
+  const input = document.getElementById('daily-prompts');
+  if (input) input.value = count;
 }
 
 // Ensure every window has a valid phase_sequence (schema migration)

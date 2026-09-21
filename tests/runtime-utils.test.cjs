@@ -68,3 +68,28 @@ test("collected responses merge completed EMA phases in sequence", () => {
   ]);
   assert.deepEqual(responses, { mood: { value: 8 }, place: { value: "home" } });
 });
+
+test("response expiry permits on-time starts only and enforces the grace deadline", () => {
+  const sentAt = Date.parse("2026-01-01T12:00:00.000Z");
+  const policy = utils.buildResponseWindowPolicy(String(sentAt), {
+    expiry_minutes: 60,
+    grace_minutes: 10
+  });
+
+  assert.equal(policy.expiresAtMs, Date.parse("2026-01-01T13:00:00.000Z"));
+  assert.equal(policy.graceUntilMs, Date.parse("2026-01-01T13:10:00.000Z"));
+  assert.equal(utils.canStartResponseWindow(policy, Date.parse("2026-01-01T12:59:59.000Z")), true);
+  assert.equal(utils.canStartResponseWindow(policy, Date.parse("2026-01-01T13:00:01.000Z")), false);
+  assert.equal(utils.isResponseWindowHardExpired(policy, Date.parse("2026-01-01T13:09:59.000Z")), false);
+  assert.equal(utils.isResponseWindowHardExpired(policy, Date.parse("2026-01-01T13:10:01.000Z")), true);
+});
+
+test("zero expiry explicitly disables response-window enforcement", () => {
+  const policy = utils.buildResponseWindowPolicy("1767268800000", {
+    expiry_minutes: 0,
+    grace_minutes: 10
+  });
+  assert.equal(policy.enforced, false);
+  assert.equal(utils.canStartResponseWindow(policy, Number.MAX_SAFE_INTEGER), true);
+  assert.equal(utils.isResponseWindowHardExpired(policy, Number.MAX_SAFE_INTEGER), false);
+});

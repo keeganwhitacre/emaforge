@@ -271,8 +271,9 @@
           <input type="number" id="study-days" value="14" min="1" max="365">
         </div>
         <div class="field-group">
-          <label class="field-label">Daily Prompts</label>
-          <input type="number" id="daily-prompts" value="3" min="1" max="10">
+          <label class="field-label">Prompts per Active Day</label>
+          <input type="number" id="daily-prompts" value="3" readonly aria-readonly="true">
+          <div class="field-hint">Derived from the number of time windows.</div>
         </div>
       </div>
 
@@ -288,7 +289,7 @@
         <div class="field-group">
           <label class="field-label">Grace Period (min)</label>
           <input type="number" id="grace-period" value="10" min="0" max="60">
-          <div class="field-hint">Extra time to finish once the first question is answered.</div>
+          <div class="field-hint">Extra time to finish after link expiry when the session was started on time.</div>
         </div>
       </div>
 

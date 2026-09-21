@@ -1601,16 +1601,16 @@ git push -u origin main
             with one row per (participant × day × session). Each row includes a <code>Phase_Sequence</code> column so
             you can eyeball at a glance what each link will do.</p>
 
-          <pre><code>Participant_ID,Day,Session,Phase_Sequence,URL
-104,0,Setup,Onboarding,https://.../?id=104&amp;session=onboarding
-104,1,Morning,Pre-EMA → ePAT → Post-EMA,https://.../?id=104&amp;day=1&amp;session=w1
-104,1,Evening,Pre-EMA,https://.../?id=104&amp;day=1&amp;session=w2
+          <pre><code>Participant_ID,Day,Active_Weekdays,Session,Phase_Sequence,Send_Window_Local,URL_Template
+104,0,Any,Setup,Onboarding,Researcher scheduled,https://.../?id=104&amp;session=onboarding
+104,1,Mon|Wed|Fri,Morning,Pre-EMA → ePAT → Post-EMA,08:00-10:00,https://.../?id=104&amp;day=1&amp;session=w1&amp;t={sent_at_ms}
 ...</code></pre>
 
-          <p>This CSV is the glue between EMA Forge and your delivery mechanism of choice — drop it into a Qualtrics
-            contacts list, a Twilio scheduled-SMS campaign, an institutional email merge, or a lab-built scheduler. Your
-            scheduler is responsible for appending a <code>t=</code> timestamp at send-time if you want expiry
-            enforcement.</p>
+          <p>This CSV is the glue between EMA Forge and your delivery mechanism of choice. It now emits a
+            <code>URL_Template</code> containing <code>{sent_at_ms}</code>; your delivery system must replace that token
+            with the millisecond Unix timestamp at send time. <code>Active_Weekdays</code> and
+            <code>Send_Window_Local</code> make the scheduling rules explicit rather than silently implying every row
+            should be sent.</p>
 
           <h2 id="notifications">Sending Prompts</h2>
           <p>You have two paths. Both use the same routing CSV as their source of truth.</p>
@@ -1646,9 +1646,10 @@ git push -u origin main
             <li><strong>Expiry window</strong> (default 60 min): after this many minutes past <code>t</code>, the link
               renders a "Link Expired" screen and the Start button is disabled. Recorded as a missed ping by the
               Dashboard.</li>
-            <li><strong>Grace period</strong>: a secondary buffer primarily used for downstream compliance calculations;
-              the link remains functional during grace, but responses inside the grace window can be flagged during
-              analysis.</li>
+            <li><strong>Grace period</strong>: a participant must begin before expiry. Once started, the exported runtime
+              allows completion until <code>expiry + grace</code>. Crossing that hard deadline records and delivers the
+              partial session with <code>status: expired_in_progress</code> and
+              <code>endedReason: response_window_elapsed</code>.</li>
           </ul>
 
           <h2 id="completion-lock">Session Locking</h2>
@@ -2628,11 +2629,10 @@ iat_trials &lt;- sessions |&gt;
 
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-item-title">📱 Twilio two-way + delivery receipts <span
+              <div class="feature-item-title">📱 Twilio delivery receipts <span
                   class="status-pill planned">PLANNED</span></div>
-              <div class="feature-item-desc">Auto-pause on STOP replies and ingest Twilio status-callback timestamps for
-                true ping-to-open latency. The dispatcher itself is <a href="#twilio-integration">already beta</a>;
-                these close the remaining two gaps.</div>
+              <div class="feature-item-desc">Ingest Twilio status-callback timestamps for true carrier-delivery and
+                ping-to-open latency. STOP auto-pause is already available in the beta dispatcher.</div>
             </div>
             <div class="feature-item">
               <div class="feature-item-title">⏱ Live latency <span class="status-pill planned">PLANNED</span></div>
@@ -3484,6 +3484,10 @@ export const handler = async (event) =&gt; {
             <li>Click <strong>1. Setup Twilio & Roster</strong>. Supply your Twilio Account SID, Auth Token, and Twilio
               phone number (E.164 format, e.g. <code>+15551234567</code>). The wizard creates a Roster sheet with the
               schema below, plus a hidden <code>_Dispatch_Log</code> sheet for audit and dedupe.</li>
+            <li>In Apps Script, choose <strong>Deploy → New deployment → Web app</strong>. Execute as yourself and allow
+              anyone to invoke it. Then use <strong>EMA Forge 🛠️ → Show inbound webhook setup</strong> and copy the
+              protected URL into Twilio's incoming-message webhook with method <code>POST</code>. For a Messaging
+              Service, enable Advanced Opt-Out so the webhook receives <code>OptOutType=STOP</code>.</li>
             <li>Fill in the Roster. One row per participant.</li>
             <li>Click <strong>2. Start Automation (every 15 min)</strong>. A time-based trigger is installed that runs
               <code>dispatchPrompts</code> every fifteen minutes.
@@ -3523,13 +3527,19 @@ export const handler = async (event) =&gt; {
               </tr>
               <tr>
                 <td><code>Status</code></td>
-                <td><code>Active</code> to enroll. <code>Paused</code> to stop sends (e.g. if a participant replies STOP
-                  — see two-way caveat below). <code>Completed</code> is set automatically when the last day's last
-                  window has fired.</td>
+                <td><code>Active</code> to enroll. <code>Paused</code> stops sends manually. <code>Opted Out</code> is set
+                  automatically when the inbound webhook receives STOP. <code>Completed</code> is set automatically
+                  after the study schedule ends.</td>
               </tr>
               <tr>
-                <td><code>Current_Day</code>, <code>Next_Window</code>, <code>Next_Ping_ISO</code>,
-                  <code>Last_Sent_ISO</code>
+                <td><code>Schedule_Preferences_JSON</code></td>
+                <td>Optional. Paste the onboarding record's top-level <code>schedulePreferences</code> object. The
+                  dispatcher intersects preferred days with protocol weekdays and applies valid per-window time
+                  overrides. Blank means use the protocol schedule unchanged.</td>
+              </tr>
+              <tr>
+                <td><code>Current_Day</code>, <code>Next_Window</code>, <code>Next_Study_Day</code>,
+                  <code>Next_Ping_ISO</code>, <code>Last_Sent_ISO</code>, <code>Opted_Out_At</code>
                 </td>
                 <td>Managed by the dispatcher. Don't write to these manually unless you're intentionally rescheduling.
                 </td>
@@ -3550,14 +3560,15 @@ export const handler = async (event) =&gt; {
           <p>Every 15 minutes the trigger runs <code>dispatchPrompts</code>, which for each Active participant:</p>
 
           <ol>
-            <li>Computes the participant's current study day in their own timezone. Handles DST correctly — a
-              spring-forward or fall-back won't shift anyone's morning ping.</li>
+            <li>Computes the participant's calendar study day in their own timezone. Handles DST correctly, skips
+              inactive weekdays without renumbering study days, and intersects optional onboarding preferences with
+              the protocol schedule.</li>
             <li>If a ping is already scheduled and its time has passed, sends it via Twilio, then clears the scheduled
               fields. The URL includes an <code>&t=</code> timestamp so the study's <code>expiry_minutes</code> setting
               is actually enforced.</li>
-            <li>Otherwise, schedules the next window: picks the first window (sorted by end-time) whose end is still in
-              the participant's future today, or rolls to tomorrow's first window if they've finished today. Within the
-              window, a random minute is picked — the core behavior any EMA designer needs.</li>
+            <li>Otherwise, scans forward for the next eligible, unsent window and picks a random minute inside it. A
+              stale scheduled prompt caused by dispatcher downtime is recorded as
+              <code>missed:dispatcher_late</code> instead of being sent hours or days late.</li>
             <li>Writes outcomes to the hidden <code>_Dispatch_Log</code> sheet with a <code>sent:HTTPcode</code> or
               <code>fail:HTTPcode:message</code> marker. Failures leave the ping scheduled for retry on the next tick;
               successes are recorded so a subsequent tick can't send a duplicate even if the sheet-write that clears
@@ -3565,9 +3576,9 @@ export const handler = async (event) =&gt; {
             </li>
           </ol>
 
-          <p>The dedupe key is <code>(Participant_ID, Day, Window_ID)</code> scoped to today in the participant's
-            timezone. A participant gets at most one SMS per window per day, regardless of what happens to the sheet
-            cells in between.</p>
+          <p>The dedupe key is <code>(Participant_ID, Day, Window_ID)</code> across the study. A script-wide lock prevents
+            overlapping trigger runs. Explicit Twilio failures retry; ambiguous network failures are logged as
+            <code>uncertain:manual_review</code> rather than automatically risking a duplicate SMS.</p>
 
           <h3 id="twilio-message-format">Message format</h3>
 
@@ -3603,6 +3614,11 @@ export const handler = async (event) =&gt; {
                   Start.</td>
               </tr>
               <tr>
+                <td>Show inbound webhook setup</td>
+                <td>Shows the deployed Web App URL plus its generated secret. Configure this as Twilio's incoming
+                  message webhook to auto-pause matching roster rows on STOP.</td>
+              </tr>
+              <tr>
                 <td>Send test message to row 2</td>
                 <td>One-shot send to whatever phone is in row 2 of the Roster. Use this to verify credentials end-to-end
                   before enrolling.</td>
@@ -3613,10 +3629,9 @@ export const handler = async (event) =&gt; {
           <h3 id="twilio-caveats">Known beta caveats</h3>
 
           <ul>
-            <li><strong>Two-way SMS is not wired.</strong> Participants who reply STOP will stop receiving messages from
-              Twilio (Twilio handles the opt-out carrier-side automatically), but the dispatcher won't know and will
-              keep trying. You'll see the failures accumulate in <code>_Dispatch_Log</code>. The manual workaround: set
-              that participant's <code>Status</code> to <code>Paused</code>.</li>
+            <li><strong>Inbound opt-out requires webhook setup.</strong> Twilio blocks recognized STOP replies
+              carrier-side, but the roster only changes to <code>Opted Out</code> after you deploy the Apps Script Web
+              App and configure its protected URL as the incoming-message webhook. Test this before enrollment.</li>
             <li><strong>Credentials are "script-private," not "secure."</strong> Anyone with edit access to the Apps
               Script project can read them back with two lines of code. For the typical single-PI setup this is fine;
               for a shared lab Sheet, restrict Apps Script edit access explicitly.</li>

@@ -498,6 +498,9 @@ function collectDeviceMetadata() {
     data: [],
     status: "in_progress"
   };
+  const activeResponseWindowPolicy = typeof responseWindowPolicy !== 'undefined'
+    ? responseWindowPolicy
+    : { enforced: false, sentAtMs: null, expiresAtMs: null, graceUntilMs: null };
   const pendingSubmission = SubmissionManager.load(urlPid, urlDay, urlSession);
 
   const cbParam = params.get('cb');
@@ -609,10 +612,24 @@ function collectDeviceMetadata() {
   // START handler — either fresh start or resume
   // ---------------------------------------------------------------
   function doStart(resuming) {
+    if (!resuming && !EMAForgeRuntimeUtils.canStartResponseWindow(activeResponseWindowPolicy, Date.now())) {
+      document.getElementById('task-subtitle').textContent = 'Link Expired';
+      startBtn.disabled = true;
+      startBtn.textContent = 'Session no longer active';
+      return;
+    }
     if (!resuming) {
       sessionData.participantId = pidInput.value.trim();
       sessionData.startedAt = new Date().toISOString();
       sessionData.device = collectDeviceMetadata();
+      if (activeResponseWindowPolicy.enforced) {
+        sessionData.responseWindow = {
+          sentAt: new Date(activeResponseWindowPolicy.sentAtMs).toISOString(),
+          expiresAt: new Date(activeResponseWindowPolicy.expiresAtMs).toISOString(),
+          graceUntil: new Date(activeResponseWindowPolicy.graceUntilMs).toISOString(),
+          startedBeforeExpiry: true
+        };
+      }
     } else {
       // Adopt the resumed state, but stamp a new device record in case
       // they switched devices (keep the original too).
@@ -671,6 +688,7 @@ function collectDeviceMetadata() {
   //   "<moduleId>"                → dispatch via explicit module switch
   // ---------------------------------------------------------------
   function runNextPhase() {
+    if (isResponseWindowExpired()) { expireResponseWindow(); return; }
     const phase = sessionData.phases[sessionData.currentPhase];
     if (!phase) { finalizeSession(); return; }
 
@@ -751,11 +769,29 @@ function collectDeviceMetadata() {
   function advancePhase() {
     sessionData.currentPhase++;
     persistResumeState();  // snapshot after each phase completes
+    if (isResponseWindowExpired()) { expireResponseWindow(); return; }
     runNextPhase();
   }
 
-  function finalizeSession() {
-    sessionData.status = "complete";
+  function isResponseWindowExpired() {
+    if (!activeResponseWindowPolicy.enforced) return false;
+    const graceUntil = sessionData.responseWindow?.graceUntil
+      ? Date.parse(sessionData.responseWindow.graceUntil)
+      : activeResponseWindowPolicy.graceUntilMs;
+    return EMAForgeRuntimeUtils.isResponseWindowHardExpired(
+      { ...activeResponseWindowPolicy, graceUntilMs: graceUntil },
+      Date.now()
+    );
+  }
+
+  function expireResponseWindow() {
+    if (sessionData.status !== 'in_progress') return;
+    sessionData.endedReason = 'response_window_elapsed';
+    finalizeSession('expired_in_progress');
+  }
+
+  function finalizeSession(finalStatus = 'complete') {
+    sessionData.status = finalStatus;
     sessionData.completedAt = new Date().toISOString();
     sessionData.submission = {
       id: sessionData.sessionId,
@@ -884,5 +920,7 @@ function collectDeviceMetadata() {
   window.advancePhase = advancePhase;
   window.__sessionData = sessionData;
   window.__persistResumeState = persistResumeState;
+  window.isResponseWindowExpired = isResponseWindowExpired;
+  window.expireResponseWindow = expireResponseWindow;
 
 })();

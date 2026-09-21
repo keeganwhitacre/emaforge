@@ -43,8 +43,13 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
     : `async function loadConfig() { const r = await fetch('config.json'); if (!r.ok) throw new Error('Could not load config.json'); return r.json(); }`;
   const expiryCheck = previewMode ? '' : `
     const tParam = params.get('t');
-    const expiryMs = (config.ema.scheduling.timing?.expiry_minutes || 60) * 60 * 1000;
-    if (tParam && (Date.now() - parseInt(tParam)) > expiryMs) {
+    const responseWindowPolicy = EMAForgeRuntimeUtils.buildResponseWindowPolicy(
+      tParam,
+      config.ema?.scheduling?.timing
+    );
+    // Keep the page loadable through grace so an already-started session can
+    // resume. A fresh start is still rejected immediately after expiresAtMs.
+    if (EMAForgeRuntimeUtils.isResponseWindowHardExpired(responseWindowPolicy, Date.now())) {
       document.getElementById('task-subtitle').textContent = 'Link Expired';
       document.getElementById('start-btn').disabled = true;
       document.getElementById('start-btn').textContent = 'Session no longer active';
@@ -83,6 +88,10 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
       <input type="time" id="ob-win-${escH(w.id)}-end" value="${escH(w.end)}">
     </div>
   `).join('');
+  const configuredDays = new Set(cfg.ema?.scheduling?.days_of_week || []);
+  const dynamicDaysHtml = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    .map((label, index) => `<button class="day-btn${configuredDays.has(index + 1) ? ' selected' : ''}" data-day="${label}">${label}</button>`)
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -139,14 +148,11 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
   <div class="screen" id="screen-ob-schedule">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:40%"></div></div>
     <h1>Scheduling</h1>
-    <p>Choose your available days and preferred check-in windows.</p>
+    <p>Choose your available days and preferred check-in windows. Your study team will use these preferences when scheduling prompts.</p>
     <div class="schedule-section">
       <span class="schedule-label">Available days</span>
       <div class="day-grid" id="ob-day-grid">
-        <button class="day-btn selected" data-day="Mon">Mon</button><button class="day-btn selected" data-day="Tue">Tue</button>
-        <button class="day-btn selected" data-day="Wed">Wed</button><button class="day-btn selected" data-day="Thu">Thu</button>
-        <button class="day-btn selected" data-day="Fri">Fri</button><button class="day-btn selected" data-day="Sat">Sat</button>
-        <button class="day-btn selected" data-day="Sun">Sun</button>
+        ${dynamicDaysHtml}
       </div>
     </div>
     <div class="schedule-section">

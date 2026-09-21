@@ -224,7 +224,7 @@ const StorageManager = {
 
         // 3. Schedule tab numeric fields
         if (el('study-days'))      el('study-days').value    = state.ema.scheduling.study_days || 14;
-        if (el('daily-prompts'))   el('daily-prompts').value = state.ema.scheduling.daily_prompts || 3;
+        if (el('daily-prompts'))   el('daily-prompts').value = state.ema.scheduling.windows?.length || 0;
         if (el('window-expiry'))   el('window-expiry').value = state.ema.scheduling.timing?.expiry_minutes || 60;
         if (el('grace-period'))    el('grace-period').value  = state.ema.scheduling.timing?.grace_minutes  || 10;
         document.querySelectorAll('#dow-grid .dow-chip').forEach(chip => {

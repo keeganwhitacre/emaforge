@@ -1,7 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Deployment Tab — v1.3
+// Deployment Tab — v1.4
 //
 // Changes from v1.2:
 //   - generateTwilioScript rewritten to emit a hardened dispatcher.
@@ -39,11 +39,22 @@ function bindDeploymentTab() {
     const startId  = parseInt(document.getElementById('deploy-start-id').value) || 1;
     const endId    = parseInt(document.getElementById('deploy-end-id').value)   || 20;
 
-    const windows   = state.ema.scheduling.windows || [];
+    const scheduling = state.ema.scheduling || {};
+    const windows   = scheduling.windows || [];
     const studyDays = state.ema.scheduling.study_days || 1;
+    const activeDays = normalizeDaysOfWeek(scheduling.days_of_week);
 
     if (windows.length === 0 && !state.onboarding.enabled) {
       alert('No schedule windows or onboarding found. Please configure your study before generating links.');
+      return;
+    }
+    if (windows.length > 0 && activeDays.length === 0) {
+      alert('Select at least one active day of week before generating deployment links.');
+      return;
+    }
+    const invalidWindow = windows.find(w => !isValidScheduleWindow(w));
+    if (invalidWindow) {
+      alert(`Fix the time range for "${invalidWindow.label || invalidWindow.id}" before generating links.`);
       return;
     }
 
@@ -51,27 +62,34 @@ function bindDeploymentTab() {
       ? baseUrl
       : baseUrl + '/';
 
-    // CSV header — Phase_Sequence tells the researcher what each link does
-    let csv = 'Participant_ID,Day,Session,Phase_Sequence,URL\n';
+    // This is intentionally a send-time template. A static timestamp would
+    // either expire before use or silently defeat the configured expiry rule.
+    const activeDayLabels = activeDays.map(dayNumberToLabel).join('|');
+    const rows = [[
+      'Participant_ID', 'Day', 'Active_Weekdays', 'Session',
+      'Phase_Sequence', 'Send_Window_Local', 'URL_Template'
+    ]];
 
     for (let p = startId; p <= endId; p++) {
 
       // Onboarding link (Day 0)
       if (state.onboarding.enabled) {
         const url = `${cleanBase}?id=${p}&session=onboarding`;
-        csv += `${p},0,Setup,Onboarding,${url}\n`;
+        rows.push([p, 0, 'Any', 'Setup', 'Onboarding', 'Researcher scheduled', url]);
       }
 
       // Daily session links
       for (let day = 1; day <= studyDays; day++) {
         windows.forEach(w => {
-          const label    = w.label.replace(/,/g, '');   // guard against CSV breaks
+          const label    = w.label || w.id;
           const sequence = phaseLabel(w);
-          const url      = `${cleanBase}?id=${p}&day=${day}&session=${w.id}`;
-          csv += `${p},${day},${label},${sequence},${url}\n`;
+          const url      = `${cleanBase}?id=${encodeURIComponent(p)}&day=${day}&session=${encodeURIComponent(w.id)}&t={sent_at_ms}`;
+          rows.push([p, day, activeDayLabels, label, sequence, `${w.start}-${w.end}`, url]);
         });
       }
     }
+
+    const csv = rows.map(row => row.map(csvCell).join(',')).join('\n') + '\n';
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a    = document.createElement('a');
@@ -88,8 +106,17 @@ function bindDeploymentTab() {
       const baseUrl  = baseUrlInput || 'https://example.com/study/';
 
       const windows = state.ema.scheduling.windows || [];
-      if (windows.length === 0 && !state.onboarding.enabled) {
+      if (windows.length === 0) {
         alert('No schedule windows found. Please configure your study before exporting.');
+        return;
+      }
+      if (normalizeDaysOfWeek(state.ema.scheduling.days_of_week).length === 0) {
+        alert('Select at least one active day of week before exporting.');
+        return;
+      }
+      const invalidWindow = windows.find(w => !isValidScheduleWindow(w));
+      if (invalidWindow) {
+        alert(`Fix the time range for "${invalidWindow.label || invalidWindow.id}" before exporting.`);
         return;
       }
 
@@ -113,6 +140,20 @@ function bindDeploymentTab() {
 //      { pre: true, task: null, post: false }   → "EMA"
 // ---------------------------------------------------------------------------
 function phaseLabel(w) {
+  if (Array.isArray(w.phase_sequence) && w.phase_sequence.length) {
+    const labels = w.phase_sequence.map(step => {
+      if (step.kind === 'ema') return step.block === 'post' ? 'Post-EMA' : 'Pre-EMA';
+      if (step.kind === 'hr') return 'HR Capture';
+      if (step.kind === 'task') {
+        const mod = state.modules.find(module => module.id === step.id);
+        return mod ? mod.label : (step.id || 'Task');
+      }
+      return step.kind || 'Step';
+    });
+    if (labels.length === 1 && labels[0] === 'Pre-EMA') return 'EMA';
+    return labels.join(' → ');
+  }
+
   const ph = w.phases || { pre: true, task: null, post: false };
   const parts = [];
 
@@ -130,6 +171,27 @@ function phaseLabel(w) {
   return parts.join(' → ') || 'EMA';
 }
 
+function normalizeDaysOfWeek(days) {
+  const normalized = (Array.isArray(days) ? days : [])
+    .map(Number)
+    .filter(day => Number.isInteger(day) && day >= 1 && day <= 7);
+  return [...new Set(normalized)].sort((a, b) => a - b);
+}
+
+function dayNumberToLabel(day) {
+  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day - 1] || '';
+}
+
+function csvCell(value) {
+  const text = String(value ?? '');
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function isValidScheduleWindow(window) {
+  const validTime = value => typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+  return !!window && validTime(window.start) && validTime(window.end) && window.start <= window.end;
+}
+
 function slugifyStudyName() {
   return (state.study.name || 'study').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -143,10 +205,14 @@ function slugifyStudyName() {
 // the header comment inside for the runtime architecture.
 // ---------------------------------------------------------------------------
 function generateTwilioScript(baseUrl) {
-  const windows   = state.ema.scheduling.windows || [];
-  const studyDays = state.ema.scheduling.study_days || 1;
+  const scheduling = state.ema.scheduling || {};
+  const windows   = scheduling.windows || [];
+  const studyDays = scheduling.study_days || 1;
   const studyName = (state.study && state.study.name) ? state.study.name : 'Study';
-  const expiryMin = (state.ema.scheduling && state.ema.scheduling.expiry_minutes) || 0;
+  const timing = scheduling.timing || {};
+  const expiryMin = Number(timing.expiry_minutes) || 0;
+  const graceMin = Number(timing.grace_minutes) || 0;
+  const activeDays = normalizeDaysOfWeek(scheduling.days_of_week);
 
   // Sort windows by end-time ascending so the dispatcher's "find the next
   // window whose end is after now" loop works regardless of the order the
@@ -161,7 +227,7 @@ function generateTwilioScript(baseUrl) {
   const safeStudyName = studyName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
   const scriptContent = `/**
- * EMA Forge — Twilio Dispatcher (Beta, v2)
+ * EMA Forge — Twilio Dispatcher (Beta, v3)
  *
  * Emitted for study: ${studyName}
  * Study length: ${studyDays} day(s)
@@ -174,28 +240,26 @@ function generateTwilioScript(baseUrl) {
  *   dispatchPrompts() every 15 minutes. On each tick the dispatcher walks
  *   the Roster sheet and, for each Active participant:
  *
- *     1. Computes the participant's "current day" in their own timezone.
- *     2. If a ping is already scheduled and its time has arrived, sends it.
- *     3. Otherwise, schedules the next window in the participant's local
- *        time, converting to the script's time for the sheet.
+ *     1. Computes the calendar study day in the participant's timezone.
+ *     2. Applies study weekdays and optional participant preferences.
+ *     3. Sends the due prompt or schedules the next unsent window.
  *
  *   All reads/writes to the Roster use header-name lookup (not column
  *   indices), so you can freely insert Notes columns, reorder, etc.
  *
  * DEDUPE MODEL
  *   A ping is identified by (Participant_ID, Day, Window_ID). Before the
- *   Twilio call, we stamp Last_Sent_ISO with the current time and write
- *   the dedupe key to a hidden _Dispatch_Log sheet. On any tick, if the
- *   key already exists in _Dispatch_Log for today, we skip. If the Twilio
- *   call returns a non-2xx code we clear Last_Sent_ISO so the same key
- *   retries on the next tick — but the log entry prevents a double-send
- *   if it was actually delivered.
+ *   Twilio call, we stamp Last_Sent_ISO while holding a script-wide lock.
+ *   Successful Message SIDs are written to _Dispatch_Log and suppress future
+ *   sends for that key. Explicit non-2xx responses retry; ambiguous network
+ *   failures are logged for manual review rather than risking a duplicate.
+ *
+ * INBOUND OPT-OUT
+ *   Deploy this script as a Web App and configure the Twilio incoming-message
+ *   webhook using EMA Forge -> Show inbound webhook setup. Advanced Opt-Out's
+ *   OptOutType=STOP is preferred; standard English STOP words are a fallback.
  *
  * WHAT DOES NOT SHIP IN THIS BETA
- *   - Two-way SMS (STOP handling is "soft" — we include the opt-out text
- *     in every message, but we don't currently subscribe to Twilio's
- *     inbound webhook to auto-pause a participant on reply. Manually set
- *     Status to "Paused" if a participant replies STOP.)
  *   - Delivery-receipt timestamps for latency analysis.
  *   - Retry back-off beyond "try again on the next 15-min tick."
  */
@@ -206,6 +270,8 @@ const BASE_URL    = '${baseUrl}';
 const STUDY_DAYS  = ${studyDays};
 const STUDY_NAME  = '${safeStudyName}';
 const EXPIRY_MIN  = ${expiryMin};                     // 0 = no expiry enforcement
+const GRACE_MIN   = ${graceMin};                      // participant completion buffer
+const ACTIVE_DAYS = ${JSON.stringify(activeDays)};    // ISO weekday: Mon=1 ... Sun=7
 const SCHEDULE    = ${scheduleJson};                  // pre-sorted by end-time
 
 // ---- CONSTANTS -------------------------------------------------------------
@@ -222,10 +288,13 @@ const ROSTER_COLS = [
   'Timezone',          // IANA string, e.g. 'America/Los_Angeles'
   'Start_Date',
   'Status',            // Active | Paused | Completed
+  'Schedule_Preferences_JSON', // optional onboarding schedule_pref payload
   'Current_Day',
   'Next_Window',
+  'Next_Study_Day',
   'Next_Ping_ISO',
-  'Last_Sent_ISO'
+  'Last_Sent_ISO',
+  'Opted_Out_At'
 ];
 
 
@@ -240,6 +309,7 @@ function onOpen() {
     .addItem('2. Start Automation (every ' + TICK_MINUTES + ' min)', 'startTrigger')
     .addItem('3. Pause Automation', 'stopTrigger')
     .addSeparator()
+    .addItem('Show inbound webhook setup', 'showInboundWebhookSetup')
     .addItem('Send test message to row 2', 'sendTestMessageRow2')
     .addToUi();
 }
@@ -268,11 +338,15 @@ function runSetupWizard() {
   const phone = ui.prompt('Step 3 of 3', 'Enter Twilio phone number (E.164, e.g. +15551234567):', ui.ButtonSet.OK_CANCEL);
   if (phone.getSelectedButton() !== ui.Button.OK) return;
   props.setProperty('TWILIO_PHONE', phone.getResponseText().trim());
+  props.setProperty('SPREADSHEET_ID', SpreadsheetApp.getActiveSpreadsheet().getId());
+  if (!props.getProperty('WEBHOOK_SECRET')) {
+    props.setProperty('WEBHOOK_SECRET', Utilities.getUuid().replace(/-/g, ''));
+  }
 
   ensureRosterSchema_();
   ensureLogSheet_();
 
-  ui.alert('Success. Credentials stored in script properties.\\n\\nNext: EMA Forge menu → "Start Automation".');
+  ui.alert('Success. Credentials stored in script properties.\\n\\nNext: deploy this script as a Web App, run "Show inbound webhook setup", then start automation.');
 }
 
 /**
@@ -281,7 +355,7 @@ function runSetupWizard() {
  * alone, and any missing columns are appended to the right.
  */
 function ensureRosterSchema_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getStudySpreadsheet_();
   let sheet = ss.getSheetByName(ROSTER_SHEET);
 
   if (!sheet) {
@@ -301,6 +375,9 @@ function ensureRosterSchema_() {
       'America/Los_Angeles',
       today,
       'Paused',    // Paused so it doesn't accidentally text +15550000000
+      '',
+      '',
+      '',
       '',
       '',
       '',
@@ -325,7 +402,7 @@ function ensureRosterSchema_() {
 }
 
 function ensureLogSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getStudySpreadsheet_();
   let log = ss.getSheetByName(LOG_SHEET);
   if (!log) {
     log = ss.insertSheet(LOG_SHEET);
@@ -334,6 +411,14 @@ function ensureLogSheet_() {
     log.setFrozenRows(1);
     log.hideSheet();
   }
+}
+
+function getStudySpreadsheet_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (!active) throw new Error('Study spreadsheet is not configured. Run Setup from the bound sheet.');
+  return active;
 }
 
 
@@ -353,12 +438,103 @@ function stopTrigger() {
   });
 }
 
+function showInboundWebhookSetup() {
+  const props = PropertiesService.getScriptProperties();
+  let secret = props.getProperty('WEBHOOK_SECRET');
+  if (!secret) {
+    secret = Utilities.getUuid().replace(/-/g, '');
+    props.setProperty('WEBHOOK_SECRET', secret);
+  }
+  const webAppUrl = ScriptApp.getService().getUrl();
+  if (!webAppUrl) {
+    SpreadsheetApp.getUi().alert(
+      'Deploy this Apps Script as a Web App first (execute as you; access: anyone), then run this menu item again.'
+    );
+    return;
+  }
+  SpreadsheetApp.getUi().alert(
+    'In Twilio, set the incoming-message webhook method to POST and use:\\n\\n' +
+    webAppUrl + '?key=' + secret + '\\n\\n' +
+    'For a Messaging Service, enable Advanced Opt-Out so Twilio sends OptOutType=STOP. ' +
+    'Keep the URL private; the key protects roster updates because Apps Script does not expose the Twilio signature header.'
+  );
+}
+
+// Twilio posts application/x-www-form-urlencoded fields such as From, Body,
+// and (with Advanced Opt-Out) OptOutType. Return empty TwiML because Twilio
+// already sends the opt-out confirmation for matched Advanced Opt-Out words.
+function doPost(e) {
+  const props = PropertiesService.getScriptProperties();
+  const expectedKey = props.getProperty('WEBHOOK_SECRET');
+  const suppliedKey = e && e.parameter ? String(e.parameter.key || '') : '';
+  if (!expectedKey || suppliedKey !== expectedKey) {
+    return twimlResponse_();
+  }
+
+  const from = normalizePhone_(e.parameter.From || '');
+  const body = String(e.parameter.Body || '').trim().toUpperCase();
+  const optOutType = String(e.parameter.OptOutType || '').trim().toUpperCase();
+  const stopWords = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'END', 'QUIT', 'REVOKE', 'OPTOUT', 'CANCEL'];
+  if (optOutType !== 'STOP' && stopWords.indexOf(body) === -1) return twimlResponse_();
+
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return twimlResponse_();
+  try {
+    const ss = getStudySpreadsheet_();
+    const sheet = ss.getSheetByName(ROSTER_SHEET);
+    if (!sheet) return twimlResponse_();
+    ensureRosterSchema_();
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0].map(String);
+    const phoneIdx = headers.indexOf('Phone');
+    const statusIdx = headers.indexOf('Status');
+    const optedOutIdx = headers.indexOf('Opted_Out_At');
+    const nextWindowIdx = headers.indexOf('Next_Window');
+    const nextDayIdx = headers.indexOf('Next_Study_Day');
+    const nextPingIdx = headers.indexOf('Next_Ping_ISO');
+    const pidIdx = headers.indexOf('Participant_ID');
+    const log = ss.getSheetByName(LOG_SHEET) || (ensureLogSheet_(), ss.getSheetByName(LOG_SHEET));
+    let matched = false;
+
+    for (let r = 1; r < values.length; r++) {
+      if (normalizePhone_(values[r][phoneIdx]) !== from) continue;
+      matched = true;
+      const sheetRow = r + 1;
+      writeCell_(sheet, sheetRow, statusIdx, 'Opted Out');
+      writeCell_(sheet, sheetRow, optedOutIdx, new Date().toISOString());
+      writeCell_(sheet, sheetRow, nextWindowIdx, '');
+      writeCell_(sheet, sheetRow, nextDayIdx, '');
+      writeCell_(sheet, sheetRow, nextPingIdx, '');
+      logOutcome_(log, values[r][pidIdx], '', '', 'opt_out:' + (optOutType || body));
+    }
+    if (!matched) logOutcome_(log, '', '', '', 'opt_out_unmatched_phone:' + from);
+  } finally {
+    lock.releaseLock();
+  }
+  return twimlResponse_();
+}
+
+function twimlResponse_() {
+  return ContentService.createTextOutput('<?xml version="1.0" encoding="UTF-8"?><Response></Response>')
+    .setMimeType(ContentService.MimeType.XML);
+}
+
 
 // ============================================================================
 //   CORE DISPATCHER
 // ============================================================================
 
 function dispatchPrompts() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return;
+  try {
+    dispatchPromptsLocked_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function dispatchPromptsLocked_() {
   const props = PropertiesService.getScriptProperties();
   const sid       = props.getProperty('TWILIO_SID');
   const token     = props.getProperty('TWILIO_TOKEN');
@@ -368,9 +544,10 @@ function dispatchPrompts() {
     return;
   }
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getStudySpreadsheet_();
   const sheet = ss.getSheetByName(ROSTER_SHEET);
   if (!sheet) return;
+  ensureRosterSchema_();
   const log = ss.getSheetByName(LOG_SHEET) || (ensureLogSheet_(), ss.getSheetByName(LOG_SHEET));
 
   const range = sheet.getDataRange();
@@ -416,6 +593,8 @@ function dispatchPrompts() {
     const pStartYmd = Utilities.formatDate(startDate, tz, 'yyyy-MM-dd');
     const dayNumber = dayDiffYmd_(pStartYmd, pTodayYmd) + 1;
 
+    if (dayNumber < 1) continue;
+
     // Completion: dayNumber past the end AND no windows are still pending today.
     // (We handle "day N evening not yet fired" inside the send loop below.)
     if (dayNumber > STUDY_DAYS) {
@@ -430,42 +609,51 @@ function dispatchPrompts() {
 
     const nextPingIso  = String(row[colIdx['Next_Ping_ISO']]  || '').trim();
     const nextWindowId = String(row[colIdx['Next_Window']]    || '').trim();
+    const nextStudyDay = Number(row[colIdx['Next_Study_Day']]) || dayNumber;
+    const participantSchedule = participantSchedule_(row[colIdx['Schedule_Preferences_JSON']]);
 
     // --- 2. Send if a ping is due. -----------------------------------------
     if (nextPingIso && nextWindowId) {
       const due = new Date(nextPingIso);
       if (!isNaN(due.getTime()) && nowMs >= due.getTime()) {
-        const dedupeKey = pid + '|' + dayNumber + '|' + nextWindowId;
+        const pendingWindow = participantSchedule.windows.find(window => window.id === nextWindowId);
+        const pendingYmd = addDaysYmd_(pStartYmd, nextStudyDay - 1);
+        const windowEnd = pendingWindow
+          ? dateFromLocalString_(pendingYmd + 'T' + pendingWindow.end + ':00', tz)
+          : null;
 
-        // Dedupe check against today's log.
-        if (alreadySentToday_(log, pid, dayNumber, nextWindowId, tz, now)) {
-          // Someone/something already logged this as sent today. Clear the
-          // ping fields and move on — no double-send.
-          writeCell_(sheet, sheetRow, colIdx['Next_Ping_ISO'], '');
-          writeCell_(sheet, sheetRow, colIdx['Next_Window'],   '');
-          continue;
-        }
-
-        // Stamp Last_Sent_ISO *before* the network call. On success we leave
-        // it; on failure we roll it back and leave Next_Ping_ISO untouched
-        // so the next tick retries.
-        const sentAtIso = now.toISOString();
-        writeCell_(sheet, sheetRow, colIdx['Last_Sent_ISO'], sentAtIso);
-
-        const url  = buildLinkUrl_(pid, dayNumber, nextWindowId, nowMs);
-        const body = buildSmsBody_(url);
-
-        const res = sendTwilioSMS_(sid, token, fromPhone, phone, body);
-
-        if (res.ok) {
-          logOutcome_(log, pid, dayNumber, nextWindowId, 'sent:' + res.status);
-          writeCell_(sheet, sheetRow, colIdx['Next_Ping_ISO'], '');
-          writeCell_(sheet, sheetRow, colIdx['Next_Window'],   '');
+        // A dispatcher outage must not send an old prompt hours or days late.
+        if (!pendingWindow || nextStudyDay > STUDY_DAYS ||
+            (windowEnd && nowMs > windowEnd.getTime() + TICK_MINUTES * 60000)) {
+          logOutcome_(log, pid, nextStudyDay, nextWindowId, 'missed:dispatcher_late');
+          clearNextPing_(sheet, sheetRow, colIdx);
+        } else if (alreadySent_(log, pid, nextStudyDay, nextWindowId)) {
+          clearNextPing_(sheet, sheetRow, colIdx);
         } else {
-          // Roll back Last_Sent_ISO and leave the ping scheduled for retry.
-          writeCell_(sheet, sheetRow, colIdx['Last_Sent_ISO'], '');
-          logOutcome_(log, pid, dayNumber, nextWindowId, 'fail:' + res.status + ':' + (res.message || ''));
-          continue;
+
+          // Stamp before the network call so concurrent triggers cannot send
+          // the same prompt. ScriptLock serializes this entire dispatcher.
+          const sentAtIso = now.toISOString();
+          writeCell_(sheet, sheetRow, colIdx['Last_Sent_ISO'], sentAtIso);
+
+          const url  = buildLinkUrl_(pid, nextStudyDay, nextWindowId, nowMs);
+          const body = buildSmsBody_(url);
+          const res = sendTwilioSMS_(sid, token, fromPhone, phone, body);
+
+          if (res.ok) {
+            logOutcome_(log, pid, nextStudyDay, nextWindowId, 'sent:' + res.status + ':' + (res.sid || 'no_sid'));
+            clearNextPing_(sheet, sheetRow, colIdx);
+          } else if (res.uncertain) {
+            // Retrying an ambiguous network failure can duplicate an SMS.
+            // Leave a visible audit event and require researcher review.
+            logOutcome_(log, pid, nextStudyDay, nextWindowId, 'uncertain:manual_review:' + (res.message || ''));
+            clearNextPing_(sheet, sheetRow, colIdx);
+            continue;
+          } else {
+            writeCell_(sheet, sheetRow, colIdx['Last_Sent_ISO'], '');
+            logOutcome_(log, pid, nextStudyDay, nextWindowId, 'fail:' + res.status + ':' + (res.message || ''));
+            continue;
+          }
         }
       } else {
         // Not yet time; do nothing this tick.
@@ -476,7 +664,7 @@ function dispatchPrompts() {
     // --- 3. Schedule the next window, if any. ------------------------------
     if (SCHEDULE.length === 0) continue;
 
-    const scheduled = computeNextPing_(tz, dayNumber, now);
+    const scheduled = computeNextPing_(tz, pStartYmd, now, participantSchedule, pid, log);
     if (!scheduled) {
       // No more windows this study. Mark completed if we've exhausted all days.
       if (dayNumber >= STUDY_DAYS) {
@@ -486,6 +674,7 @@ function dispatchPrompts() {
     }
 
     writeCell_(sheet, sheetRow, colIdx['Next_Window'],   scheduled.windowId);
+    writeCell_(sheet, sheetRow, colIdx['Next_Study_Day'], scheduled.forDay);
     writeCell_(sheet, sheetRow, colIdx['Next_Ping_ISO'], scheduled.pingDate.toISOString());
   }
 }
@@ -496,58 +685,90 @@ function dispatchPrompts() {
 // ============================================================================
 
 /**
- * Given a participant's timezone, their current study-day number, and the
- * current moment, return { windowId, pingDate } for the next window to fire,
- * or null if there are no more windows in this study for this participant.
+ * Scan calendar study days and return the next unsent eligible window.
+ * Study day remains a calendar offset from Start_Date; excluded weekdays are
+ * skipped, not renumbered, so URL day values stay stable and auditable.
  *
  * The ping time is randomized within [window.start, window.end] in the
  * participant's local time, then converted back to a real Date object.
  */
-function computeNextPing_(tz, dayNumber, now) {
+function computeNextPing_(tz, startYmd, now, participantSchedule, pid, log) {
   const pNowHm = Utilities.formatDate(now, tz, 'HH:mm');
   const pNowYmd = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+  const firstDay = Math.max(1, dayDiffYmd_(startYmd, pNowYmd) + 1);
 
-  // Find the first window (sorted ascending by end) whose end is still
-  // in the participant's future today.
-  let target = null;
-  for (let i = 0; i < SCHEDULE.length; i++) {
-    if (SCHEDULE[i].end >= pNowHm) { target = SCHEDULE[i]; break; }
+  for (let studyDay = firstDay; studyDay <= STUDY_DAYS; studyDay++) {
+    const targetYmd = addDaysYmd_(startYmd, studyDay - 1);
+    const isoDow = isoWeekdayYmd_(targetYmd);
+    if (participantSchedule.days.indexOf(isoDow) === -1) continue;
+
+    for (let i = 0; i < participantSchedule.windows.length; i++) {
+      const target = participantSchedule.windows[i];
+      if (alreadySent_(log, pid, studyDay, target.id)) continue;
+      if (targetYmd === pNowYmd && target.end < pNowHm) continue;
+
+      const startMins = hmToMinutes_(target.start);
+      const endMins = hmToMinutes_(target.end);
+      let scheduledMins = startMins === endMins
+        ? startMins
+        : Math.floor(Math.random() * (endMins - startMins + 1)) + startMins;
+
+      if (targetYmd === pNowYmd) {
+        const nowMins = hmToMinutes_(pNowHm);
+        scheduledMins = Math.max(scheduledMins, nowMins + 1);
+        if (scheduledMins > endMins) continue;
+      }
+
+      const hh = Math.floor(scheduledMins / 60).toString().padStart(2, '0');
+      const mm = (scheduledMins % 60).toString().padStart(2, '0');
+      const pingDate = dateFromLocalString_(targetYmd + 'T' + hh + ':' + mm + ':00', tz);
+      return { windowId: target.id, pingDate: pingDate, forDay: studyDay };
+    }
+  }
+  return null;
+}
+
+function participantSchedule_(rawPreferences) {
+  let preferences = null;
+  if (rawPreferences) {
+    try { preferences = JSON.parse(String(rawPreferences)); }
+    catch (e) { console.warn('Invalid Schedule_Preferences_JSON; using study schedule.'); }
   }
 
-  let pTargetYmd = pNowYmd;
-  let forDay = dayNumber;
-
-  if (!target) {
-    // No more windows today. Roll to tomorrow's first window — unless we're
-    // already on the last study day, in which case we're done.
-    if (dayNumber >= STUDY_DAYS) return null;
-    target = SCHEDULE[0];
-    pTargetYmd = addDaysYmd_(pNowYmd, 1);
-    forDay = dayNumber + 1;
+  let days = ACTIVE_DAYS.slice();
+  if (preferences && Array.isArray(preferences.days)) {
+    const dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+    const preferred = preferences.days.map(day => dayMap[day] || Number(day)).filter(Boolean);
+    days = days.filter(day => preferred.indexOf(day) !== -1);
   }
 
-  // Random minute inside the window, in participant-local time.
-  const [sh, sm] = target.start.split(':').map(Number);
-  const [eh, em] = target.end.split(':').map(Number);
-  const startMins = sh * 60 + sm;
-  const endMins   = eh * 60 + em;
-  const scheduledMins = startMins === endMins
-    ? startMins
-    : Math.floor(Math.random() * (endMins - startMins + 1)) + startMins;
+  const overrides = preferences && preferences.windows && typeof preferences.windows === 'object'
+    ? preferences.windows
+    : {};
+  const windows = SCHEDULE.map(window => {
+    const override = overrides[window.id] || {};
+    const start = validHm_(override.start) ? override.start : window.start;
+    const end = validHm_(override.end) ? override.end : window.end;
+    return hmToMinutes_(end) >= hmToMinutes_(start)
+      ? { id: window.id, label: window.label, start: start, end: end }
+      : window;
+  }).sort((a, b) => a.end.localeCompare(b.end));
 
-  // If we're rolling to "today" but the scheduled minute has already passed,
-  // clamp to "now + 1 minute" rather than scheduling in the past.
-  const [nh, nm] = pNowHm.split(':').map(Number);
-  const nowMins = nh * 60 + nm;
-  let finalMins = scheduledMins;
-  if (pTargetYmd === pNowYmd && finalMins < nowMins) finalMins = nowMins + 1;
+  return { days: days, windows: windows };
+}
 
-  const hh = Math.floor(finalMins / 60).toString().padStart(2, '0');
-  const mm = (finalMins % 60).toString().padStart(2, '0');
-  const localIso = pTargetYmd + 'T' + hh + ':' + mm + ':00';
+function validHm_(value) {
+  return typeof value === 'string' && /^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(value);
+}
 
-  const pingDate = dateFromLocalString_(localIso, tz);
-  return { windowId: target.id, pingDate: pingDate, forDay: forDay };
+function hmToMinutes_(hm) {
+  const parts = String(hm).split(':').map(Number);
+  return parts[0] * 60 + parts[1];
+}
+
+function isoWeekdayYmd_(ymd) {
+  const day = new Date(ymd + 'T12:00:00Z').getUTCDay();
+  return day === 0 ? 7 : day;
 }
 
 /**
@@ -642,11 +863,13 @@ function sendTwilioSMS_(sid, token, fromPhone, toPhone, body) {
     const code = resp.getResponseCode();
     const text = resp.getContentText();
     if (code >= 200 && code < 300) {
-      return { ok: true, status: code };
+      let sid = '';
+      try { sid = JSON.parse(text).sid || ''; } catch (e) {}
+      return { ok: true, status: code, sid: sid };
     }
     return { ok: false, status: code, message: truncate_(text, 300) };
   } catch (e) {
-    return { ok: false, status: 0, message: String(e).slice(0, 300) };
+    return { ok: false, uncertain: true, status: 0, message: String(e).slice(0, 300) };
   }
 }
 
@@ -659,8 +882,7 @@ function logOutcome_(log, pid, day, windowId, outcome) {
   }
 }
 
-function alreadySentToday_(log, pid, dayNumber, windowId, tz, now) {
-  const todayYmd = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
+function alreadySent_(log, pid, dayNumber, windowId) {
   const last = log.getLastRow();
   if (last < 2) return false;
   const rows = log.getRange(2, 1, last - 1, 5).getValues();
@@ -670,11 +892,19 @@ function alreadySentToday_(log, pid, dayNumber, windowId, tz, now) {
     if (String(rPid) !== String(pid)) continue;
     if (Number(rDay) !== Number(dayNumber)) continue;
     if (String(rWin) !== String(windowId)) continue;
-    const rTs = new Date(tsIso);
-    if (isNaN(rTs.getTime())) continue;
-    if (Utilities.formatDate(rTs, tz, 'yyyy-MM-dd') === todayYmd) return true;
+    return true;
   }
   return false;
+}
+
+function clearNextPing_(sheet, sheetRow, colIdx) {
+  writeCell_(sheet, sheetRow, colIdx['Next_Window'], '');
+  writeCell_(sheet, sheetRow, colIdx['Next_Study_Day'], '');
+  writeCell_(sheet, sheetRow, colIdx['Next_Ping_ISO'], '');
+}
+
+function normalizePhone_(value) {
+  return String(value || '').replace(/[^0-9]/g, '');
 }
 
 function writeCell_(sheet, row, colIndexZeroBased, value) {
@@ -697,7 +927,7 @@ function sendTestMessageRow2() {
   const fromPhone = props.getProperty('TWILIO_PHONE');
   if (!sid || !token || !fromPhone) { ui.alert('Run Setup first.'); return; }
 
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ROSTER_SHEET);
+  const sheet = getStudySpreadsheet_().getSheetByName(ROSTER_SHEET);
   if (!sheet || sheet.getLastRow() < 2) { ui.alert('No roster rows.'); return; }
 
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
