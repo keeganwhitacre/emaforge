@@ -11,6 +11,54 @@ const builderSections = {
   deployment: ["Deployment", "Prepare participant links and delivery tools for your study."]
 };
 
+function sectionForIssue(issue) {
+  if (issue.path.startsWith("ema.questions")) return "questions";
+  if (issue.path.startsWith("ema.scheduling")) return "schedule";
+  if (issue.path.startsWith("onboarding")) return "onboarding";
+  if (issue.path.startsWith("modules")) return "tasks";
+  return "study";
+}
+
+function showBuilderIssue(issue) {
+  const section = sectionForIssue(issue);
+  if (!document.getElementById(`tab-${section}`).classList.contains("active")) {
+    document.querySelector(`.tab-btn[data-tab="${section}"]`).click();
+  }
+  const questionIndex = /^ema\.questions\[(\d+)\]/.exec(issue.path);
+  let target = questionIndex && document.querySelectorAll("#question-list .q-card")[Number(questionIndex[1])];
+  if (target) target.classList.add("expanded");
+  if (!target && issue.path === "study.name") target = document.getElementById("study-name");
+  if (!target && issue.path === "study.institution") target = document.getElementById("institution");
+  if (!target && issue.path === "study.webhook_url") target = document.getElementById("study-webhook");
+  if (!target && issue.path === "onboarding.consent_text") target = document.getElementById("ob-consent-text");
+  if (target) target.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+function renderSectionIssues(issues) {
+  const section = document.querySelector(".tab-btn.active")?.dataset.tab || "study";
+  const relevant = issues.filter(issue => sectionForIssue(issue) === section);
+  const panel = document.getElementById("builder-inline-issues");
+  panel.hidden = relevant.length === 0;
+  panel.replaceChildren();
+  if (!relevant.length) return;
+  const heading = document.createElement("strong");
+  heading.textContent = `${relevant.length} ${section === "questions" ? "question" : "section"} issue${relevant.length === 1 ? "" : "s"}`;
+  panel.append(heading);
+  relevant.slice(0, 6).forEach(issue => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `builder-issue ${issue.severity}`;
+    button.textContent = issue.message;
+    button.addEventListener("click", () => showBuilderIssue(issue));
+    panel.append(button);
+  });
+  if (relevant.length > 6) {
+    const extra = document.createElement("p");
+    extra.textContent = `Plus ${relevant.length - 6} more. Resolve these or review the export report.`;
+    panel.append(extra);
+  }
+}
+
 function renderBuilderShell() {
   const name = (state.study.name || "").trim();
   document.getElementById("builder-project-name").textContent = name || "Untitled study";
@@ -20,6 +68,7 @@ function renderBuilderShell() {
   const blocks = count ? 1 + questions.filter(q => q.type === "page_break").length : 0;
   const report = EMAForgeProtocolValidator.validate(buildConfig());
   const { errors, warnings, issues } = report;
+  renderSectionIssues(issues);
   document.getElementById("summary-question-count").textContent = count;
   document.getElementById("summary-block-count").textContent = blocks;
   document.getElementById("summary-issue-count").textContent = errors.length + warnings.length;
@@ -68,6 +117,7 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").scrollTop = 0;
+  renderBuilderShell();
 }));
 document.getElementById("builder-preview-btn").addEventListener("click", () => {
   if (window.matchMedia("(max-width: 1050px)").matches) {

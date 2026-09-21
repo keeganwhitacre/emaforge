@@ -2,7 +2,8 @@
 <html lang="en">
   <script>
   // Apply theme immediately on load to prevent flickering
-  const savedTheme = localStorage.getItem('ema-forge-theme') || 'light';
+  const savedTheme = localStorage.getItem('ema-forge-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
 <head>
@@ -11,6 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css">
+<link rel="stylesheet" href="css/builder.css">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -43,11 +45,11 @@
     </div>
     <div class="topbar-project"><strong id="builder-project-name">Untitled study</strong><span class="badge badge-muted">Draft</span></div>
     <div class="topbar-actions">
-      <span class="save-status" id="save-status">Up to date</span>
+      <span class="save-status" id="save-status">Saved in this browser</span>
       <button class="btn-ghost" id="builder-preview-btn">Preview</button>
       <button class="btn-ghost" id="btn-save-project">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-10.5C1 .784 1.784 0 2.75 0h8a.75.75 0 01.53.22l3.5 3.5c.141.14.22.331.22.53v8a1.75 1.75 0 01-1.75 1.75H2.75zM11.5 13.5V8.75a.25.25 0 00-.25-.25h-6.5a.25.25 0 00-.25.25v4.75h7zm-5.75-10v2.25c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V3.5z"/></svg>
-        Save Project
+        Download Backup
       </button>
       <button class="btn-export" id="export-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
@@ -90,7 +92,7 @@
 
   <!-- ========== CONFIG PANEL ========== -->
   <section id="config-panel">
-    <div class="builder-section-header"><div><h1 id="builder-section-title">Overview</h1><p id="builder-section-description">Set up your study identity, participant experience, and data output.</p></div></div>
+    <div class="builder-section-header"><div><h1 id="builder-section-title">Overview</h1><p id="builder-section-description">Set up your study identity, participant experience, and data output.</p></div><div id="builder-inline-issues" class="builder-inline-issues" aria-live="polite" hidden></div></div>
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
       <div class="section-title">Study Identity</div>
@@ -398,6 +400,7 @@
         <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
       </div>
     </div>
+    <p id="preview-error" class="preview-error" role="alert" hidden></p>
     </div>
     <div class="readiness-card"><div class="readiness-heading"><h2>Study Readiness</h2><span id="readiness-count"></span></div><div id="readiness-list" aria-live="polite"></div></div>
   </section>

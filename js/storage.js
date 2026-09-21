@@ -121,7 +121,7 @@ const StorageManager = {
             const toSave = Object.assign({}, state, { schema_version: currentVersion });
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
             const status = document.getElementById('save-status');
-            if (status) { status.textContent = 'Up to date'; status.style.color = ''; }
+            if (status) { status.textContent = 'Saved in this browser'; status.style.color = ''; }
         } catch (e) {
             console.warn('EMA Forge: localStorage save failed.', e);
         }

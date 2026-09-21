@@ -2,7 +2,7 @@ function schedulePreview() {
     clearTimeout(previewDebounceTimer);
     previewDebounceTimer = setTimeout(renderPreview, 600);
     const status = document.getElementById('save-status');
-    if (status) status.textContent = 'Unsaved changes';
+    if (status) status.textContent = 'Saving in this browser…';
     // Tell storage to persist shortly after the preview updates.
     if (typeof StorageManager !== 'undefined' && StorageManager.debouncedSave) {
       StorageManager.debouncedSave();
@@ -49,8 +49,11 @@ function renderPreviewTabs() {
   });
 }
 
+let previewRequestId = 0;
 async function renderPreview() {
   if (!window.buildStudyHtml) return;
+  const requestId = ++previewRequestId;
+  const errorEl = document.getElementById('preview-error');
   
   // Re-build tabs if windows changed
   if (document.querySelectorAll('.preview-session-tab').length !== (state.onboarding.enabled ? 1 : 0) + state.ema.scheduling.windows.length) {
@@ -59,12 +62,18 @@ async function renderPreview() {
 
   try {
     const html = await buildStudyHtml({ configInline: true, previewMode: true, previewSession });
+    if (requestId !== previewRequestId) return;
     const iframe = document.getElementById('preview-iframe');
     if (iframe) {
       iframe.srcdoc = html;
     }
+    if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
   } catch(e) {
+    if (requestId !== previewRequestId) return;
     console.error("Preview render failed:", e);
+    const iframe = document.getElementById('preview-iframe');
+    if (iframe) iframe.removeAttribute('srcdoc');
+    if (errorEl) { errorEl.textContent = 'Preview could not be generated. Check the browser console and try resetting the preview.'; errorEl.hidden = false; }
   }
 }
 
