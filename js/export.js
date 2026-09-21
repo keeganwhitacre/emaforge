@@ -580,9 +580,30 @@ function getRuntimeCss() {
 }
 
 function slugify(str) { return (str || 'study').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+
+function confirmProtocolExport(config = buildConfig()) {
+  if (typeof EMAForgeProtocolValidator === 'undefined') {
+    alert('Protocol validation could not be loaded. Reload the Builder before exporting.');
+    return false;
+  }
+  const report = EMAForgeProtocolValidator.validate(config);
+  const format = items => items.slice(0, 12).map(item => `• ${item.message}`).join('\n');
+  if (report.errors.length) {
+    const remaining = report.errors.length > 12 ? `\n• …and ${report.errors.length - 12} more` : '';
+    alert(`Export blocked — fix ${report.errors.length} protocol error${report.errors.length === 1 ? '' : 's'}:\n\n${format(report.errors)}${remaining}`);
+    return false;
+  }
+  if (report.warnings.length) {
+    const remaining = report.warnings.length > 12 ? `\n• …and ${report.warnings.length - 12} more` : '';
+    return confirm(`Protocol review — ${report.warnings.length} warning${report.warnings.length === 1 ? '' : 's'}:\n\n${format(report.warnings)}${remaining}\n\nExport anyway?`);
+  }
+  return true;
+}
+
 document.getElementById('export-btn').addEventListener('click', () => document.getElementById('export-modal').classList.add('open'));
 document.getElementById('modal-close-btn').addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
 document.getElementById('export-single-file').addEventListener('click', async () => {
+  if (!confirmProtocolExport()) return;
   document.getElementById('export-modal').classList.remove('open');
   const html = await buildStudyHtml({ configInline: true, previewMode: false });
   const a = document.createElement('a');
@@ -591,6 +612,7 @@ document.getElementById('export-single-file').addEventListener('click', async ()
 const zipBtn = document.getElementById('export-zip');
 if (zipBtn) {
   zipBtn.addEventListener('click', async () => {
+    if (!confirmProtocolExport()) return;
     document.getElementById('export-modal').classList.remove('open');
     const { files } = await buildStaticBundle(); const blob = makeZip(files);
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = slugify(state.study.name) + '-static.zip'; a.click();

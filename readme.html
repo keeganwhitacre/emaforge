@@ -1502,6 +1502,16 @@
             </tbody>
           </table>
 
+          <div class="docs-callout">
+            <div class="docs-callout-content">
+              <p><strong>Preflight validation runs on every export.</strong> Blocking errors include placeholder consent,
+                duplicate IDs, empty or unreachable EMA steps, broken conditions, unavailable task modules, invalid
+                timing, malformed webhooks, and unsafe module settings. Research warnings — such as manual-only data
+                return, disabled in-app consent, experimental IAT use, or unpiloted physiology — require explicit
+                confirmation. Deployment files also reject placeholder, local, non-HTTPS, or query-bearing host URLs.</p>
+            </div>
+          </div>
+
           <h2 id="hosting">Hosting Your Study</h2>
           <p>This section is about hosting the <em>exported study bundle</em> — the thing participants will open. You
             are <strong>not</strong> hosting the Builder itself (that already lives at <a

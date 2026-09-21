@@ -31,7 +31,7 @@ function builderContext(overrides = {}) {
     },
     ...overrides
   };
-  const context = { state, console };
+  const context = { state, console, URL };
   vm.createContext(context);
   vm.runInContext(deploymentSource, context);
   return context;
@@ -127,4 +127,21 @@ test("phase labels use the full ordered phase sequence", () => {
     ]
   });
   assert.equal(label, "Pre-EMA → HR Capture → ePAT → Pre-EMA → Post-EMA");
+});
+
+test("deployment URLs must be real HTTPS hosts", () => {
+  const context = builderContext();
+  assert.equal(context.isDeployableBaseUrl("https://community.example.org/study/"), true);
+  assert.equal(context.isDeployableBaseUrl("https://example.com/study/"), false);
+  assert.equal(context.isDeployableBaseUrl("http://localhost:8080/study/"), false);
+  assert.equal(context.isDeployableBaseUrl("not a url"), false);
+});
+
+test("dispatcher serializes study names and URLs as safe JavaScript", () => {
+  const context = builderContext();
+  context.state.study.name = "Researcher's */ Study";
+  const generated = context.generateTwilioScript("https://example.org/study/it's-ready/");
+  assert.doesNotThrow(() => new vm.Script(generated));
+  const dispatcher = dispatcherContext(generated);
+  assert.equal(vm.runInContext("STUDY_NAME", dispatcher), "Researcher's */ Study");
 });

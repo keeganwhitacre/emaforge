@@ -36,13 +36,18 @@ function bindDeploymentTab() {
   generateBtn.addEventListener('click', () => {
     const baseUrlInput = document.getElementById('deploy-base-url').value.trim();
     const baseUrl  = baseUrlInput || 'https://example.com/study/';
-    const startId  = parseInt(document.getElementById('deploy-start-id').value) || 1;
-    const endId    = parseInt(document.getElementById('deploy-end-id').value)   || 20;
+    const startId  = Number(document.getElementById('deploy-start-id').value);
+    const endId    = Number(document.getElementById('deploy-end-id').value);
 
     const scheduling = state.ema.scheduling || {};
     const windows   = scheduling.windows || [];
     const studyDays = state.ema.scheduling.study_days || 1;
     const activeDays = normalizeDaysOfWeek(scheduling.days_of_week);
+
+    if (!Number.isInteger(startId) || !Number.isInteger(endId) || startId < 1 || endId < startId || endId - startId > 99999) {
+      alert('Participant ID range must use positive whole numbers, with the end at or after the start (maximum 100,000 IDs).');
+      return;
+    }
 
     if (windows.length === 0 && !state.onboarding.enabled) {
       alert('No schedule windows or onboarding found. Please configure your study before generating links.');
@@ -57,6 +62,11 @@ function bindDeploymentTab() {
       alert(`Fix the time range for "${invalidWindow.label || invalidWindow.id}" before generating links.`);
       return;
     }
+    if (!isDeployableBaseUrl(baseUrl)) {
+      alert('Enter the real HTTPS URL where this study is hosted. Example.com and local URLs cannot be deployed.');
+      return;
+    }
+    if (typeof confirmProtocolExport === 'function' && !confirmProtocolExport()) return;
 
     const cleanBase = baseUrl.endsWith('/') || baseUrl.endsWith('.html')
       ? baseUrl
@@ -119,6 +129,11 @@ function bindDeploymentTab() {
         alert(`Fix the time range for "${invalidWindow.label || invalidWindow.id}" before exporting.`);
         return;
       }
+      if (!isDeployableBaseUrl(baseUrl)) {
+        alert('Enter the real HTTPS URL where this study is hosted. Example.com and local URLs cannot be deployed.');
+        return;
+      }
+      if (typeof confirmProtocolExport === 'function' && !confirmProtocolExport()) return;
 
       const scriptContent = generateTwilioScript(baseUrl);
 
@@ -192,6 +207,19 @@ function isValidScheduleWindow(window) {
   return !!window && validTime(window.start) && validTime(window.end) && window.start <= window.end;
 }
 
+function isDeployableBaseUrl(value) {
+  try {
+    const url = new URL(value);
+    const blockedHosts = new Set(['example.com', 'www.example.com', 'localhost', '127.0.0.1', '0.0.0.0']);
+    return url.protocol === 'https:' &&
+      !blockedHosts.has(url.hostname.toLowerCase()) &&
+      !url.search &&
+      !url.hash;
+  } catch (error) {
+    return false;
+  }
+}
+
 function slugifyStudyName() {
   return (state.study.name || 'study').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -223,15 +251,17 @@ function generateTwilioScript(baseUrl) {
 
   const scheduleJson = JSON.stringify(sortedWindows);
 
-  // Escape study name for embedding in a JS string literal.
-  const safeStudyName = studyName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  // Values also appear in comments in the generated file; neutralize comment
+  // terminators there, and serialize executable constants as JSON literals.
+  const commentStudyName = studyName.replace(/\*\//g, '* /').replace(/[\r\n]+/g, ' ');
+  const commentBaseUrl = String(baseUrl).replace(/\*\//g, '* /').replace(/[\r\n]+/g, ' ');
 
   const scriptContent = `/**
  * EMA Forge — Twilio Dispatcher (Beta, v3)
  *
- * Emitted for study: ${studyName}
+ * Emitted for study: ${commentStudyName}
  * Study length: ${studyDays} day(s)
- * Base URL: ${baseUrl}
+ * Base URL: ${commentBaseUrl}
  *
  * HOW THIS WORKS
  *   The menu wizard writes your Twilio credentials to the script's
@@ -266,9 +296,9 @@ function generateTwilioScript(baseUrl) {
 
 // ---- CONFIGURATION (baked in from the Builder) -----------------------------
 
-const BASE_URL    = '${baseUrl}';
+const BASE_URL    = ${JSON.stringify(baseUrl)};
 const STUDY_DAYS  = ${studyDays};
-const STUDY_NAME  = '${safeStudyName}';
+const STUDY_NAME  = ${JSON.stringify(studyName)};
 const EXPIRY_MIN  = ${expiryMin};                     // 0 = no expiry enforcement
 const GRACE_MIN   = ${graceMin};                      // participant completion buffer
 const ACTIVE_DAYS = ${JSON.stringify(activeDays)};    // ISO weekday: Mon=1 ... Sun=7
