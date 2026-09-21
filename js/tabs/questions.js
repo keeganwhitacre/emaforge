@@ -28,6 +28,7 @@ function renderQuestions() {
       displayNum++;
     }
   });
+  if (typeof renderBuilderShell === 'function') renderBuilderShell();
 }
 
 // Add displayNum as the third argument here

@@ -2,8 +2,7 @@
 <html lang="en">
   <script>
   // Apply theme immediately on load to prevent flickering
-  const savedTheme = localStorage.getItem('ema-forge-theme') || 
-    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const savedTheme = localStorage.getItem('ema-forge-theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
 </script>
 <head>
@@ -42,54 +41,56 @@
       </div>
       EMA Forge
     </div>
-    <div class="topbar-sep"></div>
-    <nav class="topbar-tabs">
-      <button class="tab-btn active" data-tab="study">Study</button>
-      <button class="tab-btn" data-tab="onboarding">Onboarding</button>
-      <button class="tab-btn" data-tab="questions">Questions</button>
-      <button class="tab-btn" data-tab="schedule">Schedule</button>
-      <button class="tab-btn" data-tab="tasks">Tasks</button>
-      <button class="tab-btn" data-tab="deployment">Deployment</button>
-    </nav>
+    <div class="topbar-project"><strong id="builder-project-name">Untitled study</strong><span class="badge badge-muted">Draft</span></div>
     <div class="topbar-actions">
+      <span class="save-status" id="save-status">Up to date</span>
+      <button class="btn-ghost" id="builder-preview-btn">Preview</button>
+      <button class="btn-ghost" id="btn-save-project">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-10.5C1 .784 1.784 0 2.75 0h8a.75.75 0 01.53.22l3.5 3.5c.141.14.22.331.22.53v8a1.75 1.75 0 01-1.75 1.75H2.75zM11.5 13.5V8.75a.25.25 0 00-.25-.25h-6.5a.25.25 0 00-.25.25v4.75h7zm-5.75-10v2.25c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V3.5z"/></svg>
+        Save Project
+      </button>
+      <button class="btn-export" id="export-btn">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
+        Export Study
+      </button>
+      <details class="project-menu"><summary aria-label="More project actions" title="More project actions">•••</summary><div class="project-menu-list">
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        Toggle theme
       </button>
-      <!-- Status indicator -->
-      <span class="save-status" id="save-status">Up to date</span>
- 
-      <div class="topbar-actions-sep"></div>
- 
-      <!-- Project management -->
      <button class="btn-ghost" id="btn-import-modal">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689V2a.75.75 0 00-1.5 0v5.689L3.53 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L7.25 7.689z"/></svg>
         Import
-      </button>
-      <button class="btn-ghost" id="btn-save-project">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-10.5C1 .784 1.784 0 2.75 0h8a.75.75 0 01.53.22l3.5 3.5c.141.14.22.331.22.53v8a1.75 1.75 0 01-1.75 1.75H2.75zM11.5 13.5V8.75a.25.25 0 00-.25-.25h-6.5a.25.25 0 00-.25.25v4.75h7zm-5.75-10v2.25c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V3.5z"/></svg>
-        Save
       </button>
       <button class="btn-ghost btn-ghost-danger" id="btn-reset">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.343 13.657A8 8 0 1113.657 2.343 8 8 0 012.343 13.657zM6.03 4.97a.75.75 0 00-1.06 1.06L6.94 8 4.97 9.97a.75.75 0 101.06 1.06L8 9.06l1.97 1.97a.75.75 0 101.06-1.06L9.06 8l1.97-1.97a.75.75 0 10-1.06-1.06L8 6.94 6.03 4.97z"/></svg>
         Reset
       </button>
  
-      <div class="topbar-actions-sep"></div>
- 
-      <!-- Output actions -->
       <button class="btn-ghost" id="preview-json-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.72 3.22a.75.75 0 011.06 1.06L2.06 8l3.72 3.72a.75.75 0 11-1.06 1.06L.47 8.53a.75.75 0 010-1.06l4.25-4.25zm6.56 0a.75.75 0 10-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 101.06 1.06l4.25-4.25a.75.75 0 000-1.06l-4.25-4.25z"/></svg>
         JSON
       </button>
-      <button class="btn-export" id="export-btn">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
-        Export
-      </button>
+      </div></details>
     </div>
   </header>
 
+  <aside id="builder-sidebar">
+    <div class="sidebar-group-label">Study Builder</div>
+    <nav class="topbar-tabs" aria-label="Study builder sections">
+      <button class="tab-btn active" data-tab="study" aria-current="page">Overview</button>
+      <button class="tab-btn" data-tab="onboarding">Onboarding</button>
+      <button class="tab-btn" data-tab="questions">Questions</button>
+      <button class="tab-btn" data-tab="schedule">Schedule</button>
+      <button class="tab-btn" data-tab="tasks">Tasks</button>
+      <button class="tab-btn" data-tab="deployment">Deployment</button>
+    </nav>
+    <div class="sidebar-footer"><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
+  </aside>
+
   <!-- ========== CONFIG PANEL ========== -->
   <section id="config-panel">
+    <div class="builder-section-header"><div><h1 id="builder-section-title">Overview</h1><p id="builder-section-description">Set up your study identity, participant experience, and data output.</p></div></div>
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
       <div class="section-title">Study Identity</div>
@@ -235,10 +236,12 @@
 
     <!-- QUESTIONS TAB -->
     <div class="config-section" id="tab-questions">
-      <div>
-        <div class="section-title">EMA Questions</div>
-        <div class="field-hint" style="margin-top:4px">Insert Page Breaks to group questions onto separate screens.</div>
+      <div class="question-summary" aria-live="polite">
+        <div><strong id="summary-question-count">0</strong><span>Questions</span></div>
+        <div><strong id="summary-block-count">0</strong><span>Question blocks</span></div>
+        <div><strong id="summary-issue-count">0</strong><span>Validation issues</span></div>
       </div>
+      <p class="field-hint">Drag questions to reorder. Insert page breaks to group questions onto separate screens.</p>
 
       <div class="toggle-row" style="margin-bottom: 16px;">
         <span class="toggle-label">Randomize Question Order (per block)</span>
@@ -380,8 +383,9 @@
 
   <!-- ========== PREVIEW PANEL ========== -->
   <section id="preview-panel">
-    <div id="preview-header">
-      <span class="preview-label">Live Preview</span>
+    <button id="close-preview-btn" type="button" aria-label="Close preview">✕ Close preview</button>
+    <div class="preview-card"><div id="preview-header">
+      <span class="preview-label">Participant Preview</span>
       <div style="display:flex;gap:8px;align-items:center">
         <!-- Injected dynamically by js/preview.js -->
         <div class="preview-session-tabs" id="preview-session-tabs"></div>
@@ -394,6 +398,8 @@
         <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
       </div>
     </div>
+    </div>
+    <div class="readiness-card"><div class="readiness-heading"><h2>Study Readiness</h2><span id="readiness-count"></span></div><div id="readiness-list" aria-live="polite"></div></div>
   </section>
 </div>
 
@@ -514,5 +520,6 @@
     });
   }
 </script>
+<script src="js/builder-shell.js"></script>
 </body>
 </html>

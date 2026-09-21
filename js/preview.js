@@ -7,6 +7,7 @@ function schedulePreview() {
     if (typeof StorageManager !== 'undefined' && StorageManager.debouncedSave) {
       StorageManager.debouncedSave();
     }
+    if (typeof renderBuilderShell === 'function') renderBuilderShell();
   }
 
 function renderPreviewTabs() {
