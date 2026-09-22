@@ -149,13 +149,17 @@ function buildWindowCard(w, i) {
     const choice = e.target.value;
     if (!choice) return;
     if (choice === 'questions') {
-      const step = { kind: 'ema', id: genSId(), question_ids: [] };
+      let surveyNumber = w.phase_sequence.filter(s => s.kind === 'ema').length + 1;
+      while (w.phase_sequence.some(s => s.label === `Survey ${surveyNumber}`)) surveyNumber++;
+      const step = { kind: 'ema', id: genSId(), label: `Survey ${surveyNumber}`, question_ids: [] };
       w.phase_sequence.push(step);
       addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1,
         anchors: ['', ''], required: true, condition: null }, step);
       document.querySelector('.tab-btn[data-tab="questions"]').click();
     } else if (choice === 'hr_question') {
-      const step = { kind: 'ema', id: genSId(), question_ids: [] };
+      const hrCount = w.phase_sequence.filter(s => s.kind === 'ema' && s.label?.startsWith('PPG heart-rate capture')).length;
+      const step = { kind: 'ema', id: genSId(),
+        label: hrCount ? `PPG heart-rate capture ${hrCount + 1}` : 'PPG heart-rate capture', question_ids: [] };
       w.phase_sequence.push(step);
       addQ({ id: genQId(), type: 'heart_rate', text: 'Measuring your heart rate…',
         duration_sec: 30, report_as: 'bpm', required: true, condition: null }, step);
@@ -206,7 +210,7 @@ function renderStepList(container, w) {
       (step.question_ids || []).includes(q.id)) : [];
     title.textContent = step.kind === 'ema'
       ? (eligible.length === 1 && eligible[0].type === 'heart_rate'
-          ? 'PPG heart-rate capture'
+          ? (step.label || 'PPG heart-rate capture')
           : (step.label || 'Survey questions'))
       : (module?.label || step.id || 'Task');
     heading.append(handle, title);
@@ -291,7 +295,10 @@ function buildStepControls(step, w) {
     name.value = step.label || 'Survey questions';
     name.setAttribute('aria-label', 'Survey step name');
     name.addEventListener('input', e => { step.label = e.target.value; schedulePreview(); });
-    name.addEventListener('change', () => renderStepList(wrap.closest('.step-list'), w));
+    name.addEventListener('change', () => {
+      renderStepList(wrap.closest('.step-list'), w);
+      renderQuestions();
+    });
     wrap.appendChild(name);
     const hint = document.createElement('span');
     hint.className = 'field-hint';
