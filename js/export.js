@@ -18,9 +18,9 @@ let templates = {
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js').then(r => r.text());
-  if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js').then(r => r.text());
-  if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js').then(r => r.text());
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260922a').then(r => r.text());
+  if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260922a').then(r => r.text());
+  if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260922a').then(r => r.text());
   if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js').then(r => r.text());
   if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js').then(r => r.text());
   if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js').then(r => r.text());
@@ -203,9 +203,9 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       <h1>You're All Set</h1>
-      <p>Setup is complete. Your first session begins now.</p>
+      <p>Setup is complete. Open your first check-in link when the study begins.</p>
     </div>
-    <button class="btn btn-primary btn-block" id="ob-complete-pat">Begin First Session →</button>
+    <button class="btn btn-primary btn-block" id="ob-complete-pat">Complete Setup →</button>
   </div>
 
   <div class="screen" id="screen-ema">
@@ -600,10 +600,63 @@ function confirmProtocolExport(config = buildConfig()) {
   return true;
 }
 
-document.getElementById('export-btn').addEventListener('click', () => document.getElementById('export-modal').classList.add('open'));
+let exportReport = null;
+function renderExportReview() {
+  const panel = document.getElementById('export-review');
+  panel.replaceChildren();
+  exportReport = typeof EMAForgeProtocolValidator === 'undefined'
+    ? { errors: [{ message: 'Protocol validation could not be loaded. Reload the builder.', path: '' }], warnings: [] }
+    : EMAForgeProtocolValidator.validate(buildConfig());
+  const { errors, warnings } = exportReport;
+  const summary = document.createElement('p');
+  summary.textContent = errors.length
+    ? `${errors.length} blocking issue${errors.length === 1 ? '' : 's'} to resolve before export.`
+    : warnings.length
+      ? `Ready to export with ${warnings.length} warning${warnings.length === 1 ? '' : 's'} to review.`
+      : 'Ready to export. Review the participant preview before sharing your study.';
+  panel.appendChild(summary);
+  [...errors, ...warnings].slice(0, 12).forEach(issue => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `builder-issue ${issue.severity || 'error'}`;
+    button.textContent = issue.message;
+    button.addEventListener('click', () => {
+      document.getElementById('export-modal').classList.remove('open');
+      if (typeof showBuilderIssue === 'function' && issue.path) showBuilderIssue(issue);
+    });
+    panel.appendChild(button);
+  });
+  if (errors.length + warnings.length > 12) {
+    const remainder = document.createElement('p');
+    remainder.textContent = `Plus ${errors.length + warnings.length - 12} more issues in the relevant builder sections.`;
+    panel.appendChild(remainder);
+  }
+  if (!errors.length && warnings.length) {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'export-warnings-reviewed';
+    checkbox.addEventListener('change', updateExportAvailability);
+    label.append(checkbox, document.createTextNode('I reviewed these warnings and want to export.'));
+    panel.appendChild(label);
+  }
+  updateExportAvailability();
+}
+function updateExportAvailability() {
+  const available = exportReport && !exportReport.errors.length &&
+    (!exportReport.warnings.length || document.getElementById('export-warnings-reviewed')?.checked);
+  ['export-single-file', 'export-zip'].forEach(id => {
+    document.getElementById(id).disabled = !available;
+  });
+}
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  renderExportReview();
+  document.getElementById('export-modal').classList.add('open');
+});
 document.getElementById('modal-close-btn').addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
 document.getElementById('export-single-file').addEventListener('click', async () => {
-  if (!confirmProtocolExport()) return;
+  if (document.getElementById('export-single-file').disabled) return;
   document.getElementById('export-modal').classList.remove('open');
   const html = await buildStudyHtml({ configInline: true, previewMode: false });
   const a = document.createElement('a');
@@ -612,7 +665,7 @@ document.getElementById('export-single-file').addEventListener('click', async ()
 const zipBtn = document.getElementById('export-zip');
 if (zipBtn) {
   zipBtn.addEventListener('click', async () => {
-    if (!confirmProtocolExport()) return;
+    if (zipBtn.disabled) return;
     document.getElementById('export-modal').classList.remove('open');
     const { files } = await buildStaticBundle(); const blob = makeZip(files);
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = slugify(state.study.name) + '-static.zip'; a.click();

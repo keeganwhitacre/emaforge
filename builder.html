@@ -11,8 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="stylesheet" href="css/studio.css?v=20260921b">
-<link rel="stylesheet" href="css/builder.css?v=20260921b">
+<link rel="stylesheet" href="css/studio.css?v=20260922a">
+<link rel="stylesheet" href="css/builder.css?v=20260922a">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -85,7 +85,7 @@
       <button class="tab-btn" data-tab="questions">Questions</button>
       <button class="tab-btn" data-tab="schedule">Schedule</button>
       <button class="tab-btn" data-tab="tasks">Tasks</button>
-      <button class="tab-btn" data-tab="deployment">Deployment</button>
+      <button class="tab-btn" data-tab="deployment">Review &amp; Deploy</button>
     </nav>
     <div class="sidebar-footer"><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
   </aside>
@@ -96,6 +96,7 @@
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
       <div class="section-title">Study Identity</div>
+      <button type="button" class="btn template-start" id="start-template-btn">Start from a template</button>
       <div class="field-group">
         <label class="field-label">Study Name</label>
         <input type="text" id="study-name" placeholder="e.g. Affective Rhythms Study">
@@ -195,7 +196,7 @@
     <!-- ONBOARDING TAB -->
     <div class="config-section" id="tab-onboarding">
       <div class="section-title">Onboarding Flow</div>
-      <div class="field-hint">Setup the initial introduction and consent experience for participants. Route them here via <code>?session=onboarding</code>.</div>
+      <div class="field-hint">Set up the introduction and approved consent text participants see before their first session.</div>
       
       <div class="toggle-row" style="margin-top:12px;">
         <span class="toggle-label">Enable Onboarding Module</span>
@@ -241,9 +242,10 @@
       <div class="question-summary" aria-live="polite">
         <div><strong id="summary-question-count">0</strong><span>Questions</span></div>
         <div><strong id="summary-block-count">0</strong><span>Question blocks</span></div>
-        <div><strong id="summary-issue-count">0</strong><span>Validation issues</span></div>
+        <div><strong id="summary-issue-count">0</strong><span>Question issues</span></div>
       </div>
       <p class="field-hint">Drag questions to reorder. Insert page breaks to group questions onto separate screens.</p>
+      <p class="field-hint">Questions assigned to both sets repeat if a session includes follow-up questions. Choose first, follow-up, or both in each question’s settings.</p>
 
       <div class="toggle-row" style="margin-bottom: 16px;">
         <span class="toggle-label">Randomize Question Order (per block)</span>
@@ -254,17 +256,21 @@
       </div>
 
       <div class="question-list" id="question-list"></div>
-      <div class="add-row">
-        <button class="btn" id="add-slider-btn">+ Slider</button>
-        <button class="btn" id="add-choice-btn">+ Single Choice</button>
-        <button class="btn" id="add-check-btn">+ Checkbox (Multi)</button>
-        <button class="btn" id="add-text-btn">+ Text</button>
-        <button class="btn" id="add-num-btn">+ Number</button>
-        <button class="btn" id="add-affect-btn" style="color: var(--accent);">+ Affect Grid</button>
-        <button class="btn" id="add-hr-btn" style="color: #f6c90e;">+ HR Capture</button>
-        <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-        <button class="btn" id="add-page-btn" style="color: var(--accent); border-color: rgba(232,113,106,0.3);">+ Page Break</button>
-      </div>
+      <label class="question-add field-group"><span class="field-label">Add a question or measure</span>
+        <select id="add-question-select">
+          <option value="">Choose a type…</option>
+          <option value="slider">Rating scale</option>
+          <option value="choice">Single choice</option>
+          <option value="text">Open text</option>
+          <optgroup label="More question types">
+            <option value="numeric">Number</option>
+            <option value="checkbox">Multiple choice</option>
+            <option value="affect_grid">Affect grid</option>
+            <option value="heart_rate">PPG heart-rate capture</option>
+            <option value="page_break">Page break</option>
+          </optgroup>
+        </select>
+      </label>
     </div>
 
     <!-- SCHEDULE TAB -->
@@ -300,42 +306,30 @@
 
       <div class="divider"></div>
       <div class="section-title">Days of Week</div>
-      <div class="dow-grid" id="dow-grid">
-        <div class="dow-chip on" data-dow="1">Mo</div>
-        <div class="dow-chip on" data-dow="2">Tu</div>
-        <div class="dow-chip on" data-dow="3">We</div>
-        <div class="dow-chip on" data-dow="4">Th</div>
-        <div class="dow-chip on" data-dow="5">Fr</div>
-        <div class="dow-chip" data-dow="6">Sa</div>
-        <div class="dow-chip" data-dow="7">Su</div>
+      <div class="dow-grid" id="dow-grid" aria-label="Active days of week">
+        <button type="button" class="dow-chip on" data-dow="1" aria-pressed="true" aria-label="Monday">Mo</button>
+        <button type="button" class="dow-chip on" data-dow="2" aria-pressed="true" aria-label="Tuesday">Tu</button>
+        <button type="button" class="dow-chip on" data-dow="3" aria-pressed="true" aria-label="Wednesday">We</button>
+        <button type="button" class="dow-chip on" data-dow="4" aria-pressed="true" aria-label="Thursday">Th</button>
+        <button type="button" class="dow-chip on" data-dow="5" aria-pressed="true" aria-label="Friday">Fr</button>
+        <button type="button" class="dow-chip" data-dow="6" aria-pressed="false" aria-label="Saturday">Sa</button>
+        <button type="button" class="dow-chip" data-dow="7" aria-pressed="false" aria-label="Sunday">Su</button>
       </div>
 
       <div class="divider"></div>
-      <div class="section-title">Time Windows</div>
-      <div class="field-hint">One prompt fires at a random time within each active window.</div>
+      <div class="section-title">Daily Sessions</div>
+      <div class="field-hint">Each session gets one prompt at a random time in its window. Add questions or a physiological task, then drag or use the arrows to set the order.</div>
       <div class="window-list" id="window-list"></div>
       <div class="add-row">
-        <button class="btn" id="add-window-btn">+ Add Window</button>
+        <button class="btn" id="add-window-btn">+ Add Session</button>
       </div>
     </div>
 
     <!-- TASKS TAB -->
     <div class="config-section" id="tab-tasks">
-      <div class="section-title">Task Modules</div>
+      <div class="section-title">Measurement Settings</div>
       <div class="field-hint" style="margin-bottom:16px;">
-        Enable modules to make them available for assignment in the
-        <strong>Schedule</strong> tab. EMA is always included and needs
-        no module entry.
-      </div>
- 
-      <!-- EMA — always on, static card -->
-      <div class="task-card enabled" style="margin-bottom:12px;">
-        <div class="task-header">
-          <div>
-            <div class="task-name">EMA <span class="badge badge-muted" style="margin-left:6px">Required</span></div>
-            <div class="task-desc">Ecological Momentary Assessment — configurable question battery. Configure questions in the Questions tab and assign per-window phases in the Schedule tab.</div>
-          </div>
-        </div>
+        Add tasks and PPG capture to a session in <strong>Schedule</strong>. Adjust task settings here when your protocol needs it.
       </div>
  
       <!-- Dynamic module cards injected by js/tabs/tasks.js -->
@@ -344,12 +338,17 @@
 
     <!-- DEPLOYMENT TAB -->
     <div class="config-section" id="tab-deployment">
-      <div class="section-title">Deployment & Routing</div>
-      <div class="field-hint" style="margin-bottom: 12px;">Generate a complete schedule of participant links (CSV) pre-filled with ID, Day, and Session parameters.</div>
+      <div class="section-title">Review &amp; Deploy</div>
+      <ol class="deploy-steps">
+        <li><strong>Review the study.</strong> Resolve blocking issues in Study Readiness and walk through the participant preview.</li>
+        <li><strong>Export the study.</strong> Use Export Study above; the static-hosting bundle is recommended.</li>
+        <li><strong>Host the exported files.</strong> Upload the bundle to your chosen HTTPS static host, then enter its live URL below.</li>
+        <li><strong>Make participant links.</strong> Download the routing CSV. A separate delivery service or research team sends prompts.</li>
+      </ol>
       
       <div class="field-group" style="margin-bottom: 16px;">
         <label class="field-label">Hosted URL</label>
-        <input type="text" id="deploy-base-url" placeholder="https://my-lab.github.io/study/index.html" value="https://example.com/study/">
+        <input type="url" id="deploy-base-url" placeholder="https://my-lab.github.io/study/index.html" value="">
         <div class="field-hint" style="margin-top: 4px;">The web address where your exported HTML file will be hosted.</div>
       </div>
       
@@ -413,16 +412,17 @@
       <div class="modal-title">Export Study</div>
       <button class="modal-close" id="modal-close-btn">✕</button>
     </div>
-    <div class="modal-subtitle">All options are fully self-contained — no server required for the participant-facing app.</div>
-    <div class="export-option" id="export-single-file">
+    <div class="modal-subtitle">Download the participant app, host it on an HTTPS static host, then make participant links in Review &amp; Deploy. Data uploads require a separate webhook.</div>
+    <div id="export-review" class="export-review" aria-live="polite"></div>
+    <button type="button" class="export-option" id="export-single-file">
         <div class="export-option-title">Single HTML file</div>
         <div class="export-option-desc">One self-contained file. Easiest to share via email or a quick upload. Updating the study means re-exporting.</div>
-      </div>
+    </button>
 
-      <div class="export-option" id="export-zip">
+      <button type="button" class="export-option" id="export-zip">
         <div class="export-option-title">Static-hosting bundle <span class="badge badge-muted" style="margin-left:6px">Recommended</span></div>
         <div class="export-option-desc">Zip containing <code>index.html</code>, <code>config.json</code>, <code>css/</code>, and <code>js/</code>. Drop into GitHub Pages or any static host. Edit <code>config.json</code> directly to change questions or schedule — no re-export needed.</div>
-      </div>
+      </button>
   </div>
 </div>
 
@@ -441,7 +441,7 @@
 <div class="modal-overlay" id="import-modal">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="modal-title">Import Project</div>
+      <div class="modal-title">Start or Import Project</div>
       <button class="modal-close" id="import-modal-close">✕</button>
     </div>
     <div class="modal-subtitle">Resume work on a saved project, or start fresh using a pre-configured template.</div>
@@ -472,20 +472,20 @@
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
-<script src="js/state.js"></script>
-<script src="js/storage.js?v=20260921b"></script>
+<script src="js/state.js?v=20260922a"></script>
+<script src="js/storage.js?v=20260922a"></script>
 <script src="js/templates.js"></script>
 <script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js"></script>
-<script src="js/tabs/schedule.js"></script>
-<script src="js/tabs/tasks.js"></script>
+<script src="js/tabs/questions.js?v=20260922a"></script>
+<script src="js/tabs/schedule.js?v=20260922a"></script>
+<script src="js/tabs/tasks.js?v=20260922a"></script>
 <script src="js/protocol-validator.js"></script>
-<script src="js/tabs/deployment.js"></script>
-<script src="js/preview.js?v=20260921b"></script>
+<script src="js/tabs/deployment.js?v=20260922a"></script>
+<script src="js/preview.js?v=20260922a"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js"></script>
+<script src="js/export.js?v=20260922a"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -523,6 +523,6 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260921b"></script>
+<script src="js/builder-shell.js?v=20260922a"></script>
 </body>
 </html>

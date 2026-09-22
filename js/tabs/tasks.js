@@ -413,9 +413,10 @@ function buildModuleCard(mod) {
         <span class="toggle-track"></span>
       </label>
     </div>
-    <div class="task-settings${mod.enabled ? '' : ' hidden'}" id="mod-settings-${mod.id}">
-      ${settingsHtml}
-    </div>
+    <details class="task-settings${mod.enabled ? '' : ' hidden'}" id="mod-settings-${mod.id}">
+      <summary>Advanced settings</summary>
+      <div class="task-settings-body">${settingsHtml}</div>
+    </details>
   `;
 
   // Wire the enable/disable toggle
@@ -445,7 +446,18 @@ function renderModules() {
   list.style.flexDirection = 'column';
   list.style.gap = '12px';
   list.innerHTML = '';
-  state.modules.forEach(mod => list.appendChild(buildModuleCard(mod)));
+  state.modules.filter(mod => mod.badge !== 'Experimental').forEach(mod => list.appendChild(buildModuleCard(mod)));
+  const experimental = state.modules.filter(mod => mod.badge === 'Experimental');
+  if (experimental.length) {
+    const disclosure = document.createElement('details');
+    disclosure.className = 'experimental-modules';
+    disclosure.open = experimental.some(mod => mod.enabled);
+    const summary = document.createElement('summary');
+    summary.textContent = 'Experimental modules';
+    disclosure.append(summary);
+    experimental.forEach(mod => disclosure.appendChild(buildModuleCard(mod)));
+    list.appendChild(disclosure);
+  }
 }
 
 // ---------------------------------------------------------------------------

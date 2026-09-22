@@ -1,21 +1,16 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Questions Tab — v1.5
-//
-// Changes from v1.4:
-//   - Added heart_rate question type. Shows a camera-based PPG capture
-//     for duration_sec seconds; stores {bpm, sqi, ibi_series} but
-//     surfaces the BPM number for conditional logic comparisons.
-//     Builder fields: duration (seconds), report_as ("bpm" only for now).
-//   - heart_rate questions created via the Schedule tab HR step are shown
-//     here but labelled as auto-managed (editing duration syncs back to
-//     the step).
+// Questions are optional in a physiology-only study. A survey step is
+// inserted into the first session when the first question is created.
 // ---------------------------------------------------------------------------
 
 function renderQuestions() {
   const list = document.getElementById('question-list');
   list.innerHTML = '';
+  if (!state.ema.questions.length) {
+    list.innerHTML = '<p class="questions-empty">Questions are optional. Add one here or add a survey to a session in Schedule.</p>';
+  }
   
   let displayNum = 1; // Track the visual question number
   
@@ -74,9 +69,9 @@ function buildQCard(q, index, displayNum) {
   if (q.type === 'heart_rate')  typeLabel = 'Heart Rate';
 
   const blockOpts = [
-    { value: 'pre',  label: 'Pre-task only'  },
-    { value: 'both', label: 'Pre & Post'     },
-    { value: 'post', label: 'Post-task only' }
+    { value: 'pre',  label: 'First question set'  },
+    { value: 'both', label: 'Both question sets'   },
+    { value: 'post', label: 'Follow-up question set' }
   ].map(o => `<option value="${o.value}" ${q.block === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
 
   card.innerHTML = `
@@ -108,7 +103,7 @@ function buildQCard(q, index, displayNum) {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
         <div class="field-group" style="margin:0">
-          <label class="field-label">Show In (Phase)</label>
+          <label class="field-label">Question set</label>
           <select class="q-block-select" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-family:var(--font);font-size:0.88rem;outline:none;">
             ${blockOpts}
           </select>
@@ -466,27 +461,42 @@ function bindSessionSelector(card, q) {
 // Add question helpers
 // ---------------------------------------------------------------------------
 function addQ(obj) {
+  // A questionnaire is optional; creating the first question adds a survey
+  // before the first task if this project started as physiology-only.
+  const windows = state.ema.scheduling.windows || [];
+  if (obj.type !== 'page_break' && windows.length && !windows.some(w => (w.phase_sequence || []).some(s => s.kind === 'ema'))) {
+    windows[0].phase_sequence.unshift({ kind: 'ema', block: 'pre' });
+    renderWindows();
+  }
   state.ema.questions.push(obj);
   renderQuestions(); schedulePreview();
   const cards = document.querySelectorAll('.q-card');
   if (cards.length && obj.type !== 'page_break') cards[cards.length-1].classList.add('expanded');
 }
 
-(function wireAddButtons() {
-  const wire = (id, factory) => {
-    const b = document.getElementById(id);
-    if (b) b.addEventListener('click', () => addQ(factory()));
-  };
-  wire('add-slider-btn',  () => ({ id: genQId(), type: 'slider',     text: '', min: 0, max: 100, step: 1, unit: null, anchors: ['',''], required: true, condition: null, block: 'both', windows: null }));
-  wire('add-choice-btn',  () => ({ id: genQId(), type: 'choice',     text: '', options: ['',''], required: true, condition: null, block: 'both', windows: null }));
-  wire('add-check-btn',   () => ({ id: genQId(), type: 'checkbox',   text: '', options: ['',''], required: true, condition: null, block: 'both', windows: null }));
-  wire('add-text-btn',    () => ({ id: genQId(), type: 'text',       text: '', required: true, condition: null, block: 'both', windows: null }));
-  wire('add-num-btn',     () => ({ id: genQId(), type: 'numeric',    text: '', required: true, condition: null, block: 'both', windows: null }));
-  wire('add-affect-btn',  () => ({ id: genQId(), type: 'affect_grid', text: 'Right now, how are you feeling?',
-                                    valence_labels: ['Unpleasant', 'Pleasant'], arousal_labels: ['Deactivated', 'Activated'],
-                                    show_quadrant_labels: true, required: true, condition: null, block: 'both', windows: null }));
-  wire('add-page-btn',    () => ({ id: genQId(), type: 'page_break' }));
-  // Heart rate can be added manually too (not just via Schedule tab)
-  wire('add-hr-btn',      () => ({ id: genQId(), type: 'heart_rate', text: 'Measuring your heart rate…',
-                                    duration_sec: 30, report_as: 'bpm', required: true, condition: null, block: 'both', windows: null }));
-})();
+document.getElementById('add-question-select').addEventListener('change', event => {
+  const type = event.target.value;
+  if (!type) return;
+  const windows = state.ema.scheduling.windows || [];
+  const targetWindow = windows.find(w => (w.phase_sequence || []).some(step => step.kind === 'ema')) || windows[0];
+  const firstSurvey = targetWindow?.phase_sequence?.find(step => step.kind === 'ema');
+  const question = { id: genQId(), type, text: '', required: true, condition: null,
+    block: firstSurvey?.block || 'pre', windows: targetWindow ? [targetWindow.id] : null };
+  if (type === 'slider') Object.assign(question, { min: 0, max: 100, step: 1, unit: null, anchors: ['', ''] });
+  if (type === 'choice' || type === 'checkbox') question.options = ['', ''];
+  if (type === 'affect_grid') Object.assign(question, {
+    text: 'Right now, how are you feeling?', valence_labels: ['Unpleasant', 'Pleasant'],
+    arousal_labels: ['Deactivated', 'Activated'], show_quadrant_labels: true
+  });
+  if (type === 'heart_rate') Object.assign(question, {
+    text: 'Measuring your heart rate…', duration_sec: 30, report_as: 'bpm'
+  });
+  if (type === 'page_break') delete question.text;
+  addQ(question);
+  event.target.value = '';
+  const card = document.querySelector('#question-list .q-card:last-child');
+  if (card) {
+    card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
+  }
+});

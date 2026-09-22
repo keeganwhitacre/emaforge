@@ -6,9 +6,9 @@ const builderSections = {
   study: ["Overview", "Set up your study identity, participant experience, and data output."],
   onboarding: ["Onboarding", "Prepare the welcome and consent experience for participants."],
   questions: ["Questions", "Create and organize the questions participants will answer."],
-  schedule: ["Schedule", "Choose when sessions open and which phases they contain."],
+  schedule: ["Schedule", "Choose when sessions open and what participants do in each one."],
   tasks: ["Tasks", "Configure the measurements and tasks used in your sessions."],
-  deployment: ["Deployment", "Prepare participant links and delivery tools for your study."]
+  deployment: ["Review & Deploy", "Review, export, host, and prepare participant links."]
 };
 
 function sectionForIssue(issue) {
@@ -25,7 +25,9 @@ function showBuilderIssue(issue) {
     document.querySelector(`.tab-btn[data-tab="${section}"]`).click();
   }
   const questionIndex = /^ema\.questions\[(\d+)\]/.exec(issue.path);
+  const windowIndex = /^ema\.scheduling\.windows\[(\d+)\]/.exec(issue.path);
   let target = questionIndex && document.querySelectorAll("#question-list .q-card")[Number(questionIndex[1])];
+  if (!target && windowIndex) target = document.querySelectorAll("#window-list .window-item")[Number(windowIndex[1])];
   if (target) target.classList.add("expanded");
   if (!target && issue.path === "study.name") target = document.getElementById("study-name");
   if (!target && issue.path === "study.institution") target = document.getElementById("institution");
@@ -71,16 +73,18 @@ function renderBuilderShell() {
   renderSectionIssues(issues);
   document.getElementById("summary-question-count").textContent = count;
   document.getElementById("summary-block-count").textContent = blocks;
-  document.getElementById("summary-issue-count").textContent = errors.length + warnings.length;
+  document.getElementById("summary-issue-count").textContent = issues.filter(issue => sectionForIssue(issue) === "questions").length;
 
   const hasConsent = !issues.some(issue => issue.code === "consent_placeholder") &&
     !!EMAForgeProtocolValidator.textOnly(state.onboarding.consent_text);
   const hasSchedule = Array.isArray(state.ema.scheduling.windows) && state.ema.scheduling.windows.length > 0 &&
     !errors.some(issue => issue.path.startsWith("ema.scheduling"));
+  const hasMeasures = state.ema.scheduling.windows.length > 0 && state.ema.scheduling.windows.every(w =>
+    Array.isArray(w.phase_sequence) && w.phase_sequence.length > 0);
   const checks = [
     ["Study details completed", !!name && !!(state.study.institution || "").trim(), "study"],
     ["Consent flow configured", !!state.onboarding.enabled && hasConsent, "onboarding"],
-    ["At least one question added", count > 0, "questions"],
+    ["Each session has a measure", hasMeasures, "schedule"],
     ["Schedule configured", hasSchedule, "schedule"],
     ["No blocking export issues", errors.length === 0, "deployment"]
   ];
@@ -117,8 +121,17 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").scrollTop = 0;
+  if (button.dataset.tab === "onboarding" && state.onboarding.enabled) previewSession = "onboarding";
+  if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length) {
+    previewSession = state.ema.scheduling.windows[0].id;
+  }
+  renderPreviewTabs();
+  renderPreview();
   renderBuilderShell();
 }));
+document.getElementById("start-template-btn").addEventListener("click", () => {
+  document.getElementById("import-modal").classList.add("open");
+});
 document.getElementById("builder-preview-btn").addEventListener("click", () => {
   if (window.matchMedia("(max-width: 1050px)").matches) {
     document.getElementById("preview-panel").classList.toggle("open-mobile");

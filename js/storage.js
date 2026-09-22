@@ -84,22 +84,6 @@ const StorageManager = {
             });
         }
 
-        if (saved.pat && !Array.isArray(saved.modules)) {
-            const epatMod = state.modules.find(m => m.id === 'epat');
-            if (epatMod) {
-                epatMod.enabled  = saved.pat.enabled || false;
-                epatMod.settings = Object.assign({}, epatMod.settings, {
-                    trials:              saved.pat.trials,
-                    trial_duration_sec:  saved.pat.trial_duration_sec,
-                    retry_budget:        saved.pat.retry_budget,
-                    sqi_threshold:       saved.pat.sqi_threshold,
-                    confidence_ratings:  saved.pat.confidence_ratings,
-                    two_phase_practice:  saved.pat.two_phase_practice,
-                    body_map:            saved.pat.body_map
-                });
-            }
-        }
-
         if (state.study.completion_lock === undefined) state.study.completion_lock = true;
         if (state.study.resume_enabled  === undefined) state.study.resume_enabled  = true;
         state.onboarding.consent_text = sanitizeConsentHtml(state.onboarding.consent_text);
@@ -230,6 +214,7 @@ const StorageManager = {
         document.querySelectorAll('#dow-grid .dow-chip').forEach(chip => {
             const dow = parseInt(chip.dataset.dow);
             chip.classList.toggle('on', (state.ema.scheduling.days_of_week || []).includes(dow));
+            chip.setAttribute('aria-pressed', String(chip.classList.contains('on')));
         });
 
         // 4. Re-render panels

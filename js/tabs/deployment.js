@@ -150,40 +150,18 @@ function bindDeploymentTab() {
 }
 
 // ---------------------------------------------------------------------------
-// phaseLabel(window) — builds a human-readable phase sequence string.
-// e.g. { pre: true, task: "epat", post: true } → "Pre-EMA → ePAT → Post-EMA"
-//      { pre: true, task: null, post: false }   → "EMA"
+// phaseLabel(window) — readable summary of the ordered session flow.
 // ---------------------------------------------------------------------------
 function phaseLabel(w) {
-  if (Array.isArray(w.phase_sequence) && w.phase_sequence.length) {
-    const labels = w.phase_sequence.map(step => {
-      if (step.kind === 'ema') return step.block === 'post' ? 'Post-EMA' : 'Pre-EMA';
-      if (step.kind === 'hr') return 'HR Capture';
-      if (step.kind === 'task') {
-        const mod = state.modules.find(module => module.id === step.id);
-        return mod ? mod.label : (step.id || 'Task');
-      }
-      return step.kind || 'Step';
-    });
-    if (labels.length === 1 && labels[0] === 'Pre-EMA') return 'EMA';
-    return labels.join(' → ');
-  }
-
-  const ph = w.phases || { pre: true, task: null, post: false };
-  const parts = [];
-
-  if (ph.pre)  parts.push('Pre-EMA');
-  if (ph.task) {
-    // Try to get the human label from the module registry
-    const mod = state.modules.find(m => m.id === ph.task);
-    parts.push(mod ? mod.label : ph.task);
-  }
-  if (ph.post) parts.push('Post-EMA');
-
-  // If no task, collapse "Pre-EMA" to just "EMA" — cleaner for simple studies
-  if (!ph.task && parts.length === 1 && parts[0] === 'Pre-EMA') return 'EMA';
-
-  return parts.join(' → ') || 'EMA';
+  const labels = (w.phase_sequence || []).map(step => {
+    if (step.kind === 'ema') return step.block === 'post' ? 'Follow-up questions' : 'Survey questions';
+    if (step.kind === 'task') {
+      const mod = state.modules.find(module => module.id === step.id);
+      return mod ? mod.label : (step.id || 'Task');
+    }
+    return step.kind || 'Step';
+  });
+  return labels.join(' → ') || 'No measures';
 }
 
 function normalizeDaysOfWeek(days) {

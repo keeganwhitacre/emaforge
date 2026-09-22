@@ -38,6 +38,12 @@ test("phase planning preserves conditions until task execution", () => {
   assert.equal(utils.evaluateCondition(plan[1].condition, { distress: { value: 9 } }), true);
 });
 
+test("task-only sessions have one task and no implicit questionnaire", () => {
+  const plan = utils.buildPhasePlan({ id: "w1", phase_sequence: [{ kind: "task", id: "epat" }] }, { epat: {} });
+  assert.deepEqual(plan.map(step => step.token), ["epat"]);
+  assert.deepEqual(utils.buildPhasePlan({ id: "w1" }, { epat: {} }), []);
+});
+
 test("repeated EMA blocks receive parseable, stable tokens", () => {
   const plan = utils.buildPhasePlan({
     id: "w1",

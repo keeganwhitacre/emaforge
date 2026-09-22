@@ -7,13 +7,10 @@
 // Changes from v1.4.0:
 //
 // MULTI-TASK SESSIONS:
-//   Windows now store phase_sequence[] as the primary schema. The old
-//   phases: {pre, task, post} triple is kept for backwards compat but
-//   phasesToSequence() is the sole expansion path.
+//   Windows store an ordered phase_sequence[] used by the participant runtime.
 //   A phase_sequence step can now be:
 //     { kind: "ema",  block: "pre"|"post" }
 //     { kind: "task", id: "epat"|..., condition: {question_id, operator, value} | null }
-//     { kind: "hr",   duration_sec: 30,  store_as: "q_hr_1" }
 //   Multiple tasks in a single window are fully supported.
 //
 // HEART RATE QUESTION TYPE:
@@ -44,7 +41,7 @@ let state = {
     completion_lock: true,
     resume_enabled: true,
     webhook_url: "",
-    greetings: { w1: "Good Morning", w2: "Check-In", w3: "Good Evening" }
+    greetings: { w1: "Check-In" }
   },
 
   onboarding: {
@@ -59,7 +56,7 @@ let state = {
     label: "ePAT",
     desc: "Ecological Phase Adjustment Task — objective cardiac interoceptive accuracy via PPG. Requires rear camera + torch on participant device.",
     badge: "Beta",
-    enabled: false,
+    enabled: true,
     settings: {
     trials: 20,
     trial_duration_sec: 30,
@@ -133,31 +130,14 @@ let state = {
 
   ema: {
     randomize_questions: false,
-    questions: [
-      { id: "q1", type: "slider",  text: "Right now, my mood is…",          min: 0, max: 100, step: 1, unit: null, anchors: ["Unpleasant", "Pleasant"],        required: true, condition: null, block: "both", windows: null },
-      { id: "q2", type: "slider",  text: "Right now, my energy level is…",  min: 0, max: 100, step: 1, unit: null, anchors: ["Low / Calm", "High / Activated"], required: true, condition: null, block: "both", windows: null },
-      { id: "q3", type: "choice",  text: "What are you doing right now?",   options: ["Resting", "Working / Studying", "Socializing", "Exercising", "Eating", "Commuting", "Other"], required: true, condition: null, block: "both", windows: null }
-    ],
+    questions: [],
     scheduling: {
       study_days: 14,
-      daily_prompts: 3,
+      daily_prompts: 1,
       days_of_week: [1,2,3,4,5],
       windows: [
-        {
-          id: "w1", label: "Morning",   start: "08:00", end: "10:00",
-          phases: { pre: true, task: null, post: false },
-          phase_sequence: [{ kind: "ema", block: "pre" }]
-        },
-        {
-          id: "w2", label: "Afternoon", start: "13:00", end: "15:00",
-          phases: { pre: true, task: null, post: false },
-          phase_sequence: [{ kind: "ema", block: "pre" }]
-        },
-        {
-          id: "w3", label: "Evening",   start: "19:00", end: "21:00",
-          phases: { pre: true, task: null, post: false },
-          phase_sequence: [{ kind: "ema", block: "pre" }]
-        }
+        { id: "w1", label: "Daily session", start: "09:00", end: "11:00",
+          phase_sequence: [{ kind: "task", id: "epat", condition: null }] }
       ],
       timing: { expiry_minutes: 60, grace_minutes: 10 }
     }
@@ -214,19 +194,10 @@ function sanitizeConsentHtml(html) {
 }
 
 // ---------------------------------------------------------------------------
-// phasesToSequence(w) — canonical expansion from legacy triple or explicit array.
-// phase_sequence on the window is always used verbatim if present and non-empty.
+// Sequence is the sole source of session step order.
 // ---------------------------------------------------------------------------
 function phasesToSequence(w) {
-  if (Array.isArray(w.phase_sequence) && w.phase_sequence.length > 0) {
-    return w.phase_sequence.map(p => ({ ...p }));
-  }
-  const ph = w.phases || { pre: true, task: null, post: false };
-  const seq = [];
-  if (ph.pre)             seq.push({ kind: "ema",  block: "pre" });
-  if (ph.task)            seq.push({ kind: "task", id: ph.task, condition: null });
-  if (ph.post && ph.task) seq.push({ kind: "ema",  block: "post" });
-  return seq;
+  return Array.isArray(w.phase_sequence) ? w.phase_sequence.map(p => ({ ...p })) : [];
 }
 
 // ---------------------------------------------------------------------------
@@ -245,15 +216,17 @@ function buildConfig() {
   if (cfg.study.resume_enabled  === undefined) cfg.study.resume_enabled  = true;
   cfg.onboarding.consent_text = sanitizeConsentHtml(cfg.onboarding.consent_text);
 
-  // Always emit phase_sequence — runtime prefers this over legacy triple
+  // Emit only the ordered sequence consumed by the participant runtime.
   const configuredWindows = cfg.ema?.scheduling?.windows || [];
   if (cfg.ema?.scheduling) cfg.ema.scheduling.daily_prompts = configuredWindows.length;
   configuredWindows.forEach(w => {
     w.phase_sequence = phasesToSequence(w);
   });
 
+  const usedTasks = new Set(configuredWindows.flatMap(w => w.phase_sequence)
+    .filter(step => step.kind === 'task').map(step => step.id));
   state.modules.forEach(mod => {
-    if (mod.enabled) {
+    if (mod.enabled && usedTasks.has(mod.id)) {
       cfg.modules[mod.id] = JSON.parse(JSON.stringify(mod.settings));
     }
   });

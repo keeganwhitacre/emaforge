@@ -43,19 +43,10 @@
     }
   }
 
-  function legacyTripleToSequence(phases) {
-    const legacy = phases || { pre: true, task: null, post: false };
-    const sequence = [];
-    if (legacy.pre) sequence.push({ kind: "ema", block: "pre" });
-    if (legacy.task) sequence.push({ kind: "task", id: legacy.task, condition: null });
-    if (legacy.post && legacy.task) sequence.push({ kind: "ema", block: "post" });
-    return sequence;
-  }
-
   function buildPhasePlan(windowConfig, enabledModules) {
     const sequence = Array.isArray(windowConfig.phase_sequence) && windowConfig.phase_sequence.length
       ? windowConfig.phase_sequence
-      : legacyTripleToSequence(windowConfig.phases);
+      : [];
     const counters = { pre: 0, post: 0 };
 
     return sequence.flatMap((step, stepIndex) => {
@@ -165,7 +156,6 @@
   return {
     responseValue,
     evaluateCondition,
-    legacyTripleToSequence,
     buildPhasePlan,
     parseEmaPhaseToken,
     collectResponses,

@@ -215,25 +215,11 @@ textarea { resize: vertical; min-height: 60px; }
 .export-option-title { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 4px; }
 .export-option-desc { font-size: 11px; color: var(--fg-3); line-height: 1.5; }
 
-/* Phase sequencer pills in Schedule tab window cards */
-.phase-pill {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  padding: 2px 7px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
 /* Session checkbox rows in question cards */
 .q-session-checks { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
 .session-check-row { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.85rem; color: var(--fg-2); user-select: none; }
 .session-check-row input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0; cursor: pointer; }
 .session-check-row:hover span { color: var(--fg); }
-
-.phase-pill-pre  { background: rgba(99, 179, 237, 0.15); color: #63b3ed; border: 1px solid rgba(99, 179, 237, 0.3); }
-.phase-pill-task { background: rgba(232, 113, 106, 0.15); color: var(--accent); border: 1px solid rgba(232, 113, 106, 0.3); }
-.phase-pill-post { background: rgba(154, 215, 160, 0.15); color: #9ad7a0; border: 1px solid rgba(154, 215, 160, 0.3); }
 
 /* Misc */
 ::-webkit-scrollbar { width: 6px; height: 6px; }

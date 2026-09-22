@@ -55,6 +55,9 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .q-body { padding: 0 18px 18px; }
 #tab-questions { min-width: 0; }
 #question-list { min-width: 0; }
+.questions-empty { border: 1px dashed var(--border-hi); border-radius: var(--radius); padding: 18px; color: var(--fg-2); font-size: 12px; }
+.question-add { max-width: 300px; margin-top: 4px; }
+.question-add select { width: 100%; }
 #preview-panel { grid-column: 3; grid-row: 2; padding: 16px 12px; overflow-y: auto; gap: 14px; background: var(--bg-2); }
 .preview-card, .readiness-card { border: 1px solid var(--border); border-radius: 9px; background: var(--bg-1); }
 .preview-card { display: flex; flex-direction: column; flex: 0 0 auto; min-height: 0; }
@@ -76,6 +79,51 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .readiness-item.complete .readiness-icon { display: grid; place-items: center; border-radius: 50%; width: 19px; height: 19px; margin-right: 3px; font-size: 12px; background: var(--green); color: white; }
 .readiness-arrow { margin-left: auto; font-size: 20px; }
 .readiness-detail { border-top: 1px solid var(--border); padding-top: 9px; margin-top: 8px; font-size: 11px; color: var(--fg-3); line-height: 1.5; }
+.session-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 9px; padding: 17px; margin-bottom: 14px; }
+.session-heading, .session-time, .session-content-heading, .session-step-heading, .session-add { display: flex; align-items: center; gap: 12px; }
+.session-heading .field-group { flex: 1; margin: 0; }
+.session-heading input { width: 100%; font-weight: 650; }
+.session-heading .del-btn { align-self: flex-end; background: transparent; border: 0; color: var(--fg-3); cursor: pointer; font-size: 16px; padding: 9px; }
+.session-time { margin-top: 12px; }
+.session-time .field-group { flex: 1; margin: 0; }
+.session-time input { width: 100%; }
+.session-content { margin-top: 17px; border-top: 1px solid var(--border); padding-top: 14px; }
+.session-content-heading { justify-content: space-between; margin-bottom: 11px; }
+.session-content-heading strong { font-size: 13px; }
+.session-content-heading span { font-size: 11px; color: var(--fg-3); }
+.session-step { border: 1px solid var(--border); border-radius: 7px; background: var(--bg); margin-bottom: 7px; padding: 9px 11px; }
+.session-step.dragging { opacity: .5; }
+.session-step-heading { min-width: 0; }
+.session-step-heading strong { font-size: 12px; min-width: 0; }
+.session-step-handle { color: var(--fg-3); cursor: grab; font-size: 17px; user-select: none; }
+.session-step-tag { border-radius: 12px; padding: 2px 7px; background: var(--accent-dim); color: var(--accent); font-size: 10px; }
+.session-step-actions { display: flex; gap: 3px; margin-left: auto; }
+.session-step-actions button { border: 1px solid var(--border); border-radius: 4px; background: var(--bg-1); color: var(--fg-2); cursor: pointer; padding: 3px 7px; }
+.session-step-actions button:disabled { opacity: .35; cursor: default; }
+.session-step-actions .step-del { color: var(--red); }
+.session-step-options { margin: 7px 0 0 26px; }
+.session-step-options summary { color: var(--fg-3); font-size: 11px; cursor: pointer; }
+.session-step-options > div { margin-top: 9px; }
+.session-add { margin-top: 12px; flex-wrap: wrap; }
+.session-add select { flex: 1; min-width: 190px; }
+.deploy-steps { margin: 0; padding: 14px 18px 14px 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-1); color: var(--fg-2); font-size: 12px; line-height: 1.6; }
+.deploy-steps li + li { margin-top: 7px; }
+.deploy-steps strong { color: var(--fg); }
+.template-start { margin-top: 4px; align-self: flex-start; }
+.experimental-modules { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 3px; }
+.experimental-modules > summary { color: var(--fg-2); font-size: 12px; cursor: pointer; margin-bottom: 12px; }
+.experimental-modules .task-card { margin-bottom: 12px; }
+.task-settings { display: block; }
+.task-settings > summary { cursor: pointer; color: var(--fg-2); font-size: 12px; }
+.task-settings-body { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.export-option { width: 100%; text-align: left; font-family: var(--font); }
+.export-option:disabled { cursor: not-allowed; opacity: .5; }
+.export-option:disabled:hover { border-color: var(--border); background: var(--bg-2); }
+.export-review { max-height: 190px; overflow-y: auto; color: var(--fg-2); font-size: 12px; line-height: 1.5; }
+.export-review p { margin: 0 0 8px; }
+.export-review .builder-issue { padding: 4px 0; }
+.export-review label { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+#export-modal .modal-box { max-height: calc(100vh - 40px); overflow-y: auto; }
 #close-preview-btn { display: none; }
 @media (max-width: 1250px) {
   #app { grid-template-columns: 190px minmax(0,1fr) 390px; }

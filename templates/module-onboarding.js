@@ -2,6 +2,15 @@
 // ONBOARDING ENGINE
 // ==========================================================
 const OnboardingSession = (function() {
+ function usesTask(taskId) {
+    return !!config.modules?.[taskId] && (config.ema?.scheduling?.windows || [])
+      .some(w => (w.phase_sequence || []).some(step => step.kind === 'task' && step.id === taskId));
+  }
+
+  function needsPPGCheck() {
+    return usesTask('epat') || usesTask('hct') ||
+      (config.ema?.questions || []).some(question => question.type === 'heart_rate');
+  }
 
  function initConsent() {
     const scroll   = document.getElementById("ob-consent-scroll");
@@ -45,7 +54,7 @@ const OnboardingSession = (function() {
       sessionData.data.push({ type: "consent", agreed: true, initials: initials ? initials.value.trim().toUpperCase() : '', timestamp: new Date().toISOString() });
       if (config.onboarding.ask_schedule !== false) {
         show("screen-ob-schedule");
-      } else if (config.modules?.epat && window.ePATCore) {
+      } else if (needsPPGCheck() && window.ePATCore) {
         show("screen-ob-device");
       } else {
         show("screen-ob-complete");
@@ -79,7 +88,7 @@ const OnboardingSession = (function() {
       sessionData.schedulePreferences = schedulePreferences;
       sessionData.data.push({ type: "schedule_pref", ...schedulePreferences });
       
-      if (config.modules?.epat && window.ePATCore) {
+      if (needsPPGCheck() && window.ePATCore) {
         show("screen-ob-device");
       } else {
         show("screen-ob-complete");
@@ -128,8 +137,12 @@ const OnboardingSession = (function() {
         stream.getTracks().forEach(t => t.stop());
       } catch(e) { setCheck("torch", "fail", "Error: " + e.message); }
 
-      // Audio
-      try {
+      // Audio is used by ePAT; HCT and standalone PPG capture do not need it.
+      if (!usesTask('epat')) {
+        checks.audio = true;
+        setCheck("audio", "pass", "Not required for this study");
+      } else {
+        try {
         setCheck("audio", "testing", "Playing test tone…");
         const actx = new (window.AudioContext || window.webkitAudioContext)();
         await actx.resume();
@@ -141,7 +154,8 @@ const OnboardingSession = (function() {
         await new Promise(r => setTimeout(r, 300));
         actx.close();
         checks.audio = true; setCheck("audio", "pass", "Audio OK");
-      } catch(e) { setCheck("audio", "fail", "Audio error"); }
+        } catch(e) { setCheck("audio", "fail", "Audio error"); }
+      }
 
       // PPG Signal
       if (BeatDetector) {
@@ -219,7 +233,7 @@ const OnboardingSession = (function() {
     };
 
     const nextEl = document.getElementById("ob-device-next");
-    if (nextEl) nextEl.onclick = () => show("screen-ob-training");
+    if (nextEl) nextEl.onclick = () => show(usesTask('epat') ? "screen-ob-training" : "screen-ob-complete");
   }
 
   function initTraining() {
@@ -380,19 +394,11 @@ const OnboardingSession = (function() {
     const completeBtn = document.getElementById("ob-complete-pat");
     if (completeBtn) {
       completeBtn.onclick = () => {
-        // Hand off to the normal phase runner — onboarding is done,
-        // now run whatever phases are in sessionData.phases (if any),
-        // or just finalize if there are none.
+        // Setup is complete. Tasks run only in the scheduled sessions where
+        // the researcher placed them, never automatically on Day 0.
         sessionData.type = "onboarding_complete";
         sessionData.completedOnboarding = new Date().toISOString();
-        // If ePAT is configured and enabled, kick off a fresh PAT-only run
-        if (config.modules?.epat && window.ePATCore && typeof ePAT !== 'undefined') {
-          sessionData.phases = ['epat'];
-          sessionData.currentPhase = 0;
-          runNextPhase();
-        } else {
-          advancePhase();
-        }
+        advancePhase();
       };
     }
   }

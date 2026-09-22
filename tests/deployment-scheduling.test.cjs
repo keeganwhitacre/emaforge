@@ -120,13 +120,12 @@ test("phase labels use the full ordered phase sequence", () => {
   const label = context.phaseLabel({
     phase_sequence: [
       { kind: "ema", block: "pre" },
-      { kind: "hr" },
       { kind: "task", id: "epat" },
       { kind: "ema", block: "pre" },
       { kind: "ema", block: "post" }
     ]
   });
-  assert.equal(label, "Pre-EMA → HR Capture → ePAT → Pre-EMA → Post-EMA");
+  assert.equal(label, "Survey questions → ePAT → Survey questions → Follow-up questions");
 });
 
 test("deployment URLs must be real HTTPS hosts", () => {

@@ -43,6 +43,15 @@ test("a complete protocol passes without blocking errors", () => {
   assert.deepEqual(report.errors, []);
 });
 
+test("a physiology-only session does not require survey questions", () => {
+  const config = validConfig();
+  config.ema.questions = [];
+  config.modules.epat = { trials: 20, trial_duration_sec: 30, retry_budget: 30, sqi_threshold: 0.008 };
+  config.ema.scheduling.windows[0].phase_sequence = [{ kind: "task", id: "epat", condition: null }];
+  const report = validator.validate(config);
+  assert.equal(report.valid, true, JSON.stringify(report.errors));
+});
+
 test("placeholder consent blocks export", () => {
   const config = validConfig();
   config.onboarding.consent_text = "<h3>Consent template — researcher action required</h3><p>Replace this placeholder.</p>";

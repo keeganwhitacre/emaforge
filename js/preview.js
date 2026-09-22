@@ -14,6 +14,10 @@ function renderPreviewTabs() {
   const container = document.getElementById('preview-session-tabs');
   if (!container) return;
   container.innerHTML = '';
+  if ((!state.onboarding.enabled && previewSession === 'onboarding') ||
+      (previewSession !== 'onboarding' && !state.ema.scheduling.windows.some(w => w.id === previewSession))) {
+    previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
+  }
 
   // Add Onboarding Tab if enabled
   if (state.onboarding.enabled) {
@@ -26,10 +30,6 @@ function renderPreviewTabs() {
 
   // Add Tabs for every defined window in the schedule
   state.ema.scheduling.windows.forEach(w => {
-    // If current previewSession isn't valid anymore, fallback to the first window
-    if (previewSession !== 'onboarding' && !state.ema.scheduling.windows.find(win => win.id === previewSession)) {
-       previewSession = w.id;
-    }
     const btn = document.createElement('button');
     btn.className = `preview-session-tab ${previewSession === w.id ? 'active' : ''}`;
     btn.dataset.session = w.id;

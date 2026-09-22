@@ -1,21 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Schedule Tab — v1.5
-//
-// Changes from v1.2:
-//   - Phase Sequencer replaced by a full step list. Each window has an
-//     ordered array of steps: EMA block, Task, HR Capture.
-//   - Multiple tasks per window are supported — add as many task steps
-//     as needed in any order.
-//   - Each Task step has an optional condition (question_id + operator + value)
-//     that gates whether it runs at all (evaluated against prior EMA responses
-//     at runtime). Useful for e.g. "only run ePAT if HR > 80".
-//   - HR Capture steps let you specify a duration; they store BPM inline
-//     which other conditions can reference.
-//   - The legacy phases: {pre, task, post} triple is still kept on each window
-//     for backward compat but is no longer the primary authoring surface.
-//     buildConfig() always emits phase_sequence.
+// An ordered session flow is the only source of measurement order.
 // ---------------------------------------------------------------------------
 
 function bindScheduleTab() {
@@ -30,8 +16,10 @@ function bindScheduleTab() {
   document.querySelectorAll('#dow-grid .dow-chip').forEach(chip => {
     const dow = parseInt(chip.dataset.dow);
     chip.classList.toggle('on', state.ema.scheduling.days_of_week.includes(dow));
+    chip.setAttribute('aria-pressed', String(chip.classList.contains('on')));
     chip.addEventListener('click', () => {
       const active = chip.classList.toggle('on');
+      chip.setAttribute('aria-pressed', String(active));
       if (active) state.ema.scheduling.days_of_week.push(dow);
       else state.ema.scheduling.days_of_week = state.ema.scheduling.days_of_week.filter(d => d !== dow);
       state.ema.scheduling.days_of_week.sort();
@@ -41,13 +29,16 @@ function bindScheduleTab() {
 
   document.getElementById('add-window-btn').addEventListener('click', () => {
     const wId = genWId();
+    const firstStep = state.ema.scheduling.windows[0]?.phase_sequence?.[0];
+    const initialStep = firstStep?.kind === 'task' && state.modules.some(m => m.id === firstStep.id && m.enabled)
+      ? { kind: 'task', id: firstStep.id, condition: null }
+      : { kind: 'ema', block: 'pre' };
     state.ema.scheduling.windows.push({
       id: wId,
-      label: `Window ${state.ema.scheduling.windows.length + 1}`,
+      label: `Session ${state.ema.scheduling.windows.length + 1}`,
       start: "12:00",
       end: "13:00",
-      phases: { pre: true, task: null, post: false },
-      phase_sequence: [{ kind: "ema", block: "pre" }]
+      phase_sequence: [initialStep]
     });
     renderWindows();
     if (typeof renderGreetings === 'function') renderGreetings();
@@ -77,52 +68,51 @@ function syncDailyPromptCount() {
   if (input) input.value = count;
 }
 
-// Ensure every window has a valid phase_sequence (schema migration)
+// Keep the editor resilient to incomplete imported configurations.
 function migrateWindow(w) {
-  if (!w.phases) w.phases = { pre: true, task: null, post: false };
-  if (!Array.isArray(w.phase_sequence) || w.phase_sequence.length === 0) {
-    w.phase_sequence = phasesToSequence(w);
-  }
+  if (!Array.isArray(w.phase_sequence)) w.phase_sequence = [];
 }
 
 // ---------------------------------------------------------------------------
 // buildWindowCard
 // ---------------------------------------------------------------------------
+const expandedSteps = new WeakSet();
+
 function buildWindowCard(w, i) {
   const el = document.createElement('div');
-  el.className = 'window-item drag-item';
-  el.style.cssText = 'display:flex;align-items:flex-start;gap:16px;background:var(--bg-surface);padding:16px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;';
+  el.className = 'window-item session-card';
+  const taskOptions = state.modules.filter(m => m.badge !== 'Experimental')
+    .map(m => `<option value="task:${escH(m.id)}">${escH(m.label)} · physiological task</option>`).join('');
+  const experimentalOptions = state.modules.filter(m => m.badge === 'Experimental')
+    .map(m => `<option value="task:${escH(m.id)}">${escH(m.label)} · experimental</option>`).join('');
 
   el.innerHTML = `
-    <div style="cursor:grab;color:var(--fg-muted);font-weight:bold;padding-top:12px;flex-shrink:0;">⋮⋮</div>
-    <div class="window-content" style="flex:1;display:flex;flex-direction:column;gap:10px;">
-
-      <input type="text" class="win-label" value="${escH(w.label)}"
-        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--font);font-size:1rem;outline:none;">
-
-      <div style="display:flex;gap:12px;align-items:center;">
-        <input type="time" class="win-start" value="${w.start}"
-          style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--font-mono);font-size:0.95rem;outline:none;">
-        <span style="color:var(--fg-muted);font-size:0.9rem;font-weight:500;">to</span>
-        <input type="time" class="win-end" value="${w.end}"
-          style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-family:var(--font-mono);font-size:0.95rem;outline:none;">
-      </div>
-
-      <div class="phase-sequencer-container" style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--bg);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <span style="font-size:0.75rem;font-weight:600;color:var(--fg-muted);text-transform:uppercase;letter-spacing:0.07em;">Session Sequence</span>
-          <div style="display:flex;gap:6px;">
-            <button class="add-step-btn" data-kind="ema"  style="padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:transparent;color:#63b3ed;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:0.05em;">+ EMA</button>
-            <button class="add-step-btn" data-kind="task" style="padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--accent);font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:0.05em;">+ Task</button>
-          </div>
-        </div>
-        <div class="step-list"></div>
-        <div class="field-hint" style="margin-top:6px;margin-bottom:0;">Steps run top to bottom. Conditions on task steps are evaluated against prior EMA responses in the same session.</div>
-      </div>
-
+    <div class="session-heading">
+      <label class="field-group"><span class="field-label">Session name</span>
+        <input type="text" class="win-label" value="${escH(w.label)}"></label>
+      <button type="button" class="del-btn" aria-label="Remove ${escH(w.label)}" title="Remove session">✕</button>
     </div>
-    <button class="del-btn" title="Remove window"
-      style="background:none;border:none;color:var(--accent-red);font-size:1.4rem;cursor:pointer;padding:8px;opacity:0.7;flex-shrink:0;">✕</button>
+    <div class="session-time">
+      <label class="field-group"><span class="field-label">From</span><input type="time" class="win-start" value="${w.start}"></label>
+      <label class="field-group"><span class="field-label">To</span><input type="time" class="win-end" value="${w.end}"></label>
+    </div>
+    <div class="session-content">
+      <div class="session-content-heading">
+        <strong>Participant flow</strong>
+        <span>Runs in this order</span>
+      </div>
+      <div class="step-list"></div>
+      <div class="session-add">
+        <label class="field-label" for="session-add-${i}">Add to session</label>
+        <select class="add-step-select" id="session-add-${i}">
+          <option value="">Choose a measure…</option>
+          <option value="questions">Survey questions</option>
+          <option value="hr_question">PPG heart-rate capture</option>
+          ${taskOptions}
+          ${experimentalOptions ? `<optgroup label="Experimental">${experimentalOptions}</optgroup>` : ''}
+        </select>
+      </div>
+    </div>
   `;
 
   // Wire label + time
@@ -135,12 +125,19 @@ function buildWindowCard(w, i) {
   });
   el.querySelector('.win-start').addEventListener('input', e => { w.start = e.target.value; schedulePreview(); });
   el.querySelector('.win-end').addEventListener('input',   e => { w.end   = e.target.value; schedulePreview(); });
+  el.addEventListener('focusin', () => {
+    if (previewSession !== w.id) {
+      previewSession = w.id;
+      renderPreviewTabs();
+      renderPreview();
+    }
+  });
 
   // Delete window
   el.querySelector('.del-btn').addEventListener('click', () => {
     const idx = state.ema.scheduling.windows.indexOf(w);
     if (idx !== -1) state.ema.scheduling.windows.splice(idx, 1);
-    if (previewSession === w.id) previewSession = 'onboarding';
+    if (previewSession === w.id) previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
     renderWindows();
     if (typeof renderGreetings === 'function') renderGreetings();
     if (typeof renderPreviewTabs === 'function') renderPreviewTabs();
@@ -148,24 +145,44 @@ function buildWindowCard(w, i) {
     schedulePreview();
   });
 
-  // Add step buttons
-  el.querySelectorAll('.add-step-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const kind = btn.dataset.kind;
-      if (kind === 'ema') {
-        // Determine next block label: if already have a pre, use post; otherwise pre
-        const hasPost = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'post');
-        const block = hasPost ? 'pre' : (w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'pre') ? 'post' : 'pre');
-        w.phase_sequence.push({ kind: 'ema', block });
-      } else if (kind === 'task') {
-        const enabledMods = state.modules.filter(m => m.enabled);
-        const defaultId = enabledMods.length > 0 ? enabledMods[0].id : null;
-        w.phase_sequence.push({ kind: 'task', id: defaultId, condition: null });
+  el.querySelector('.add-step-select').addEventListener('change', e => {
+    const choice = e.target.value;
+    if (!choice) return;
+    if (choice === 'questions') {
+      const hasPre = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'pre');
+      const hasPost = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'post');
+      const block = hasPre ? 'post' : 'pre';
+      if (!(block === 'post' ? hasPost : hasPre)) w.phase_sequence.push({ kind: 'ema', block });
+      const eligible = state.ema.questions.some(q => q.type !== 'page_break' &&
+        (!Array.isArray(q.windows) || q.windows.includes(w.id)) &&
+        (q.block === 'both' || (q.block || 'pre') === block));
+      if (!eligible || (hasPre && hasPost)) {
+        addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1,
+          anchors: ['', ''], required: true, condition: null, block, windows: [w.id] });
+        document.querySelector('.tab-btn[data-tab="questions"]').click();
       }
-      renderStepList(el.querySelector('.step-list'), w);
-      syncLegacyPhases(w);
-      schedulePreview();
-    });
+    } else if (choice === 'hr_question') {
+      const hasPre = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'pre');
+      const hasPost = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'post');
+      const block = hasPre && (hasPost || w.phase_sequence.at(-1)?.kind === 'task') ? 'post' : 'pre';
+      if (!w.phase_sequence.some(s => s.kind === 'ema' && s.block === block)) {
+        w.phase_sequence.push({ kind: 'ema', block });
+      }
+      addQ({ id: genQId(), type: 'heart_rate', text: 'Measuring your heart rate…',
+        duration_sec: 30, report_as: 'bpm', required: true, condition: null, block, windows: [w.id] });
+    } else if (choice.startsWith('task:')) {
+      const mod = state.modules.find(m => m.id === choice.slice(5));
+      if (mod) {
+        mod.enabled = true;
+        w.phase_sequence.push({ kind: 'task', id: mod.id, condition: null });
+        renderModules();
+      }
+    }
+    e.target.value = '';
+    renderStepList(el.querySelector('.step-list'), w);
+    previewSession = w.id;
+    renderPreviewTabs();
+    schedulePreview();
   });
 
   renderStepList(el.querySelector('.step-list'), w);
@@ -178,70 +195,131 @@ function buildWindowCard(w, i) {
 function renderStepList(container, w) {
   container.innerHTML = '';
   if (!w.phase_sequence || w.phase_sequence.length === 0) {
-    container.innerHTML = '<div style="font-size:0.82rem;color:var(--fg-muted);padding:6px 0;">No steps — add one above.</div>';
+    container.innerHTML = '<div class="field-hint">Add a measure below to start this session.</div>';
     return;
   }
 
   w.phase_sequence.forEach((step, si) => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:8px;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;';
+    row.className = 'session-step';
+    row.dataset.index = String(si);
+    const heading = document.createElement('div');
+    heading.className = 'session-step-heading';
+    const handle = document.createElement('span');
+    handle.className = 'session-step-handle';
+    handle.textContent = '⠿';
+    handle.draggable = true;
+    handle.title = 'Drag to reorder';
+    handle.setAttribute('aria-hidden', 'true');
+    const title = document.createElement('strong');
+    const module = state.modules.find(m => m.id === step.id);
+    const eligible = step.kind === 'ema' ? state.ema.questions.filter(q => q.type !== 'page_break' &&
+      (!Array.isArray(q.windows) || q.windows.includes(w.id)) &&
+      (q.block === 'both' || (q.block || 'pre') === step.block)) : [];
+    title.textContent = step.kind === 'ema'
+      ? (eligible.length === 1 && eligible[0].type === 'heart_rate'
+          ? 'PPG heart-rate capture'
+          : (step.block === 'post' ? 'Follow-up questions' : 'Survey questions'))
+      : (module?.label || step.id || 'Task');
+    heading.append(handle, title);
+    if (step.condition) {
+      const tag = document.createElement('span');
+      tag.className = 'session-step-tag';
+      tag.textContent = 'Conditional';
+      heading.append(tag);
+    }
 
-    const pill = stepPill(step);
-    const controls = buildStepControls(step, w, si);
-
-    row.innerHTML = `<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;padding-top:2px;">${pill}</div>`;
-    row.appendChild(controls);
-
-    // Up/down + delete buttons
     const actions = document.createElement('div');
-    actions.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex-shrink:0;';
-    actions.innerHTML = `
-      <button class="step-up"   style="width:22px;height:18px;border:1px solid var(--border);border-radius:3px;background:transparent;color:var(--fg-muted);cursor:pointer;font-size:10px;line-height:1;">↑</button>
-      <button class="step-down" style="width:22px;height:18px;border:1px solid var(--border);border-radius:3px;background:transparent;color:var(--fg-muted);cursor:pointer;font-size:10px;line-height:1;">↓</button>
-      <button class="step-del"  style="width:22px;height:18px;border:1px solid var(--border);border-radius:3px;background:transparent;color:var(--accent-red);cursor:pointer;font-size:12px;line-height:1;margin-top:2px;">✕</button>
-    `;
+    actions.className = 'session-step-actions';
+    [['step-up', 'Move', 'earlier', '↑', si === 0],
+     ['step-down', 'Move', 'later', '↓', si === w.phase_sequence.length - 1],
+     ['step-del', 'Remove', '', '✕', w.phase_sequence.length === 1]].forEach(([className, action, direction, symbol, disabled]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.setAttribute('aria-label', `${action} ${title.textContent}${direction ? ' ' + direction : ''}`);
+      button.disabled = disabled;
+      button.textContent = symbol;
+      actions.appendChild(button);
+    });
+    heading.appendChild(actions);
+    row.appendChild(heading);
+    const details = document.createElement('details');
+    details.className = 'session-step-options';
+    details.open = expandedSteps.has(step);
+    const summary = document.createElement('summary');
+    summary.textContent = 'Options';
+    details.append(summary, buildStepControls(step, w));
+    details.addEventListener('toggle', () => {
+      if (details.open) expandedSteps.add(step);
+      else expandedSteps.delete(step);
+    });
+    row.appendChild(details);
+
+    handle.addEventListener('dragstart', event => {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', JSON.stringify({ windowId: w.id, index: si }));
+      row.classList.add('dragging');
+    });
+    handle.addEventListener('dragend', () => row.classList.remove('dragging'));
+    row.addEventListener('dragover', event => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    });
+    row.addEventListener('drop', event => {
+      event.preventDefault();
+      let drag;
+      try { drag = JSON.parse(event.dataTransfer.getData('text/plain')); } catch { return; }
+      if (drag.windowId !== w.id) return;
+      const from = drag.index;
+      if (!Number.isInteger(from) || from < 0 || from >= w.phase_sequence.length || from === si) return;
+      const [moved] = w.phase_sequence.splice(from, 1);
+      w.phase_sequence.splice(si, 0, moved);
+      renderStepList(container, w); schedulePreview();
+    });
     actions.querySelector('.step-up').addEventListener('click', () => {
       if (si > 0) { [w.phase_sequence[si-1], w.phase_sequence[si]] = [w.phase_sequence[si], w.phase_sequence[si-1]]; }
-      renderStepList(container, w); syncLegacyPhases(w); schedulePreview();
+      renderStepList(container, w); schedulePreview();
     });
     actions.querySelector('.step-down').addEventListener('click', () => {
       if (si < w.phase_sequence.length - 1) { [w.phase_sequence[si], w.phase_sequence[si+1]] = [w.phase_sequence[si+1], w.phase_sequence[si]]; }
-      renderStepList(container, w); syncLegacyPhases(w); schedulePreview();
+      renderStepList(container, w); schedulePreview();
     });
     actions.querySelector('.step-del').addEventListener('click', () => {
       w.phase_sequence.splice(si, 1);
-      renderStepList(container, w); syncLegacyPhases(w); schedulePreview();
+      renderStepList(container, w); schedulePreview();
     });
-    row.appendChild(actions);
     container.appendChild(row);
   });
 }
 
-function stepPill(step) {
-  if (step.kind === 'ema')  return `<span class="phase-pill phase-pill-pre" style="${step.block==='post'?'background:rgba(154,215,160,0.15);color:#9ad7a0;border-color:rgba(154,215,160,0.3);':''}">${step.block === 'post' ? 'POST' : 'PRE'}</span>`;
-  if (step.kind === 'task') return `<span class="phase-pill phase-pill-task">TASK</span>`;
-  return `<span class="phase-pill">${step.kind}</span>`;
-}
-
-function buildStepControls(step, w, si) {
+function buildStepControls(step, w) {
   const wrap = document.createElement('div');
   wrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:6px;';
 
   if (step.kind === 'ema') {
     const sel = document.createElement('select');
     sel.style.cssText = 'width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.85rem;outline:none;';
-    sel.innerHTML = `<option value="pre" ${step.block==='pre'?'selected':''}>Pre-task EMA</option><option value="post" ${step.block==='post'?'selected':''}>Post-task EMA</option>`;
-    sel.addEventListener('change', e => { step.block = e.target.value; syncLegacyPhases(w); schedulePreview(); });
+    sel.setAttribute('aria-label', 'Question set');
+    sel.innerHTML = `<option value="pre" ${step.block==='pre'?'selected':''}>Survey questions</option><option value="post" ${step.block==='post'?'selected':''}>Follow-up questions</option>`;
+    sel.addEventListener('change', e => { step.block = e.target.value; renderStepList(wrap.closest('.step-list'), w); schedulePreview(); });
     wrap.appendChild(sel);
+    const hint = document.createElement('span');
+    hint.className = 'field-hint';
+    hint.textContent = 'Choose which questions appear here in the Questions tab.';
+    wrap.appendChild(hint);
 
   } if (step.kind === 'task') {
     const enabledMods = state.modules.filter(m => m.enabled);
     const taskSel = document.createElement('select');
     taskSel.style.cssText = 'width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.85rem;outline:none;';
-    const noMod = enabledMods.length === 0;
-    taskSel.innerHTML = (noMod ? '<option value="">— Enable a module in Tasks tab —</option>' : '') +
-      enabledMods.map(m => `<option value="${m.id}" ${step.id===m.id?'selected':''}>${escH(m.label)}</option>`).join('');
-    taskSel.addEventListener('change', e => { step.id = e.target.value || null; syncLegacyPhases(w); schedulePreview(); });
+    const currentUnavailable = !enabledMods.some(m => m.id === step.id);
+    taskSel.innerHTML = (currentUnavailable
+      ? `<option value="${escH(step.id || '')}" selected disabled>Task unavailable — enable it in Tasks or choose another</option>`
+      : '') +
+      enabledMods.map(m => `<option value="${escH(m.id)}" ${step.id===m.id?'selected':''}>${escH(m.label)}</option>`).join('');
+    taskSel.setAttribute('aria-label', 'Task module');
+    taskSel.addEventListener('change', e => { step.id = e.target.value || null; renderStepList(wrap.closest('.step-list'), w); schedulePreview(); });
     wrap.appendChild(taskSel);
 
     // Condition row
@@ -360,18 +438,4 @@ function buildConditionRow(step, w) {
   });
 
   return wrap;
-}
-
-// ---------------------------------------------------------------------------
-// syncLegacyPhases — keep the old phases triple loosely in sync so older
-// code paths (e.g. deployment.js phaseLabel) don't crash
-// ---------------------------------------------------------------------------
-function syncLegacyPhases(w) {
-  const seq = w.phase_sequence || [];
-  const firstTask = seq.find(s => s.kind === 'task');
-  w.phases = {
-    pre:  seq.some(s => s.kind === 'ema' && s.block === 'pre'),
-    task: firstTask ? firstTask.id : null,
-    post: seq.some(s => s.kind === 'ema' && s.block === 'post')
-  };
 }

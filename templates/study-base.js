@@ -7,10 +7,8 @@
 //
 // Changes from v1.3:
 //
-// PHASE SEQUENCE (forward-looking):
-//   - Router now prefers config.ema.scheduling.windows[i].phase_sequence
-//     when non-empty. Falls back to the legacy {pre, task, post} triple
-//     if phase_sequence is missing (old exports still work).
+// SESSION FLOW:
+//   - Router consumes config.ema.scheduling.windows[i].phase_sequence.
 //   - phase_sequence is an ordered array of:
 //       { kind: "ema",  block: "pre" | "post" }
 //       { kind: "task", id: "epat" | "stroop" | ... }
@@ -508,8 +506,7 @@ function collectDeviceMetadata() {
   const enabledModules = config.modules || {};
 
   // ---------------------------------------------------------------
-  // ROUTER — v1.4: consume window.phase_sequence (preferred) OR the
-  // legacy {pre, task, post} triple (fallback).
+  // Run the ordered session flow authored in the builder.
   // ---------------------------------------------------------------
   let runtimePhasePlan = [];
 
@@ -520,22 +517,11 @@ function collectDeviceMetadata() {
     const w = dynamicWindows.find(win => win.id === sessionId);
 
     if (!w) {
-      const fallback = dynamicWindows[0];
-      if (fallback) {
-        sessionData.type = "ema_only";
-        runtimePhasePlan = EMAForgeRuntimeUtils.buildPhasePlan(fallback, enabledModules)
-          .filter(phase => phase.kind === 'ema')
-          .slice(0, 1);
-        sessionData.phases = runtimePhasePlan.map(phase => phase.token);
-        sessionData.phasePlan = runtimePhasePlan;
-        document.getElementById('task-subtitle').textContent = fallback.label || 'Check-In';
-      } else {
-        sessionData.type = "error";
-        document.getElementById('task-subtitle').textContent = "Invalid Session";
-        startBtn.disabled = true;
-        startBtn.textContent = 'Session not found';
-        return;
-      }
+      sessionData.type = "error";
+      document.getElementById('task-subtitle').textContent = "Invalid Session";
+      startBtn.disabled = true;
+      startBtn.textContent = 'Session not found';
+      return;
     } else {
       runtimePhasePlan = EMAForgeRuntimeUtils.buildPhasePlan(w, enabledModules);
 
@@ -559,8 +545,9 @@ function collectDeviceMetadata() {
 
       // Categorize session type for downstream analyses.
       const hasTask = runtimePhasePlan.some(phase => phase.kind === 'task');
+      const hasSurvey = runtimePhasePlan.some(phase => phase.kind === 'ema');
       const hasPost = runtimePhasePlan.some(phase => phase.kind === 'ema' && phase.block === 'post');
-      sessionData.type = hasTask ? (hasPost ? "pre_task_post" : "pre_task") : "ema_only";
+      sessionData.type = hasTask ? (hasSurvey ? (hasPost ? "pre_task_post" : "pre_task") : "task_only") : "ema_only";
       sessionData.phases = runtimePhasePlan.map(phase => phase.token);
       sessionData.phasePlan = runtimePhasePlan;
 
