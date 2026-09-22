@@ -128,6 +128,19 @@ test("phase labels use the full ordered phase sequence", () => {
   assert.equal(label, "Survey questions → ePAT → Survey questions → Follow-up questions");
 });
 
+test("Twilio API acceptance is deduplicated without claiming handset delivery", () => {
+  const dispatcher = dispatcherContext(builderContext().generateTwilioScript("https://example.org/study/"));
+  const log = {
+    getLastRow: () => 3,
+    getRange: () => ({ getValues: () => [
+      ["2026-01-01", "P001", 1, "morning", "fail:429:rate limit"],
+      ["2026-01-01", "P002", 1, "morning", "accepted:201:SMexample"]
+    ] })
+  };
+  assert.equal(dispatcher.alreadySent_(log, "P001", 1, "morning"), false);
+  assert.equal(dispatcher.alreadySent_(log, "P002", 1, "morning"), true);
+});
+
 test("deployment URLs must be real HTTPS hosts", () => {
   const context = builderContext();
   assert.equal(context.isDeployableBaseUrl("https://community.example.org/study/"), true);

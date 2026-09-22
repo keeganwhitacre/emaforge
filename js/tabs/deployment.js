@@ -649,7 +649,7 @@ function dispatchPromptsLocked_() {
           const res = sendTwilioSMS_(sid, token, fromPhone, phone, body);
 
           if (res.ok) {
-            logOutcome_(log, pid, nextStudyDay, nextWindowId, 'sent:' + res.status + ':' + (res.sid || 'no_sid'));
+            logOutcome_(log, pid, nextStudyDay, nextWindowId, 'accepted:' + res.status + ':' + (res.sid || 'no_sid'));
             clearNextPing_(sheet, sheetRow, colIdx);
           } else if (res.uncertain) {
             // Retrying an ambiguous network failure can duplicate an SMS.
@@ -896,7 +896,7 @@ function alreadySent_(log, pid, dayNumber, windowId) {
   const rows = log.getRange(2, 1, last - 1, 5).getValues();
   for (let i = rows.length - 1; i >= 0; i--) {
     const [tsIso, rPid, rDay, rWin, outcome] = rows[i];
-    if (!outcome || !String(outcome).startsWith('sent:')) continue;
+    if (!outcome || !String(outcome).startsWith('accepted:')) continue;
     if (String(rPid) !== String(pid)) continue;
     if (Number(rDay) !== Number(dayNumber)) continue;
     if (String(rWin) !== String(windowId)) continue;

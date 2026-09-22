@@ -3573,9 +3573,9 @@ export const handler = async (event) =&gt; {
             <li>Otherwise, scans forward for the next eligible, unsent window and picks a random minute inside it. A
               stale scheduled prompt caused by dispatcher downtime is recorded as
               <code>missed:dispatcher_late</code> instead of being sent hours or days late.</li>
-            <li>Writes outcomes to the hidden <code>_Dispatch_Log</code> sheet with a <code>sent:HTTPcode</code> or
+            <li>Writes outcomes to the hidden <code>_Dispatch_Log</code> sheet with an <code>accepted:HTTPcode</code> or
               <code>fail:HTTPcode:message</code> marker. Failures leave the ping scheduled for retry on the next tick;
-              successes are recorded so a subsequent tick can't send a duplicate even if the sheet-write that clears
+              API acceptances are recorded so a subsequent tick can't send a duplicate even if the sheet-write that clears
               <code>Next_Ping_ISO</code> somehow failed mid-operation.
             </li>
           </ol>
