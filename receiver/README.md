@@ -1,0 +1,13 @@
+# EMA Forge receiver (Cloudflare Worker + private R2)
+
+This optional receiver accepts session uploads, saves each session once in R2, and returns a readable receipt. It does not require a database or a Twilio account. Your institution must approve your chosen host and handling of research data before enrollment.
+
+1. Create a Cloudflare account. In a terminal, install or run [Wrangler](https://developers.cloudflare.com/workers/wrangler/): `npx wrangler login`.
+2. From this directory, run `npx wrangler r2 bucket create ema-forge-study-data`. Keep this bucket **private**; do not enable public access.
+3. Edit `wrangler.jsonc`: replace `https://your-study-host.example` with the exact **origin** where the exported participant study will run (scheme, hostname, and port if any; **no path**). A second origin may be added after a comma if you have two actual study hosts. For a new study, use a separate bucket and Worker name.
+4. Run `npx wrangler deploy`. Copy its HTTPS Worker URL and add `/submit`, for example `https://ema-forge-receiver.your-account.workers.dev/submit`.
+5. Paste the complete `/submit` URL into **Study → Webhook URL** in EMA Forge. Export the **static bundle**, host all its files over HTTPS, and open `check.html` on that host. Click **Send test submission**; a success receipt should include the test ID. Check your R2 bucket for the matching object under `setup-tests/`. Only then send a real test session through `index.html` and confirm its object appears under `sessions/`.
+
+Retries of the same submission ID get a `duplicate: true` receipt without overwriting the original. A conflicting participant/day/window for that ID returns 409. There is no public data-reading endpoint; export or download objects from your private R2 bucket for analysis. The connection check stores a synthetic record under `setup-tests/`; delete these records when no longer needed.
+
+The origin allowlist prevents ordinary browsers hosted elsewhere from uploading; **it is not authentication** (non-browser clients can supply their own Origin header). The endpoint address is publicly visible in the exported study, so it cannot be used as a secret. Use unrelated, opaque participant IDs; do not place names, contact details, or clinical identifiers in links. Assess abuse controls, consent, retention, and institutional approval for the study's risk level. If the receiver is unavailable or the browser cannot read its receipt, participants are offered a local download. A real participant-session test and inspection of its stored object are required before enrollment. No live deployment is bundled with this source code.

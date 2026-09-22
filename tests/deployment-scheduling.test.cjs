@@ -149,6 +149,19 @@ test("deployment URLs must be real HTTPS hosts", () => {
   assert.equal(context.isDeployableBaseUrl("not a url"), false);
 });
 
+test("connection check URL stays beside the hosted participant app", () => {
+  const context = builderContext();
+  assert.equal(
+    context.connectionCheckUrl("https://lab.example.org/studies/sleep/index.html"),
+    "https://lab.example.org/studies/sleep/check.html"
+  );
+  assert.equal(
+    context.connectionCheckUrl("https://lab.example.org/studies/sleep"),
+    "https://lab.example.org/studies/sleep/check.html"
+  );
+  assert.equal(context.connectionCheckUrl("http://localhost/study"), null);
+});
+
 test("dispatcher serializes study names and URLs as safe JavaScript", () => {
   const context = builderContext();
   context.state.study.name = "Researcher's */ Study";

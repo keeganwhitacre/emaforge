@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260922b">
-<link rel="stylesheet" href="css/builder.css?v=20260922b">
+<link rel="stylesheet" href="css/builder.css?v=20260922d">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -339,19 +339,43 @@
     <!-- DEPLOYMENT TAB -->
     <div class="config-section" id="tab-deployment">
       <div class="section-title">Review &amp; Deploy</div>
+      <p class="field-hint">Take the study from this browser to a working participant link with confirmed data storage.</p>
       <ol class="deploy-steps">
         <li><strong>Review the study.</strong> Resolve blocking issues in Study Readiness and walk through the participant preview.</li>
-        <li><strong>Export the study.</strong> Use Export Study above; the static-hosting bundle is recommended.</li>
-        <li><strong>Host the exported files.</strong> Upload the bundle to your chosen HTTPS static host, then enter its live URL below.</li>
-        <li><strong>Make participant links.</strong> Download the routing CSV. A separate delivery service or research team sends prompts.</li>
+        <li><strong>Connect data storage.</strong> Use the reference receiver or an approved institutional endpoint, then paste its URL below.</li>
+        <li><strong>Export and host.</strong> Export the static bundle and upload every file to an HTTPS host.</li>
+        <li><strong>Confirm receipt.</strong> Open the hosted connection check and verify its test record exists in storage.</li>
+        <li><strong>Create participant links.</strong> Download the routing CSV or optional Twilio dispatcher.</li>
       </ol>
-      
-      <div class="field-group" style="margin-bottom: 16px;">
-        <label class="field-label">Hosted URL</label>
-        <input type="url" id="deploy-base-url" placeholder="https://my-lab.github.io/study/index.html" value="">
-        <div class="field-hint" style="margin-top: 4px;">The web address where your exported HTML file will be hosted.</div>
+
+      <div class="deploy-block">
+        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Connect data storage</strong><span>Automatic return is optional, but recommended for field studies.</span></div></div>
+        <div class="field-group">
+          <label class="field-label" for="deploy-webhook-url">Receiver URL</label>
+          <input type="url" id="deploy-webhook-url" placeholder="https://your-receiver.workers.dev/submit">
+          <div class="field-hint" style="margin-top: 4px;">This is the same receiver configured under Study. It must save the record before returning a success receipt.</div>
+        </div>
+        <div class="deploy-actions">
+          <button type="button" class="btn btn-secondary" id="download-receiver-btn">Download receiver starter</button>
+          <a href="readme.html#webhook-cloudflare" target="_blank" rel="noopener" class="deploy-link">Receiver instructions ↗</a>
+        </div>
+        <div class="field-hint" id="receiver-starter-status" style="margin-top: 7px;"></div>
+        <div class="deploy-note">The included receiver uses a private Cloudflare R2 bucket and refuses duplicate overwrites. It is a reference implementation, not a substitute for IRB or institutional review.</div>
       </div>
-      
+
+      <div class="deploy-block">
+        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Export and host</strong><span>Use Export Study above and choose the static-hosting bundle.</span></div></div>
+      <div class="field-group" style="margin-bottom: 16px;">
+        <label class="field-label" for="deploy-base-url">Hosted study URL</label>
+        <input type="url" id="deploy-base-url" placeholder="https://my-lab.github.io/study/index.html" value="">
+        <div class="field-hint" style="margin-top: 4px;">The live address of index.html after uploading the complete exported bundle.</div>
+      </div>
+      <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open hosted connection check</button>
+      <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Available after entering a valid hosted HTTPS URL.</div>
+      </div>
+
+      <div class="deploy-block">
+      <div class="deploy-block-heading"><span class="deploy-number">3</span><div><strong>Create participant links</strong><span>Use opaque study IDs—not names, emails, or medical-record numbers.</span></div></div>
       <div class="field-row">
         <div class="field-group">
           <label class="field-label">Start Participant ID</label>
@@ -378,6 +402,7 @@
           Setup guide
           <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
         </a>
+      </div>
       </div>
     </div>
   </section>
@@ -482,10 +507,10 @@
 <script src="js/tabs/schedule.js?v=20260922c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
-<script src="js/tabs/deployment.js?v=20260922c"></script>
+<script src="js/tabs/deployment.js?v=20260922d"></script>
 <script src="js/preview.js?v=20260922b"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260922b"></script>
+<script src="js/export.js?v=20260922d"></script>
 
 <!-- Initialize everything -->
 <script>

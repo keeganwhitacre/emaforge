@@ -109,6 +109,17 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .deploy-steps { margin: 0; padding: 14px 18px 14px 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-1); color: var(--fg-2); font-size: 12px; line-height: 1.6; }
 .deploy-steps li + li { margin-top: 7px; }
 .deploy-steps strong { color: var(--fg); }
+.deploy-block { border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--bg-1); }
+.deploy-block-heading { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 15px; }
+.deploy-block-heading > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.deploy-block-heading strong { color: var(--fg); font-size: 13px; }
+.deploy-block-heading span:not(.deploy-number) { color: var(--fg-2); font-size: 12px; line-height: 1.45; }
+.deploy-number { display: grid; place-items: center; flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 700; }
+.deploy-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 11px; }
+.deploy-actions .btn { min-height: 36px; padding: 8px 12px; }
+.deploy-link { color: var(--accent); font-size: 12px; text-decoration: none; }
+.deploy-note { margin-top: 12px; padding: 10px 11px; border-left: 3px solid var(--border-hi); background: var(--bg-2); color: var(--fg-2); font-size: 11px; line-height: 1.5; }
+#open-connection-check-btn { width: 100%; min-height: 38px; }
 .template-start { margin-top: 4px; align-self: flex-start; }
 .experimental-modules { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 3px; }
 .experimental-modules > summary { color: var(--fg-2); font-size: 12px; cursor: pointer; margin-bottom: 12px; }

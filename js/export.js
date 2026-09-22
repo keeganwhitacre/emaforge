@@ -13,7 +13,8 @@
 
 let templates = {
     epatCore: null, runtimeUtils: null, studyBase: null,
-    modOnboarding: null, modEma: null, modEpat: null, modHct: null, modIat: null
+    modOnboarding: null, modEma: null, modEpat: null, modHct: null, modIat: null,
+    connectionCheck: null
   };
 
 async function loadTemplates() {
@@ -25,6 +26,7 @@ async function loadTemplates() {
   if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js').then(r => r.text());
   if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js').then(r => r.text());
   if (!templates.modIat) templates.modIat = await fetch('templates/module-iat.js').then(r => r.text());
+  if (!templates.connectionCheck) templates.connectionCheck = await fetch('templates/connection-check.html?v=20260922d').then(r => r.text());
 }
 
 function getThemeCSS(theme, accent) {
@@ -424,11 +426,12 @@ async function buildStaticBundle() {
   const files = [
     { path: 'index.html', content: html },
     { path: 'config.json', content: JSON.stringify(cfg, null, 2) },
+    { path: 'check.html', content: templates.connectionCheck },
     { path: 'css/study.css', content: runtimeCss },
     { path: 'js/study.js', content: studyJs }
   ];
   if (needsCore) files.push({ path: 'js/epat-core.js', content: templates.epatCore });
-  files.push({ path: 'README.txt', content: `${cfg.study.name} — deploy to any static host.\nParticipants open: index.html?id=<PID>&day=<N>&session=<windowId>\n` });
+  files.push({ path: 'README.txt', content: `${cfg.study.name} — deploy to any HTTPS static host.\nParticipants open: index.html?id=<PID>&day=<N>&session=<windowId>\nOpen check.html on the hosted site to test the data receiver with a synthetic record. Confirm the saved object, then run a complete test session before enrollment.\n` });
   return { files };
 }
 

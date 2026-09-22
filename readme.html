@@ -1019,8 +1019,9 @@
                   rel="noopener">emaforge.keeganwhitacre.com</a>, design your study there, click Export, and host the
                 resulting <em>bundle</em> for participants. The Builder runs entirely in your browser — nothing you type
                 gets sent to the server — so using the hosted version does not compromise privacy in any way.</p>
-              <p>No user account, no database, no backend. The entire study lifecycle — build → export → host →
-                distribute → collect → analyze — runs without a server component maintained by you.</p>
+              <p>No account or backend is required to build or run a study. Automatic data return is optional and uses
+                a receiver selected by the research team; manual return remains available when that better matches the
+                approved protocol.</p>
             </div>
           </div>
 
@@ -1029,8 +1030,8 @@
             data-in-transit through a database that becomes a named component of every IRB protocol. The tradeoffs EMA
             Forge makes to avoid that:</p>
           <ul>
-            <li><strong>Zero backend infrastructure.</strong> Host on GitHub Pages, Netlify, Vercel, Cloudflare Pages,
-              or any institutional static web server. No runtime, no DB, no SSL cert to renew.</li>
+            <li><strong>Static participant app.</strong> Host on GitHub Pages, Netlify, Vercel, Cloudflare Pages,
+              or an institutional static web server. A small receiver is needed only when automatic data return is enabled.</li>
             <li><strong>Data stays local until the participant hands it over.</strong> Response data is written to the
               participant's device as a file. You collect it via whatever channel your IRB has already approved for data
               return (secure email, REDCap upload, institutional SFTP, etc.).</li>
@@ -1492,8 +1493,8 @@
               </tr>
               <tr>
                 <td><strong>Static-hosting bundle</strong> <span class="status-pill stable">RECOMMENDED</span></td>
-                <td>A <code>.zip</code> containing <code>index.html</code>, <code>config.json</code>, <code>css/</code>,
-                  and <code>js/</code>.</td>
+                <td>A <code>.zip</code> containing <code>index.html</code>, <code>config.json</code>,
+                  <code>check.html</code>, <code>css/</code>, and <code>js/</code>.</td>
                 <td>Real deployment. <strong>Because <code>config.json</code> is separate, you can fix a typo in a
                     question without re-exporting.</strong> Just edit the JSON on the host.</td>
               </tr>
@@ -1533,8 +1534,9 @@
             </li>
           </ol>
 
-          <p>That URL is the base you give to the Builder's Review &amp; Deploy tab to generate participant links. You're done.
-          </p>
+          <p>Enter that URL in Review &amp; Deploy. If automatic return is enabled, open the hosted
+            <code>check.html</code>, send its synthetic test, and confirm the same ID exists in receiver storage. Then
+            complete one full participant session and inspect that record before generating enrollment links.</p>
 
           <details>
             <summary>Prefer the command line, or deploying via another host?</summary>
@@ -2778,9 +2780,9 @@ iat_trials &lt;- sessions |&gt;
     </tr>
     <tr>
       <td><a href="#webhook-cloudflare">Cloudflare Worker → R2</a></td>
-      <td>Free up to 100k req/day</td>
-      <td>~15 min</td>
-      <td>One file per session, no row-size limits, no Google account, no cold starts.</td>
+      <td>Free tiers available; billing setup required for R2</td>
+      <td>~15–25 min</td>
+      <td>Recommended reference path. Private object storage, verified receipts, duplicate protection.</td>
     </tr>
     <tr>
       <td><a href="#webhook-azure">Azure Function → SharePoint</a></td>
@@ -2879,73 +2881,34 @@ iat_trials &lt;- sessions |&gt;
      CLOUDFLARE WORKER → R2
      ========================================================== -->
 
-<h3 id="webhook-cloudflare">Cloudflare Worker → R2 object storage <span class="status-pill stable">STABLE</span></h3>
+<h3 id="webhook-cloudflare">Reference receiver: Cloudflare Worker → private R2 <span class="status-pill beta">BETA</span></h3>
 
-<p>Cloudflare Workers are free up to 100,000 requests per day. R2 (Cloudflare's
-  S3-compatible object storage) is free up to 10 GB stored with no egress
-  fees. This combination scales further than Apps Script, stores one full
-  JSON per session (so signal-heavy ePAT sessions don't bump against any
-  row-size cap), and has no cold-start latency.</p>
+<p>This is EMA Forge's recommended starting path for automatic data return. It stores one JSON object per session,
+  uses the stable submission ID as its key, confirms a successful write before acknowledging the participant app,
+  treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The bucket has
+  no public read route. Cloudflare currently provides free monthly R2 usage, but requires an R2 subscription and bills
+  usage beyond the included amounts; check its current pricing before deployment.</p>
 
 <details>
   <summary>Full step-by-step setup (click to expand)</summary>
   <div class="details-body">
     <ol>
-      <li>Create a free Cloudflare account at <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener">cloudflare.com</a>.</li>
-      <li>Install <code>wrangler</code> CLI: <code>npm install -g wrangler</code>.</li>
-      <li><code>wrangler login</code> to authenticate.</li>
-      <li><code>wrangler r2 bucket create ema-forge-sessions</code></li>
-      <li>Create a directory <code>ema-receiver/</code> with <code>wrangler.toml</code>:
-        <pre><code>name = "ema-receiver"
-main = "worker.js"
-compatibility_date = "2025-01-01"
-
-[[r2_buckets]]
-binding = "EMA_BUCKET"
-bucket_name = "ema-forge-sessions"
-
-</code></pre>
-      </li>
-      <li>Create <code>worker.js</code> with the code below.</li>
-      <li><code>wrangler deploy</code>. Copy the workers.dev URL it prints.</li>
-      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+      <li>In Review &amp; Deploy, enter the eventual hosted study URL and select <strong>Download receiver starter</strong>.</li>
+      <li>Extract the zip. It includes the receiver, configuration, and a short README.</li>
+      <li>Create a Cloudflare account and enable R2. From the extracted folder, run <code>npx wrangler login</code>.</li>
+      <li>Run <code>npx wrangler r2 bucket create ema-forge-study-data</code>. Keep the bucket private.</li>
+      <li>Open <code>wrangler.jsonc</code>. Confirm <code>ALLOWED_ORIGINS</code> exactly matches the hosted study's origin.
+        Change the Worker and bucket names when deploying a separate study.</li>
+      <li>Run <code>npx wrangler deploy</code>. Copy the HTTPS URL and append <code>/submit</code>.</li>
+      <li>Paste that complete URL into the Builder's Receiver URL field, export the static bundle, and upload every file.</li>
+      <li>Open the hosted <code>check.html</code> and send a synthetic test. Confirm the displayed ID exists under
+        <code>setup-tests/</code> in R2. Then complete a real test session and inspect its object under <code>sessions/</code>.</li>
     </ol>
 
-    <pre><code>export default {
-  async fetch(request, env) {
-    const cors = {
-      'Access-Control-Allow-Origin':  '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-
-    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
-    if (request.method !== 'POST')    return new Response('POST only', { status: 405, headers: cors });
-
-    let body;
-    try { body = await request.json(); }
-    catch {
-      return new Response(JSON.stringify({error: 'bad json'}), {
-        status: 400, headers: { ...cors, 'Content-Type': 'application/json' }
-      });
-    }
-
-    const pid = String(body.participant_id || 'unknown');
-    const day = String(body.day || '0');
-    const win = String(body.window_id || 'na');
-    const submission = String(body.submission_id || 'missing').replace(/[^a-zA-Z0-9_-]/g, '');
-    const key = `sessions/${pid}/day-${day}/${win}_${submission}.json`;
-
-    await env.EMA_BUCKET.put(key, JSON.stringify(body), {
-      httpMetadata:   { contentType: 'application/json' },
-      customMetadata: { pid, day, win }
-    });
-
-    return new Response(JSON.stringify({status: 'success', submission_id: body.submission_id, key}), {
-      status: 200, headers: { ...cors, 'Content-Type': 'application/json' }
-    });
-  }
-};</code></pre>
+    <p><strong>Security boundary:</strong> the allowed-origin check controls ordinary browser access; it is not
+      authentication because a non-browser client can set an Origin header. The receiver URL is visible in the study
+      bundle and cannot be a secret. Use opaque participant IDs and assess consent, abuse controls, retention, and
+      institutional approval for the sensitivity of the study. Deploy a separate receiver and bucket per study.</p>
 
     <p><strong>To pull data for analysis</strong>, R2 speaks S3 API. From R:</p>
     <pre><code>library(aws.s3)

@@ -1,0 +1,11 @@
+{
+  "name": "ema-forge-receiver",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-01",
+  "vars": {
+    "ALLOWED_ORIGINS": "https://your-study-host.example"
+  },
+  "r2_buckets": [
+    { "binding": "STUDY_DATA", "bucket_name": "ema-forge-study-data" }
+  ]
+}

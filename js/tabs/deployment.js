@@ -31,7 +31,35 @@
 function bindDeploymentTab() {
   const generateBtn = document.getElementById('generate-csv-btn');
   const twilioBtn = document.getElementById('export-twilio-btn');
+  const hostedInput = document.getElementById('deploy-base-url');
+  const receiverInput = document.getElementById('deploy-webhook-url');
+  const studyReceiverInput = document.getElementById('study-webhook');
+  const checkBtn = document.getElementById('open-connection-check-btn');
+  const receiverBtn = document.getElementById('download-receiver-btn');
   if (!generateBtn) return;
+
+  if (receiverInput) {
+    receiverInput.value = state.study.webhook_url || '';
+    receiverInput.addEventListener('input', () => {
+      state.study.webhook_url = receiverInput.value.trim();
+      if (studyReceiverInput) studyReceiverInput.value = receiverInput.value;
+      if (typeof schedulePreview === 'function') schedulePreview();
+    });
+  }
+  if (studyReceiverInput && receiverInput) {
+    studyReceiverInput.addEventListener('input', () => { receiverInput.value = studyReceiverInput.value; });
+  }
+  if (hostedInput) hostedInput.addEventListener('input', updateDeploymentControls);
+  if (checkBtn) checkBtn.addEventListener('click', () => {
+    const checkUrl = connectionCheckUrl(hostedInput ? hostedInput.value.trim() : '');
+    if (!checkUrl) {
+      alert('Enter the real HTTPS URL of the hosted study first.');
+      return;
+    }
+    window.open(checkUrl, '_blank', 'noopener,noreferrer');
+  });
+  if (receiverBtn) receiverBtn.addEventListener('click', downloadReceiverStarter);
+  updateDeploymentControls();
 
   generateBtn.addEventListener('click', () => {
     const baseUrlInput = document.getElementById('deploy-base-url').value.trim();
@@ -195,6 +223,64 @@ function isDeployableBaseUrl(value) {
       !url.hash;
   } catch (error) {
     return false;
+  }
+}
+
+function connectionCheckUrl(value) {
+  if (!isDeployableBaseUrl(value)) return null;
+  const url = new URL(value);
+  if (/\/[^/]+\.html$/i.test(url.pathname)) {
+    url.pathname = url.pathname.replace(/[^/]+\.html$/i, 'check.html');
+  } else {
+    url.pathname = url.pathname.replace(/\/?$/, '/') + 'check.html';
+  }
+  return url.toString();
+}
+
+function updateDeploymentControls() {
+  const hostedInput = document.getElementById('deploy-base-url');
+  const checkBtn = document.getElementById('open-connection-check-btn');
+  const hint = document.getElementById('connection-check-hint');
+  const url = connectionCheckUrl(hostedInput ? hostedInput.value.trim() : '');
+  if (checkBtn) checkBtn.disabled = !url;
+  if (hint) hint.textContent = url
+    ? `Opens ${url}`
+    : 'Available after entering a valid hosted HTTPS URL.';
+}
+
+async function downloadReceiverStarter() {
+  const button = document.getElementById('download-receiver-btn');
+  const status = document.getElementById('receiver-starter-status');
+  const hosted = document.getElementById('deploy-base-url')?.value.trim() || '';
+  let origin = 'https://your-study-host.example';
+  if (isDeployableBaseUrl(hosted)) origin = new URL(hosted).origin;
+
+  if (button) button.disabled = true;
+  if (status) status.textContent = 'Preparing receiver files…';
+  try {
+    const paths = ['receiver/worker.mjs', 'receiver/wrangler.jsonc', 'receiver/README.md'];
+    const responses = await Promise.all(paths.map(path => fetch(path)));
+    if (responses.some(response => !response.ok)) throw new Error('Receiver files could not be loaded.');
+    const content = await Promise.all(responses.map(response => response.text()));
+    content[1] = content[1].replace('https://your-study-host.example', origin);
+    const files = [
+      { path: 'worker.mjs', content: content[0] },
+      { path: 'wrangler.jsonc', content: content[1] },
+      { path: 'README.md', content: content[2] }
+    ];
+    const objectUrl = URL.createObjectURL(makeZip(files));
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = `${slugifyStudyName()}-receiver.zip`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    if (status) status.textContent = origin.includes('your-study-host.example')
+      ? 'Downloaded. Enter your hosted study URL in wrangler.jsonc before deploying.'
+      : `Downloaded with allowed origin ${origin}.`;
+  } catch (error) {
+    if (status) status.textContent = error.message;
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 

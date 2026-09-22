@@ -9,9 +9,11 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 1. Enter study details and replace the consent template with approved text.
 2. In **Schedule**, set your session times. A new study begins with an ePAT session; add survey questions, PPG heart-rate capture, or other tasks as needed. Reorder steps in each session.
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
-4. Export the static-hosting bundle and upload it to an HTTPS host such as GitHub Pages. Use the resulting URL to generate participant links in **Review & Deploy**.
+4. For automatic data return, download the reference receiver starter in **Review & Deploy**, deploy it to a private R2 bucket, and paste its `/submit` URL into the builder.
+5. Export the static-hosting bundle and upload it to an HTTPS host such as GitHub Pages. Open the included `check.html` on the hosted site and confirm the synthetic record reached storage.
+6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment.
 
-The builder needs no account or backend. Hosting and sending prompt links are separate steps. Without a configured webhook, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
+The builder itself needs no account or backend. Hosting, automatic data return, and sending prompt links are separate so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 
 ## Included measures
 

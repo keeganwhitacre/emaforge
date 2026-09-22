@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EMA Forge — Data connection check</title>
+<style>
+  :root { color-scheme: light; font: 16px/1.55 system-ui, -apple-system, sans-serif; color: #273345; background: #f8f9fb; }
+  main { max-width: 540px; margin: min(12vh, 80px) auto; padding: 32px; background: white; border: 1px solid #e1e5eb; border-radius: 12px; }
+  h1 { line-height: 1.2; font-size: 1.7rem; margin: 0 0 12px; }
+  p { margin: 0 0 18px; }
+  button { border: 0; border-radius: 7px; padding: 12px 18px; background: #ad5145; color: white; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  #result { margin-top: 18px; overflow-wrap: anywhere; }
+  .success { color: #217653; } .error { color: #ac3d39; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Check your data connection</h1>
+  <p>This sends a synthetic record from the hosted study to its configured receiver. It contains no participant data. A successful test confirms this browser received an acknowledgment; check the receiver's storage for the same ID.</p>
+  <button id="run" type="button">Send test submission</button>
+  <p id="result" role="status" aria-live="polite"></p>
+  <p><small>After this check, complete a real test session and inspect its stored record before enrolling participants.</small></p>
+</main>
+<script>
+  'use strict';
+  const button = document.getElementById('run');
+  const result = document.getElementById('result');
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    result.className = '';
+    result.textContent = 'Checking…';
+    try {
+      const configResponse = await fetch('./config.json', { cache: 'no-store' });
+      if (!configResponse.ok) throw new Error('Could not load config.json on this host.');
+      const config = await configResponse.json();
+      const endpoint = config.study && config.study.webhook_url;
+      if (!endpoint || !/^https:\/\//i.test(endpoint)) throw new Error('Set an HTTPS Webhook URL in the builder, then export and host the updated bundle.');
+      const id = 'test_' + crypto.randomUUID().replace(/-/g, '');
+      const data = {
+        submission_id: id,
+        participant_id: 'ema-forge-setup-test',
+        day: 0,
+        window_id: 'setup-test',
+        test: true,
+        session_data: { sessionId: id, participantId: 'ema-forge-setup-test', day: 0, data: [], test: true }
+      };
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(data)
+      });
+      const receipt = await response.json();
+      if (!response.ok || receipt.status !== 'success' || receipt.submission_id !== id || receipt.stored !== true) {
+        throw new Error((receipt && receipt.error) || 'The receiver did not confirm storage.');
+      }
+      result.className = 'success';
+      result.textContent = 'Receiver acknowledged ' + id + '. Confirm this ID exists under setup-tests/ in your private storage.';
+    } catch (error) {
+      result.className = 'error';
+      result.textContent = 'Connection not confirmed: ' + error.message + ' Check the receiver URL, allowed study origin, and receiver storage.';
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
