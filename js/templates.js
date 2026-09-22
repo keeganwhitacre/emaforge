@@ -6,7 +6,7 @@ const StarterTemplates = {
     // Features: Morning vs Evening windows, simple skip logic
     // ---------------------------------------------------------
     diary: {
-      schema_version: "1.6.0",
+      schema_version: "2.0.0",
       study: { 
         name: "Daily Reflections", institution: "Department of Psychology", 
         theme: "light", accent_color: "#388bfd", output_format: "csv", 
@@ -48,7 +48,7 @@ const StarterTemplates = {
     // Features: HR Capture, Affect Grid, Text Piping, Conditional Task Step
     // ---------------------------------------------------------
     physio: {
-      schema_version: "1.6.0",
+      schema_version: "2.0.0",
       study: { 
         name: "Cardiac Interoception & Affect", institution: "Cognitive Neuroscience Lab", 
         theme: "oled", accent_color: "#ff453a", output_format: "csv", 
@@ -90,7 +90,7 @@ const StarterTemplates = {
     // Features: Weekdays only, Deep Piping, and Multi-rule Skip Logic
     // ---------------------------------------------------------
     workplace: {
-      schema_version: "1.6.0",
+      schema_version: "2.0.0",
       study: { 
         name: "Workplace Flow Experience", institution: "Organizational Behavior Group", 
         theme: "dark", accent_color: "#32d74b", output_format: "csv", 
@@ -123,6 +123,24 @@ const StarterTemplates = {
       }
     }
 };
+
+// Keep example question lists readable while producing the same explicit
+// step membership as studies made in the builder.
+Object.values(StarterTemplates).forEach(template => {
+  const questions = template.ema.questions;
+  template.ema.scheduling.windows.forEach(window => {
+    window.phase_sequence.forEach(step => {
+      if (step.kind !== 'ema') return;
+      step.id = genSId();
+      step.question_ids = questions.filter(question =>
+        (question.type === 'page_break' || !Array.isArray(question.windows) || question.windows.includes(window.id)) &&
+        (question.type === 'page_break' || question.block === 'both' || question.block === step.block)
+      ).map(question => question.id);
+      delete step.block;
+    });
+  });
+  questions.forEach(question => { delete question.block; delete question.windows; });
+});
 
 // Bind the template buttons
 document.addEventListener('DOMContentLoaded', () => {

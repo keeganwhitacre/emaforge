@@ -11,8 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="stylesheet" href="css/studio.css?v=20260922a">
-<link rel="stylesheet" href="css/builder.css?v=20260922a">
+<link rel="stylesheet" href="css/studio.css?v=20260922b">
+<link rel="stylesheet" href="css/builder.css?v=20260922b">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -184,8 +184,8 @@
   <label class="field-label" style="display: flex; align-items: center; gap: 6px;">
     Webhook URL <span class="badge badge-neutral">Optional</span>
   </label>
-  <input type="text" id="study-webhook" placeholder="https://script.google.com/macros/s/...">
-  <div class="field-hint" style="margin-top: 4px;">Paste a Google Apps Script Web App URL here to silently upload data. Leave blank to require participants to manually download their data at the end of the session.</div>
+  <input type="text" id="study-webhook" placeholder="https://your-study-receiver.example/upload">
+  <div class="field-hint" style="margin-top: 4px;">Optional. Receiver must return readable JSON with {"status":"success"} after saving data. Its URL is visible in the exported study. If absent or unconfirmed, participants can save a local copy.</div>
   <a href="readme.html#webhook-upload" target="_blank" rel="noopener" class="field-hint" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--accent); text-decoration: none;">
     Setup guide
     <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
@@ -241,14 +241,14 @@
     <div class="config-section" id="tab-questions">
       <div class="question-summary" aria-live="polite">
         <div><strong id="summary-question-count">0</strong><span>Questions</span></div>
-        <div><strong id="summary-block-count">0</strong><span>Question blocks</span></div>
+        <div><strong id="summary-block-count">0</strong><span>Survey steps</span></div>
         <div><strong id="summary-issue-count">0</strong><span>Question issues</span></div>
       </div>
       <p class="field-hint">Drag questions to reorder. Insert page breaks to group questions onto separate screens.</p>
-      <p class="field-hint">Questions assigned to both sets repeat if a session includes follow-up questions. Choose first, follow-up, or both in each question’s settings.</p>
+      <p class="field-hint">Select the survey steps where each question appears. You can reuse a question in multiple steps or sessions.</p>
 
       <div class="toggle-row" style="margin-bottom: 16px;">
-        <span class="toggle-label">Randomize Question Order (per block)</span>
+        <span class="toggle-label">Randomize Question Order (per page)</span>
         <label class="toggle">
           <input type="checkbox" id="ema-randomize">
           <span class="toggle-track"></span>
@@ -472,20 +472,20 @@
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
-<script src="js/state.js?v=20260922a"></script>
-<script src="js/storage.js?v=20260922a"></script>
-<script src="js/templates.js"></script>
+<script src="js/state.js?v=20260922b"></script>
+<script src="js/storage.js?v=20260922b"></script>
+<script src="js/templates.js?v=20260922b"></script>
 <script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260922a"></script>
-<script src="js/tabs/schedule.js?v=20260922a"></script>
-<script src="js/tabs/tasks.js?v=20260922a"></script>
-<script src="js/protocol-validator.js"></script>
-<script src="js/tabs/deployment.js?v=20260922a"></script>
-<script src="js/preview.js?v=20260922a"></script>
+<script src="js/tabs/questions.js?v=20260922b"></script>
+<script src="js/tabs/schedule.js?v=20260922b"></script>
+<script src="js/tabs/tasks.js?v=20260922b"></script>
+<script src="js/protocol-validator.js?v=20260922b"></script>
+<script src="js/tabs/deployment.js?v=20260922b"></script>
+<script src="js/preview.js?v=20260922b"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260922a"></script>
+<script src="js/export.js?v=20260922b"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -523,6 +523,6 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260922a"></script>
+<script src="js/builder-shell.js?v=20260922b"></script>
 </body>
 </html>

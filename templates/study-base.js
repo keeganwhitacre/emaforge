@@ -10,7 +10,7 @@
 // SESSION FLOW:
 //   - Router consumes config.ema.scheduling.windows[i].phase_sequence.
 //   - phase_sequence is an ordered array of:
-//       { kind: "ema",  block: "pre" | "post" }
+//       { kind: "ema", id: "s_...", question_ids: ["q_..."] }
 //       { kind: "task", id: "epat" | "stroop" | ... }
 //   - Multiple tasks per session are now a pure schema concern — the router
 //     just walks the array.
@@ -525,11 +525,11 @@ function collectDeviceMetadata() {
     } else {
       runtimePhasePlan = EMAForgeRuntimeUtils.buildPhasePlan(w, enabledModules);
 
-      // Counterbalancing: swap first pair if the window has both an EMA pre-block
+      // Counterbalancing: swap first pair if the window has both a survey
       // and a task, and cb=task_first was requested. Kept narrow-scope — if you
       // need arbitrary permutations you'd edit phase_sequence directly in config.
       if (cbParam && runtimePhasePlan.length >= 2) {
-        const firstIsPre = runtimePhasePlan[0].kind === 'ema' && runtimePhasePlan[0].block === 'pre';
+        const firstIsPre = runtimePhasePlan[0].kind === 'ema';
         const secondIsTask = runtimePhasePlan[1].kind === 'task';
         if (firstIsPre && secondIsTask) {
           const wantTaskFirst = (cbParam === 'task_first') ||
@@ -546,8 +546,7 @@ function collectDeviceMetadata() {
       // Categorize session type for downstream analyses.
       const hasTask = runtimePhasePlan.some(phase => phase.kind === 'task');
       const hasSurvey = runtimePhasePlan.some(phase => phase.kind === 'ema');
-      const hasPost = runtimePhasePlan.some(phase => phase.kind === 'ema' && phase.block === 'post');
-      sessionData.type = hasTask ? (hasSurvey ? (hasPost ? "pre_task_post" : "pre_task") : "task_only") : "ema_only";
+      sessionData.type = hasTask ? (hasSurvey ? "ema_with_task" : "task_only") : "ema_only";
       sessionData.phases = runtimePhasePlan.map(phase => phase.token);
       sessionData.phasePlan = runtimePhasePlan;
 
@@ -671,7 +670,7 @@ function collectDeviceMetadata() {
 
   // ---------------------------------------------------------------
   // PHASE DISPATCH — v1.4: token shape determines handler.
-  //   "pre_<wid>" / "post_<wid>"  → EMA.start(token)
+  //   "survey_<wid>" / "survey2_<wid>" → EMA.start(token, phasePlan)
   //   "<moduleId>"                → dispatch via explicit module switch
   // ---------------------------------------------------------------
   function runNextPhase() {
@@ -698,7 +697,7 @@ function collectDeviceMetadata() {
     }
 
     if (EMAForgeRuntimeUtils.parseEmaPhaseToken(phase)) {
-      EMA.start(phase);
+      EMA.start(phase, phasePlan);
       return;
     }
 
@@ -879,22 +878,23 @@ function collectDeviceMetadata() {
 
       fetch(config.study.webhook_url, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Bypasses CORS pre-flight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Avoid a preflight; readable responses still need CORS.
         body: JSON.stringify(payload)
       })
-        .then(response => {
-          if (response.ok) {
-            acknowledgeSubmission('webhook');
-            statusText.style.color = "var(--accent-green)";
-            statusText.textContent = "✓ Data uploaded successfully. You can close this page.";
-          } else {
-            throw new Error("Upload failed");
+        .then(async response => {
+          if (!response.ok) throw new Error('Receiver rejected the upload');
+          const receipt = await response.json();
+          if (!EMAForgeRuntimeUtils.isWebhookAcknowledgement(receipt, payload.submission_id)) {
+            throw new Error('Receiver did not acknowledge the submission');
           }
+          acknowledgeSubmission('webhook');
+          statusText.style.color = "var(--accent-green)";
+          statusText.textContent = "✓ Data uploaded successfully. You can close this page.";
         })
         .catch(error => {
           // Fallback: Network error. Show the manual download button so data isn't lost.
           statusText.style.color = "var(--accent-red)";
-          statusText.textContent = "Upload failed (No internet?). Please save a local copy.";
+          statusText.textContent = "Upload not confirmed. Please save a local copy.";
           downloadBtn.style.display = 'block';
         })
         .finally(() => { deliveryInFlight = false; });

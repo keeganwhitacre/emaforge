@@ -67,7 +67,8 @@ function renderBuilderShell() {
 
   const questions = state.ema.questions || [];
   const count = questions.filter(q => q.type !== "page_break").length;
-  const blocks = count ? 1 + questions.filter(q => q.type === "page_break").length : 0;
+  const blocks = state.ema.scheduling.windows.reduce((total, w) =>
+    total + (w.phase_sequence || []).filter(step => step.kind === "ema").length, 0);
   const report = EMAForgeProtocolValidator.validate(buildConfig());
   const { errors, warnings, issues } = report;
   renderSectionIssues(issues);

@@ -8,6 +8,7 @@
 const StorageManager = {
     STORAGE_KEY: 'ema_studio_project_v1',
     _saveTimer: null,
+    _blockedOlderDraft: false,
 
     init() {
         const saved = localStorage.getItem(this.STORAGE_KEY);
@@ -67,7 +68,11 @@ const StorageManager = {
         }
 
         if (cmp < 0) {
-            console.info(`EMA Forge: migrating project from schema v${savedVer} to v${currentVersion}.`);
+            console.warn(`EMA Forge: older project v${savedVer} uses global question sets. Download a backup before starting a new v${currentVersion} project.`);
+            const status = document.getElementById('save-status');
+            if (status) status.textContent = 'Older draft not loaded — reset to start new';
+            this._blockedOlderDraft = true;
+            return false;
         }
 
         ['study', 'onboarding', 'ema'].forEach(key => {
@@ -87,10 +92,7 @@ const StorageManager = {
         if (state.study.completion_lock === undefined) state.study.completion_lock = true;
         if (state.study.resume_enabled  === undefined) state.study.resume_enabled  = true;
         state.onboarding.consent_text = sanitizeConsentHtml(state.onboarding.consent_text);
-        const epat = state.modules.find(module => module.id === 'epat');
-        if (epat && Number(epat.settings.sqi_threshold) > 0.05) {
-            epat.settings.sqi_threshold = 0.008;
-        }
+        this._blockedOlderDraft = false;
         return true;
     },
 
@@ -100,6 +102,7 @@ const StorageManager = {
     },
 
     saveLocalState() {
+        if (this._blockedOlderDraft) return;
         try {
             const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
             const toSave = Object.assign({}, state, { schema_version: currentVersion });
@@ -153,6 +156,7 @@ const StorageManager = {
 
     loadTemplate(templateObj) {
         if (!confirm("Loading a template will overwrite your current project. Continue?")) return;
+        this._blockedOlderDraft = false;
         
         // 1. Clean slate: Turn off all known modules so we don't carry over user settings
         if (Array.isArray(state.modules)) {

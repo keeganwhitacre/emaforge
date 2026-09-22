@@ -32,9 +32,7 @@ function buildQCard(q, index, displayNum) {
   card.className = 'q-card';
   card.dataset.qid = q.id;
 
-  // Schema migrations
-  if (!q.block && q.type !== 'page_break') q.block = 'both';
-  if (q.windows === undefined) q.windows = null;
+  // Fill missing optional measurement controls.
   if (q.type === 'affect_grid') {
     if (!q.valence_labels) q.valence_labels = ['Unpleasant', 'Pleasant'];
     if (!q.arousal_labels) q.arousal_labels = ['Deactivated', 'Activated'];
@@ -56,6 +54,7 @@ function buildQCard(q, index, displayNum) {
       </div>
     `;
     card.querySelector('.q-del-btn').addEventListener('click', () => {
+      detachQuestion(q.id);
       state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
       renderQuestions(); schedulePreview();
     });
@@ -67,12 +66,6 @@ function buildQCard(q, index, displayNum) {
   if (q.type === 'checkbox')    typeLabel = 'Multi Select';
   if (q.type === 'affect_grid') typeLabel = 'Affect Grid';
   if (q.type === 'heart_rate')  typeLabel = 'Heart Rate';
-
-  const blockOpts = [
-    { value: 'pre',  label: 'First question set'  },
-    { value: 'both', label: 'Both question sets'   },
-    { value: 'post', label: 'Follow-up question set' }
-  ].map(o => `<option value="${o.value}" ${q.block === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
 
   card.innerHTML = `
     <div class="q-header">
@@ -101,17 +94,9 @@ function buildQCard(q, index, displayNum) {
       ${(q.type === 'text' || q.type === 'numeric')
         ? `<div class="field-hint" style="margin-top:6px">Participants type a ${q.type === 'numeric' ? 'number' : 'text'} response.</div>` : ''}
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
-        <div class="field-group" style="margin:0">
-          <label class="field-label">Question set</label>
-          <select class="q-block-select" style="width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-family:var(--font);font-size:0.88rem;outline:none;">
-            ${blockOpts}
-          </select>
-        </div>
-        <div class="field-group" style="margin:0">
-          <label class="field-label">Active Sessions</label>
-          <div class="q-session-checks">${buildSessionSelector(q)}</div>
-        </div>
+      <div class="field-group" style="margin-top:10px">
+        <label class="field-label">Show in these survey steps</label>
+        <div class="q-session-checks">${buildStepSelector(q)}</div>
       </div>
 
       <div class="field-group condition-wrapper" style="margin-top:10px;">
@@ -140,12 +125,11 @@ function buildQCard(q, index, displayNum) {
     card.querySelector('.q-preview-text').textContent = q.text || '(no text)';
     schedulePreview();
   });
-  const blockSel = card.querySelector('.q-block-select');
-  if (blockSel) blockSel.addEventListener('change', e => { q.block = e.target.value; schedulePreview(); });
   const reqChk = card.querySelector('.q-required');
   if (reqChk) reqChk.addEventListener('change', e => { q.required = e.target.checked; schedulePreview(); });
   const delBtn = card.querySelector('.q-del-btn-full');
   if (delBtn) delBtn.addEventListener('click', () => {
+    detachQuestion(q.id);
     state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
     renderQuestions(); schedulePreview();
   });
@@ -156,7 +140,7 @@ function buildQCard(q, index, displayNum) {
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
 
   bindConditionBlock(card, q, index);
-  bindSessionSelector(card, q);
+  bindStepSelector(card, q);
 
   return card;
 }
@@ -168,7 +152,7 @@ function buildHeartRateFields(q) {
   return `
     <div class="field-hint" style="margin-top:6px;margin-bottom:8px;">
       Captures PPG via the rear camera for the specified duration. The resulting BPM value
-      is stored and can be referenced in conditional task logic. Requires ePATCore — make sure the ePAT module is enabled.
+      is stored and can be referenced in conditional task logic. Requires a compatible camera and flashlight.
     </div>
     <div class="q-row-2">
       <div class="field-group">
@@ -207,12 +191,6 @@ function bindHeartRateFields(card, q) {
   const repEl = card.querySelector('.hr-report-as');
   if (durEl) durEl.addEventListener('input', e => {
     q.duration_sec = parseInt(e.target.value) || 30;
-    // Sync to any HR step in any window that references this question
-    state.ema.scheduling.windows.forEach(w => {
-      (w.phase_sequence || []).forEach(s => {
-        if (s.kind === 'hr' && s.store_as === q.id) s.duration_sec = q.duration_sec;
-      });
-    });
     schedulePreview();
   });
   if (repEl) repEl.addEventListener('change', e => { q.report_as = e.target.value; schedulePreview(); });
@@ -435,40 +413,58 @@ function bindConditionBlock(card, q, index) {
 }
 
 // ---------------------------------------------------------------------------
-// Session selector
+// A question can be reused in any number of explicitly selected survey steps.
 // ---------------------------------------------------------------------------
-function buildSessionSelector(q) {
-  const windows = state.ema.scheduling.windows || [];
-  if (windows.length === 0) return `<div style="font-size:0.8rem;color:var(--fg-3);">No sessions defined.</div>`;
-  return windows.map(w => {
-    const checked = (q.windows === null || q.windows === undefined || q.windows.includes(w.id));
-    return `<label class="session-check-row"><input type="checkbox" class="session-chk" data-wid="${w.id}" ${checked?'checked':''}><span>${escH(w.label)}</span></label>`;
+function surveySteps() {
+  return (state.ema.scheduling.windows || []).flatMap(w =>
+    (w.phase_sequence || []).filter(step => step.kind === 'ema').map(step => ({ window: w, step })));
+}
+
+function buildStepSelector(q) {
+  const steps = surveySteps();
+  if (!steps.length) return '<div class="field-hint">Add a survey to a session first.</div>';
+  return steps.map(({ window: w, step }) => {
+    const checked = (step.question_ids || []).includes(q.id);
+    return `<label class="session-check-row"><input type="checkbox" class="step-chk" data-step-id="${escH(step.id)}" ${checked?'checked':''}><span>${escH(w.label)} · ${escH(step.label || 'Survey questions')}</span></label>`;
   }).join('');
 }
 
-function bindSessionSelector(card, q) {
-  card.querySelectorAll('.session-chk').forEach(chk => {
+function bindStepSelector(card, q) {
+  card.querySelectorAll('.step-chk').forEach(chk => {
     chk.addEventListener('change', () => {
-      const all = [...card.querySelectorAll('.session-chk')];
-      const checked = all.filter(c => c.checked).map(c => c.dataset.wid);
-      q.windows = checked.length === all.length ? null : checked;
+      const found = surveySteps().find(({ step }) => step.id === chk.dataset.stepId);
+      if (!found) return;
+      const ids = found.step.question_ids || (found.step.question_ids = []);
+      found.step.question_ids = chk.checked ? [...new Set([...ids, q.id])] : ids.filter(id => id !== q.id);
+      renderWindows();
       schedulePreview();
     });
   });
 }
 
+function detachQuestion(qid) {
+  surveySteps().forEach(({ step }) => {
+    step.question_ids = (step.question_ids || []).filter(id => id !== qid);
+  });
+  renderWindows();
+}
+
 // ---------------------------------------------------------------------------
 // Add question helpers
 // ---------------------------------------------------------------------------
-function addQ(obj) {
-  // A questionnaire is optional; creating the first question adds a survey
-  // before the first task if this project started as physiology-only.
+function addQ(obj, targetStep) {
   const windows = state.ema.scheduling.windows || [];
-  if (obj.type !== 'page_break' && windows.length && !windows.some(w => (w.phase_sequence || []).some(s => s.kind === 'ema'))) {
-    windows[0].phase_sequence.unshift({ kind: 'ema', block: 'pre' });
-    renderWindows();
+  if (!targetStep) {
+    const preferred = windows.find(w => w.id === previewSession);
+    targetStep = preferred?.phase_sequence?.find(step => step.kind === 'ema') || surveySteps()[0]?.step;
   }
+  if (!targetStep && windows.length) {
+    targetStep = { kind: 'ema', id: genSId(), question_ids: [] };
+    windows[0].phase_sequence.unshift(targetStep);
+  }
+  if (targetStep) (targetStep.question_ids || (targetStep.question_ids = [])).push(obj.id);
   state.ema.questions.push(obj);
+  renderWindows();
   renderQuestions(); schedulePreview();
   const cards = document.querySelectorAll('.q-card');
   if (cards.length && obj.type !== 'page_break') cards[cards.length-1].classList.add('expanded');
@@ -477,11 +473,7 @@ function addQ(obj) {
 document.getElementById('add-question-select').addEventListener('change', event => {
   const type = event.target.value;
   if (!type) return;
-  const windows = state.ema.scheduling.windows || [];
-  const targetWindow = windows.find(w => (w.phase_sequence || []).some(step => step.kind === 'ema')) || windows[0];
-  const firstSurvey = targetWindow?.phase_sequence?.find(step => step.kind === 'ema');
-  const question = { id: genQId(), type, text: '', required: true, condition: null,
-    block: firstSurvey?.block || 'pre', windows: targetWindow ? [targetWindow.id] : null };
+  const question = { id: genQId(), type, text: '', required: true, condition: null };
   if (type === 'slider') Object.assign(question, { min: 0, max: 100, step: 1, unit: null, anchors: ['', ''] });
   if (type === 'choice' || type === 'checkbox') question.options = ['', ''];
   if (type === 'affect_grid') Object.assign(question, {

@@ -2,14 +2,14 @@
 
 // ---------------------------------------------------------------------------
 // EMA Forge — state.js
-// Schema v1.6.0
+// Schema v2.0.0
 //
 // Changes from v1.4.0:
 //
 // MULTI-TASK SESSIONS:
 //   Windows store an ordered phase_sequence[] used by the participant runtime.
 //   A phase_sequence step can now be:
-//     { kind: "ema",  block: "pre"|"post" }
+//     { kind: "ema", id: "s_...", question_ids: ["q_..."] }
 //     { kind: "task", id: "epat"|..., condition: {question_id, operator, value} | null }
 //   Multiple tasks in a single window are fully supported.
 //
@@ -29,7 +29,7 @@
 //   phase_event is recorded and the task is skipped.
 // ---------------------------------------------------------------------------
 
-const SCHEMA_VERSION = "1.6.0";
+const SCHEMA_VERSION = "2.0.0";
 
 let state = {
   study: {
@@ -153,6 +153,7 @@ let previewDebounceTimer = null;
 // Use a random string to guarantee IDs never collide even after page reloads
 function genQId() { return 'q_' + Math.random().toString(36).substr(2, 6); }
 function genWId() { return 'w_' + Math.random().toString(36).substr(2, 6); }
+function genSId() { return 's_' + Math.random().toString(36).substr(2, 9); }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -196,10 +197,6 @@ function sanitizeConsentHtml(html) {
 // ---------------------------------------------------------------------------
 // Sequence is the sole source of session step order.
 // ---------------------------------------------------------------------------
-function phasesToSequence(w) {
-  return Array.isArray(w.phase_sequence) ? w.phase_sequence.map(p => ({ ...p })) : [];
-}
-
 // ---------------------------------------------------------------------------
 // buildConfig — serialises state into config.json consumed by study-base.js
 // ---------------------------------------------------------------------------
@@ -219,11 +216,7 @@ function buildConfig() {
   // Emit only the ordered sequence consumed by the participant runtime.
   const configuredWindows = cfg.ema?.scheduling?.windows || [];
   if (cfg.ema?.scheduling) cfg.ema.scheduling.daily_prompts = configuredWindows.length;
-  configuredWindows.forEach(w => {
-    w.phase_sequence = phasesToSequence(w);
-  });
-
-  const usedTasks = new Set(configuredWindows.flatMap(w => w.phase_sequence)
+  const usedTasks = new Set(configuredWindows.flatMap(w => w.phase_sequence || [])
     .filter(step => step.kind === 'task').map(step => step.id));
   state.modules.forEach(mod => {
     if (mod.enabled && usedTasks.has(mod.id)) {

@@ -154,7 +154,7 @@ function bindDeploymentTab() {
 // ---------------------------------------------------------------------------
 function phaseLabel(w) {
   const labels = (w.phase_sequence || []).map(step => {
-    if (step.kind === 'ema') return step.block === 'post' ? 'Follow-up questions' : 'Survey questions';
+    if (step.kind === 'ema') return step.label || 'Survey questions';
     if (step.kind === 'task') {
       const mod = state.modules.find(module => module.id === step.id);
       return mod ? mod.label : (step.id || 'Task');

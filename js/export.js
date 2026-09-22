@@ -1,7 +1,7 @@
 "use strict";
 
 // ==========================================================
-// EMA Forge — export.js  v1.6.0
+// EMA Forge — export.js  v2.0.0
 // ==========================================================
 // Changes from v1.3.1:
 //   - Removed modHrCapture — HR capture is a question type handled inline
@@ -18,10 +18,10 @@ let templates = {
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260922a').then(r => r.text());
-  if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260922a').then(r => r.text());
-  if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260922a').then(r => r.text());
-  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js').then(r => r.text());
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260922b').then(r => r.text());
+  if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260922b').then(r => r.text());
+  if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260922b').then(r => r.text());
+  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260922b').then(r => r.text());
   if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js').then(r => r.text());
   if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js').then(r => r.text());
   if (!templates.modIat) templates.modIat = await fetch('templates/module-iat.js').then(r => r.text());

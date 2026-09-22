@@ -39,7 +39,7 @@
 //   - Per-question respondedAt timestamps
 //   - Skip-logic evaluation per page
 //   - Orphan page-break dropping
-//   - Prefixed phase tokens only (pre_<wid> / post_<wid>)
+//   - Survey step tokens with explicit question IDs
 // ==========================================================
 
 const EMA = (function() {
@@ -70,11 +70,10 @@ const EMA = (function() {
     return condition.question_id === questionId;
   }
 
-  function buildPages(windowId, blockDir) {
+  function buildPages(questionIds) {
     emaPages = [];
     let currentBlock = [];
-
-    config.ema.questions.forEach(q => {
+    EMAForgeRuntimeUtils.questionsForStep(config.ema.questions, questionIds).forEach(q => {
       if (q.type === 'page_break') {
         if (currentBlock.length > 0) {
           // Shuffle the block if the config allows it
@@ -85,18 +84,7 @@ const EMA = (function() {
         return;
       }
 
-      const windowMatch = q.windows === null
-        || q.windows === undefined
-        || (windowId && q.windows.includes(windowId));
-
-      const block = q.block || 'both';
-      const blockMatch = blockDir === 'post'
-        ? (block === 'post' || block === 'both')
-        : (block === 'pre'  || block === 'both');
-
-      if (windowMatch && blockMatch) {
-        currentBlock.push(q);
-      }
+      currentBlock.push(q);
     });
 
     if (currentBlock.length > 0) {
@@ -738,21 +726,15 @@ function interpolate(text, responses) {
   }
 
   return {
-    start(phaseToken) {
+    start(phaseToken, phasePlan) {
       const parsedPhase = EMAForgeRuntimeUtils.parseEmaPhaseToken(phaseToken);
-      let blockDir = parsedPhase?.block || 'pre';
-      let windowId = parsedPhase?.windowId || null;
-
-      if (!parsedPhase) {
-        console.warn('EMA.start received unprefixed phase token:', phaseToken);
-        windowId = phaseToken;
-      }
+      const windowId = phasePlan?.windowId || parsedPhase?.windowId || null;
 
       emaResponses = {
         type:        'ema_response',
         phase:       phaseToken,
         windowId:    windowId,
-        block:       blockDir,
+        block:       phasePlan?.stepId || '',
         startedAt:   new Date().toISOString(),
         submittedAt: null,
         responses:   {},
@@ -762,7 +744,7 @@ function interpolate(text, responses) {
         invalidatedResponses: []
       };
 
-      buildPages(windowId, blockDir);
+      buildPages(phasePlan?.questionIds);
       currentPageIndex = 0;
       emaResponses.eligibleQuestionIds = emaPages.flat().map(q => q.id);
 

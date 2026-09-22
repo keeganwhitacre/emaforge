@@ -1073,7 +1073,7 @@
               <tr>
                 <td>Study Builder (questions, schedule, theme)</td>
                 <td><span class="status-pill stable">STABLE</span></td>
-                <td>Schema v1.6.0.</td>
+                <td>Schema v2.0.0.</td>
               </tr>
               <tr>
                 <td>Single-file &amp; static-bundle export</td>
@@ -1143,14 +1143,14 @@
               </tr>
               <tr>
                 <td>Webhook auto-upload on session complete</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Google Apps Script tested end-to-end; see <a href="#webhook-upload">Auto-upload with Webhooks</a>.
+                <td><span class="status-pill beta">BETA</span></td>
+                <td>Use a receiver that returns a readable JSON acknowledgment; confirm data appears in storage.
                 </td>
               </tr>
               <tr>
                 <td>IAT (Implicit Association Task)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Mobile-optimized tap response, D-score computed in-browser. No camera required.</td>
+                <td><span class="status-pill beta">EXPERIMENTAL</span></td>
+                <td>Development module. Procedure, scoring and mobile timing need independent validation.</td>
               </tr>
               <tr>
                 <td>Stroop / additional task modules</td>
@@ -1348,10 +1348,8 @@
 
           <h3>Per-question settings</h3>
           <ul>
-            <li><strong>Question set:</strong> whether this question appears in the first survey, follow-up survey,
-              or both. Questions assigned to both sets repeat when both surveys are in a session.</li>
-            <li><strong>Active Sessions:</strong> restrict the question to specific time windows (e.g. only morning).
-            </li>
+            <li><strong>Show in these survey steps:</strong> choose the exact session steps where this question appears.
+              Select more than one step when you intentionally want to repeat a question.</li>
             <li><strong>Required:</strong> blocks advancement until answered.</li>
             <li><strong>Skip Logic:</strong> compound AND/OR conditions on any prior question. Operators:
               <code>eq, neq, gt, gte, lt, lte, includes</code>. When a condition evaluates false, the question is
@@ -1402,9 +1400,10 @@
           </ul>
 
           <h3>Participant flow</h3>
-          <p>Drag the cards or use their arrow buttons to change the order. Each card has an Options control for
-            question-set assignment, task selection, and conditional task rules. The export stores this order as
-            <code>phase_sequence</code>.</p>
+          <p>Drag the cards or use their arrow buttons to change the order. Add as many separate survey steps as your
+            protocol needs. The Questions tab assigns each question to specific steps. Each card has an Options control
+            for its name or task selection and conditional task rules. The export stores this order as
+            <code>phase_sequence</code>, with <code>question_ids</code> on every survey step.</p>
           <p>The available steps are:</p>
           <table>
             <thead>
@@ -1415,12 +1414,8 @@
             </thead>
             <tbody>
               <tr>
-                <td><code>ema</code> (pre)</td>
-                <td>Survey questions assigned to the first question set or both sets.</td>
-              </tr>
-              <tr>
-                <td><code>ema</code> (post)</td>
-                <td>Follow-up questions assigned to the follow-up question set or both sets.</td>
+                <td><code>ema</code></td>
+                <td>An independent set of questions selected for this step. You can add several survey steps in any order.</td>
               </tr>
               <tr>
                 <td><code>task</code></td>
@@ -1428,14 +1423,13 @@
               </tr>
               <tr>
                 <td><code>heart_rate</code> question</td>
-                <td>Camera-based heart-rate capture added in Questions, inside a survey question set.</td>
+                <td>Camera-based heart-rate capture in its own survey step or alongside other questions.</td>
               </tr>
             </tbody>
           </table>
 
-          <p>Steps run top to bottom. To put heart-rate capture before ePAT, add a heart-rate question in the first
-            question set, then place ePAT after Survey questions. Questions assigned to both sets repeat if you also
-            add Follow-up questions.</p>
+          <p>Steps run top to bottom. For example, add PPG heart-rate capture, then ePAT, then a new survey step.
+            Questions only repeat when you select multiple survey steps for the same question.</p>
 
           <div class="docs-callout">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -1617,7 +1611,7 @@ git push -u origin main
 
           <pre><code>Participant_ID,Day,Active_Weekdays,Session,Phase_Sequence,Send_Window_Local,URL_Template
 104,0,Any,Setup,Onboarding,Researcher scheduled,https://.../?id=104&amp;session=onboarding
-104,1,Mon|Wed|Fri,Morning,Survey questions → ePAT → Follow-up questions,08:00-10:00,https://.../?id=104&amp;day=1&amp;session=w1&amp;t={sent_at_ms}
+104,1,Mon|Wed|Fri,Morning,Survey questions → ePAT → Reflection,08:00-10:00,https://.../?id=104&amp;day=1&amp;session=w1&amp;t={sent_at_ms}
 ...</code></pre>
 
           <p>This CSV is the glue between EMA Forge and your delivery mechanism of choice. It now emits a
@@ -1677,7 +1671,7 @@ git push -u origin main
           <p>If a participant's browser crashes mid-session (tab killed by iOS memory pressure, phone restart, app
             switch past timeout), reopening the same link will:</p>
           <ul>
-            <li>Restore all <em>completed</em> phases (pre-EMA, finished task trials, etc.) — that data survives.</li>
+            <li>Restore all <em>completed</em> steps (surveys, finished task trials, etc.) — that data survives.</li>
             <li>Restart the <em>current</em> phase from the beginning. Partial data within the phase is discarded to
               avoid ambiguity.</li>
           </ul>
@@ -1686,12 +1680,13 @@ git push -u origin main
             worse than a clean re-run.</p>
 
           <h2 id="schema-versioning">Schema Versioning &amp; Migrations</h2>
-          <p>Every study carries a <strong>schema version</strong> (currently <code>1.6.0</code>). When the Builder
+          <p>Every study carries a <strong>schema version</strong> (currently <code>2.0.0</code>). When the Builder
             loads a saved study — whether from your browser's local storage or a backup file you imported — it checks
             that version:</p>
           <ul>
             <li><strong>Equal</strong> → load as-is.</li>
-            <li><strong>Older</strong> → forward-migrate silently (new fields get sensible defaults).</li>
+            <li><strong>Older</strong> → refuse to load. Version 2 assigns questions directly to steps; start a new
+              study or retain an older backup outside this Builder.</li>
             <li><strong>Newer</strong> → <em>refuse to load</em>. A newer schema might include fields this runtime
               doesn't know how to preserve; loading would silently corrupt them. Export a backup from the newer Builder
               or reset.</li>
@@ -1722,11 +1717,10 @@ git push -u origin main
             is also viable for simpler studies.</p>
 
           <h3>Webhook return (opt-in)</h3>
-          <p>If a Webhook URL is set, the same data POSTs silently to your endpoint and the participant sees "✓ Data
-            uploaded successfully" instead of a download button. Setup, payload shape, and concrete Google Sheets /
-            Microsoft recipes are in <a href="#webhook-upload">Auto-upload with Webhooks</a>. If the POST fails (offline
-            participant, endpoint down), the "Save Local Copy" button automatically reappears — data is never lost
-            silently.</p>
+          <p>If a Webhook URL is set, the data POSTs to your endpoint. The participant sees an upload confirmation only
+            after a readable success receipt. Otherwise "Save Local Copy" appears. Browser connectivity, receiver CORS,
+            and actual server storage must be checked with a dummy submission before collecting participant data. See
+            <a href="#webhook-upload">Auto-upload with Webhooks</a>.</p>
 
           <h2 id="csv-schema">CSV Schema (Dashboard export)</h2>
           <p>When you use the <strong>Export Master CSV</strong> button in the Dashboard, you get one row per
@@ -1763,8 +1757,7 @@ git push -u origin main
               </tr>
               <tr>
                 <td><code>block</code></td>
-                <td><code>pre</code>, <code>post</code>, or blank. Which EMA block within the phase sequence the
-                  question belonged to.</td>
+                <td>Survey step ID or blank. Identifies the exact survey step that presented this question.</td>
               </tr>
               <tr>
                 <td><code>session_started_at</code></td>
@@ -1821,14 +1814,14 @@ git push -u origin main
   "participantId": "104",
   "sessionId": "s_a1b2c3",
   "day": 2,
-  "type": "morning",
+  "type": "ema_with_task",
   "status": "complete",
   "startedAt": "2026-04-22T08:03:11Z",
   "completedAt": "2026-04-22T08:06:48Z",
   "data": [
     {
       "type": "ema_response",
-      "block": "pre",
+      "block": "s_baseline",
       "windowId": "w1",
       "startedAt": "...",
       "submittedAt": "...",
@@ -2680,7 +2673,7 @@ iat_trials &lt;- sessions |&gt;
             </div>
           </div>
 
-          <h2 id="webhook-upload">Auto-upload with Webhooks <span class="status-pill stable">STABLE</span></h2>
+          <h2 id="webhook-upload">Auto-upload with Webhooks <span class="status-pill beta">BETA</span></h2>
 
           <p>By default, each session ends with the participant tapping "Save Local Copy" and emailing the resulting
             file to your lab. This works, but it has two costs: it depends on the participant remembering the step, and
@@ -2688,9 +2681,9 @@ iat_trials &lt;- sessions |&gt;
 
           <p>The <strong>webhook</strong> option removes both. When you paste a URL into the <em>Webhook URL</em> field
             in the Builder's Study tab, the exported study silently POSTs the full session JSON to that URL at
-            save-time. The participant sees "✓ Data uploaded successfully" instead of a download prompt. If the upload
-            fails (no network, endpoint down), the manual download button automatically re-appears — <strong>data is
-              never lost silently</strong>.</p>
+            save-time. The participant sees "Data uploaded successfully" only after the receiver responds with readable
+            JSON containing <code>{"status":"success"}</code>. A failed or unreadable acknowledgment offers a local
+            download. Confirm storage on the receiver before enrollment; an HTTP 200 alone does not prove data was saved.</p>
 
           <div class="docs-callout">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -2713,6 +2706,7 @@ iat_trials &lt;- sessions |&gt;
           <p>The runtime POSTs a JSON body to your endpoint with this shape:</p>
 
           <pre><code>{
+  "submission_id": "s_a1b2c3",
   "participant_id": "104",
   "day": 2,
   "window_id": "morning",
@@ -2720,7 +2714,7 @@ iat_trials &lt;- sessions |&gt;
     "participantId": "104",
     "sessionId":     "s_a1b2c3",
     "day":           2,
-    "type":          "morning",
+    "type":          "ema_with_task",
     "status":        "complete",
     "startedAt":     "2026-04-22T08:03:11Z",
     "completedAt":   "2026-04-22T08:06:48Z",
@@ -2728,7 +2722,8 @@ iat_trials &lt;- sessions |&gt;
   }
 }</code></pre>
 
-          <p>The top four fields are duplicated out of <code>session_data</code> for easy dispatch/filtering on your
+          <p>The top fields include a stable <code>submission_id</code> for receiver deduplication and convenient
+            dispatch/filtering on your
             receiving end. The <code>session_data</code> object is the same JSON documented in <a
               href="#json-schema">JSON Schema</a>.</p>
 
@@ -2757,8 +2752,11 @@ iat_trials &lt;- sessions |&gt;
 
 <h3 id="webhook-recipes">Webhook recipes by receiver</h3>
 
-<p>EMA Forge's webhook is a plain HTTPS POST with a JSON body. Anything that
-  can accept that and respond with a 2xx works. The table below summarises the
+<p>These recipes are examples that require testing in your own hosting and institutional environment. The endpoint
+  must return readable JSON with <code>{"status":"success"}</code> after durable storage and permit the study origin
+  through CORS. The Google Apps Script option may save a row even when a browser cannot read its redirected response.
+  EMA Forge's webhook is a plain HTTPS POST with a JSON body. Anything that
+  can accept that and return a readable success receipt after saving can work. The table below summarises the
   recipes documented in this section; pick the one whose tradeoffs match your
   IRB, your IT environment, and your willingness to do setup work.</p>
 
@@ -2776,7 +2774,7 @@ iat_trials &lt;- sessions |&gt;
       <td><a href="#webhook-google">Google Apps Script → Sheets</a></td>
       <td>Free</td>
       <td>~5 min</td>
-      <td>Default starting point. Personal Google account is the only requirement.</td>
+      <td>Illustrative only: browser acknowledgment across Apps Script redirects is unverified.</td>
     </tr>
     <tr>
       <td><a href="#webhook-cloudflare">Cloudflare Worker → R2</a></td>
@@ -2815,11 +2813,10 @@ iat_trials &lt;- sessions |&gt;
      GOOGLE APPS SCRIPT
      ========================================================== -->
 
-<h3 id="webhook-google">Google Sheets via Apps Script <span class="status-pill stable">STABLE</span></h3>
+<h3 id="webhook-google">Google Sheets via Apps Script <span class="status-pill beta">BETA</span></h3>
 
-<p>The fastest path to a working pipeline — no server, no billing, no
-  institutional signoff beyond your existing Google account. Sessions
-  fill a Google Sheet one row at a time as participants complete them.</p>
+<p>An example receiver for testing with non-sensitive data. Apps Script Content Service redirects its response;
+  browser cross-origin access and institutional approval must be checked before relying on it for participant data.</p>
 
 <details>
   <summary>Full step-by-step setup (click to expand)</summary>
@@ -2860,7 +2857,7 @@ iat_trials &lt;- sessions |&gt;
     ]);
 
     return ContentService
-      .createTextOutput(JSON.stringify({status: 'success'}))
+      .createTextOutput(JSON.stringify({status: 'success', submission_id: data.submission_id}))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
@@ -2907,8 +2904,7 @@ compatibility_date = "2025-01-01"
 binding = "EMA_BUCKET"
 bucket_name = "ema-forge-sessions"
 
-[vars]
-AUTH_SECRET = "" # optional — set to a random string to require ?auth= on POSTs</code></pre>
+</code></pre>
       </li>
       <li>Create <code>worker.js</code> with the code below.</li>
       <li><code>wrangler deploy</code>. Copy the workers.dev URL it prints.</li>
@@ -2926,11 +2922,6 @@ AUTH_SECRET = "" # optional — set to a random string to require ?auth= on POST
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (request.method !== 'POST')    return new Response('POST only', { status: 405, headers: cors });
 
-    const url = new URL(request.url);
-    if (env.AUTH_SECRET &amp;&amp; url.searchParams.get('auth') !== env.AUTH_SECRET) {
-      return new Response('unauthorized', { status: 401, headers: cors });
-    }
-
     let body;
     try { body = await request.json(); }
     catch {
@@ -2942,15 +2933,15 @@ AUTH_SECRET = "" # optional — set to a random string to require ?auth= on POST
     const pid = String(body.participant_id || 'unknown');
     const day = String(body.day || '0');
     const win = String(body.window_id || 'na');
-    const ts  = new Date().toISOString().replace(/[:.]/g, '-');
-    const key = `sessions/${pid}/day-${day}/${win}_${ts}.json`;
+    const submission = String(body.submission_id || 'missing').replace(/[^a-zA-Z0-9_-]/g, '');
+    const key = `sessions/${pid}/day-${day}/${win}_${submission}.json`;
 
     await env.EMA_BUCKET.put(key, JSON.stringify(body), {
       httpMetadata:   { contentType: 'application/json' },
       customMetadata: { pid, day, win }
     });
 
-    return new Response(JSON.stringify({status: 'success', key}), {
+    return new Response(JSON.stringify({status: 'success', submission_id: body.submission_id, key}), {
       status: 200, headers: { ...cors, 'Content-Type': 'application/json' }
     });
   }
@@ -3436,17 +3427,16 @@ export const handler = async (event) =&gt; {
 
           <h3 id="webhook-cautions">Cautions and gotchas</h3>
           <ul>
-            <li><strong>Your endpoint URL is effectively a credential.</strong> Anyone who has it can post synthetic
-              data into your dataset. For serious studies, add a shared secret — have the study POST an
-              <code>?auth=...</code> query parameter that the script checks, rotate it if leaked.
+            <li><strong>Webhook URLs in a public study are public.</strong> Anyone can inspect exported HTML and POST
+              synthetic data, including if the URL contains a query-string secret. Use server-side validation, study-specific
+              limits and reconciliation; a static webpage cannot keep a shared secret.
             </li>
-            <li><strong>Google Apps Script rate limits exist</strong> but are generous for EMA-scale traffic. Expect no
-              issues below ~1000 participant-sessions per day. Beyond that, batch or switch to a dedicated endpoint.
+            <li><strong>Google Apps Script has quotas and redirects.</strong> Capacity depends on the account and payload;
+              verify browser-to-receiver acknowledgment and storage under expected load.
             </li>
-            <li><strong>Apps Script responses don't always reach the client cleanly.</strong> The runtime treats any
-              <code>response.ok</code> as success; if Apps Script happens to return a redirect to a final content URL,
-              the fetch still counts as a success. Your row will appear in the sheet regardless. This is fine for the
-              "did it save?" question; if you need byte-exact response parsing, use a real endpoint.
+            <li><strong>Apps Script may store a row while the browser cannot read its response.</strong> Cross-origin
+              redirects and CORS can cause the participant to see "Upload not confirmed" after the server wrote data.
+              Check the sheet before accepting a manually returned copy to avoid duplicates.
             </li>
             <li><strong>If you change the webhook URL mid-study,</strong> participants who cached the old exported HTML
               will continue to post to the old URL until they clear site data or you push a new export. Make webhook
@@ -3876,7 +3866,7 @@ https://github.com/keeganwhitacre/emaforge</code></pre>
           <div class="credit-card">
             <div class="credit-card-icon">EF</div>
             <div class="credit-card-text">
-              <strong>EMA Forge</strong> · Schema v1.6.0 · MIT License<br>
+              <strong>EMA Forge</strong> · Schema v2.0.0 · MIT License<br>
               Maintained by Keegan Whitacre, OSU Affective Science Lab.
             </div>
           </div>

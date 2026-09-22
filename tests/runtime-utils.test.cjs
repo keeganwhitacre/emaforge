@@ -26,13 +26,15 @@ test("phase planning preserves conditions until task execution", () => {
   const plan = utils.buildPhasePlan({
     id: "evening",
     phase_sequence: [
-      { kind: "ema", block: "pre" },
+      { kind: "ema", id: "baseline", question_ids: ["distress"] },
       { kind: "task", id: "epat", condition },
-      { kind: "ema", block: "post" }
+      { kind: "ema", id: "followup", question_ids: ["reflection"] }
     ]
   }, { epat: {} });
 
-  assert.deepEqual(plan.map(step => step.token), ["pre_evening", "epat", "post_evening"]);
+  assert.deepEqual(plan.map(step => step.token), ["survey_evening", "epat", "survey2_evening"]);
+  assert.deepEqual(plan[0].questionIds, ["distress"]);
+  assert.deepEqual(plan[2].questionIds, ["reflection"]);
   assert.deepEqual(plan[1].condition, condition);
   assert.equal(utils.evaluateCondition(plan[1].condition, {}), false);
   assert.equal(utils.evaluateCondition(plan[1].condition, { distress: { value: 9 } }), true);
@@ -44,20 +46,38 @@ test("task-only sessions have one task and no implicit questionnaire", () => {
   assert.deepEqual(utils.buildPhasePlan({ id: "w1" }, { epat: {} }), []);
 });
 
-test("repeated EMA blocks receive parseable, stable tokens", () => {
+test("multiple independent surveys receive parseable, stable tokens", () => {
   const plan = utils.buildPhasePlan({
     id: "w1",
     phase_sequence: [
-      { kind: "ema", block: "pre" },
-      { kind: "ema", block: "pre" },
-      { kind: "ema", block: "post" },
-      { kind: "ema", block: "post" }
+      { kind: "ema", id: "s1", question_ids: ["mood"] },
+      { kind: "ema", id: "s2", question_ids: ["stress"] },
+      { kind: "ema", id: "s3", question_ids: ["social"] },
+      { kind: "ema", id: "s4", question_ids: ["sleep"] }
     ]
   }, {});
 
-  assert.deepEqual(plan.map(step => step.token), ["pre_w1", "pre2_w1", "post_w1", "post2_w1"]);
-  assert.deepEqual(utils.parseEmaPhaseToken("pre2_w1"), { block: "pre", ordinal: 2, windowId: "w1" });
-  assert.deepEqual(utils.parseEmaPhaseToken("post2_evening_check"), { block: "post", ordinal: 2, windowId: "evening_check" });
+  assert.deepEqual(plan.map(step => step.token), ["survey_w1", "survey2_w1", "survey3_w1", "survey4_w1"]);
+  assert.deepEqual(utils.parseEmaPhaseToken("survey2_w1"), { block: "survey", ordinal: 2, windowId: "w1" });
+  assert.deepEqual(utils.parseEmaPhaseToken("survey3_evening_check"), { block: "survey", ordinal: 3, windowId: "evening_check" });
+});
+
+test("step membership isolates questions while allowing deliberate reuse", () => {
+  const questions = [
+    { id: "mood", type: "slider" },
+    { id: "stress", type: "slider" },
+    { id: "break", type: "page_break" },
+    { id: "reflection", type: "text" }
+  ];
+  assert.deepEqual(utils.questionsForStep(questions, ["mood", "stress"]).map(q => q.id), ["mood", "stress"]);
+  assert.deepEqual(utils.questionsForStep(questions, ["mood", "reflection"]).map(q => q.id), ["mood", "reflection"]);
+});
+
+test("a webhook HTTP response must acknowledge a successful submission", () => {
+  assert.equal(utils.isWebhookAcknowledgement({ status: "success", submission_id: "s1" }, "s1"), true);
+  assert.equal(utils.isWebhookAcknowledgement({ status: "success", submission_id: "other" }, "s1"), false);
+  assert.equal(utils.isWebhookAcknowledgement({ error: "storage failed" }, "s1"), false);
+  assert.equal(utils.isWebhookAcknowledgement("<html>Sign in</html>", "s1"), false);
 });
 
 test("ePAT phase uses the final participant-adjusted knob value", () => {

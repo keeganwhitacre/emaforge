@@ -119,10 +119,10 @@ test("phase labels use the full ordered phase sequence", () => {
   const context = builderContext();
   const label = context.phaseLabel({
     phase_sequence: [
-      { kind: "ema", block: "pre" },
+      { kind: "ema", id: "s1" },
       { kind: "task", id: "epat" },
-      { kind: "ema", block: "pre" },
-      { kind: "ema", block: "post" }
+      { kind: "ema", id: "s2" },
+      { kind: "ema", id: "s3", label: "Follow-up questions" }
     ]
   });
   assert.equal(label, "Survey questions → ePAT → Survey questions → Follow-up questions");

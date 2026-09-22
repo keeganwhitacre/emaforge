@@ -56,16 +56,6 @@
     });
   }
 
-  function questionApplies(question, windowId, block) {
-    const windowMatch = question.windows == null ||
-      (Array.isArray(question.windows) && question.windows.includes(windowId));
-    const questionBlock = question.block || "both";
-    const blockMatch = block === "post"
-      ? questionBlock === "post" || questionBlock === "both"
-      : questionBlock === "pre" || questionBlock === "both";
-    return windowMatch && blockMatch && question.type !== "page_break";
-  }
-
   function validateConditionAvailability(condition, allowedIds, path, issues) {
     conditionRules(condition).forEach((rule, index) => {
       if (rule && rule.question_id && !allowedIds.has(rule.question_id)) {
@@ -198,17 +188,12 @@
           issues.push(issue("error", "heart_rate_duration_invalid", `${path}.duration_sec`, "Heart-rate capture duration must be 10–120 seconds."));
         }
       }
-      if (question && Array.isArray(question.windows)) {
-        question.windows.forEach(windowId => {
-          if (!windows.some(window => window && window.id === windowId)) {
-            issues.push(issue("error", "question_window_unknown", `${path}.windows`, `Question references unknown window "${windowId}".`));
-          }
-        });
-      }
       validateCondition(question && question.condition, priorQuestionIds, `${path}.condition`, issues);
       if (question && question.type !== "page_break" && question.id) priorQuestionIds.add(question.id);
     });
 
+    const surveyStepIds = new Set();
+    const assignedQuestionIds = new Set();
     windows.forEach((window, windowIndex) => {
       if (!window) return;
       const path = `ema.scheduling.windows[${windowIndex}]`;
@@ -224,13 +209,19 @@
       sequence.forEach((step, stepIndex) => {
         const stepPath = `${path}.phase_sequence[${stepIndex}]`;
         if (step.kind === "ema") {
-          if (step.block !== "pre" && step.block !== "post") {
-            issues.push(issue("error", "ema_block_invalid", `${stepPath}.block`, "EMA step block must be pre or post."));
-            return;
+          if (!step.id || surveyStepIds.has(step.id)) {
+            issues.push(issue("error", "survey_step_id_invalid", `${stepPath}.id`, "Survey steps need distinct IDs."));
           }
-          const eligible = questions.filter(question => questionApplies(question, window.id, step.block));
+          surveyStepIds.add(step.id);
+          const ids = Array.isArray(step.question_ids) ? step.question_ids : [];
+          if (new Set(ids).size !== ids.length || ids.some(id => !questionIds.has(id))) {
+            issues.push(issue("error", "survey_question_ids_invalid", `${stepPath}.question_ids`, "Survey step contains duplicate or unknown question IDs."));
+          }
+          ids.forEach(id => assignedQuestionIds.add(id));
+          const included = new Set(ids);
+          const eligible = questions.filter(question => included.has(question.id) && question.type !== "page_break");
           if (eligible.length === 0) {
-            issues.push(issue("error", "ema_step_empty", stepPath, `EMA step has no eligible questions for "${window.label || window.id}".`));
+            issues.push(issue("error", "ema_step_empty", stepPath, `Survey step has no questions for "${window.label || window.id}".`));
           }
           eligible.forEach(question => {
             validateConditionAvailability(question.condition, availableResponses, `question:${question.id}.condition@${window.id}`, issues);
@@ -247,6 +238,11 @@
         }
         issues.push(issue("error", "phase_kind_unsupported", `${stepPath}.kind`, `Phase kind "${step.kind || "(missing)"}" is not supported by the runtime.`));
       });
+    });
+    questions.forEach((question, index) => {
+      if (question.type !== "page_break" && !assignedQuestionIds.has(question.id)) {
+        issues.push(issue("error", "question_unassigned", `ema.questions[${index}]`, "Assign this question to a survey step or delete it."));
+      }
     });
 
     if (modules.epat) {

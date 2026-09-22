@@ -47,18 +47,18 @@
     const sequence = Array.isArray(windowConfig.phase_sequence) && windowConfig.phase_sequence.length
       ? windowConfig.phase_sequence
       : [];
-    const counters = { pre: 0, post: 0 };
+    let surveyCount = 0;
 
     return sequence.flatMap((step, stepIndex) => {
       if (step.kind === "ema") {
-        const block = step.block === "post" ? "post" : "pre";
-        counters[block] += 1;
-        const ordinal = counters[block];
-        const prefix = ordinal === 1 ? block : `${block}${ordinal}`;
+        surveyCount += 1;
+        const ordinal = surveyCount;
+        const prefix = ordinal === 1 ? "survey" : `survey${ordinal}`;
         return [{
           token: `${prefix}_${windowConfig.id}`,
           kind: "ema",
-          block,
+          stepId: step.id,
+          questionIds: step.question_ids,
           windowId: windowConfig.id,
           ordinal,
           stepIndex
@@ -79,13 +79,23 @@
     });
   }
 
+  function questionsForStep(questions, questionIds) {
+    const included = new Set(questionIds || []);
+    return (questions || []).filter(question => included.has(question.id));
+  }
+
+  function isWebhookAcknowledgement(receipt, submissionId) {
+    return !!receipt && typeof receipt === "object" && receipt.status === "success" &&
+      (!Object.prototype.hasOwnProperty.call(receipt, "submission_id") || receipt.submission_id === submissionId);
+  }
+
   function parseEmaPhaseToken(token) {
-    const match = /^(pre|post)(\d*)_(.+)$/.exec(token || "");
+    const match = /^survey(\d*)_(.+)$/.exec(token || "");
     if (!match) return null;
     return {
-      block: match[1],
-      ordinal: match[2] ? Number(match[2]) : 1,
-      windowId: match[3]
+      block: "survey",
+      ordinal: match[1] ? Number(match[1]) : 1,
+      windowId: match[2]
     };
   }
 
@@ -157,6 +167,8 @@
     responseValue,
     evaluateCondition,
     buildPhasePlan,
+    questionsForStep,
+    isWebhookAcknowledgement,
     parseEmaPhaseToken,
     collectResponses,
     phaseMsFromKnob,

@@ -32,13 +32,13 @@ function bindScheduleTab() {
     const firstStep = state.ema.scheduling.windows[0]?.phase_sequence?.[0];
     const initialStep = firstStep?.kind === 'task' && state.modules.some(m => m.id === firstStep.id && m.enabled)
       ? { kind: 'task', id: firstStep.id, condition: null }
-      : { kind: 'ema', block: 'pre' };
+      : null;
     state.ema.scheduling.windows.push({
       id: wId,
       label: `Session ${state.ema.scheduling.windows.length + 1}`,
       start: "12:00",
       end: "13:00",
-      phase_sequence: [initialStep]
+      phase_sequence: initialStep ? [initialStep] : []
     });
     renderWindows();
     if (typeof renderGreetings === 'function') renderGreetings();
@@ -149,27 +149,16 @@ function buildWindowCard(w, i) {
     const choice = e.target.value;
     if (!choice) return;
     if (choice === 'questions') {
-      const hasPre = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'pre');
-      const hasPost = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'post');
-      const block = hasPre ? 'post' : 'pre';
-      if (!(block === 'post' ? hasPost : hasPre)) w.phase_sequence.push({ kind: 'ema', block });
-      const eligible = state.ema.questions.some(q => q.type !== 'page_break' &&
-        (!Array.isArray(q.windows) || q.windows.includes(w.id)) &&
-        (q.block === 'both' || (q.block || 'pre') === block));
-      if (!eligible || (hasPre && hasPost)) {
-        addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1,
-          anchors: ['', ''], required: true, condition: null, block, windows: [w.id] });
-        document.querySelector('.tab-btn[data-tab="questions"]').click();
-      }
+      const step = { kind: 'ema', id: genSId(), question_ids: [] };
+      w.phase_sequence.push(step);
+      addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1,
+        anchors: ['', ''], required: true, condition: null }, step);
+      document.querySelector('.tab-btn[data-tab="questions"]').click();
     } else if (choice === 'hr_question') {
-      const hasPre = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'pre');
-      const hasPost = w.phase_sequence.some(s => s.kind === 'ema' && s.block === 'post');
-      const block = hasPre && (hasPost || w.phase_sequence.at(-1)?.kind === 'task') ? 'post' : 'pre';
-      if (!w.phase_sequence.some(s => s.kind === 'ema' && s.block === block)) {
-        w.phase_sequence.push({ kind: 'ema', block });
-      }
+      const step = { kind: 'ema', id: genSId(), question_ids: [] };
+      w.phase_sequence.push(step);
       addQ({ id: genQId(), type: 'heart_rate', text: 'Measuring your heart rate…',
-        duration_sec: 30, report_as: 'bpm', required: true, condition: null, block, windows: [w.id] });
+        duration_sec: 30, report_as: 'bpm', required: true, condition: null }, step);
     } else if (choice.startsWith('task:')) {
       const mod = state.modules.find(m => m.id === choice.slice(5));
       if (mod) {
@@ -214,12 +203,11 @@ function renderStepList(container, w) {
     const title = document.createElement('strong');
     const module = state.modules.find(m => m.id === step.id);
     const eligible = step.kind === 'ema' ? state.ema.questions.filter(q => q.type !== 'page_break' &&
-      (!Array.isArray(q.windows) || q.windows.includes(w.id)) &&
-      (q.block === 'both' || (q.block || 'pre') === step.block)) : [];
+      (step.question_ids || []).includes(q.id)) : [];
     title.textContent = step.kind === 'ema'
       ? (eligible.length === 1 && eligible[0].type === 'heart_rate'
           ? 'PPG heart-rate capture'
-          : (step.block === 'post' ? 'Follow-up questions' : 'Survey questions'))
+          : (step.label || 'Survey questions'))
       : (module?.label || step.id || 'Task');
     heading.append(handle, title);
     if (step.condition) {
@@ -298,15 +286,16 @@ function buildStepControls(step, w) {
   wrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:6px;';
 
   if (step.kind === 'ema') {
-    const sel = document.createElement('select');
-    sel.style.cssText = 'width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.85rem;outline:none;';
-    sel.setAttribute('aria-label', 'Question set');
-    sel.innerHTML = `<option value="pre" ${step.block==='pre'?'selected':''}>Survey questions</option><option value="post" ${step.block==='post'?'selected':''}>Follow-up questions</option>`;
-    sel.addEventListener('change', e => { step.block = e.target.value; renderStepList(wrap.closest('.step-list'), w); schedulePreview(); });
-    wrap.appendChild(sel);
+    const name = document.createElement('input');
+    name.type = 'text';
+    name.value = step.label || 'Survey questions';
+    name.setAttribute('aria-label', 'Survey step name');
+    name.addEventListener('input', e => { step.label = e.target.value; schedulePreview(); });
+    name.addEventListener('change', () => renderStepList(wrap.closest('.step-list'), w));
+    wrap.appendChild(name);
     const hint = document.createElement('span');
     hint.className = 'field-hint';
-    hint.textContent = 'Choose which questions appear here in the Questions tab.';
+    hint.textContent = `${(step.question_ids || []).filter(id => state.ema.questions.some(q => q.id === id && q.type !== 'page_break')).length} questions. Assign or reuse questions in the Questions tab.`;
     wrap.appendChild(hint);
 
   } if (step.kind === 'task') {
@@ -357,7 +346,9 @@ function buildConditionRow(step, w) {
   condFields.style.cssText = `display:${hasCondition?'flex':'none'};flex-direction:column;gap:4px;margin-top:2px;padding:8px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border);`;
 
   function getQuestionOptions(selectedId) {
-    const allQ = state.ema.questions.filter(q => q.type !== 'page_break' && q.type !== 'checkbox' && q.type !== 'choice' && q.type !== 'affect_grid');
+    const precedingIds = new Set(w.phase_sequence.slice(0, w.phase_sequence.indexOf(step))
+      .filter(s => s.kind === 'ema').flatMap(s => s.question_ids || []));
+    const allQ = state.ema.questions.filter(q => precedingIds.has(q.id) && q.type !== 'page_break' && q.type !== 'checkbox' && q.type !== 'choice' && q.type !== 'affect_grid');
     return allQ.map(q => `<option value="${q.id}" ${selectedId===q.id?'selected':''}>${escH(q.text?.slice(0,40)||q.id)}</option>`).join('');
   }
 
