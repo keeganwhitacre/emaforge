@@ -6,23 +6,6 @@
 // ---------------------------------------------------------------------------
 
 function renderQuestions() {
-  const list = document.getElementById('question-list');
-  list.innerHTML = '';
-  if (!state.ema.questions.length) {
-    list.innerHTML = '<p class="questions-empty">No survey items yet. This study can remain physiology-only, or you can add a survey measure above.</p>';
-  }
-  
-  let displayNum = 1; // Track the visual question number
-  
-  state.ema.questions.forEach((q, i) => {
-    // Pass the displayNum to the card builder
-    list.appendChild(buildQCard(q, i, displayNum));
-    
-    // Only increment the number if it's an actual question
-    if (q.type !== 'page_break') {
-      displayNum++;
-    }
-  });
   renderMeasureComposer();
   if (typeof renderBuilderShell === 'function') renderBuilderShell();
 }
@@ -56,7 +39,7 @@ function renderMeasureComposer() {
   }
   const window = windows.find(candidate => candidate.id === sessionSelect?.value) || windows[0];
   const entries = EMAForgeMeasureFlow.flatten(window);
-  flow.innerHTML = '<div class="measure-flow-heading"><strong>Participant flow</strong><span>Drag to reorder · tasks create screen boundaries automatically</span></div>';
+  flow.innerHTML = `<div class="measure-flow-heading"><div><strong>${escH(window.label || 'Untitled session')}</strong><span class="measure-flow-session">Participant flow</span></div><span>Expand to edit · drag to reorder</span></div>`;
   const list = document.createElement('div');
   list.className = 'measure-flow-list';
   if (!entries.length) list.innerHTML = '<p class="questions-empty">No measures in this session yet. Choose any survey item or physiology task above.</p>';
@@ -81,24 +64,21 @@ function renderMeasureTypeOptions(select) {
 }
 
 function buildMeasureFlowCard(window, entries, entry, index) {
+  const question = entry.kind === 'question' ? state.ema.questions.find(candidate => candidate.id === entry.questionId) : null;
+  if (question) return buildQuestionFlowCard(window, entries, entry, index, question);
   const card = document.createElement('div');
-  card.className = `measure-flow-card ${entry.kind}`;
+  card.className = `measure-flow-card flow-item ${entry.kind}`;
   card.draggable = true;
   card.dataset.index = String(index);
-  const question = entry.kind === 'question' ? state.ema.questions.find(candidate => candidate.id === entry.questionId) : null;
   const module = entry.kind === 'task' ? state.modules.find(candidate => candidate.id === entry.taskId) : null;
-  const isBreak = question?.type === 'page_break';
-  if (isBreak) card.classList.add('page-break');
-  const type = entry.kind === 'task' ? 'Physiology task' : isBreak ? 'Survey screen' : measureTypeLabel(question?.type);
-  const title = entry.kind === 'task' ? (module?.label || entry.taskId) : isBreak ? 'Page break' : (question?.text || 'Untitled survey item');
-  const description = entry.kind === 'task'
-    ? (module?.desc || 'Built-in participant task')
-    : isBreak ? 'Starts a new participant screen' : `ID ${question?.id || entry.questionId}${question?.condition ? ' · Conditional' : ''}`;
+  const type = 'Physiology task';
+  const title = module?.label || entry.taskId;
+  const description = module?.desc || 'Built-in participant task';
   card.innerHTML = `<span class="measure-flow-handle" aria-hidden="true">⠿</span>
     <span class="measure-flow-order">${index + 1}</span>
     <span class="measure-flow-copy"><strong>${escH(title)}</strong><span>${escH(type)} · ${escH(description)}</span></span>
     <span class="measure-flow-actions">
-      ${!isBreak ? `<button type="button" class="measure-edit">${entry.kind === 'task' ? 'Settings' : 'Edit'}</button>` : ''}
+      <button type="button" class="measure-edit">Settings</button>
       <button type="button" class="measure-up" aria-label="Move earlier" ${index === 0 ? 'disabled' : ''}>↑</button>
       <button type="button" class="measure-down" aria-label="Move later" ${index === entries.length - 1 ? 'disabled' : ''}>↓</button>
       <button type="button" class="measure-remove" aria-label="Remove from session">✕</button>
@@ -149,13 +129,6 @@ function buildMeasureFlowCard(window, entries, entry, index) {
     }
   });
   card.querySelector('.measure-edit')?.addEventListener('click', () => {
-    if (entry.kind === 'question') {
-      const detailCard = document.querySelector(`.q-card[data-qid="${CSS.escape(entry.questionId)}"]`);
-      detailCard?.classList.add('expanded');
-      detailCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => detailCard?.querySelector('.q-text')?.focus({ preventScroll: true }), 350);
-      return;
-    }
     document.querySelector('.tab-btn[data-tab="tasks"]')?.click();
     const taskCard = document.querySelector(`.task-card[data-mod-id="${CSS.escape(entry.taskId)}"]`);
     const settings = taskCard?.querySelector('details.task-settings');
@@ -163,6 +136,64 @@ function buildMeasureFlowCard(window, entries, entry, index) {
     taskCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
   return card;
+}
+
+function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
+  const questionIndex = state.ema.questions.indexOf(question);
+  const card = buildQCard(question, questionIndex, flowIndex + 1, { flow: true });
+  card.classList.add('flow-item', 'flow-question-card');
+  const header = card.querySelector('.q-header');
+  const actions = document.createElement('span');
+  actions.className = 'measure-flow-actions';
+  actions.innerHTML = `<button type="button" class="measure-up" aria-label="Move earlier" ${flowIndex === 0 ? 'disabled' : ''}>↑</button>
+    <button type="button" class="measure-down" aria-label="Move later" ${flowIndex === entries.length - 1 ? 'disabled' : ''}>↓</button>
+    <button type="button" class="measure-remove" aria-label="Remove from this session" title="Remove from this session">✕</button>`;
+  const chevron = header.querySelector('.q-chevron');
+  header.insertBefore(actions, chevron || null);
+  wireQuestionFlowReordering(card, window, entries, entry, flowIndex);
+  actions.querySelector('.measure-up').addEventListener('click', event => {
+    event.stopPropagation();
+    if (flowIndex > 0) [entries[flowIndex - 1], entries[flowIndex]] = [entries[flowIndex], entries[flowIndex - 1]];
+    commitMeasureFlow(window, entries);
+  });
+  actions.querySelector('.measure-down').addEventListener('click', event => {
+    event.stopPropagation();
+    if (flowIndex < entries.length - 1) [entries[flowIndex], entries[flowIndex + 1]] = [entries[flowIndex + 1], entries[flowIndex]];
+    commitMeasureFlow(window, entries);
+  });
+  actions.querySelector('.measure-remove').addEventListener('click', event => {
+    event.stopPropagation();
+    entries.splice(flowIndex, 1);
+    window.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
+    const stillUsed = state.ema.scheduling.windows.some(candidate => candidate.phase_sequence?.some(step =>
+      step.kind === 'ema' && (step.question_ids || []).includes(question.id)));
+    if (!stillUsed) state.ema.questions = state.ema.questions.filter(candidate => candidate.id !== question.id);
+    renderWindows(); renderQuestions(); renderPreviewTabs(); schedulePreview();
+  });
+  return card;
+}
+
+function wireQuestionFlowReordering(card, window, entries, entry, flowIndex) {
+  const handle = card.querySelector('.q-drag-handle');
+  card.draggable = false;
+  handle?.addEventListener('mousedown', () => { card.draggable = true; });
+  handle?.addEventListener('mouseup', () => { card.draggable = false; });
+  card.addEventListener('dragstart', event => {
+    if (!card.draggable) { event.preventDefault(); return; }
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(flowIndex));
+    card.classList.add('dragging');
+  });
+  card.addEventListener('dragend', () => { card.draggable = false; card.classList.remove('dragging'); });
+  card.addEventListener('dragover', event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; });
+  card.addEventListener('drop', event => {
+    event.preventDefault();
+    const from = Number(event.dataTransfer.getData('text/plain'));
+    if (!Number.isInteger(from) || from === flowIndex || from < 0 || from >= entries.length) return;
+    const [moved] = entries.splice(from, 1);
+    entries.splice(flowIndex, 0, moved);
+    commitMeasureFlow(window, entries);
+  });
 }
 
 function measureTypeLabel(type) {
@@ -187,7 +218,7 @@ function setMeasureFeedback(message, isError = false) {
 }
 
 // Add displayNum as the third argument here
-function buildQCard(q, index, displayNum) {
+function buildQCard(q, index, displayNum, options = {}) {
   const card = document.createElement('div');
   card.className = 'q-card';
   card.dataset.qid = q.id;
@@ -210,14 +241,9 @@ function buildQCard(q, index, displayNum) {
       <div class="q-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;">
         <span class="q-drag-handle" style="cursor:grab;flex-shrink:0;">⠿</span>
         <span style="flex:1;text-align:center;font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--accent);">--- PAGE BREAK ---</span>
-        <button class="q-del-btn" style="flex-shrink:0;padding:2px 8px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--fg-3);cursor:pointer;">✕</button>
+        <svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg>
       </div>
     `;
-    card.querySelector('.q-del-btn').addEventListener('click', () => {
-      detachQuestion(q.id);
-      state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
-      renderQuestions(); schedulePreview();
-    });
     return card;
   }
 
@@ -254,11 +280,6 @@ function buildQCard(q, index, displayNum) {
       ${(q.type === 'text' || q.type === 'numeric')
         ? `<div class="field-hint" style="margin-top:6px">Participants type a ${q.type === 'numeric' ? 'number' : 'text'} response.</div>` : ''}
 
-      <div class="field-group" style="margin-top:10px">
-        <label class="field-label">Show in these survey steps</label>
-        <div class="q-session-checks">${buildStepSelector(q)}</div>
-      </div>
-
       <div class="field-group condition-wrapper" style="margin-top:10px;">
         <label class="field-label">Skip Logic</label>
         ${buildConditionBlock(q, index)}
@@ -277,7 +298,7 @@ function buildQCard(q, index, displayNum) {
   `;
 
   card.querySelector('.q-header').addEventListener('click', e => {
-    if (e.target.closest('.q-drag-handle')) return;
+    if (e.target.closest('.q-drag-handle, .measure-flow-actions')) return;
     card.classList.toggle('expanded');
   });
   card.querySelector('.q-text').addEventListener('input', e => {
@@ -300,8 +321,6 @@ function buildQCard(q, index, displayNum) {
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
 
   bindConditionBlock(card, q, index);
-  bindStepSelector(card, q);
-
   return card;
 }
 
@@ -631,8 +650,8 @@ function addQ(obj, targetStep) {
   state.ema.questions.push(obj);
   renderWindows();
   renderQuestions(); schedulePreview();
-  const cards = document.querySelectorAll('.q-card');
-  if (cards.length && obj.type !== 'page_break') cards[cards.length-1].classList.add('expanded');
+  const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(obj.id)}"]`);
+  if (card && obj.type !== 'page_break') card.classList.add('expanded');
 }
 
 document.getElementById('add-question-select').addEventListener('change', event => {
@@ -688,7 +707,7 @@ document.getElementById('add-question-select').addEventListener('change', event 
   renderPreviewTabs();
   setMeasureFeedback(`${type === 'heart_rate' ? 'PPG heart-rate capture' : 'Survey item'} added to ${targetWindow.label}.`);
   event.target.value = '';
-  const card = document.querySelector('#question-list .q-card:last-child');
+  const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
     card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });

@@ -254,24 +254,17 @@
         <label class="field-group"><span class="field-label">Add to session</span>
           <select id="add-measure-session" aria-label="Session for new measure"></select>
         </label>
+        <div class="toggle-row measure-randomize-control">
+          <span class="toggle-label">Randomize survey items within each page</span>
+          <label class="toggle">
+            <input type="checkbox" id="ema-randomize">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
         <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
       </div>
 
       <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
-
-      <div class="divider"></div>
-      <div class="section-title">Survey item details</div>
-      <p class="field-hint">Edit wording, response options, and branching here. Reorder the participant experience in the flow above.</p>
-
-      <div class="toggle-row" style="margin-bottom: 16px;">
-        <span class="toggle-label">Randomize Question Order (per page)</span>
-        <label class="toggle">
-          <input type="checkbox" id="ema-randomize">
-          <span class="toggle-track"></span>
-        </label>
-      </div>
-
-      <div class="question-list" id="question-list"></div>
     </div>
 
     <!-- SCHEDULE TAB -->
@@ -503,7 +496,6 @@
 <script src="js/library-utils.js?v=20260923b"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20260923d"></script>
-<script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/tabs/questions.js?v=20260923d"></script>

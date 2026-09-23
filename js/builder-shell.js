@@ -26,7 +26,21 @@ function showBuilderIssue(issue) {
   }
   const questionIndex = /^ema\.questions\[(\d+)\]/.exec(issue.path);
   const windowIndex = /^ema\.scheduling\.windows\[(\d+)\]/.exec(issue.path);
-  let target = questionIndex && document.querySelectorAll("#question-list .q-card")[Number(questionIndex[1])];
+  let target = null;
+  if (questionIndex) {
+    const question = state.ema.questions[Number(questionIndex[1])];
+    const window = question && state.ema.scheduling.windows.find(candidate => candidate.phase_sequence?.some(step =>
+      step.kind === "ema" && (step.question_ids || []).includes(question.id)));
+    if (window) {
+      previewSession = window.id;
+      renderPreviewTabs();
+      renderMeasureComposer();
+      const sessionSelect = document.getElementById("add-measure-session");
+      if (sessionSelect) sessionSelect.value = window.id;
+      renderMeasureComposer();
+      target = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
+    }
+  }
   if (!target && windowIndex) target = document.querySelectorAll("#window-list .window-item")[Number(windowIndex[1])];
   if (target) target.classList.add("expanded");
   if (!target && issue.path === "study.name") target = document.getElementById("study-name");
