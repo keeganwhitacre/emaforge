@@ -13,9 +13,12 @@ async function loadProtocolLibrary() {
     const catalog = await response.json();
     const result = EMAForgeLibraryUtils.validateCatalog(catalog);
     if (!result.valid) throw new Error(result.errors[0]);
-    protocolLibraryCatalog = catalog;
-    renderProtocolLibrary(catalog.items);
-    if (status) status.textContent = `${catalog.items.length} curated items · every item is inspectable JSON`;
+    const personal = EMAForgeLibraryUtils.loadPersonalLibrary(localStorage).map(item => ({
+      ...item, badge: 'My Library', origin: 'personal', payload: item
+    }));
+    protocolLibraryCatalog = { ...catalog, items: [...personal, ...catalog.items.map(item => ({ ...item, origin: 'curated' }))] };
+    renderProtocolLibrary(protocolLibraryCatalog.items);
+    if (status) status.textContent = `${catalog.items.length} curated · ${personal.length} in My Library · every item is inspectable JSON`;
   } catch (error) {
     container.innerHTML = `<p class="questions-empty">${escH(error.message)}</p>`;
     if (status) status.textContent = '';
@@ -26,19 +29,20 @@ function renderProtocolLibrary(items) {
   const container = document.getElementById('library-items');
   if (!container) return;
   const groups = [
+    ['personal', 'My Library'],
     ['protocol', 'Complete protocols'],
     ['question_pack', 'Question packs'],
     ['task_preset', 'Physiology task presets']
   ];
   container.innerHTML = groups.map(([kind, label]) => {
-    const matching = items.filter(item => item.kind === kind);
+    const matching = kind === 'personal' ? items.filter(item => item.origin === 'personal') : items.filter(item => item.kind === kind && item.origin !== 'personal');
     if (!matching.length) return '';
     return `<section class="library-group"><h3>${label}</h3><div class="library-grid">${matching.map(item => `
       <button type="button" class="library-card" data-library-id="${escH(item.id)}" style="--library-accent:${escH(item.accent || '#e8716a')}">
         <span class="library-card-top"><strong>${escH(item.name)}</strong><span>${escH(item.badge || '')}</span></span>
         <span class="library-card-desc">${escH(item.description)}</span>
         <span class="library-features">${(item.features || []).map(feature => `<span>${escH(feature)}</span>`).join('')}</span>
-        <span class="library-action">${kind === 'protocol' ? 'Use protocol' : kind === 'question_pack' ? 'Add question pack' : 'Add task preset'} →</span>
+        <span class="library-action">${item.kind === 'protocol' ? 'Use protocol' : item.kind === 'question_pack' ? 'Add question pack' : 'Add task preset'} →</span>
       </button>`).join('')}</div></section>`;
   }).join('');
 
@@ -58,6 +62,11 @@ function renderProtocolLibrary(items) {
 async function fetchCatalogItem(id) {
   const item = protocolLibraryCatalog?.items.find(candidate => candidate.id === id);
   if (!item) throw new Error('Library item not found.');
+  if (item.origin === 'personal') {
+    const result = EMAForgeLibraryUtils.validateItem(item.payload);
+    if (!result.valid) throw new Error(result.errors[0]);
+    return JSON.parse(JSON.stringify(item.payload));
+  }
   const response = await fetch(item.path);
   if (!response.ok) throw new Error('Library item could not be loaded.');
   const payload = await response.json();

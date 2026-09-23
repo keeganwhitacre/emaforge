@@ -6,7 +6,7 @@
   <title>Protocol Library — EMA Forge</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="css/studio.css?v=20260923c">
-  <link rel="stylesheet" href="css/library.css?v=20260923c">
+  <link rel="stylesheet" href="css/library.css?v=20260923d">
   <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('ema-forge-theme') || 'light');
   </script>
@@ -43,7 +43,7 @@
 
     <section class="library-contribution">
       <div><p class="library-eyebrow">Community library</p><h2>Share inspectable research components</h2><p>Contributions use versioned JSON, disclose sources and validation status, and cannot execute remote code.</p></div>
-      <a class="btn" href="https://github.com/keeganwhitacre/emaforge/tree/main/library" target="_blank" rel="noopener noreferrer">Contribution guide ↗</a>
+      <div class="library-contribution-actions"><button class="btn btn-primary" type="button" id="library-create-btn">Create library item</button><a class="btn" href="https://github.com/keeganwhitacre/emaforge/tree/main/library" target="_blank" rel="noopener noreferrer">Official contribution guide ↗</a></div>
     </section>
   </main>
 
@@ -55,11 +55,35 @@
       <p class="library-detail-description" id="library-detail-description"></p>
       <dl id="library-detail-meta"></dl>
       <div id="library-detail-references" class="library-detail-references"></div>
-      <div class="library-detail-actions"><a class="btn btn-primary" id="library-use-link" href="builder.html#library">Open in Builder</a><a class="btn" id="library-json-link" href="#" target="_blank">Inspect JSON ↗</a></div>
+      <div class="library-detail-actions"><a class="btn btn-primary" id="library-use-link" href="builder.html#library">Open in Builder</a><a class="btn" id="library-json-link" href="#" target="_blank">Inspect JSON ↗</a><button class="btn library-delete" type="button" id="library-delete-btn" hidden>Delete from My Library</button></div>
     </article>
   </div>
 
-  <script src="js/library-utils.js?v=20260923a"></script>
-  <script src="js/library-page.js?v=20260923c"></script>
+  <div class="modal-overlay" id="library-create-modal" role="dialog" aria-modal="true" aria-labelledby="library-create-title">
+    <form class="library-create modal-box" id="library-create-form">
+      <button type="button" class="modal-close" id="library-create-close" aria-label="Close creator">✕</button>
+      <p class="library-eyebrow">My Library</p>
+      <h2 id="library-create-title">Create a reusable library item</h2>
+      <p class="library-detail-description">EMA Forge copies from the study currently saved in this browser. Your item stays local until you download and submit its JSON for review.</p>
+      <div class="library-create-grid">
+        <label><span>Item type</span><select id="contribution-kind" required><option value="protocol">Complete protocol</option><option value="question_pack">Survey pack</option><option value="task_preset">Physiology task preset</option></select></label>
+        <label id="contribution-module-wrap" hidden><span>Built-in task</span><select id="contribution-module"></select></label>
+        <label><span>Name</span><input id="contribution-name" type="text" required placeholder="e.g. Brief Stress + ePAT Check-in"></label>
+        <label class="wide"><span>Description</span><textarea id="contribution-description" required rows="3" placeholder="What this component does and what makes it useful"></textarea></label>
+        <label class="wide"><span>Source or attribution</span><input id="contribution-source" type="text" required placeholder="Original items, citation, or adaptation note"></label>
+        <label><span>License</span><input id="contribution-license" type="text" value="CC0-1.0" required></label>
+        <label><span>Validation status</span><input id="contribution-validation" type="text" value="Contributor supplied; not independently reviewed." required></label>
+        <label class="wide"><span>Intended use</span><input id="contribution-use" type="text" placeholder="Research context and population"></label>
+        <label><span>Estimated burden</span><input id="contribution-burden" type="text" placeholder="e.g. Approximately 3 minutes"></label>
+        <label><span>Device requirements</span><input id="contribution-device" type="text" placeholder="e.g. Phone with rear camera and torch"></label>
+        <label class="wide"><span>Feature tags</span><input id="contribution-features" type="text" placeholder="branching, PPG, sleep (comma separated)"></label>
+      </div>
+      <p id="library-create-status" class="library-page-status" aria-live="polite"></p>
+      <div class="library-detail-actions"><button class="btn btn-primary" type="submit">Add to My Library</button><button class="btn" type="button" id="library-create-download">Add + download JSON</button></div>
+    </form>
+  </div>
+
+  <script src="js/library-utils.js?v=20260923b"></script>
+  <script src="js/library-page.js?v=20260923d"></script>
 </body>
 </html>

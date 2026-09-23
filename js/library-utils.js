@@ -6,6 +6,7 @@
   root.EMAForgeLibraryUtils = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function createLibraryUtils() {
   const ITEM_KINDS = new Set(['protocol', 'question_pack', 'task_preset']);
+  const PERSONAL_LIBRARY_KEY = 'ema_forge_personal_library_v1';
   const QUESTION_TYPES = new Set(['slider', 'choice', 'checkbox', 'text', 'numeric', 'affect_grid', 'heart_rate', 'page_break']);
   const TASK_IDS = new Set(['epat', 'hct', 'iat']);
   const TASK_SETTING_KEYS = {
@@ -137,5 +138,76 @@
     return copy;
   }
 
-  return { validateCatalog, validateItem, installQuestionPack, installTaskPreset, rewritePiping, protocolForValidation };
+  function slugify(value) {
+    return String(value || 'library-item').toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'library-item';
+  }
+
+  function loadPersonalLibrary(storage) {
+    try {
+      const parsed = JSON.parse(storage?.getItem(PERSONAL_LIBRARY_KEY) || '[]');
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(item => validateItem(item).valid);
+    } catch {
+      return [];
+    }
+  }
+
+  function savePersonalLibrary(items, storage) {
+    if (!storage?.setItem) throw new Error('Browser storage is unavailable.');
+    const valid = (items || []).filter(item => validateItem(item).valid).slice(-100);
+    storage.setItem(PERSONAL_LIBRARY_KEY, JSON.stringify(valid));
+    return valid;
+  }
+
+  function savePersonalItem(item, storage) {
+    const result = validateItem(item);
+    if (!result.valid) throw new Error(result.errors[0]);
+    const items = loadPersonalLibrary(storage).filter(candidate => candidate.id !== item.id);
+    items.push(JSON.parse(JSON.stringify(item)));
+    savePersonalLibrary(items, storage);
+    return item;
+  }
+
+  function deletePersonalItem(id, storage) {
+    return savePersonalLibrary(loadPersonalLibrary(storage).filter(item => item.id !== id), storage);
+  }
+
+  function createContribution(draft, metadata) {
+    if (!draft || draft.schema_version !== '2.0.0') throw new Error('Create or open a current EMA Forge study first.');
+    const kind = metadata?.kind;
+    if (!ITEM_KINDS.has(kind)) throw new Error('Choose a library item type.');
+    if (!String(metadata?.name || '').trim() || !String(metadata?.description || '').trim()) {
+      throw new Error('Add a name and description.');
+    }
+    const item = {
+      library_schema: '1.0.0',
+      id: `personal-${slugify(metadata.name)}`,
+      kind,
+      name: String(metadata.name).trim(),
+      description: String(metadata.description).trim(),
+      source: String(metadata.source || 'Created with EMA Forge; contributor-supplied content.').trim(),
+      license: String(metadata.license || 'CC0-1.0').trim(),
+      intended_use: String(metadata.intended_use || 'Contributor-supplied research component.').trim(),
+      estimated_burden: String(metadata.estimated_burden || 'Not yet estimated.').trim(),
+      validation_status: String(metadata.validation_status || 'Contributor supplied; validation not independently reviewed.').trim(),
+      device_requirements: String(metadata.device_requirements || 'Any modern phone browser.').trim(),
+      features: Array.isArray(metadata.features) ? metadata.features.filter(Boolean).map(String) : []
+    };
+    if (kind === 'protocol') item.protocol = JSON.parse(JSON.stringify(draft));
+    if (kind === 'question_pack') item.questions = JSON.parse(JSON.stringify(draft.ema?.questions || []));
+    if (kind === 'task_preset') {
+      const module = (draft.modules || []).find(candidate => candidate.id === metadata.module_id);
+      if (!module) throw new Error('Choose a built-in task that exists in the current study.');
+      item.module_id = module.id;
+      item.settings = JSON.parse(JSON.stringify(module.settings || {}));
+    }
+    const result = validateItem(item);
+    if (!result.valid) throw new Error(result.errors[0]);
+    return item;
+  }
+
+  return { PERSONAL_LIBRARY_KEY, validateCatalog, validateItem, installQuestionPack, installTaskPreset,
+    rewritePiping, protocolForValidation, loadPersonalLibrary, savePersonalLibrary, savePersonalItem,
+    deletePersonalItem, createContribution, slugify };
 });

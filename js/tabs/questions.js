@@ -29,8 +29,10 @@ function renderQuestions() {
 
 function renderMeasureComposer() {
   const sessionSelect = document.getElementById('add-measure-session');
+  const measureSelect = document.getElementById('add-question-select');
   const flow = document.getElementById('measure-flow');
   const windows = state.ema.scheduling.windows || [];
+  renderMeasureTypeOptions(measureSelect);
   if (sessionSelect) {
     const previous = sessionSelect.value;
     sessionSelect.innerHTML = windows.length
@@ -40,26 +42,141 @@ function renderMeasureComposer() {
       : windows.some(w => w.id === previewSession) ? previewSession
       : windows[0]?.id || '';
     sessionSelect.value = preferred;
+    sessionSelect.onchange = () => {
+      previewSession = sessionSelect.value;
+      renderPreviewTabs();
+      renderMeasureComposer();
+      schedulePreview();
+    };
   }
   if (!flow) return;
   if (!windows.length) {
     flow.innerHTML = '<div class="measure-flow-heading"><strong>Participant flow</strong><span>Add a session in Schedule to place measures.</span></div>';
     return;
   }
-  const moduleNames = Object.fromEntries((state.modules || []).map(module => [module.id, module.label]));
-  flow.innerHTML = `
-    <div class="measure-flow-heading"><strong>Participant flow</strong><span>Measures run left to right · reorder in Schedule</span></div>
-    ${windows.map(window => {
-      const steps = window.phase_sequence || [];
-      const stepHtml = steps.length ? steps.map(step => {
-        if (step.kind === 'task') {
-          return `<span class="measure-step task">Physiology <em>${escH(moduleNames[step.id] || step.id)}</em></span>`;
-        }
-        const count = (step.question_ids || []).filter(id => state.ema.questions.some(q => q.id === id && q.type !== 'page_break')).length;
-        return `<span class="measure-step">Survey <em>${count} item${count === 1 ? '' : 's'}</em></span>`;
-      }).join('') : '<span class="field-hint">No measures yet</span>';
-      return `<div class="measure-session"><span class="measure-session-name">${escH(window.label || 'Untitled session')}</span><div class="measure-steps">${stepHtml}</div></div>`;
-    }).join('')}`;
+  const window = windows.find(candidate => candidate.id === sessionSelect?.value) || windows[0];
+  const entries = EMAForgeMeasureFlow.flatten(window);
+  flow.innerHTML = '<div class="measure-flow-heading"><strong>Participant flow</strong><span>Drag to reorder · tasks create screen boundaries automatically</span></div>';
+  const list = document.createElement('div');
+  list.className = 'measure-flow-list';
+  if (!entries.length) list.innerHTML = '<p class="questions-empty">No measures in this session yet. Choose any survey item or physiology task above.</p>';
+  entries.forEach((entry, index) => list.appendChild(buildMeasureFlowCard(window, entries, entry, index)));
+  flow.appendChild(list);
+}
+
+function renderMeasureTypeOptions(select) {
+  if (!select) return;
+  const survey = [
+    ['slider', 'Rating scale'], ['choice', 'Single choice'], ['text', 'Open text'],
+    ['numeric', 'Number'], ['checkbox', 'Multiple choice'], ['affect_grid', 'Affect grid'],
+    ['page_break', 'Page break']
+  ];
+  const stable = (state.modules || []).filter(module => module.badge !== 'Experimental');
+  const experimental = (state.modules || []).filter(module => module.badge === 'Experimental');
+  const taskOptions = modules => modules.map(module => `<option value="task:${escH(module.id)}">${escH(module.label)}</option>`).join('');
+  select.innerHTML = `<option value="">Choose a measure…</option>
+    <optgroup label="Survey">${survey.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</optgroup>
+    <optgroup label="Physiology"><option value="heart_rate">PPG heart-rate capture</option>${taskOptions(stable)}</optgroup>
+    ${experimental.length ? `<optgroup label="Experimental">${taskOptions(experimental)}</optgroup>` : ''}`;
+}
+
+function buildMeasureFlowCard(window, entries, entry, index) {
+  const card = document.createElement('div');
+  card.className = `measure-flow-card ${entry.kind}`;
+  card.draggable = true;
+  card.dataset.index = String(index);
+  const question = entry.kind === 'question' ? state.ema.questions.find(candidate => candidate.id === entry.questionId) : null;
+  const module = entry.kind === 'task' ? state.modules.find(candidate => candidate.id === entry.taskId) : null;
+  const isBreak = question?.type === 'page_break';
+  if (isBreak) card.classList.add('page-break');
+  const type = entry.kind === 'task' ? 'Physiology task' : isBreak ? 'Survey screen' : measureTypeLabel(question?.type);
+  const title = entry.kind === 'task' ? (module?.label || entry.taskId) : isBreak ? 'Page break' : (question?.text || 'Untitled survey item');
+  const description = entry.kind === 'task'
+    ? (module?.desc || 'Built-in participant task')
+    : isBreak ? 'Starts a new participant screen' : `ID ${question?.id || entry.questionId}${question?.condition ? ' · Conditional' : ''}`;
+  card.innerHTML = `<span class="measure-flow-handle" aria-hidden="true">⠿</span>
+    <span class="measure-flow-order">${index + 1}</span>
+    <span class="measure-flow-copy"><strong>${escH(title)}</strong><span>${escH(type)} · ${escH(description)}</span></span>
+    <span class="measure-flow-actions">
+      ${!isBreak ? `<button type="button" class="measure-edit">${entry.kind === 'task' ? 'Settings' : 'Edit'}</button>` : ''}
+      <button type="button" class="measure-up" aria-label="Move earlier" ${index === 0 ? 'disabled' : ''}>↑</button>
+      <button type="button" class="measure-down" aria-label="Move later" ${index === entries.length - 1 ? 'disabled' : ''}>↓</button>
+      <button type="button" class="measure-remove" aria-label="Remove from session">✕</button>
+    </span>`;
+  if (entry.kind === 'task') {
+    const details = document.createElement('details');
+    details.className = 'measure-flow-condition';
+    const summary = document.createElement('summary');
+    summary.textContent = entry.condition ? 'Conditional · edit rule' : 'Add conditional logic';
+    const taskStep = window.phase_sequence[entry.sourceStepIndex];
+    if (taskStep) {
+      details.append(summary, buildConditionRow(taskStep, window));
+      details.addEventListener('toggle', () => { if (details.open) summary.textContent = 'Conditional logic'; });
+      card.appendChild(details);
+    }
+  }
+  card.addEventListener('dragstart', event => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(index));
+    card.classList.add('dragging');
+  });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  card.addEventListener('dragover', event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; });
+  card.addEventListener('drop', event => {
+    event.preventDefault();
+    const from = Number(event.dataTransfer.getData('text/plain'));
+    if (!Number.isInteger(from) || from === index || from < 0 || from >= entries.length) return;
+    const [moved] = entries.splice(from, 1);
+    entries.splice(index, 0, moved);
+    commitMeasureFlow(window, entries);
+  });
+  card.querySelector('.measure-up')?.addEventListener('click', () => {
+    if (index > 0) [entries[index - 1], entries[index]] = [entries[index], entries[index - 1]];
+    commitMeasureFlow(window, entries);
+  });
+  card.querySelector('.measure-down')?.addEventListener('click', () => {
+    if (index < entries.length - 1) [entries[index], entries[index + 1]] = [entries[index + 1], entries[index]];
+    commitMeasureFlow(window, entries);
+  });
+  card.querySelector('.measure-remove')?.addEventListener('click', () => {
+    entries.splice(index, 1);
+    commitMeasureFlow(window, entries);
+    if (entry.kind === 'task' && !state.ema.scheduling.windows.some(candidate =>
+      candidate.phase_sequence?.some(step => step.kind === 'task' && step.id === entry.taskId))) {
+      const taskModule = state.modules.find(candidate => candidate.id === entry.taskId);
+      if (taskModule) taskModule.enabled = false;
+      if (typeof renderModules === 'function') renderModules();
+    }
+  });
+  card.querySelector('.measure-edit')?.addEventListener('click', () => {
+    if (entry.kind === 'question') {
+      const detailCard = document.querySelector(`.q-card[data-qid="${CSS.escape(entry.questionId)}"]`);
+      detailCard?.classList.add('expanded');
+      detailCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => detailCard?.querySelector('.q-text')?.focus({ preventScroll: true }), 350);
+      return;
+    }
+    document.querySelector('.tab-btn[data-tab="tasks"]')?.click();
+    const taskCard = document.querySelector(`.task-card[data-mod-id="${CSS.escape(entry.taskId)}"]`);
+    const settings = taskCard?.querySelector('details.task-settings');
+    if (settings) settings.open = true;
+    taskCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  return card;
+}
+
+function measureTypeLabel(type) {
+  return ({ slider: 'Rating scale', choice: 'Single choice', text: 'Open text', numeric: 'Number',
+    checkbox: 'Multiple choice', affect_grid: 'Affect grid', heart_rate: 'PPG heart-rate capture' })[type] || 'Survey item';
+}
+
+function commitMeasureFlow(window, entries) {
+  window.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
+  previewSession = window.id;
+  renderWindows();
+  renderQuestions();
+  renderPreviewTabs();
+  schedulePreview();
 }
 
 function setMeasureFeedback(message, isError = false) {
@@ -499,11 +616,16 @@ function addQ(obj, targetStep) {
   const windows = state.ema.scheduling.windows || [];
   if (!targetStep) {
     const preferred = windows.find(w => w.id === previewSession);
-    targetStep = preferred?.phase_sequence?.find(step => step.kind === 'ema') || surveySteps()[0]?.step;
+    const finalStep = preferred?.phase_sequence?.[preferred.phase_sequence.length - 1];
+    targetStep = finalStep?.kind === 'ema' ? finalStep : null;
+    if (!targetStep && preferred) {
+      targetStep = { kind: 'ema', id: genSId(), label: 'Survey', question_ids: [] };
+      preferred.phase_sequence.push(targetStep);
+    }
   }
   if (!targetStep && windows.length) {
     targetStep = { kind: 'ema', id: genSId(), question_ids: [] };
-    windows[0].phase_sequence.unshift(targetStep);
+    windows[0].phase_sequence.push(targetStep);
   }
   if (targetStep) (targetStep.question_ids || (targetStep.question_ids = [])).push(obj.id);
   state.ema.questions.push(obj);
@@ -532,26 +654,23 @@ document.getElementById('add-question-select').addEventListener('change', event 
       return;
     }
     if (!Array.isArray(targetWindow.phase_sequence)) targetWindow.phase_sequence = [];
-    if (targetWindow.phase_sequence.some(step => step.kind === 'task' && step.id === moduleId)) {
-      setMeasureFeedback(`${module.label} is already in ${targetWindow.label}.`);
-    } else {
-      module.enabled = true;
-      targetWindow.phase_sequence.push({ kind: 'task', id: moduleId, condition: null });
-      if (typeof renderModules === 'function') renderModules();
-      if (typeof renderWindows === 'function') renderWindows();
-      previewSession = targetWindow.id;
-      renderPreviewTabs();
-      renderMeasureComposer();
-      schedulePreview();
-      setMeasureFeedback(`${module.label} added to ${targetWindow.label}. Fine-tune it in Task settings.`);
-    }
+    module.enabled = true;
+    targetWindow.phase_sequence.push({ kind: 'task', id: moduleId, condition: null });
+    if (typeof renderModules === 'function') renderModules();
+    if (typeof renderWindows === 'function') renderWindows();
+    previewSession = targetWindow.id;
+    renderPreviewTabs();
+    renderMeasureComposer();
+    schedulePreview();
+    setMeasureFeedback(`${module.label} added to ${targetWindow.label}. Fine-tune it in Task settings.`);
     event.target.value = '';
     return;
   }
-  let targetStep = (targetWindow.phase_sequence || []).find(step => step.kind === 'ema');
+  const finalStep = targetWindow.phase_sequence?.[targetWindow.phase_sequence.length - 1];
+  let targetStep = finalStep?.kind === 'ema' ? finalStep : null;
   if (!targetStep) {
     targetStep = { kind: 'ema', id: genSId(), label: 'Survey', question_ids: [] };
-    targetWindow.phase_sequence.unshift(targetStep);
+    targetWindow.phase_sequence.push(targetStep);
   }
   const question = { id: genQId(), type, text: '', required: true, condition: null };
   if (type === 'slider') Object.assign(question, { min: 0, max: 100, step: 1, unit: null, anchors: ['', ''] });

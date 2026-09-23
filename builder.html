@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260923c">
+<link rel="stylesheet" href="css/builder.css?v=20260923d">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -249,20 +249,6 @@
         <label class="field-group"><span class="field-label">Add a measure</span>
           <select id="add-question-select">
             <option value="">Choose a measure…</option>
-            <optgroup label="Survey">
-              <option value="slider">Rating scale</option>
-              <option value="choice">Single choice</option>
-              <option value="text">Open text</option>
-              <option value="numeric">Number</option>
-              <option value="checkbox">Multiple choice</option>
-              <option value="affect_grid">Affect grid</option>
-              <option value="page_break">Page break</option>
-            </optgroup>
-            <optgroup label="Physiology">
-              <option value="heart_rate">PPG heart-rate capture</option>
-              <option value="task:epat">ePAT · phase adjustment</option>
-              <option value="task:hct">Heartbeat Counting Task</option>
-            </optgroup>
           </select>
         </label>
         <label class="field-group"><span class="field-label">Add to session</span>
@@ -274,8 +260,8 @@
       <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
 
       <div class="divider"></div>
-      <div class="section-title">Survey items</div>
-      <p class="field-hint">Drag to reorder. Insert page breaks for separate screens; reuse an item across survey steps when needed.</p>
+      <div class="section-title">Survey item details</div>
+      <p class="field-hint">Edit wording, response options, and branching here. Reorder the participant experience in the flow above.</p>
 
       <div class="toggle-row" style="margin-bottom: 16px;">
         <span class="toggle-label">Randomize Question Order (per page)</span>
@@ -514,12 +500,13 @@
 <!-- Scripts loaded in exact dependency order -->
 <script src="js/state.js?v=20260922b"></script>
 <script src="js/storage.js?v=20260922b"></script>
-<script src="js/library-utils.js?v=20260923a"></script>
-<script src="js/templates.js?v=20260923c"></script>
+<script src="js/library-utils.js?v=20260923b"></script>
+<script src="js/measure-flow-utils.js?v=20260923a"></script>
+<script src="js/templates.js?v=20260923d"></script>
 <script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260923c"></script>
+<script src="js/tabs/questions.js?v=20260923d"></script>
 <script src="js/tabs/schedule.js?v=20260923c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>

@@ -17,7 +17,13 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 
 Browse the standalone **Protocol Library** to review descriptions, burden, device requirements, validation status, and evidence links before opening an item in the Builder. Complete showcase protocols, reusable survey packs, and physiology presets demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
 
-The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Community contributions can be proposed through GitHub. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
+The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Researchers can create a protocol, survey pack, or physiology preset from their currently saved study, add it to **My Library** in one guided form, and download the contribution JSON without writing code. Official shared-catalog publication still uses review through GitHub. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
+
+## One ordered measure flow
+
+The Measures screen treats survey questions, PPG capture, ePAT, HCT, and every registered task module as peers in one draggable session list. A physiology task creates its own participant-screen boundary automatically. For example, dragging ePAT between two questions is compiled internally as `survey → ePAT → survey`; researchers do not have to build or name those phases. Page breaks are only needed when splitting adjacent survey questions across screens.
+
+Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
 
 The builder itself needs no account or backend. Hosting, automatic data return, and sending prompt links are separate so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 

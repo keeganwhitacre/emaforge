@@ -95,3 +95,37 @@ test("library JSON cannot introduce executable or unknown task engines", () => {
   };
   assert.equal(library.validateItem(unknownSetting).valid, false);
 });
+
+test("a saved study can become a validated personal protocol and round-trip through browser storage", () => {
+  const draft = readJson("library/protocols/daily-rhythm-sleep.json").protocol;
+  const item = library.createContribution(draft, {
+    kind: "protocol",
+    name: "My Daily Rhythm Study",
+    description: "A local reusable copy of the current study.",
+    source: "Researcher-created draft",
+    license: "CC0-1.0",
+    validation_status: "Contributor supplied; not independently reviewed."
+  });
+  const values = new Map();
+  const storage = { getItem: key => values.get(key) || null, setItem: (key, value) => values.set(key, value) };
+  library.savePersonalItem(item, storage);
+  const restored = library.loadPersonalLibrary(storage);
+  assert.equal(restored.length, 1);
+  assert.equal(restored[0].id, "personal-my-daily-rhythm-study");
+  assert.equal(restored[0].protocol.study.name, "Daily Rhythm & Sleep");
+});
+
+test("personal survey packs copy questions but cannot include executable content", () => {
+  const draft = readJson("library/protocols/daily-rhythm-sleep.json").protocol;
+  const item = library.createContribution(draft, {
+    kind: "question_pack",
+    name: "Rhythm Questions",
+    description: "Reusable questions from the current draft.",
+    source: "Researcher-created draft",
+    license: "CC0-1.0",
+    validation_status: "Not independently reviewed."
+  });
+  assert.equal(item.questions.length, draft.ema.questions.length);
+  assert.equal(library.validateItem(item).valid, true);
+  assert.equal(Object.hasOwn(item, "protocol"), false);
+});
