@@ -363,8 +363,9 @@ function interpolate(text, responses) {
  
     if (isPreview || !core) {
       // Preview mode — simulate
+      const simulatedDuration = isPreview ? Math.min(durationSec, 4) : durationSec;
       if (statusEl) {
-        statusEl.textContent = 'Preview: simulating…';
+        statusEl.textContent = 'Simulated preview — no camera access';
         statusEl.style.color = 'var(--fg-muted)';
       }
       let t = 0;
@@ -372,9 +373,9 @@ function interpolate(text, responses) {
         t++;
         const fakeBpm = 65 + Math.round(Math.random() * 10);
         if (bpmEl) bpmEl.textContent = String(fakeBpm);
-        if (ringEl) ringEl.style.strokeDashoffset = String(circ * (1 - t / durationSec));
-        if (statusEl) statusEl.textContent = `${durationSec - t}s remaining`;
-        if (t >= durationSec) {
+        if (ringEl) ringEl.style.strokeDashoffset = String(circ * (1 - t / simulatedDuration));
+        if (statusEl) statusEl.textContent = `Simulating · ${simulatedDuration - t}s remaining`;
+        if (t >= simulatedDuration) {
           clearInterval(sim);
           recordResponse(q.id, fakeBpm);
           if (statusEl) statusEl.textContent = displayBpm

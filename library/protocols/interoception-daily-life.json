@@ -9,6 +9,23 @@
   "estimated_burden": "Approximately 2–4 minutes at midday and 5–8 minutes for morning/evening task sessions for 7 days.",
   "validation_status": "Research demonstration; device, population, feasibility, and inferential validity must be established by the study team.",
   "device_requirements": "HTTPS plus a compatible rear camera and controllable torch for camera PPG, ePAT, and HCT.",
+  "references": [
+    {
+      "label": "Plans et al. (2021), Measuring interoception: The Phase Adjustment Task",
+      "url": "https://doi.org/10.1016/j.biopsycho.2021.108171",
+      "note": "Paradigm underlying ePAT."
+    },
+    {
+      "label": "Palmer et al. (2025), Refinements of the Phase Adjustment Task (PAT 2.0)",
+      "url": "https://doi.org/10.31219/osf.io/4qtwv",
+      "note": "PAT methodological refinement."
+    },
+    {
+      "label": "Zong et al. (2003), WABP pulse-onset algorithm",
+      "url": "https://physionet.org/physiotools/wabp/wabp.c",
+      "note": "Signal-processing implementation reference."
+    }
+  ],
   "protocol": {
     "schema_version": "2.0.0",
     "study": {

@@ -9,7 +9,7 @@ function renderQuestions() {
   const list = document.getElementById('question-list');
   list.innerHTML = '';
   if (!state.ema.questions.length) {
-    list.innerHTML = '<p class="questions-empty">Questions are optional. Add one here or add a survey to a session in Schedule.</p>';
+    list.innerHTML = '<p class="questions-empty">No survey items yet. This study can remain physiology-only, or you can add a survey measure above.</p>';
   }
   
   let displayNum = 1; // Track the visual question number
@@ -23,7 +23,50 @@ function renderQuestions() {
       displayNum++;
     }
   });
+  renderMeasureComposer();
   if (typeof renderBuilderShell === 'function') renderBuilderShell();
+}
+
+function renderMeasureComposer() {
+  const sessionSelect = document.getElementById('add-measure-session');
+  const flow = document.getElementById('measure-flow');
+  const windows = state.ema.scheduling.windows || [];
+  if (sessionSelect) {
+    const previous = sessionSelect.value;
+    sessionSelect.innerHTML = windows.length
+      ? windows.map(w => `<option value="${escH(w.id)}">${escH(w.label || 'Untitled session')}</option>`).join('')
+      : '<option value="">Add a session first</option>';
+    const preferred = windows.some(w => w.id === previous) ? previous
+      : windows.some(w => w.id === previewSession) ? previewSession
+      : windows[0]?.id || '';
+    sessionSelect.value = preferred;
+  }
+  if (!flow) return;
+  if (!windows.length) {
+    flow.innerHTML = '<div class="measure-flow-heading"><strong>Participant flow</strong><span>Add a session in Schedule to place measures.</span></div>';
+    return;
+  }
+  const moduleNames = Object.fromEntries((state.modules || []).map(module => [module.id, module.label]));
+  flow.innerHTML = `
+    <div class="measure-flow-heading"><strong>Participant flow</strong><span>Measures run left to right · reorder in Schedule</span></div>
+    ${windows.map(window => {
+      const steps = window.phase_sequence || [];
+      const stepHtml = steps.length ? steps.map(step => {
+        if (step.kind === 'task') {
+          return `<span class="measure-step task">Physiology <em>${escH(moduleNames[step.id] || step.id)}</em></span>`;
+        }
+        const count = (step.question_ids || []).filter(id => state.ema.questions.some(q => q.id === id && q.type !== 'page_break')).length;
+        return `<span class="measure-step">Survey <em>${count} item${count === 1 ? '' : 's'}</em></span>`;
+      }).join('') : '<span class="field-hint">No measures yet</span>';
+      return `<div class="measure-session"><span class="measure-session-name">${escH(window.label || 'Untitled session')}</span><div class="measure-steps">${stepHtml}</div></div>`;
+    }).join('')}`;
+}
+
+function setMeasureFeedback(message, isError = false) {
+  const feedback = document.getElementById('measure-add-feedback');
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.style.color = isError ? 'var(--red)' : 'var(--fg-2)';
 }
 
 // Add displayNum as the third argument here
@@ -473,6 +516,43 @@ function addQ(obj, targetStep) {
 document.getElementById('add-question-select').addEventListener('change', event => {
   const type = event.target.value;
   if (!type) return;
+  const targetWindowId = document.getElementById('add-measure-session')?.value;
+  const targetWindow = state.ema.scheduling.windows.find(window => window.id === targetWindowId);
+  if (!targetWindow) {
+    setMeasureFeedback('Add a session in Schedule before adding a measure.', true);
+    event.target.value = '';
+    return;
+  }
+  if (type.startsWith('task:')) {
+    const moduleId = type.slice(5);
+    const module = state.modules.find(candidate => candidate.id === moduleId);
+    if (!module) {
+      setMeasureFeedback('That task is not available in this build.', true);
+      event.target.value = '';
+      return;
+    }
+    if (!Array.isArray(targetWindow.phase_sequence)) targetWindow.phase_sequence = [];
+    if (targetWindow.phase_sequence.some(step => step.kind === 'task' && step.id === moduleId)) {
+      setMeasureFeedback(`${module.label} is already in ${targetWindow.label}.`);
+    } else {
+      module.enabled = true;
+      targetWindow.phase_sequence.push({ kind: 'task', id: moduleId, condition: null });
+      if (typeof renderModules === 'function') renderModules();
+      if (typeof renderWindows === 'function') renderWindows();
+      previewSession = targetWindow.id;
+      renderPreviewTabs();
+      renderMeasureComposer();
+      schedulePreview();
+      setMeasureFeedback(`${module.label} added to ${targetWindow.label}. Fine-tune it in Task settings.`);
+    }
+    event.target.value = '';
+    return;
+  }
+  let targetStep = (targetWindow.phase_sequence || []).find(step => step.kind === 'ema');
+  if (!targetStep) {
+    targetStep = { kind: 'ema', id: genSId(), label: 'Survey', question_ids: [] };
+    targetWindow.phase_sequence.unshift(targetStep);
+  }
   const question = { id: genQId(), type, text: '', required: true, condition: null };
   if (type === 'slider') Object.assign(question, { min: 0, max: 100, step: 1, unit: null, anchors: ['', ''] });
   if (type === 'choice' || type === 'checkbox') question.options = ['', ''];
@@ -484,7 +564,10 @@ document.getElementById('add-question-select').addEventListener('change', event 
     text: 'Measuring your heart rate…', duration_sec: 30, report_as: 'bpm'
   });
   if (type === 'page_break') delete question.text;
-  addQ(question);
+  addQ(question, targetStep);
+  previewSession = targetWindow.id;
+  renderPreviewTabs();
+  setMeasureFeedback(`${type === 'heart_rate' ? 'PPG heart-rate capture' : 'Survey item'} added to ${targetWindow.label}.`);
   event.target.value = '';
   const card = document.querySelector('#question-list .q-card:last-child');
   if (card) {

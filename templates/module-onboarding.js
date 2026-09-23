@@ -115,6 +115,22 @@ const OnboardingSession = (function() {
       startBtn.style.display = "none";
       if (statusEl) statusEl.textContent = "Running checks…";
 
+      if (isPreview) {
+        ["camera", "torch", "audio", "signal"].forEach(id => {
+          checks[id] = true;
+          setCheck(id, "testing", "Simulating…");
+        });
+        await new Promise(resolve => setTimeout(resolve, 500));
+        ["camera", "torch", "audio", "signal"].forEach(id => setCheck(id, "pass", "Simulated in preview"));
+        if (statusEl) {
+          statusEl.textContent = "Preview complete — no sensors were accessed.";
+          statusEl.style.color = "var(--accent-green)";
+        }
+        const nextEl = document.getElementById("ob-device-next");
+        if (nextEl) nextEl.style.display = "block";
+        return;
+      }
+
       // Camera
       try {
         setCheck("camera", "testing", "Requesting access…");

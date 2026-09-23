@@ -110,6 +110,32 @@ test("response expiry permits on-time starts only and enforces the grace deadlin
   assert.equal(utils.isResponseWindowHardExpired(policy, Date.parse("2026-01-01T13:10:01.000Z")), true);
 });
 
+test("response-window boundaries preserve the intended grace semantics", () => {
+  const sentAt = Date.parse("2026-01-01T12:00:00.000Z");
+  const policy = utils.buildResponseWindowPolicy(String(sentAt), {
+    expiry_minutes: 60,
+    grace_minutes: 10
+  });
+
+  // Starting at the exact expiry boundary is accepted; one millisecond later
+  // is a fresh late start and is rejected.
+  assert.equal(utils.canStartResponseWindow(policy, policy.expiresAtMs), true);
+  assert.equal(utils.canStartResponseWindow(policy, policy.expiresAtMs + 1), false);
+  // An on-time session remains valid through the exact grace boundary and is
+  // hard-expired immediately afterward.
+  assert.equal(utils.isResponseWindowHardExpired(policy, policy.graceUntilMs), false);
+  assert.equal(utils.isResponseWindowHardExpired(policy, policy.graceUntilMs + 1), true);
+});
+
+test("missing prompt timestamps cannot accidentally expire a generic link", () => {
+  const policy = utils.buildResponseWindowPolicy("not-a-timestamp", {
+    expiry_minutes: 60,
+    grace_minutes: 10
+  });
+  assert.equal(policy.enforced, false);
+  assert.equal(utils.canStartResponseWindow(policy, Number.MAX_SAFE_INTEGER), true);
+});
+
 test("zero expiry explicitly disables response-window enforcement", () => {
   const policy = utils.buildResponseWindowPolicy("1767268800000", {
     expiry_minutes: 0,

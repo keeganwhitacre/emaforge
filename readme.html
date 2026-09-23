@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentation — EMA Forge</title>
-  <link rel="stylesheet" href="css/studio.css?v=20260923b">
+  <link rel="stylesheet" href="css/studio.css?v=20260923c">
   <script>
     // Apply theme immediately to prevent flashing
     const savedTheme = localStorage.getItem('ema-forge-theme') ||
@@ -858,9 +858,9 @@
           <div class="docs-nav-title">Building a Study</div>
           <a href="#study-tab" class="docs-nav-link">Study Tab</a>
           <a href="#onboarding" class="docs-nav-link">Onboarding &amp; Consent</a>
-          <a href="#questions-tab" class="docs-nav-link">Questions Tab</a>
+          <a href="#questions-tab" class="docs-nav-link">Measures</a>
           <a href="#schedule-tab" class="docs-nav-link">Sessions &amp; Scheduling</a>
-          <a href="#tasks-tab" class="docs-nav-link">Tasks Tab</a>
+          <a href="#tasks-tab" class="docs-nav-link">Task settings</a>
           <a href="#preview" class="docs-nav-link">Live Preview</a>
         </div>
         <div class="docs-nav-group">
@@ -1102,7 +1102,7 @@
               <tr>
                 <td>EMA question types (slider, choice, multi, text, number)</td>
                 <td><span class="status-pill stable">STABLE</span></td>
-                <td>See <a href="#questions-tab">Questions Tab</a>.</td>
+                <td>See <a href="#questions-tab">Measures</a>.</td>
               </tr>
               <tr>
                 <td>Affect Grid (valence × arousal)</td>
@@ -1264,7 +1264,8 @@
           </div>
 
           <h2 id="protocol-library">Protocol Library</h2>
-          <p>The Builder's Protocol Library provides three kinds of reusable building blocks:</p>
+          <p>The standalone <a href="library.html">Protocol Library</a> lets you browse descriptions, burden, device
+            requirements, validation status, and linked evidence before opening an item in the Builder. It provides three kinds of reusable building blocks:</p>
           <ul>
             <li><strong>Complete protocols</strong> replace the current draft and demonstrate end-to-end study flows.</li>
             <li><strong>Question packs</strong> add a new survey step to the first session while safely remapping question,
@@ -1322,9 +1323,11 @@
           <!-- QUESTIONS                                                   -->
           <!-- ========================================================= -->
 
-          <h2 id="questions-tab">Questions Tab</h2>
-          <p>The Questions tab is where you write your survey items. Each question appears as a card — click to expand
-            it, drag to reorder. Changes show up live in the phone preview as you type.</p>
+          <h2 id="questions-tab">Measures</h2>
+          <p>Measures is the single entry point for survey items and physiology. Choose a session, then add a rating,
+            response item, PPG heart-rate capture, ePAT, or heartbeat-counting task. The participant-flow summary shows
+            survey blocks and physiological tasks together; Schedule controls their exact order. Survey items appear as
+            expandable cards and update the participant preview as you type.</p>
 
           <h3>Question types</h3>
           <table>
@@ -1421,8 +1424,8 @@
           <h2 id="schedule-tab">Sessions &amp; Scheduling</h2>
           <p>New studies start with one daily ePAT session and no survey questions. Choose the study length and active
             days, then add sessions as needed. Each session has a time window and an ordered participant flow. Add survey
-            questions, PPG heart-rate capture, ePAT, or heartbeat counting from <strong>Add to session</strong>. Adding a
-            task enables its module; advanced settings are under Measurement Settings. Survey questions are optional.</p>
+            questions, PPG heart-rate capture, ePAT, or heartbeat counting from <strong>Measures</strong> or directly from
+            a session. Adding a task enables its module; advanced controls stay under Task settings. Survey questions are optional.</p>
 
           <h3>Days &amp; windows</h3>
           <ul>
@@ -1435,7 +1438,7 @@
 
           <h3>Participant flow</h3>
           <p>Drag the cards or use their arrow buttons to change the order. Add as many separate survey steps as your
-            protocol needs. The Questions tab assigns each question to specific steps. Each card has an Options control
+            protocol needs. Measures assigns each survey item to specific steps. Each card has an Options control
             for its name or task selection and conditional task rules. The export stores this order as
             <code>phase_sequence</code>, with <code>question_ids</code> on every survey step.</p>
           <p>The available steps are:</p>
@@ -1483,8 +1486,8 @@
           <!-- TASKS                                                       -->
           <!-- ========================================================= -->
 
-          <h2 id="tasks-tab">Tasks Tab</h2>
-          <p>Add a task to a session from Schedule to enable it automatically. In Tasks you can adjust its settings or
+          <h2 id="tasks-tab">Task settings</h2>
+          <p>Add a task to a session from Measures or Schedule to enable it automatically. In Task settings you can adjust its settings or
             disable a module; a disabled task still assigned to a session will block export until re-enabled or removed.</p>
           <p>Currently available: <strong>ePAT</strong>, <strong>HCT</strong>, and experimental <strong>IAT</strong>. No camera is
             required for the IAT — it is the only task module that works on any smartphone without hardware constraints.
@@ -1495,13 +1498,13 @@
           <!-- ========================================================= -->
 
           <h2 id="preview">Live Preview</h2>
-          <p>The right-hand iframe in the Builder is a fully functional participant app, re-stitched on every edit. It
-            runs in <strong>preview mode</strong> (<code>__PREVIEW_MODE__ = true</code>), which disables link expiry and
-            session locking so you can walk through the same session repeatedly. Clicking <strong>Reset</strong> clears
-            the preview's local storage without touching your real project.</p>
-          <p>Preview is the fastest way to catch issues <em>before</em> you export anything. Touch-test it on your own
-            phone by opening the Builder's URL on your device — the preview iframe works over any local network you're
-            on.</p>
+          <p>The Builder contains a live participant app and the top-bar <strong>Preview</strong> button opens it in a
+            full-screen iPhone-sized frame. Preview mode (<code>__PREVIEW_MODE__ = true</code>) disables link expiry and
+            session locking so you can repeat a session. It also clearly simulates camera access, flashlight checks,
+            PPG, calibration, ePAT, and HCT values; the Builder preview never asks for sensor permission.</p>
+          <p>Click <strong>Reset</strong> to restart the rendered session without changing the study draft. Preview is for
+            flow and usability checks, not device compatibility or measurement validation; those checks still require a
+            deployed HTTPS study on a supported phone.</p>
 
           <!-- ========================================================= -->
           <!-- EXPORT                                                      -->
@@ -1824,7 +1827,7 @@ git push -u origin main
               </tr>
               <tr>
                 <td><code>question_type</code></td>
-                <td>One of the types listed in <a href="#questions-tab">Questions Tab</a>.</td>
+                <td>One of the types listed in <a href="#questions-tab">Measures</a>.</td>
               </tr>
               <tr>
                 <td><code>presentation_order</code></td>

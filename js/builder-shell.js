@@ -5,9 +5,9 @@
 const builderSections = {
   study: ["Overview", "Set up your study identity, participant experience, and data output."],
   onboarding: ["Onboarding", "Prepare the welcome and consent experience for participants."],
-  questions: ["Questions", "Create and organize the questions participants will answer."],
+  questions: ["Measures", "Add survey items and physiological tasks to the same participant flow."],
   schedule: ["Schedule", "Choose when sessions open and what participants do in each one."],
-  tasks: ["Tasks", "Configure the measurements and tasks used in your sessions."],
+  tasks: ["Task settings", "Fine-tune task duration, trials, feedback, and quality controls."],
   deployment: ["Review & Deploy", "Review, export, host, and prepare participant links."]
 };
 
@@ -67,13 +67,14 @@ function renderBuilderShell() {
 
   const questions = state.ema.questions || [];
   const count = questions.filter(q => q.type !== "page_break").length;
-  const blocks = state.ema.scheduling.windows.reduce((total, w) =>
-    total + (w.phase_sequence || []).filter(step => step.kind === "ema").length, 0);
+  const taskCount = state.ema.scheduling.windows.reduce((total, w) =>
+    total + (w.phase_sequence || []).filter(step => step.kind === "task").length, 0) +
+    questions.filter(question => question.type === "heart_rate").length;
   const report = EMAForgeProtocolValidator.validate(buildConfig());
   const { errors, warnings, issues } = report;
   renderSectionIssues(issues);
   document.getElementById("summary-question-count").textContent = count;
-  document.getElementById("summary-block-count").textContent = blocks;
+  document.getElementById("summary-block-count").textContent = taskCount;
   document.getElementById("summary-issue-count").textContent = issues.filter(issue => sectionForIssue(issue) === "questions").length;
 
   const hasConsent = !issues.some(issue => issue.code === "consent_placeholder") &&
@@ -134,21 +135,27 @@ document.getElementById("start-template-btn").addEventListener("click", () => {
   document.getElementById("import-modal").classList.add("open");
 });
 document.getElementById("builder-preview-btn").addEventListener("click", () => {
-  if (window.matchMedia("(max-width: 1050px)").matches) {
-    document.getElementById("preview-panel").classList.toggle("open-mobile");
-  } else {
-    document.getElementById("preview-panel").scrollIntoView({ behavior: "smooth" });
-    document.getElementById("preview-iframe").focus();
-  }
+  const panel = document.getElementById("preview-panel");
+  panel.classList.remove("open-mobile");
+  panel.classList.add("preview-fullscreen");
+  document.body.classList.add("preview-open");
+  document.getElementById("close-preview-btn").focus();
 });
 document.getElementById("close-preview-btn").addEventListener("click", () => {
-  document.getElementById("preview-panel").classList.remove("open-mobile");
+  document.getElementById("preview-panel").classList.remove("open-mobile", "preview-fullscreen");
+  document.body.classList.remove("preview-open");
+  document.getElementById("builder-preview-btn").focus();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && document.getElementById("preview-panel").classList.contains("preview-fullscreen")) {
+    document.getElementById("close-preview-btn").click();
+  }
 });
 document.addEventListener("click", event => {
   const menu = document.querySelector(".project-menu");
   if (menu.open && !menu.contains(event.target)) menu.open = false;
 });
 renderBuilderShell();
-if (window.location.hash === "#library") {
+if (window.location.hash === "#library" || new URLSearchParams(window.location.search).has("library")) {
   document.getElementById("import-modal").classList.add("open");
 }

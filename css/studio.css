@@ -25,19 +25,21 @@
 
 /* Light Mode Overrides */
 [data-theme="light"] {
-  --bg: #f5f2ec;
-  --bg-1: #fbfaf7;
-  --bg-2: #eeebe4;
-  --bg-3: #e3dfd6;
-  --border: #d5d0c6;
-  --border-hi: #a9a39a;
-  --fg: #182027;
-  --fg-2: #515b62;
-  --fg-3: #737b80;
-  --accent: #9d4037;
-  --accent-dim: rgba(157,64,55,0.10);
-  --accent-hover: #87362f;
-  --shadow: 0 12px 30px rgba(62,55,46,0.10);
+  /* Cool neutral work surfaces keep the red identity legible without
+     washing the whole product in a single beige tone. */
+  --bg: #f6f8fa;
+  --bg-1: #ffffff;
+  --bg-2: #eef1f4;
+  --bg-3: #e2e6ea;
+  --border: #d0d7de;
+  --border-hi: #8c959f;
+  --fg: #1f2328;
+  --fg-2: #4a5562;
+  --fg-3: #6e7781;
+  --accent: #a63f35;
+  --accent-dim: rgba(166,63,53,0.11);
+  --accent-hover: #8d342c;
+  --shadow: 0 12px 32px rgba(31,35,40,0.14);
 }
 
 ::selection {

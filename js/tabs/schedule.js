@@ -59,6 +59,7 @@ function renderWindows() {
     migrateWindow(w);
     list.appendChild(buildWindowCard(w, i));
   });
+  if (typeof renderMeasureComposer === 'function') renderMeasureComposer();
 }
 
 function syncDailyPromptCount() {
@@ -302,7 +303,7 @@ function buildStepControls(step, w) {
     wrap.appendChild(name);
     const hint = document.createElement('span');
     hint.className = 'field-hint';
-    hint.textContent = `${(step.question_ids || []).filter(id => state.ema.questions.some(q => q.id === id && q.type !== 'page_break')).length} questions. Assign or reuse questions in the Questions tab.`;
+    hint.textContent = `${(step.question_ids || []).filter(id => state.ema.questions.some(q => q.id === id && q.type !== 'page_break')).length} survey items. Assign or reuse them in Measures.`;
     wrap.appendChild(hint);
 
   } if (step.kind === 'task') {

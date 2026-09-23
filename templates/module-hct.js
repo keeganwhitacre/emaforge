@@ -298,6 +298,8 @@ const HCT = (function() {
       // simulation regardless of whether the core happens to be loaded.
       show("screen-hct-sensor-check");
       const btn = document.getElementById("hct-sensor-start-btn");
+      const statusEl = document.getElementById("hct-sensor-status");
+      if (statusEl) statusEl.textContent = "Simulated signal check — no camera access";
       if (btn) {
         btn.disabled = false;
         btn.textContent = "Start counting →";
@@ -471,15 +473,16 @@ const HCT = (function() {
       intStartedPerfMs = performance.now();
       const FAKE_BPM = 72;
       const fakeBeats = Math.round((item.duration_sec * FAKE_BPM) / 60);
+      const previewDuration = isPreview ? Math.min(item.duration_sec, 4) : item.duration_sec;
       const start = Date.now();
       intervalTimer = setInterval(() => {
         const elapsed = (Date.now() - start) / 1000;
-        const remaining = Math.max(0, item.duration_sec - elapsed);
+        const remaining = Math.max(0, previewDuration - elapsed);
         if (timerEl && SHOW_TIMER) {
           const m = Math.floor(elapsed / 60), s = Math.floor(elapsed % 60);
           timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
         }
-        if (ringFill) ringFill.style.strokeDashoffset = circ * (1 - Math.min(1, elapsed / item.duration_sec));
+        if (ringFill) ringFill.style.strokeDashoffset = circ * (1 - Math.min(1, elapsed / previewDuration));
         if (remaining <= 0) {
           clearInterval(intervalTimer);
           for (let i = 0; i < fakeBeats; i++) {

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protocol Library — EMA Forge</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="css/studio.css?v=20260923c">
+  <link rel="stylesheet" href="css/library.css?v=20260923c">
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('ema-forge-theme') || 'light');
+  </script>
+</head>
+<body>
+  <header class="library-topbar">
+    <a class="library-brand" href="index.html" aria-label="EMA Forge home">
+      <span class="topbar-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14"/><polyline points="4,6 8,6 10,3 13,9 15,6 20,6"/></svg></span>
+      EMA Forge
+    </a>
+    <nav aria-label="Primary"><a href="builder.html">Builder</a><a href="dashboard.html">Analyze</a><a href="readme.html">Documentation</a></nav>
+  </header>
+
+  <main class="library-shell">
+    <section class="library-hero">
+      <p class="library-eyebrow">Open research components</p>
+      <h1>Protocol Library</h1>
+      <p>Preview complete EMA protocols, reusable survey packs, and physiological task presets before bringing them into the Builder.</p>
+      <div class="library-principles"><span>Inspectable JSON</span><span>No uploaded code</span><span>Evidence disclosed</span><span>Community contribution ready</span></div>
+    </section>
+
+    <section class="library-toolbar" aria-label="Library filters">
+      <label><span class="sr-only">Search library</span><input id="library-search" type="search" placeholder="Search protocols, tasks, or features…"></label>
+      <div class="library-filters" role="group" aria-label="Item type">
+        <button class="active" type="button" data-kind="all">All</button>
+        <button type="button" data-kind="protocol">Protocols</button>
+        <button type="button" data-kind="question_pack">Survey packs</button>
+        <button type="button" data-kind="task_preset">Physiology</button>
+      </div>
+    </section>
+
+    <p id="library-page-status" class="library-page-status" aria-live="polite">Loading library…</p>
+    <section id="library-page-grid" class="library-page-grid" aria-label="Library items"></section>
+
+    <section class="library-contribution">
+      <div><p class="library-eyebrow">Community library</p><h2>Share inspectable research components</h2><p>Contributions use versioned JSON, disclose sources and validation status, and cannot execute remote code.</p></div>
+      <a class="btn" href="https://github.com/keeganwhitacre/emaforge/tree/main/library" target="_blank" rel="noopener noreferrer">Contribution guide ↗</a>
+    </section>
+  </main>
+
+  <div class="modal-overlay" id="library-detail-modal" role="dialog" aria-modal="true" aria-labelledby="library-detail-title">
+    <article class="library-detail modal-box">
+      <button type="button" class="modal-close" id="library-detail-close" aria-label="Close details">✕</button>
+      <p class="library-eyebrow" id="library-detail-kind"></p>
+      <h2 id="library-detail-title"></h2>
+      <p class="library-detail-description" id="library-detail-description"></p>
+      <dl id="library-detail-meta"></dl>
+      <div id="library-detail-references" class="library-detail-references"></div>
+      <div class="library-detail-actions"><a class="btn btn-primary" id="library-use-link" href="builder.html#library">Open in Builder</a><a class="btn" id="library-json-link" href="#" target="_blank">Inspect JSON ↗</a></div>
+    </article>
+  </div>
+
+  <script src="js/library-utils.js?v=20260923a"></script>
+  <script src="js/library-page.js?v=20260923c"></script>
+</body>
+</html>

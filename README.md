@@ -15,7 +15,7 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 
 ## Protocol library
 
-Open **Protocol Library** from the builder overview to use a complete showcase protocol or add a reusable question pack or physiology task preset to your current study. The included protocols demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
+Browse the standalone **Protocol Library** to review descriptions, burden, device requirements, validation status, and evidence links before opening an item in the Builder. Complete showcase protocols, reusable survey packs, and physiology presets demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
 
 The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Community contributions can be proposed through GitHub. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
 

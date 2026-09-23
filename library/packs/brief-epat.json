@@ -9,6 +9,23 @@
   "estimated_burden": "Approximately 5–7 minutes, depending on signal-quality retries.",
   "validation_status": "Research demonstration; not independently validated for clinical or confirmatory use.",
   "device_requirements": "HTTPS plus a compatible rear camera and controllable torch.",
+  "references": [
+    {
+      "label": "Plans et al. (2021), Measuring interoception: The Phase Adjustment Task",
+      "url": "https://doi.org/10.1016/j.biopsycho.2021.108171",
+      "note": "Original PAT paradigm."
+    },
+    {
+      "label": "Palmer et al. (2025), Refinements of the Phase Adjustment Task (PAT 2.0)",
+      "url": "https://doi.org/10.31219/osf.io/4qtwv",
+      "note": "Methodological refinement preprint."
+    },
+    {
+      "label": "Original Swift/iOS reference implementation",
+      "url": "https://github.com/huma-engineering/Phase-Adjustment-Task",
+      "note": "Implementation lineage; EMA Forge is an independent browser adaptation."
+    }
+  ],
   "module_id": "epat",
   "settings": {
     "trials": 8,

@@ -11,8 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="stylesheet" href="css/studio.css?v=20260923b">
-<link rel="stylesheet" href="css/builder.css?v=20260923b">
+<link rel="stylesheet" href="css/studio.css?v=20260923c">
+<link rel="stylesheet" href="css/builder.css?v=20260923c">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -82,12 +82,12 @@
     <nav class="topbar-tabs" aria-label="Study builder sections">
       <button class="tab-btn active" data-tab="study" aria-current="page">Overview</button>
       <button class="tab-btn" data-tab="onboarding">Onboarding</button>
-      <button class="tab-btn" data-tab="questions">Questions</button>
+      <button class="tab-btn" data-tab="questions">Measures</button>
       <button class="tab-btn" data-tab="schedule">Schedule</button>
-      <button class="tab-btn" data-tab="tasks">Tasks</button>
+      <button class="tab-btn" data-tab="tasks">Task settings</button>
       <button class="tab-btn" data-tab="deployment">Review &amp; Deploy</button>
     </nav>
-    <div class="sidebar-footer"><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
+    <div class="sidebar-footer"><a href="library.html">Protocol library</a><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
   </aside>
 
   <!-- ========== CONFIG PANEL ========== -->
@@ -237,15 +237,45 @@
       </div>
     </div>
 
-    <!-- QUESTIONS TAB -->
+    <!-- MEASURES TAB -->
     <div class="config-section" id="tab-questions">
       <div class="question-summary" aria-live="polite">
-        <div><strong id="summary-question-count">0</strong><span>Questions</span></div>
-        <div><strong id="summary-block-count">0</strong><span>Survey steps</span></div>
-        <div><strong id="summary-issue-count">0</strong><span>Question issues</span></div>
+        <div><strong id="summary-question-count">0</strong><span>Survey items</span></div>
+        <div><strong id="summary-block-count">0</strong><span>Physiology tasks</span></div>
+        <div><strong id="summary-issue-count">0</strong><span>Measure issues</span></div>
       </div>
-      <p class="field-hint">Drag questions to reorder. Insert page breaks to group questions onto separate screens.</p>
-      <p class="field-hint">Select the survey steps where each question appears. You can reuse a question in multiple steps or sessions.</p>
+
+      <div class="measure-add-panel">
+        <label class="field-group"><span class="field-label">Add a measure</span>
+          <select id="add-question-select">
+            <option value="">Choose a measure…</option>
+            <optgroup label="Survey">
+              <option value="slider">Rating scale</option>
+              <option value="choice">Single choice</option>
+              <option value="text">Open text</option>
+              <option value="numeric">Number</option>
+              <option value="checkbox">Multiple choice</option>
+              <option value="affect_grid">Affect grid</option>
+              <option value="page_break">Page break</option>
+            </optgroup>
+            <optgroup label="Physiology">
+              <option value="heart_rate">PPG heart-rate capture</option>
+              <option value="task:epat">ePAT · phase adjustment</option>
+              <option value="task:hct">Heartbeat Counting Task</option>
+            </optgroup>
+          </select>
+        </label>
+        <label class="field-group"><span class="field-label">Add to session</span>
+          <select id="add-measure-session" aria-label="Session for new measure"></select>
+        </label>
+        <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
+      </div>
+
+      <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
+
+      <div class="divider"></div>
+      <div class="section-title">Survey items</div>
+      <p class="field-hint">Drag to reorder. Insert page breaks for separate screens; reuse an item across survey steps when needed.</p>
 
       <div class="toggle-row" style="margin-bottom: 16px;">
         <span class="toggle-label">Randomize Question Order (per page)</span>
@@ -256,21 +286,6 @@
       </div>
 
       <div class="question-list" id="question-list"></div>
-      <label class="question-add field-group"><span class="field-label">Add a question or measure</span>
-        <select id="add-question-select">
-          <option value="">Choose a type…</option>
-          <option value="slider">Rating scale</option>
-          <option value="choice">Single choice</option>
-          <option value="text">Open text</option>
-          <optgroup label="More question types">
-            <option value="numeric">Number</option>
-            <option value="checkbox">Multiple choice</option>
-            <option value="affect_grid">Affect grid</option>
-            <option value="heart_rate">PPG heart-rate capture</option>
-            <option value="page_break">Page break</option>
-          </optgroup>
-        </select>
-      </label>
     </div>
 
     <!-- SCHEDULE TAB -->
@@ -420,7 +435,7 @@
     </div>
     <div id="preview-viewport">
       <div class="phone-shell">
-        <div class="phone-notch"></div>
+        <div class="phone-notch" aria-hidden="true"></div>
         <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
       </div>
     </div>
@@ -500,18 +515,18 @@
 <script src="js/state.js?v=20260922b"></script>
 <script src="js/storage.js?v=20260922b"></script>
 <script src="js/library-utils.js?v=20260923a"></script>
-<script src="js/templates.js?v=20260923a"></script>
+<script src="js/templates.js?v=20260923c"></script>
 <script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260922b"></script>
-<script src="js/tabs/schedule.js?v=20260922c"></script>
+<script src="js/tabs/questions.js?v=20260923c"></script>
+<script src="js/tabs/schedule.js?v=20260923c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
 <script src="js/tabs/deployment.js?v=20260922d"></script>
-<script src="js/preview.js?v=20260922b"></script>
+<script src="js/preview.js?v=20260923c"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260922d"></script>
+<script src="js/export.js?v=20260923c"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -549,6 +564,6 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260922b"></script>
+<script src="js/builder-shell.js?v=20260923c"></script>
 </body>
 </html>

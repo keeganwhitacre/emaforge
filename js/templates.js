@@ -45,6 +45,14 @@ function renderProtocolLibrary(items) {
   container.querySelectorAll('.library-card').forEach(card => {
     card.addEventListener('click', () => installCatalogItem(card.dataset.libraryId));
   });
+  const requestedId = new URLSearchParams(window.location.search).get('library');
+  const requestedCard = requestedId && container.querySelector(`[data-library-id="${CSS.escape(requestedId)}"]`);
+  if (requestedCard) {
+    requestedCard.classList.add('requested');
+    requestedCard.scrollIntoView({ block: 'center' });
+    const status = document.getElementById('library-status');
+    if (status) status.textContent = `Selected “${requestedCard.querySelector('strong')?.textContent || requestedId}” · review it, then choose the install action.`;
+  }
 }
 
 async function fetchCatalogItem(id) {

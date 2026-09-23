@@ -1,0 +1,54 @@
+html, body { min-height: 100%; height: auto; overflow: auto; background: var(--bg); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.library-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; min-height: 60px; padding: 0 28px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg-1) 94%, transparent); backdrop-filter: blur(12px); }
+.library-brand { display: flex; align-items: center; gap: 9px; color: var(--fg); text-decoration: none; font-weight: 700; }
+.library-topbar nav { display: flex; gap: 22px; margin-left: auto; }
+.library-topbar nav a { color: var(--fg-2); text-decoration: none; font-size: 12px; }
+.library-topbar nav a:hover { color: var(--accent); }
+.library-shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 62px 0 80px; }
+.library-hero { max-width: 780px; }
+.library-eyebrow { margin: 0 0 9px; color: var(--accent); font-size: 10px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.library-hero h1 { font-size: clamp(36px,5vw,56px); letter-spacing: -.04em; line-height: 1; }
+.library-hero > p:not(.library-eyebrow) { max-width: 690px; margin-top: 18px; color: var(--fg-2); font-size: 16px; line-height: 1.65; }
+.library-principles { display: flex; flex-wrap: wrap; margin-top: 28px; border-top: 1px solid var(--border-hi); border-bottom: 1px solid var(--border); }
+.library-principles span { padding: 9px 16px; border-right: 1px solid var(--border); color: var(--fg-2); font-size: 11px; }
+.library-principles span:first-child { padding-left: 0; }
+.library-toolbar { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-top: 52px; padding: 14px; border: 1px solid var(--border); background: var(--bg-1); }
+.library-toolbar label { flex: 1; }
+.library-toolbar input { max-width: 470px; background: var(--bg-1); }
+.library-filters { display: flex; gap: 4px; }
+.library-filters button { padding: 7px 10px; border: 1px solid transparent; background: transparent; color: var(--fg-2); font: 11px var(--font); cursor: pointer; }
+.library-filters button.active { border-color: var(--border-hi); background: var(--bg-2); color: var(--fg); font-weight: 650; }
+.library-page-status { margin: 16px 0; color: var(--fg-3); font-size: 11px; }
+.library-page-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.library-page-card { display: flex; min-height: 250px; flex-direction: column; padding: 20px; border: 1px solid var(--border); border-top: 2px solid var(--fg); border-radius: var(--radius); background: var(--bg-1); color: var(--fg); text-align: left; font-family: var(--font); cursor: pointer; transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
+.library-page-card:hover { transform: translateY(-2px); border-color: var(--border-hi); box-shadow: 0 9px 24px rgba(31,35,40,.09); }
+.library-page-card.physiology { border-top-color: var(--accent); }
+.library-page-card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.library-page-card h2 { font-size: 17px; line-height: 1.3; }
+.library-kind { padding: 2px 6px; background: var(--bg-2); color: var(--fg-3); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.library-page-card p { margin-top: 15px; color: var(--fg-2); font-size: 12px; line-height: 1.55; }
+.library-page-features { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 20px; }
+.library-page-features span { padding: 3px 6px; border: 1px solid var(--border); color: var(--fg-2); font-size: 9px; }
+.library-view { margin-top: 15px; color: var(--accent); font-size: 11px; font-weight: 700; }
+.library-contribution { display: flex; justify-content: space-between; gap: 30px; align-items: center; margin-top: 54px; padding: 28px 0; border-top: 2px solid var(--fg); border-bottom: 1px solid var(--border); }
+.library-contribution h2 { font-size: 21px; }
+.library-contribution p:not(.library-eyebrow) { max-width: 670px; margin-top: 7px; color: var(--fg-2); font-size: 12px; }
+.library-contribution a { text-decoration: none; }
+.library-detail { position: relative; width: min(720px,calc(100vw - 36px)); max-height: calc(100vh - 40px); overflow-y: auto; }
+.library-detail > .modal-close { position: absolute; top: 19px; right: 20px; }
+.library-detail h2 { padding-right: 40px; font-size: 25px; }
+.library-detail-description { margin-top: 10px; color: var(--fg-2); line-height: 1.6; }
+.library-detail dl { display: grid; grid-template-columns: 145px 1fr; margin-top: 20px; border-top: 1px solid var(--border-hi); }
+.library-detail dt, .library-detail dd { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+.library-detail dt { color: var(--fg-3); font-weight: 650; }
+.library-detail dd { color: var(--fg-2); }
+.library-detail-references { margin-top: 22px; }
+.library-detail-references h3 { font-size: 13px; }
+.library-detail-references ul { margin: 9px 0 0 18px; }
+.library-detail-references li { margin-bottom: 7px; color: var(--fg-2); font-size: 11px; line-height: 1.45; }
+.library-detail-references a { color: var(--accent); }
+.library-detail-actions { display: flex; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.library-detail-actions a { text-decoration: none; }
+@media (max-width: 850px) { .library-page-grid { grid-template-columns: 1fr 1fr; } .library-toolbar { align-items: stretch; flex-direction: column; } }
+@media (max-width: 600px) { .library-shell { width: min(100% - 28px,1180px); padding-top: 38px; } .library-topbar nav a:not(:first-child) { display: none; } .library-page-grid { grid-template-columns: 1fr; } .library-principles span { border-bottom: 1px solid var(--border); } .library-contribution { align-items: flex-start; flex-direction: column; } .library-detail dl { grid-template-columns: 1fr; } .library-detail dt { padding-bottom: 2px; border-bottom: 0; } .library-detail dd { padding-top: 2px; } }
