@@ -91,6 +91,7 @@ const StorageManager = {
 
         if (state.study.completion_lock === undefined) state.study.completion_lock = true;
         if (state.study.resume_enabled  === undefined) state.study.resume_enabled  = true;
+        if (state.ema.allow_back_navigation === undefined) state.ema.allow_back_navigation = false;
         state.onboarding.consent_text = sanitizeConsentHtml(state.onboarding.consent_text);
         this._blockedOlderDraft = false;
         return true;
@@ -203,6 +204,7 @@ const StorageManager = {
 
         if (el('study-completion-lock')) el('study-completion-lock').checked = !!state.study.completion_lock;
         if (el('study-resume-enabled'))  el('study-resume-enabled').checked  = !!state.study.resume_enabled;
+        if (el('ema-allow-back'))        el('ema-allow-back').checked = state.ema.allow_back_navigation === true;
 
         // 2. Onboarding tab
         if (el('ob-toggle'))        el('ob-toggle').checked = !!state.onboarding.enabled;

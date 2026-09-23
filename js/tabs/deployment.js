@@ -36,6 +36,7 @@ function bindDeploymentTab() {
   const studyReceiverInput = document.getElementById('study-webhook');
   const checkBtn = document.getElementById('open-connection-check-btn');
   const receiverBtn = document.getElementById('download-receiver-btn');
+  const cloudflareStudyBtn = document.getElementById('prepare-cloudflare-study-btn');
   if (!generateBtn) return;
 
   if (receiverInput) {
@@ -59,6 +60,7 @@ function bindDeploymentTab() {
     window.open(checkUrl, '_blank', 'noopener,noreferrer');
   });
   if (receiverBtn) receiverBtn.addEventListener('click', downloadReceiverStarter);
+  if (cloudflareStudyBtn) cloudflareStudyBtn.addEventListener('click', downloadCloudflareStudy);
   updateDeploymentControls();
 
   generateBtn.addEventListener('click', () => {
@@ -174,6 +176,28 @@ function bindDeploymentTab() {
       a.click();
       document.body.removeChild(a);
     });
+  }
+}
+
+async function downloadCloudflareStudy() {
+  const button = document.getElementById('prepare-cloudflare-study-btn');
+  const status = document.getElementById('cloudflare-study-status');
+  if (typeof confirmProtocolExport === 'function' && !confirmProtocolExport()) return;
+  if (button) button.disabled = true;
+  if (status) status.textContent = 'Preparing the participant study…';
+  try {
+    const html = await buildCloudflareStudyHtml();
+    const objectUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = `${slugifyStudyName()}-cloudflare-study.html`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    if (status) status.textContent = 'Downloaded. Deploy the template, then upload this file at your Worker’s /admin page.';
+  } catch (error) {
+    if (status) status.textContent = `Could not prepare the study: ${error.message}`;
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 

@@ -2950,16 +2950,23 @@ iat_trials &lt;- sessions |&gt;
      CLOUDFLARE WORKER → R2
      ========================================================== -->
 
-<h3 id="webhook-cloudflare">Reference receiver: Cloudflare Worker → private R2 <span class="status-pill beta">BETA</span></h3>
+<h3 id="webhook-cloudflare">Cloudflare study host → private R2 <span class="status-pill beta">BETA</span></h3>
 
-<p>This is EMA Forge's recommended starting path for automatic data return. It stores one JSON object per session,
+<p>This is EMA Forge's recommended starting path for hosting and automatic data return. One Worker serves the participant study and stores one JSON object per session,
   uses the stable submission ID as its key, confirms a successful write before acknowledging the participant app,
-  treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The bucket has
-  no public read route. Cloudflare currently provides free monthly R2 usage, but requires an R2 subscription and bills
-  usage beyond the included amounts; check its current pricing before deployment.</p>
+  treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The private bucket has
+  no public read route. Study installation and browser exports require the deployment's admin token.</p>
+
+<div class="callout info">
+  <div class="callout-title">Fast path: deploy, then import once</div>
+  <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
+    Cloudflare clones the public template, provisions and binds private R2 storage, and asks for a unique admin token.
+    After deployment, open the Worker's <code>/admin</code> page and install the downloaded file. EMA Forge never receives
+    the researcher's Cloudflare credentials, token, study file, or participant data.</p>
+</div>
 
 <details>
-  <summary>Full step-by-step setup (click to expand)</summary>
+  <summary>Independent receiver setup (click to expand)</summary>
   <div class="details-body">
     <ol>
       <li>In Review &amp; Deploy, enter the eventual hosted study URL and select <strong>Download receiver starter</strong>.</li>

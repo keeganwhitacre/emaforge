@@ -109,6 +109,15 @@ function bindStudyTab() {
       schedulePreview();
     });
   }
+
+  const backEl = document.getElementById('ema-allow-back');
+  if (backEl) {
+    backEl.checked = state.ema.allow_back_navigation === true;
+    backEl.addEventListener('change', e => {
+      state.ema.allow_back_navigation = e.target.checked;
+      schedulePreview();
+    });
+  }
 } 
 
 // Dynamically generate greeting inputs based on schedule windows.

@@ -59,6 +59,9 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .measure-add-panel { display: grid; grid-template-columns: minmax(220px,1.4fr) minmax(180px,1fr); gap: 12px; padding: 16px; margin-bottom: 2px; border: 1px solid var(--border); border-top: 2px solid var(--accent); background: var(--bg); }
 .measure-add-panel .field-group { margin: 0; }
 .measure-randomize-control { grid-column: 1 / -1; margin: 0; padding: 8px 0 0; border-top: 1px solid var(--border); }
+.measure-back-control { grid-column: 1 / -1; margin: 0; padding: 8px 0 0; }
+.measure-back-control .toggle-label { display: flex; flex-direction: column; gap: 3px; }
+.measure-back-control .toggle-label small { color: var(--fg-muted); font-size: 0.75rem; font-weight: 400; line-height: 1.35; }
 .measure-add-feedback { grid-column: 1 / -1; min-height: 17px; color: var(--fg-2); font-size: 11px; }
 .measure-flow { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--border); background: var(--bg); }
 .measure-flow-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
@@ -155,6 +158,14 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .deploy-actions .btn { min-height: 36px; padding: 8px 12px; }
 .deploy-link { color: var(--accent); font-size: 12px; text-decoration: none; }
 .deploy-note { margin-top: 12px; padding: 10px 0; border-top: 1px solid var(--border); background: transparent; color: var(--fg-2); font-size: 11px; line-height: 1.5; }
+.deploy-cloudflare { border-top: 2px solid var(--accent); }
+.cloudflare-steps { margin: 0; padding-left: 20px; color: var(--fg-2); font-size: 12px; line-height: 1.55; }
+.cloudflare-steps li + li { margin-top: 4px; }
+.cloudflare-steps code { color: var(--fg); font-family: var(--font-mono); font-size: 11px; }
+.manual-deploy { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 13px 0; }
+.manual-deploy > summary { color: var(--fg-2); cursor: pointer; font-size: 12px; font-weight: 600; }
+.manual-deploy[open] > summary { margin-bottom: 12px; color: var(--fg); }
+.manual-deploy .deploy-block { margin-bottom: 0; }
 #open-connection-check-btn { width: 100%; min-height: 38px; }
 .template-start { margin-top: 4px; align-self: flex-start; }
 .experimental-modules { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 3px; }

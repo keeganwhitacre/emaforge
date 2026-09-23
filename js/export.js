@@ -19,10 +19,10 @@ let templates = {
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260923c').then(r => r.text());
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260923e').then(r => r.text());
   if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260923c').then(r => r.text());
   if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260923c').then(r => r.text());
-  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260923c').then(r => r.text());
+  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260923e').then(r => r.text());
   if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js?v=20260923c').then(r => r.text());
   if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js?v=20260923c').then(r => r.text());
   if (!templates.modIat) templates.modIat = await fetch('templates/module-iat.js').then(r => r.text());
@@ -100,6 +100,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="generator" content="EMA Forge">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>${escH(cfg.study.name)}</title>
@@ -215,7 +216,10 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <h2 id="ema-greeting" style="margin-bottom:12px;font-weight:600;color:var(--fg);">Check-In</h2>
     <div class="ema-progress"><div class="ema-progress-fill" id="ema-progress-fill" style="width:0%"></div></div>
     <div class="ema-item-container" id="ema-single-container"></div>
-    <div style="margin-top:40px;flex-shrink:0;"><button class="btn btn-primary btn-block" id="ema-next-btn" disabled>Next</button></div>
+    <div class="ema-navigation">
+      <button class="btn btn-secondary" id="ema-back-btn" type="button" hidden>Back</button>
+      <button class="btn btn-primary" id="ema-next-btn" type="button" disabled>Next</button>
+    </div>
   </div>
 
   <div class="screen" id="screen-baseline">
@@ -397,9 +401,9 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
 </html>`;
 }
 
-async function buildStudyHtml({ configInline, previewMode = false, previewSession: _ps }) {
+async function buildStudyHtml({ configInline, previewMode = false, previewSession: _ps, configOverride = null }) {
   await loadTemplates();
-  const cfg = buildConfig();
+  const cfg = configOverride || buildConfig();
   const themeCSS = getThemeCSS(cfg.study.theme, cfg.study.accent_color);
   const runtimeCss = getRuntimeCss();
   const studyJs = stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps });
@@ -410,6 +414,12 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
   const cssTag = `<style>:root{${themeCSS}}${runtimeCss}</style>`;
   const studyTag = `<script>\n${studyJs}\n<\/script>`;
   return buildHtmlShell({ cfg, themeCSS, includeEpatCore: !!needsCore, configTag, coreTag, studyTag, cssTag, previewMode });
+}
+
+async function buildCloudflareStudyHtml() {
+  const cfg = buildConfig();
+  cfg.study.webhook_url = '/submit';
+  return buildStudyHtml({ configInline: true, previewMode: false, configOverride: cfg });
 }
 
 async function buildStaticBundle() {
@@ -493,6 +503,10 @@ function getRuntimeCss() {
     .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
     .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
     .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding: 8px 4px; }
+    .ema-navigation { display: flex; gap: 10px; margin-top: 28px; flex-shrink: 0; }
+    .ema-navigation .btn { min-height: 56px; }
+    .ema-navigation #ema-back-btn { flex: 0 0 auto; min-width: 96px; }
+    .ema-navigation #ema-next-btn { flex: 1 1 auto; }
     .ema-question { font-size: 1.15rem; font-weight: 500; color: var(--fg); margin-bottom: 24px; line-height: 1.4; text-align: left; }
     .slider-group { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
     .slider-val-display { font-size: 2.2rem; font-weight: 600; color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }

@@ -73,6 +73,31 @@ test("step membership isolates questions while allowing deliberate reuse", () =>
   assert.deepEqual(utils.questionsForStep(questions, ["mood", "reflection"]).map(q => q.id), ["mood", "reflection"]);
 });
 
+test("survey back navigation is opt-in and cannot cross physiology pages", () => {
+  const pages = [
+    [{ id: "mood", type: "slider" }],
+    [{ id: "pulse", type: "heart_rate" }],
+    [{ id: "context", type: "choice" }],
+    [{ id: "notes", type: "text" }]
+  ];
+
+  assert.equal(utils.canNavigateBack(false, 3, pages), false);
+  assert.equal(utils.canNavigateBack(true, 0, pages), false);
+  assert.equal(utils.canNavigateBack(true, 1, pages), false);
+  assert.equal(utils.canNavigateBack(true, 2, pages), false);
+  assert.equal(utils.canNavigateBack(true, 3, pages), true);
+});
+
+test("future survey response IDs can be invalidated after revisiting an earlier page", () => {
+  const pages = [
+    [{ id: "mood" }],
+    [{ id: "context" }, { id: "stress" }],
+    [{ id: "notes" }]
+  ];
+  assert.deepEqual(utils.questionIdsAfterPage(pages, 0), ["context", "stress", "notes"]);
+  assert.deepEqual(utils.questionIdsAfterPage(pages, 2), []);
+});
+
 test("a webhook HTTP response must acknowledge a successful submission", () => {
   assert.equal(utils.isWebhookAcknowledgement({ status: "success", submission_id: "s1" }, "s1"), true);
   assert.equal(utils.isWebhookAcknowledgement({ status: "success", submission_id: "other" }, "s1"), false);

@@ -45,6 +45,7 @@
 const EMA = (function() {
   let emaPages         = [];
   let currentPageIndex = 0;
+  let furthestPageVisited = 0;
   let emaResponses     = null;
 
   // -----------------------------------------------------------------------
@@ -104,6 +105,23 @@ const EMA = (function() {
     const rec = emaResponses.responses[qid];
     if (rec === undefined) return undefined;
     return (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
+  }
+
+  function invalidateFutureResponses() {
+    const futureIds = new Set(EMAForgeRuntimeUtils.questionIdsAfterPage(emaPages, currentPageIndex));
+    futureIds.forEach(questionId => {
+      if (emaResponses.responses[questionId] === undefined) return;
+      emaResponses.invalidatedResponses.push({
+        questionId,
+        response: emaResponses.responses[questionId],
+        reason: 'earlier_page_revisited',
+        invalidatedAt: new Date().toISOString()
+      });
+      delete emaResponses.responses[questionId];
+    });
+    emaResponses.presentationOrder.length = currentPageIndex + 1;
+    emaResponses.skippedQuestions = emaResponses.skippedQuestions.filter(item => !futureIds.has(item.questionId));
+    furthestPageVisited = currentPageIndex;
   }
 
 function interpolate(text, responses) {
@@ -513,6 +531,7 @@ function interpolate(text, responses) {
   function renderCurrentPage() {
     const container = document.getElementById('ema-single-container');
     const nextBtn   = document.getElementById('ema-next-btn');
+    const backBtn   = document.getElementById('ema-back-btn');
 
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
@@ -543,6 +562,15 @@ function interpolate(text, responses) {
       sessionData.data.push(emaResponses);
       advancePhase();
       return;
+    }
+
+    furthestPageVisited = Math.max(furthestPageVisited, currentPageIndex);
+    if (backBtn) {
+      backBtn.hidden = !EMAForgeRuntimeUtils.canNavigateBack(
+        config.ema.allow_back_navigation,
+        currentPageIndex,
+        emaPages
+      );
     }
 
     const pct = Math.round(((currentPageIndex + 1) / emaPages.length) * 100);
@@ -720,10 +748,28 @@ function interpolate(text, responses) {
         window.expireResponseWindow();
         return;
       }
+      if (currentPageIndex < furthestPageVisited) invalidateFutureResponses();
       const container = document.getElementById('ema-single-container');
       container.classList.add('fade-out');
       setTimeout(() => { currentPageIndex++; renderCurrentPage(); }, 300);
     };
+
+    const backBtn = document.getElementById('ema-back-btn');
+    if (backBtn) {
+      backBtn.onclick = () => {
+        if (!EMAForgeRuntimeUtils.canNavigateBack(
+          config.ema.allow_back_navigation,
+          currentPageIndex,
+          emaPages
+        )) return;
+        const container = document.getElementById('ema-single-container');
+        container.classList.add('fade-out');
+        setTimeout(() => {
+          currentPageIndex--;
+          renderCurrentPage();
+        }, 300);
+      };
+    }
   }
 
   return {
@@ -747,6 +793,7 @@ function interpolate(text, responses) {
 
       buildPages(phasePlan?.questionIds);
       currentPageIndex = 0;
+      furthestPageVisited = 0;
       emaResponses.eligibleQuestionIds = emaPages.flat().map(q => q.id);
 
       if (emaPages.length === 0) {

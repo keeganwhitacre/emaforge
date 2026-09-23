@@ -130,6 +130,7 @@ let state = {
 
   ema: {
     randomize_questions: false,
+    allow_back_navigation: false,
     questions: [],
     scheduling: {
       study_days: 14,

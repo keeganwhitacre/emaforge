@@ -84,6 +84,22 @@
     return (questions || []).filter(question => included.has(question.id));
   }
 
+  function pageContainsPhysiology(page) {
+    return (page || []).some(question => question && question.type === "heart_rate");
+  }
+
+  function canNavigateBack(enabled, currentPageIndex, pages) {
+    if (enabled !== true || currentPageIndex <= 0) return false;
+    return !pageContainsPhysiology(pages?.[currentPageIndex]) &&
+      !pageContainsPhysiology(pages?.[currentPageIndex - 1]);
+  }
+
+  function questionIdsAfterPage(pages, pageIndex) {
+    return (pages || []).slice(pageIndex + 1).flatMap(page =>
+      (page || []).map(question => question && question.id).filter(Boolean)
+    );
+  }
+
   function isWebhookAcknowledgement(receipt, submissionId) {
     return !!receipt && typeof receipt === "object" && receipt.status === "success" &&
       (!Object.prototype.hasOwnProperty.call(receipt, "submission_id") || receipt.submission_id === submissionId);
@@ -168,6 +184,9 @@
     evaluateCondition,
     buildPhasePlan,
     questionsForStep,
+    pageContainsPhysiology,
+    canNavigateBack,
+    questionIdsAfterPage,
     isWebhookAcknowledgement,
     parseEmaPhaseToken,
     collectResponses,

@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260923d">
+<link rel="stylesheet" href="css/builder.css?v=20260923e">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -261,6 +261,16 @@
             <span class="toggle-track"></span>
           </label>
         </div>
+        <div class="toggle-row measure-back-control">
+          <span class="toggle-label">
+            Allow participants to go back within surveys
+            <small>Off by default. Back is never available for physiology measures.</small>
+          </span>
+          <label class="toggle">
+            <input type="checkbox" id="ema-allow-back">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
         <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
       </div>
 
@@ -334,39 +344,50 @@
     <div class="config-section" id="tab-deployment">
       <div class="section-title">Review &amp; Deploy</div>
       <p class="field-hint">Take the study from this browser to a working participant link with confirmed data storage.</p>
-      <ol class="deploy-steps">
-        <li><strong>Review the study.</strong> Resolve blocking issues in Study Readiness and walk through the participant preview.</li>
-        <li><strong>Connect data storage.</strong> Use the reference receiver or an approved institutional endpoint, then paste its URL below.</li>
-        <li><strong>Export and host.</strong> Export the static bundle and upload every file to an HTTPS host.</li>
-        <li><strong>Confirm receipt.</strong> Open the hosted connection check and verify its test record exists in storage.</li>
-        <li><strong>Create participant links.</strong> Download the routing CSV or optional Twilio dispatcher.</li>
-      </ol>
 
-      <div class="deploy-block">
-        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Connect data storage</strong><span>Automatic return is optional, but recommended for field studies.</span></div></div>
-        <div class="field-group">
-          <label class="field-label" for="deploy-webhook-url">Receiver URL</label>
-          <input type="url" id="deploy-webhook-url" placeholder="https://your-receiver.workers.dev/submit">
-          <div class="field-hint" style="margin-top: 4px;">This is the same receiver configured under Study. It must save the record before returning a success receipt.</div>
-        </div>
+      <div class="deploy-block deploy-cloudflare">
+        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Deploy on Cloudflare</strong><span>Participant site and private response storage in one deployment.</span></div></div>
+        <ol class="cloudflare-steps">
+          <li>Download this study’s prepared HTML file.</li>
+          <li>Deploy the EMA Forge template to your Cloudflare account.</li>
+          <li>Open <code>/admin</code> on the new Worker and install the file with your deployment token.</li>
+        </ol>
         <div class="deploy-actions">
-          <button type="button" class="btn btn-secondary" id="download-receiver-btn">Download receiver starter</button>
-          <a href="readme.html#webhook-cloudflare" target="_blank" rel="noopener" class="deploy-link">Receiver instructions ↗</a>
+          <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
+          <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Deploy to Cloudflare ↗</a>
         </div>
-        <div class="field-hint" id="receiver-starter-status" style="margin-top: 7px;"></div>
-        <div class="deploy-note">The included receiver uses a private Cloudflare R2 bucket and refuses duplicate overwrites. It is a reference implementation, not a substitute for IRB or institutional review.</div>
+        <div class="field-hint" id="cloudflare-study-status" style="margin-top: 8px;"></div>
+        <div class="deploy-note">Cloudflare provisions the Worker and private R2 bucket. EMA Forge never sees your Cloudflare login, admin token, study file, or participant responses.</div>
       </div>
 
       <div class="deploy-block">
-        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Export and host</strong><span>Use Export Study above and choose the static-hosting bundle.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Confirm the live study</strong><span>Paste the deployed Worker URL, then verify a synthetic record reaches storage.</span></div></div>
       <div class="field-group" style="margin-bottom: 16px;">
         <label class="field-label" for="deploy-base-url">Hosted study URL</label>
-        <input type="url" id="deploy-base-url" placeholder="https://my-lab.github.io/study/index.html" value="">
-        <div class="field-hint" style="margin-top: 4px;">The live address of index.html after uploading the complete exported bundle.</div>
+        <input type="url" id="deploy-base-url" placeholder="https://your-study.workers.dev/" value="">
+        <div class="field-hint" style="margin-top: 4px;">The participant URL shown after Cloudflare installation, or your independently hosted index.html.</div>
       </div>
       <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open hosted connection check</button>
       <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Available after entering a valid hosted HTTPS URL.</div>
       </div>
+
+      <details class="manual-deploy">
+        <summary>Use a different host or approved data endpoint</summary>
+        <div class="deploy-block">
+          <div class="deploy-block-heading"><div><strong>Independent receiver</strong><span>For GitHub Pages, an institutional endpoint, or another HTTPS host.</span></div></div>
+          <div class="field-group">
+            <label class="field-label" for="deploy-webhook-url">Receiver URL</label>
+            <input type="url" id="deploy-webhook-url" placeholder="https://your-receiver.workers.dev/submit">
+            <div class="field-hint" style="margin-top: 4px;">This is the same receiver configured under Study. It must save the record before returning a success receipt.</div>
+          </div>
+          <div class="deploy-actions">
+            <button type="button" class="btn btn-secondary" id="download-receiver-btn">Download receiver starter</button>
+            <a href="readme.html#webhook-cloudflare" target="_blank" rel="noopener" class="deploy-link">Receiver instructions ↗</a>
+          </div>
+          <div class="field-hint" id="receiver-starter-status" style="margin-top: 7px;"></div>
+          <div class="deploy-note">Use Export Study → Static-hosting bundle for the participant site. The reference receiver uses private R2 and refuses duplicate overwrites.</div>
+        </div>
+      </details>
 
       <div class="deploy-block">
       <div class="deploy-block-heading"><span class="deploy-number">3</span><div><strong>Create participant links</strong><span>Use opaque study IDs—not names, emails, or medical-record numbers.</span></div></div>
@@ -491,21 +512,21 @@
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
-<script src="js/state.js?v=20260922b"></script>
-<script src="js/storage.js?v=20260922b"></script>
+<script src="js/state.js?v=20260923e"></script>
+<script src="js/storage.js?v=20260923e"></script>
 <script src="js/library-utils.js?v=20260923b"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20260923d"></script>
-<script src="js/tabs/study.js"></script>
+<script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260923d"></script>
+<script src="js/tabs/questions.js?v=20260923e"></script>
 <script src="js/tabs/schedule.js?v=20260923d"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
-<script src="js/tabs/deployment.js?v=20260922d"></script>
+<script src="js/tabs/deployment.js?v=20260923e"></script>
 <script src="js/preview.js?v=20260923c"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260923d"></script>
+<script src="js/export.js?v=20260923e"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -543,6 +564,6 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260923c"></script>
+<script src="js/builder-shell.js?v=20260923e"></script>
 </body>
 </html>

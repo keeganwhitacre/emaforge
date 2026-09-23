@@ -9,9 +9,9 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 1. Enter study details and replace the consent template with approved text.
 2. In **Schedule**, set your session times. A new study begins with an ePAT session; add survey questions, PPG heart-rate capture, or other tasks as needed. Reorder steps in each session.
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
-4. For automatic data return, download the reference receiver starter in **Review & Deploy**, deploy it to a private R2 bucket, and paste its `/submit` URL into the builder.
-5. Export the static-hosting bundle and upload it to an HTTPS host such as GitHub Pages. Open the included `check.html` on the hosted site and confirm the synthetic record reached storage.
-6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment.
+4. Download the prepared Cloudflare study, deploy the included Worker template, and install the file at the new Worker's token-protected `/admin` page. Cloudflare provisions the private R2 bucket and hosts the participant app in the researcher's account.
+5. Open the live `/check.html` page and confirm its synthetic record reached R2.
+6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment. Independent static hosting and receiver setup remain available under the manual deployment option.
 
 ## Protocol library
 
@@ -25,7 +25,7 @@ The Measures screen treats survey questions, PPG capture, ePAT, HCT, and every r
 
 Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
 
-The builder itself needs no account or backend. Hosting, automatic data return, and sending prompt links are separate so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
+The builder itself needs no account or backend. The Cloudflare deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, or participant responses. Hosting, automatic data return, and sending prompt links remain separable so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 
 ## Analyze and simulate
 
