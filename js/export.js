@@ -107,7 +107,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
   ${coreTag}
   ${cssTag}
 </head>
-<body>
+<body${previewMode ? ' class="preview-mode"' : ''}>
   ${previewMode ? '<div class="preview-simulation-banner" role="status"><strong>Simulated preview</strong><span>Camera, flashlight, PPG, calibration, and task values are simulated. No device sensors are used.</span></div>' : ''}
   <video id="video-feed" playsinline muted style="position:fixed;top:-999px;opacity:0;"></video>
   <canvas id="sampling-canvas" style="position:fixed;top:-999px;opacity:0;"></canvas>
@@ -467,9 +467,10 @@ function getRuntimeCss() {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; width: 100%; font-family: var(--font); background: var(--bg); color: var(--fg); overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-    .preview-simulation-banner { position: fixed; z-index: 1000; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 10px; right: 10px; display: flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--border)); border-radius: 8px; background: color-mix(in srgb, var(--bg-surface) 94%, var(--accent)); color: var(--fg); box-shadow: 0 4px 14px rgba(0,0,0,.16); font-size: .68rem; line-height: 1.25; }
+    .preview-simulation-banner { position: fixed; z-index: 1000; top: calc(env(safe-area-inset-top, 0px) + 48px); left: 12px; right: 12px; display: flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--border)); border-radius: 8px; background: color-mix(in srgb, var(--bg-surface) 94%, var(--accent)); color: var(--fg); box-shadow: 0 4px 14px rgba(0,0,0,.16); font-size: .68rem; line-height: 1.25; }
     .preview-simulation-banner strong { flex: 0 0 auto; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
     .preview-simulation-banner span { color: var(--fg-muted); }
+    .preview-mode .screen { padding-top: calc(env(safe-area-inset-top, 24px) + 82px); }
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
     .screen.active { opacity: 1; pointer-events: all; }
     h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--fg); text-align: center; }
