@@ -116,6 +116,7 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .session-content-heading { justify-content: space-between; margin-bottom: 11px; }
 .session-content-heading strong { font-size: 13px; }
 .session-content-heading span { font-size: 11px; color: var(--fg-3); }
+.edit-session-measures { margin-top: 10px; }
 .session-step { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; margin-bottom: 0; padding: 10px 2px; }
 .session-step.dragging { opacity: .5; }
 .session-step-heading { min-width: 0; }

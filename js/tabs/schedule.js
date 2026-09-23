@@ -29,16 +29,12 @@ function bindScheduleTab() {
 
   document.getElementById('add-window-btn').addEventListener('click', () => {
     const wId = genWId();
-    const firstStep = state.ema.scheduling.windows[0]?.phase_sequence?.[0];
-    const initialStep = firstStep?.kind === 'task' && state.modules.some(m => m.id === firstStep.id && m.enabled)
-      ? { kind: 'task', id: firstStep.id, condition: null }
-      : null;
     state.ema.scheduling.windows.push({
       id: wId,
       label: `Session ${state.ema.scheduling.windows.length + 1}`,
       start: "12:00",
       end: "13:00",
-      phase_sequence: initialStep ? [initialStep] : []
+      phase_sequence: []
     });
     renderWindows();
     if (typeof renderGreetings === 'function') renderGreetings();
@@ -77,15 +73,13 @@ function migrateWindow(w) {
 // ---------------------------------------------------------------------------
 // buildWindowCard
 // ---------------------------------------------------------------------------
+// Retained for imported projects that may still invoke the legacy step renderer.
 const expandedSteps = new WeakSet();
 
 function buildWindowCard(w, i) {
   const el = document.createElement('div');
   el.className = 'window-item session-card';
-  const taskOptions = state.modules.filter(m => m.badge !== 'Experimental')
-    .map(m => `<option value="task:${escH(m.id)}">${escH(m.label)} · physiological task</option>`).join('');
-  const experimentalOptions = state.modules.filter(m => m.badge === 'Experimental')
-    .map(m => `<option value="task:${escH(m.id)}">${escH(m.label)} · experimental</option>`).join('');
+  const entries = typeof EMAForgeMeasureFlow !== 'undefined' ? EMAForgeMeasureFlow.flatten(w) : [];
 
   el.innerHTML = `
     <div class="session-heading">
@@ -99,20 +93,11 @@ function buildWindowCard(w, i) {
     </div>
     <div class="session-content">
       <div class="session-content-heading">
-        <strong>Participant flow</strong>
-        <span>Runs in this order</span>
+        <strong>Measures</strong>
+        <span>${entries.length} item${entries.length === 1 ? '' : 's'} in this session</span>
       </div>
-      <div class="step-list"></div>
-      <div class="session-add">
-        <label class="field-label" for="session-add-${i}">Add to session</label>
-        <select class="add-step-select" id="session-add-${i}">
-          <option value="">Choose a measure…</option>
-          <option value="questions">Survey questions</option>
-          <option value="hr_question">PPG heart-rate capture</option>
-          ${taskOptions}
-          ${experimentalOptions ? `<optgroup label="Experimental">${experimentalOptions}</optgroup>` : ''}
-        </select>
-      </div>
+      <p class="field-hint">Question order, physiology tasks, and conditional task logic are managed in one place.</p>
+      <button type="button" class="btn-ghost edit-session-measures">Edit measures for this session →</button>
     </div>
   `;
 
@@ -146,40 +131,17 @@ function buildWindowCard(w, i) {
     schedulePreview();
   });
 
-  el.querySelector('.add-step-select').addEventListener('change', e => {
-    const choice = e.target.value;
-    if (!choice) return;
-    if (choice === 'questions') {
-      let surveyNumber = w.phase_sequence.filter(s => s.kind === 'ema').length + 1;
-      while (w.phase_sequence.some(s => s.label === `Survey ${surveyNumber}`)) surveyNumber++;
-      const step = { kind: 'ema', id: genSId(), label: `Survey ${surveyNumber}`, question_ids: [] };
-      w.phase_sequence.push(step);
-      addQ({ id: genQId(), type: 'slider', text: '', min: 0, max: 100, step: 1,
-        anchors: ['', ''], required: true, condition: null }, step);
-      document.querySelector('.tab-btn[data-tab="questions"]').click();
-    } else if (choice === 'hr_question') {
-      const hrCount = w.phase_sequence.filter(s => s.kind === 'ema' && s.label?.startsWith('PPG heart-rate capture')).length;
-      const step = { kind: 'ema', id: genSId(),
-        label: hrCount ? `PPG heart-rate capture ${hrCount + 1}` : 'PPG heart-rate capture', question_ids: [] };
-      w.phase_sequence.push(step);
-      addQ({ id: genQId(), type: 'heart_rate', text: 'Measuring your heart rate…',
-        duration_sec: 30, report_as: 'bpm', required: true, condition: null }, step);
-    } else if (choice.startsWith('task:')) {
-      const mod = state.modules.find(m => m.id === choice.slice(5));
-      if (mod) {
-        mod.enabled = true;
-        w.phase_sequence.push({ kind: 'task', id: mod.id, condition: null });
-        renderModules();
-      }
-    }
-    e.target.value = '';
-    renderStepList(el.querySelector('.step-list'), w);
+  el.querySelector('.edit-session-measures').addEventListener('click', () => {
     previewSession = w.id;
     renderPreviewTabs();
-    schedulePreview();
+    document.querySelector('.tab-btn[data-tab="questions"]')?.click();
+    const select = document.getElementById('add-measure-session');
+    if (select) {
+      select.value = w.id;
+      renderMeasureComposer();
+    }
   });
 
-  renderStepList(el.querySelector('.step-list'), w);
   return el;
 }
 
@@ -405,8 +367,7 @@ function buildConditionRow(step, w) {
       step.condition = null;
     }
     schedulePreview();
-    const container = wrap.closest('.step-list');
-    if (container) renderStepList(container, w); 
+    renderMeasureComposer();
   });
 
   if (!step.condition) return wrap;
@@ -418,8 +379,7 @@ function buildConditionRow(step, w) {
   condFields.querySelector('.cond-add-rule').addEventListener('click', () => {
     step.condition.rules.push({ question_id: '', operator: 'gt', value: 0 });
     schedulePreview();
-    const container = wrap.closest('.step-list');
-    if (container) renderStepList(container, w); 
+    renderMeasureComposer();
   });
 
   condFields.querySelectorAll('.task-cond-rule').forEach((row, i) => {
@@ -431,8 +391,7 @@ function buildConditionRow(step, w) {
       step.condition.rules.splice(i, 1);
       if (step.condition.rules.length === 0) step.condition = null;
       schedulePreview();
-      const container = wrap.closest('.step-list');
-      if (container) renderStepList(container, w);
+      renderMeasureComposer();
     });
   });
 
