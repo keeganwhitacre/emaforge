@@ -22,6 +22,12 @@
       background: var(--bg);
     }
 
+    #docs-app #topbar {
+      height: 64px;
+      min-height: 64px;
+      background: var(--bg);
+    }
+
     .docs-container {
       display: flex;
       flex: 1;
@@ -30,11 +36,11 @@
 
     /* ── Sidebar ────────────────────────────────────────────── */
     .docs-sidebar {
-      width: 260px;
+      width: 230px;
       background: var(--bg-1);
       border-right: 1px solid var(--border);
       overflow-y: auto;
-      padding: 24px 0;
+      padding: 28px 14px;
       flex-shrink: 0;
     }
 
@@ -48,13 +54,13 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--fg-3);
-      padding: 0 24px;
+      padding: 0 10px;
       margin-bottom: 8px;
     }
 
     .docs-nav-link {
       display: block;
-      padding: 6px 24px;
+      padding: 7px 10px;
       font-size: 13px;
       color: var(--fg-2);
       text-decoration: none;
@@ -69,21 +75,20 @@
     .docs-nav-link.active {
       color: var(--accent);
       font-weight: 500;
-      border-right: 2px solid var(--accent);
-      background: linear-gradient(90deg, transparent, var(--accent-dim));
+      border-bottom: 1px solid var(--accent);
+      background: transparent;
     }
 
     /* ── Main Content Area ──────────────────────────────────── */
     .docs-main {
       flex: 1;
       overflow-y: auto;
-      padding: 40px 60px 80px;
+      padding: 36px 54px 80px;
       scroll-behavior: smooth;
     }
 
     .docs-hero {
-      max-width: 900px;
-      margin: 0 auto 48px auto;
+      display: none;
     }
 
     .docs-hero svg {
@@ -93,7 +98,7 @@
       border: 1px solid var(--border);
       background: var(--bg-1);
       display: block;
-      box-shadow: var(--shadow);
+      box-shadow: none;
       transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -196,10 +201,11 @@
     /* Callouts & Blockquotes */
     .docs-prose blockquote {
       margin: 24px 0;
-      padding: 16px 20px;
-      border-left: 4px solid var(--accent);
-      background: var(--accent-dim);
-      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--border-hi);
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      border-radius: 0;
     }
 
     .docs-prose blockquote p {
@@ -212,10 +218,11 @@
     .docs-callout {
       display: flex;
       gap: 12px;
-      background: rgba(56, 139, 253, 0.08);
-      border: 1px solid rgba(56, 139, 253, 0.2);
-      border-radius: var(--radius-lg);
-      padding: 16px;
+      background: transparent;
+      border-top: 1px solid var(--border-hi);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      padding: 16px 0;
       margin: 24px 0;
     }
 
@@ -238,8 +245,8 @@
 
     /* Variant callouts */
     .docs-callout.warn {
-      background: rgba(246, 201, 14, 0.08);
-      border-color: rgba(246, 201, 14, 0.25);
+      background: transparent;
+      border-color: var(--border);
     }
 
     .docs-callout.warn svg {
@@ -247,8 +254,8 @@
     }
 
     .docs-callout.wip {
-      background: rgba(176, 120, 255, 0.08);
-      border-color: rgba(176, 120, 255, 0.25);
+      background: transparent;
+      border-color: var(--border);
     }
 
     .docs-callout.wip svg {
@@ -256,8 +263,8 @@
     }
 
     .docs-callout.danger {
-      background: rgba(255, 69, 58, 0.08);
-      border-color: rgba(255, 69, 58, 0.25);
+      background: transparent;
+      border-color: var(--border);
     }
 
     .docs-callout.danger svg {
@@ -303,8 +310,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 2px 10px;
-      border-radius: 100px;
+      padding: 2px 6px;
+      border-radius: 2px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -313,21 +320,21 @@
     }
 
     .status-pill.stable {
-      background: rgba(50, 215, 75, 0.1);
-      border-color: rgba(50, 215, 75, 0.3);
-      color: #32d74b;
+      background: transparent;
+      border-color: var(--border);
+      color: var(--green);
     }
 
     .status-pill.beta {
-      background: rgba(246, 201, 14, 0.1);
-      border-color: rgba(246, 201, 14, 0.3);
-      color: #f6c90e;
+      background: transparent;
+      border-color: var(--border);
+      color: var(--yellow);
     }
 
     .status-pill.wip {
-      background: rgba(176, 120, 255, 0.1);
-      border-color: rgba(176, 120, 255, 0.3);
-      color: #b078ff;
+      background: transparent;
+      border-color: var(--border);
+      color: var(--fg-2);
     }
 
     .status-pill.planned {
@@ -338,9 +345,11 @@
 
     /* Collapsible details */
     .docs-prose details {
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      background: transparent;
+      border: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
       padding: 0;
       margin: 20px 0;
       transition: border-color 0.15s ease;
@@ -400,15 +409,16 @@
     .feature-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
+      gap: 0;
       margin: 20px 0;
     }
 
     .feature-item {
       padding: 14px 16px;
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: transparent;
+      border: 0;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
     }
 
     .feature-item-title {
@@ -453,9 +463,11 @@
     .credit-card {
       margin-top: 48px;
       padding: 20px 22px;
-      background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      background: transparent;
+      border: 0;
+      border-top: 1px solid var(--border-hi);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
       display: flex;
       align-items: center;
       gap: 18px;
@@ -873,7 +885,7 @@
           <a href="#csv-schema" class="docs-nav-link">CSV Schema</a>
           <a href="#json-schema" class="docs-nav-link">JSON Schema</a>
           <a href="#r-analysis" class="docs-nav-link">Analysis in R</a>
-          <a href="#dashboard" class="docs-nav-link">Dashboard</a>
+          <a href="#dashboard" class="docs-nav-link">Analyze</a>
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">Advanced Modules</div>
@@ -985,23 +997,23 @@
 
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-item-title">🛠 Study Builder</div>
+              <div class="feature-item-title">Study Builder</div>
               <div class="feature-item-desc">Where you design the study — questions, schedule, tasks. Hosted at <a
                   href="https://emaforge.keeganwhitacre.com" target="_blank"
                   rel="noopener">emaforge.keeganwhitacre.com</a>.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">📊 Analysis Dashboard</div>
-              <div class="feature-item-desc">Where you load participant data files for compliance checks and quick
-                stats. Same site.</div>
+              <div class="feature-item-title">Analyze Workspace</div>
+              <div class="feature-item-desc">Where you inspect returned participant files, review item and ePAT
+                summaries, export long-format data, or simulate a protocol. Same site.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">📦 Exported Study Bundle</div>
+              <div class="feature-item-title">Exported Study Bundle</div>
               <div class="feature-item-desc">What the Builder produces — a small set of files you host somewhere (e.g.
                 GitHub Pages) so participants can reach it.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">📱 The Participant App</div>
+              <div class="feature-item-title">Participant App</div>
               <div class="feature-item-desc">What your participants actually open on their phone. Generated
                 automatically from the bundle above; no install needed.</div>
             </div>
@@ -1118,9 +1130,9 @@
                 <td>LocalStorage per-phase resume.</td>
               </tr>
               <tr>
-                <td>Dashboard (compliance, watchlist, CSV export)</td>
+                <td>Analyze workspace (local import, simulation, CSV export)</td>
                 <td><span class="status-pill stable">STABLE</span></td>
-                <td>Runs locally in browser.</td>
+                <td>Runs locally in browser. Scheduled completion is shown only when a schedule manifest exists.</td>
               </tr>
               <tr>
                 <td>Heart-rate capture question type (PPG)</td>
@@ -1133,9 +1145,10 @@
                 <td>Shares PPG core with HR capture.</td>
               </tr>
               <tr>
-                <td>Response latency in Dashboard</td>
-                <td><span class="status-pill wip">WIP</span></td>
-                <td>Needs external prompt-delivery timestamps — see <a href="#notifications">Sending Prompts</a>.</td>
+                <td>Response latency in Analyze</td>
+                <td><span class="status-pill beta">BETA</span></td>
+                <td>Shown when a session includes a notification-to-open duration; imported files without delivery
+                  timestamps remain explicitly unavailable.</td>
               </tr>
               <tr>
                 <td>Twilio SMS dispatcher (Apps Script)</td>
@@ -1171,15 +1184,15 @@
           <h3>For you (researcher)</h3>
           <ul>
             <li><strong>Any modern desktop browser.</strong> Chrome, Edge, Firefox, or Safari (from 2022 onward). The
-              Builder and Dashboard run entirely in your browser at <a href="https://emaforge.keeganwhitacre.com"
+              Builder and Analyze run entirely in your browser at <a href="https://emaforge.keeganwhitacre.com"
                 target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>.</li>
             <li><strong>A way to host your exported study.</strong> GitHub Pages is the path of least resistance and
               free for researchers. Any institutional static-file server works too. (See <a href="#hosting">Hosting Your
                 Study</a> — it is genuinely ten clicks.)</li>
             <li><strong>A way to send participants links</strong> at the right times — an SMS service, institutional
               email scheduler, Twilio, or similar. EMA Forge generates the links; something else delivers them.</li>
-            <li><strong>R or Python (optional).</strong> The Dashboard handles most day-to-day compliance monitoring in
-              the browser. You'll want R or Python for real analysis.</li>
+            <li><strong>R or Python (optional).</strong> Analyze handles local inspection, data-quality review, and
+              long-format export in the browser. Use R or Python for confirmatory and model-based analysis.</li>
           </ul>
 
           <h3>For participants</h3>
@@ -1212,7 +1225,7 @@
           <!-- ========================================================= -->
 
           <h2 id="quickstart">Quick Start — 5 minutes to a working draft</h2>
-          <p>You do not need to install anything. The Builder and Dashboard are hosted and ready to use.</p>
+          <p>You do not need to install anything. Builder and Analyze are hosted and ready to use.</p>
 
           <ol>
             <li>Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank"
@@ -1227,8 +1240,9 @@
               <code>?id=1&amp;day=1&amp;session=w1</code> appended. You're running a study.</li>
             <li>When you finish the session, your phone downloads a CSV. Go back to <a
                 href="https://emaforge.keeganwhitacre.com" target="_blank"
-                rel="noopener">emaforge.keeganwhitacre.com</a>, open the <strong>Dashboard</strong>, import the folder,
-              and you'll see your own compliance data.</li>
+                rel="noopener">emaforge.keeganwhitacre.com</a>, open <strong>Analyze</strong>, import the returned files,
+              and inspect the observed sessions and item responses. Completion remains unavailable without scheduled
+              prompt events.</li>
           </ol>
 
           <p>That round trip tells you whether your device can open sessions and whether your data is landing where you
@@ -1734,7 +1748,7 @@ git push -u origin main
               Written alongside the CSV, not instead of it.</li>
           </ul>
           <p>The participant returns these files via whatever channel your IRB approved (secure email, REDCap file
-            upload, institutional SFTP). The Dashboard expects a folder of JSON files for analysis; a CSV-only workflow
+            upload, institutional SFTP). Analyze accepts a folder of JSON files or compatible long-format CSV; a CSV-only workflow
             is also viable for simpler studies.</p>
 
           <h3>Webhook return (opt-in)</h3>
@@ -1743,8 +1757,8 @@ git push -u origin main
             and actual server storage must be checked with a dummy submission before collecting participant data. See
             <a href="#webhook-upload">Auto-upload with Webhooks</a>.</p>
 
-          <h2 id="csv-schema">CSV Schema (Dashboard export)</h2>
-          <p>When you use the <strong>Export Master CSV</strong> button in the Dashboard, you get one row per
+          <h2 id="csv-schema">CSV Schema (Analyze export)</h2>
+          <p>When you use <strong>Export CSV</strong> in Analyze, you get one row per
             <code>(session, question)</code> pair in long format. The columns:
           </p>
 
@@ -1756,6 +1770,10 @@ git push -u origin main
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td><code>data_source</code></td>
+                <td><code>observed</code> for imported records or <code>synthetic</code> for simulator output.</td>
+              </tr>
               <tr>
                 <td><code>participant_id</code></td>
                 <td>From the URL <code>?id=</code>.</td>
@@ -1813,6 +1831,14 @@ git push -u origin main
                 <td>1-indexed order the question was shown in, accounting for skip logic.</td>
               </tr>
               <tr>
+                <td><code>response_status</code></td>
+                <td><code>answered</code>, <code>unanswered</code>, or <code>skipped_condition</code>.</td>
+              </tr>
+              <tr>
+                <td><code>skip_reason</code></td>
+                <td>Machine-readable reason when branching prevented presentation.</td>
+              </tr>
+              <tr>
                 <td><code>response_value</code></td>
                 <td>The raw response, serialized (checkbox as <code>a;b;c</code>, Affect Grid as
                   <code>valence;arousal</code>).
@@ -1830,7 +1856,7 @@ git push -u origin main
           </table>
 
           <h2 id="json-schema">JSON Schema (per-session)</h2>
-          <p>The raw JSON payload is what the Dashboard reads and is the source of truth. Shape (abbreviated):</p>
+          <p>The raw JSON payload is what Analyze reads and is the source of truth. Shape (abbreviated):</p>
           <pre><code>{
   "participantId": "104",
   "sessionId": "s_a1b2c3",
@@ -1903,12 +1929,12 @@ affect &lt;- df |&gt;
            sep = ";", convert = TRUE)
 </code></pre>
 
-          <h2 id="dashboard">Dashboard</h2>
-          <p><code>dashboard.html</code> is a local analysis UI. Everything parses in your browser; no data is
-            transmitted anywhere.</p>
+          <h2 id="dashboard">Analyze</h2>
+          <p><code>dashboard.html</code> is a local analysis and protocol-simulation workspace. Imports and synthetic
+            generation run in your browser; EMA Forge does not upload the files to a central analysis service.</p>
 
           <h3 id="dashboard-inputs">What to feed it</h3>
-          <p>The Dashboard accepts two input shapes. You can mix them in a single import — the parser sorts out which
+          <p>Analyze accepts three input shapes. You can mix compatible files in a single import — the parser sorts out which
             files are which.</p>
 
           <ul>
@@ -1922,38 +1948,60 @@ affect &lt;- df |&gt;
               Download → CSV) and import it alongside your <code>config.json</code>. The parser reads each row's
               <code>Raw JSON</code> cell as a full session payload.
             </li>
+            <li><strong>A long-format EMA Forge CSV.</strong> Files with <code>session_id</code> and
+              <code>question_id</code> columns preserve answered, presented-but-unanswered, and condition-skipped
+              states when re-imported.</li>
           </ul>
 
           <div class="docs-callout">
             <div class="docs-callout-content">
-              <p><strong>Config caching.</strong> After your first successful import the Dashboard caches your
+              <p><strong>Config caching.</strong> After your first successful import Analyze caches your
                 <code>config.json</code> in browser storage. On subsequent visits you only need to drop in the data
                 file(s) — the config is remembered. Clearing site data resets this.
               </p>
             </div>
           </div>
 
-          <p>Once imported, the Dashboard renders:</p>
+          <p>Once imported, Analyze renders:</p>
           <h3>KPIs</h3>
           <ul>
-            <li><strong>Avg. Compliance Rate</strong> — completed sessions / expected sessions, scoped by filters.</li>
-            <li><strong>Total Pings Delivered</strong> — expected sessions up to the current study day.</li>
-            <li><strong>Signal Noise / Invalid %</strong> — proportion of sessions flagged as "speeding" (total session
-              duration &lt; 30 seconds). A rough heuristic; tune in your own analysis.</li>
-            <li><strong>Avg. Time to Complete</strong> — mean session duration.</li>
+            <li><strong>Protocol completion</strong> — shown only when an explicit schedule manifest supplies the
+              expected prompts. It is unavailable for response-only imports because missing files cannot prove a missed prompt.</li>
+            <li><strong>Delivery records</strong> — shown only when delivery events exist. EMA Forge does not infer
+              delivery from a completed response.</li>
+            <li><strong>Rapid-session flags</strong> — sessions with total duration under 30 seconds. This is a review
+              flag, not an automatic exclusion or a signal-quality verdict.</li>
+            <li><strong>Mean completion time</strong> — mean duration across observed completed sessions.</li>
           </ul>
 
           <h3>Filters &amp; views</h3>
           <ul>
             <li><strong>Aggregate vs. Per-Participant</strong> segmented view.</li>
             <li><strong>Date range</strong> (by study day).</li>
-            <li><strong>Exclude missed prompts</strong> toggle (affects denominator of compliance).</li>
-            <li><strong>Filter rapid responders (&lt;30s)</strong> toggle.</li>
-            <li><strong>Attention Required</strong> watchlist — participants whose compliance is below threshold, ready
-              for a check-in text.</li>
-            <li><strong>Export Master CSV</strong> — flattens all imported sessions into one long-format file (<a
+            <li><strong>Exclude rapid sessions (&lt;30s)</strong> toggle for sensitivity review.</li>
+            <li><strong>Records requiring review</strong> — for simulations with a schedule manifest, identifies
+              participants below 60% protocol completion. It stays unavailable for response-only imports.</li>
+            <li><strong>Responses</strong> — type-aware summaries for numeric, categorical, text, affect-grid, and
+              heart-rate items, plus an exploratory composite-score builder.</li>
+            <li><strong>ePAT</strong> — trial and session summaries, circular phase visualization, confidence, and signal-quality views.</li>
+            <li><strong>Export CSV</strong> — flattens all imported sessions into one long-format file (<a
                 href="#csv-schema">schema above</a>).</li>
           </ul>
+
+          <h3 id="study-simulation">Protocol-aware simulation</h3>
+          <p>Select <strong>Simulate study</strong> to generate a deterministic synthetic dataset from a curated
+            protocol. Choose participant count, study days, prompt completion, item missingness, and a random seed.
+            The generator follows the protocol's ordered survey/task steps and branching, and produces compatible ePAT
+            and heartbeat-counting envelopes when those tasks run.</p>
+
+          <div class="docs-callout">
+            <div class="docs-callout-content">
+              <p><strong>Synthetic provenance is persistent.</strong> Simulated studies and sessions are marked
+                synthetic in memory; CSV exports add <code>data_source=synthetic</code> and use an
+                <code>ema_synthetic_dataset_...</code> filename. Simulation demonstrates the end-to-end workflow. It
+                does not validate a measure, device, task, intervention, or statistical result.</p>
+            </div>
+          </div>
 
           <div class="docs-callout warn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -1963,10 +2011,9 @@ affect &lt;- df |&gt;
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <div class="docs-callout-content">
-              <p><strong>Latency is currently placeholder.</strong> The Dashboard has fields for "latency" (time from
-                prompt delivery to link open), but with no server, the runtime cannot know <em>when</em> the link was
-                sent. This field is zero-filled until the Twilio/webhook integration lands, which will give the parser
-                an external prompt-delivery timestamp to merge in.</p>
+              <p><strong>Do not infer missing events.</strong> Notification-to-open latency is shown only when imported
+                sessions contain a usable latency value. Response-only imports show it as unavailable. Simulations
+                include synthetic notification latency so the chart can be tested, but those values are not empirical.</p>
             </div>
           </div>
 
@@ -2636,8 +2683,9 @@ iat_trials &lt;- sessions |&gt;
           <h2 id="limitations">Known Limitations</h2>
           <ul>
             <li><strong>No live enrollment dashboard.</strong> Data is only visible once files are returned.</li>
-            <li><strong>Missed-ping detection is derived, not direct.</strong> The app cannot know a prompt was sent
-              unless you record that externally.</li>
+            <li><strong>Missed-prompt detection requires event data.</strong> Response files alone cannot reveal prompts
+              that produced no file. Analyze therefore leaves completion unavailable unless a roster and scheduled
+              prompt-event log or a synthetic schedule manifest is present.</li>
             <li><strong>Device heterogeneity.</strong> HR/ePAT quality depends on camera sensor, torch brightness, and
               case thickness. Pilot across a range of devices before locking your protocol.</li>
             <li><strong>Browser storage can be cleared.</strong> A participant who "clears website data" mid-study loses
@@ -2657,40 +2705,39 @@ iat_trials &lt;- sessions |&gt;
 
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-item-title">📱 Twilio delivery receipts <span
+              <div class="feature-item-title">Twilio delivery receipts <span
                   class="status-pill planned">PLANNED</span></div>
               <div class="feature-item-desc">Ingest Twilio status-callback timestamps for true carrier-delivery and
                 ping-to-open latency. STOP auto-pause is already available in the beta dispatcher.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">⏱ Live latency <span class="status-pill planned">PLANNED</span></div>
-              <div class="feature-item-desc">Once Twilio integration lands, the Dashboard will merge delivery timestamps
-                to compute true ping-to-open latency.</div>
+              <div class="feature-item-title">Hosted community catalog <span class="status-pill planned">PLANNED</span></div>
+              <div class="feature-item-desc">Searchable submissions, review metadata, versioning, and one-click install
+                on top of the current inspectable JSON library and GitHub contribution path.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">🧠 Stroop / IAT modules <span class="status-pill planned">PLANNED</span>
+              <div class="feature-item-title">Stroop / IAT modules <span class="status-pill planned">PLANNED</span>
               </div>
               <div class="feature-item-desc">Additional cognitive tasks slotting into the existing module registry.
               </div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">♿ Accessibility pass <span class="status-pill planned">PLANNED</span>
+              <div class="feature-item-title">Accessibility pass <span class="status-pill planned">PLANNED</span>
               </div>
               <div class="feature-item-desc">Full ARIA landmarking, screen-reader-friendly slider + affect grid,
                 text-scale respect.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">🔒 Optional AES-encrypted payloads <span
+              <div class="feature-item-title">Optional AES-encrypted payloads <span
                   class="status-pill planned">PLANNED</span></div>
               <div class="feature-item-desc">Client-side encryption of returned files against a lab-held public key, so
                 return-channel compromise is not a data exposure.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">☁ More webhook templates <span class="status-pill planned">PLANNED</span>
+              <div class="feature-item-title">Importable prompt-event logs <span class="status-pill planned">PLANNED</span>
               </div>
-              <div class="feature-item-desc">Paste-and-go recipes for Microsoft Power Automate (→
-                SharePoint/OneDrive/Excel), REDCap API, and S3 presigned endpoints — alongside the existing Google Apps
-                Script template.</div>
+              <div class="feature-item-desc">A documented event schema for rosters, scheduled prompts, delivery
+                callbacks, and opens so observed studies can use the same completion views as simulation.</div>
             </div>
           </div>
 
@@ -3671,7 +3718,11 @@ export const handler = async (event) =&gt; {
 ├── <span class="ft-dir">ppgtester.html</span>     <span class="ft-comment"># Standalone PPG pipeline tester</span>
 │
 ├── <span class="ft-dir">css/</span>
-│   └── studio.css             <span class="ft-comment"># Shared design tokens + component styles</span>
+│   ├── studio.css             <span class="ft-comment"># Shared design tokens + component styles</span>
+│   ├── builder.css            <span class="ft-comment"># Builder workspace layout</span>
+│   └── dashboard.css          <span class="ft-comment"># Analyze workspace layout</span>
+│
+├── <span class="ft-dir">library/</span>                <span class="ft-comment"># Versioned protocols, packs, and task presets</span>
 │
 ├── <span class="ft-dir">js/</span>
 │   ├── state.js               <span class="ft-comment"># Central state + schema (SCHEMA_VERSION)</span>
@@ -3689,6 +3740,7 @@ export const handler = async (event) =&gt; {
 │   │
 │   └── <span class="ft-dir">dashboard/</span>
 │       ├── parser.js          <span class="ft-comment"># Ingests participant JSON folder</span>
+│       ├── simulator.js       <span class="ft-comment"># Deterministic synthetic protocol runs</span>
 │       └── dashboard.js       <span class="ft-comment"># Charts, filters, CSV export</span>
 │
 └── <span class="ft-dir">templates/</span>                <span class="ft-comment"># Source files stitched into the exported study</span>

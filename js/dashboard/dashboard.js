@@ -3,11 +3,11 @@
  * Handles UI interactions, file binding, and rendering Chart.js graphs.
  */
 
-Chart.defaults.color = '#768390';
+Chart.defaults.color = '#68716f';
 Chart.defaults.font.family = '"TX-02", "Instrument Sans", system-ui, sans-serif';
 Chart.defaults.font.size = 11;
-Chart.defaults.borderColor = '#30363d';
-const gridConfig = { color: '#30363d', drawBorder: false };
+Chart.defaults.borderColor = '#d9d5cc';
+const gridConfig = { color: '#ded9d0', drawBorder: false };
 
 const AppUI = {
   charts: {
@@ -26,6 +26,8 @@ const AppUI = {
     const importBtn = document.getElementById('btn-import-data');
     const fileInput = document.getElementById('file-import-input');
     const exportBtn = document.getElementById('export-csv-btn');
+    const simulateButtons = [document.getElementById('btn-simulate-study'), document.getElementById('empty-simulate-study')].filter(Boolean);
+    const simulationModal = document.getElementById('simulation-modal');
     
     // Filters & Toggles
     const filterRapid = document.getElementById('toggle-filter-rapid');
@@ -46,8 +48,10 @@ const AppUI = {
       try {
         const data = await DataParser.ingestFiles(e.target.files);
         this.populateDateDropdown(data.allSessions);
+        this.populateCohortDropdown();
         this.refreshData(); 
         document.getElementById('empty-state').style.display = 'none';
+        this.updateProvenance();
         this.setStatus(data.warnings.length ? `Imported with ${data.warnings.length} warning(s)` : "Imported locally", data.warnings.length ? "badge-warn" : "badge-good");
       } catch (err) {
         console.error(err);
@@ -66,9 +70,9 @@ const AppUI = {
     segBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelector('.seg-ctrl .seg-btn.active')?.classList.remove('active');
-            e.target.classList.add('active');
+            e.currentTarget.classList.add('active');
             
-            const mode = e.target.textContent.trim();
+            const mode = e.currentTarget.textContent.trim();
             if (mode === 'Per Participant') {
                 const pList = Array.from(DataParser.state.participants).sort();
                 filterCohort.replaceChildren();
@@ -90,7 +94,7 @@ const AppUI = {
       tab.addEventListener('click', (e) => {
         // Update active tab button
         document.querySelector('.topbar-tabs .tab-btn.active')?.classList.remove('active');
-        e.target.classList.add('active');
+        e.currentTarget.classList.add('active');
         
         // Hide all views
         document.querySelectorAll('.dashboard-view').forEach(view => {
@@ -98,7 +102,7 @@ const AppUI = {
         });
 
         // Show targeted view
-        const targetId = e.target.getAttribute('data-target');
+        const targetId = e.currentTarget.getAttribute('data-target');
         const viewEl = document.getElementById(targetId);
         if (viewEl) {
             viewEl.classList.add('active');
@@ -114,6 +118,66 @@ const AppUI = {
 
     // 5. Export CSV
     exportBtn.addEventListener('click', () => this.exportToCSV());
+
+    // 6. Reproducible local study simulation
+    simulateButtons.forEach(button => button.addEventListener('click', () => this.openSimulationModal()));
+    document.getElementById('simulation-close')?.addEventListener('click', () => this.closeSimulationModal());
+    document.getElementById('simulation-cancel')?.addEventListener('click', () => this.closeSimulationModal());
+    document.getElementById('simulation-run')?.addEventListener('click', () => this.runSimulation());
+    simulationModal?.addEventListener('click', event => {
+      if (event.target === simulationModal) this.closeSimulationModal();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && simulationModal?.classList.contains('open')) this.closeSimulationModal();
+    });
+  },
+
+  openSimulationModal() {
+    const modal = document.getElementById('simulation-modal');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.getElementById('simulation-protocol').focus();
+  },
+
+  closeSimulationModal() {
+    const modal = document.getElementById('simulation-modal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  },
+
+  async runSimulation() {
+    const runButton = document.getElementById('simulation-run');
+    const protocolId = document.getElementById('simulation-protocol').value;
+    runButton.disabled = true;
+    runButton.textContent = 'Generating…';
+    this.setStatus('Generating simulation…', 'badge-warn');
+    try {
+      const response = await fetch(`library/protocols/${protocolId}.json`);
+      if (!response.ok) throw new Error(`Could not load protocol (${response.status}).`);
+      const libraryEntry = await response.json();
+      const result = EMAForgeSimulator.simulate(libraryEntry.protocol, {
+        participants: Number(document.getElementById('simulation-participants').value),
+        days: Number(document.getElementById('simulation-days').value),
+        completionRate: Number(document.getElementById('simulation-completion').value) / 100,
+        missingnessRate: Number(document.getElementById('simulation-missingness').value) / 100,
+        seed: document.getElementById('simulation-seed').value
+      });
+      const data = DataParser.loadSynthetic(result);
+      this.populateDateDropdown(data.allSessions);
+      this.populateCohortDropdown();
+      this.refreshData();
+      this.updateProvenance();
+      document.getElementById('empty-state').style.display = 'none';
+      this.setStatus('Synthetic data', 'badge-warn');
+      this.closeSimulationModal();
+    } catch (error) {
+      console.error(error);
+      alert(`Simulation could not be generated: ${error.message}`);
+      this.setStatus('Simulation error', 'badge-danger');
+    } finally {
+      runButton.disabled = false;
+      runButton.textContent = 'Generate study';
+    }
   },
 
   setStatus(text, badgeClass) {
@@ -123,7 +187,7 @@ const AppUI = {
   },
 
   refreshData() {
-    if (DataParser.state.allSessions.length === 0) return;
+    if (DataParser.state.allSessions.length === 0 && !DataParser.state.simulationManifest) return;
     
     const filters = {
         excludeRapid: document.getElementById('toggle-filter-rapid').checked,
@@ -138,7 +202,7 @@ const AppUI = {
 
   populateDateDropdown(sessions) {
     const select = document.getElementById('filter-date');
-    const maxDay = Math.max(...sessions.map(s => s.day), 1);
+    const maxDay = DataParser.state.studyConfig?.ema?.scheduling?.study_days || Math.max(...sessions.map(s => s.day), 1);
     
     select.innerHTML = '<option value="all">All available data</option>';
     for(let i = 1; i <= maxDay; i++) {
@@ -147,6 +211,32 @@ const AppUI = {
         opt.textContent = `Day ${i}`;
         select.appendChild(opt);
     }
+  },
+
+  populateCohortDropdown() {
+    const select = document.getElementById('filter-cohort');
+    select.replaceChildren();
+    const all = document.createElement('option');
+    all.value = 'all';
+    all.textContent = `All Participants (n=${DataParser.state.participants.size})`;
+    select.appendChild(all);
+  },
+
+  updateProvenance() {
+    const note = document.getElementById('data-provenance-note');
+    const missedLabel = document.getElementById('toggle-exclude-missed')?.closest('.toggle-row')?.querySelector('.toggle-label');
+    if (DataParser.state.source === 'synthetic') {
+      const manifest = DataParser.state.simulationManifest;
+      note.innerHTML = `<strong>Synthetic study.</strong> Generated locally from a curated protocol with seed <code>${this._escapeHtml(manifest.seed)}</code>. These records demonstrate workflow behavior and must not be interpreted as research findings.`;
+      if (missedLabel) missedLabel.textContent = 'Missed prompts are derived from the synthetic schedule manifest';
+    } else {
+      note.innerHTML = '<strong>Imported observations.</strong> Files remain in this browser. Completion and missed-prompt rates remain unavailable unless a roster and scheduled delivery-event log are supplied.';
+      if (missedLabel) missedLabel.textContent = 'Missed-prompt filtering unavailable without a roster/event log';
+    }
+  },
+
+  _escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>\"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
   },
 
   _toNumeric(val) {
@@ -187,7 +277,7 @@ const AppUI = {
     const windows = cfg.ema?.scheduling?.windows || [];
 
     const header = [
-      'participant_id', 'day', 'session_id', 'window_id', 'window_label', 'block',
+      'data_source', 'participant_id', 'day', 'session_id', 'window_id', 'window_label', 'block',
       'session_started_at', 'session_submitted_at',
       'phase_started_at', 'phase_submitted_at',
       'question_id', 'question_text', 'question_type', 'presentation_order',
@@ -234,6 +324,7 @@ const AppUI = {
             : (answered ? 'answered' : 'unanswered');
 
           const rowData = [
+            DataParser.state.source === 'synthetic' ? 'synthetic' : 'observed',
             sessionData.participantId,
             sessionData.day,
             sessionData.sessionId || '',
@@ -265,8 +356,10 @@ const AppUI = {
     
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ema_master_dataset_${new Date().toISOString().slice(0, 10)}.csv`;
+    const prefix = DataParser.state.source === 'synthetic' ? 'ema_synthetic_dataset' : 'ema_master_dataset';
+    a.download = `${prefix}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   },
 
   initEmptyCharts() {
@@ -335,18 +428,22 @@ const AppUI = {
     const cohortFilter = document.getElementById('filter-cohort').value;
     
     document.getElementById('dash-study-name').textContent = studyName;
+    const sourceLabel = data.source === 'synthetic' ? 'Synthetic protocol run' : 'Local file analysis';
     document.getElementById('dash-subtitle').textContent = cohortFilter === 'all' 
-        ? `Local File Analysis — ${data.participants.size} Active Participants`
-        : `Local File Analysis — Isolating Participant ${cohortFilter}`;
+        ? `${sourceLabel} — ${data.participants.size} participants`
+        : `${sourceLabel} — participant ${cohortFilter}`;
     
     const studyDays = data.studyConfig?.ema?.scheduling?.study_days || Object.keys(data.metrics.observedByDay).length || 1;
     
     const currentDay = Math.max(...data.allSessions.map(s => s.day), 1);
-    const pct = Math.round((currentDay / studyDays) * 100);
+    const pct = Math.min(100, Math.round((currentDay / studyDays) * 100));
     
     document.getElementById('study-progress-text').textContent = `Day ${currentDay} of ${studyDays}`;
     document.getElementById('study-progress-pct').textContent = `${pct}%`;
     document.getElementById('study-progress-bar').style.width = `${pct}%`;
+    document.getElementById('study-progress-hint').textContent = data.source === 'synthetic'
+      ? 'Protocol schedule represented in the generated dataset.'
+      : 'Progress reflects the latest observed session day.';
   },
 
   updateKPIs(m) {
@@ -357,12 +454,19 @@ const AppUI = {
         return `${mins}m ${secs}s`;
     };
 
-    document.getElementById('kpi-compliance').textContent = "Unavailable";
-    document.getElementById('trend-compliance').textContent = "Requires roster + prompt events";
-    this.setCardStatus('card-compliance', '');
-
-    document.getElementById('kpi-pings').textContent = "Unavailable";
-    document.getElementById('trend-pings').textContent = "Requires delivery events";
+    if (m.complianceAvailable) {
+      document.getElementById('kpi-compliance').textContent = `${Math.round(m.complianceRate * 100)}%`;
+      document.getElementById('trend-compliance').textContent = `${m.totalCompleted} records observed · ${m.totalMissed} scheduled misses`;
+      this.setCardStatus('card-compliance', m.complianceRate >= 0.8 ? 'good' : 'warn');
+      document.getElementById('kpi-pings').textContent = `${m.totalDelivered}/${m.totalExpectedPings}`;
+      document.getElementById('trend-pings').textContent = 'From synthetic schedule manifest';
+    } else {
+      document.getElementById('kpi-compliance').textContent = "Unavailable";
+      document.getElementById('trend-compliance').textContent = "Requires roster + prompt events";
+      this.setCardStatus('card-compliance', '');
+      document.getElementById('kpi-pings').textContent = "Unavailable";
+      document.getElementById('trend-pings').textContent = "Requires delivery events";
+    }
 
     document.getElementById('kpi-noise').textContent = String(m.totalRapid);
     document.getElementById('trend-noise').textContent = "Review flag; not automatic exclusion";
@@ -377,15 +481,32 @@ const AppUI = {
   },
 
   updateCharts(m) {
-    const days = Object.keys(m.observedByDay).sort((a,b)=>a-b);
+    const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const accent = css('--accent') || '#9d4037';
+    const green = css('--green') || '#36705b';
+    const yellow = css('--yellow') || '#9a6a26';
+    const panel = css('--bg-1') || '#fbfaf7';
+    const days = Array.from(new Set([...Object.keys(m.observedByDay), ...Object.keys(m.expectedByDay || {})])).sort((a,b)=>a-b);
     const labels = days.map(d => `Day ${d}`);
-    const completedData = days.map(d => m.observedByDay[d].completed);
+    const completedData = days.map(d => m.observedByDay[d]?.completed || 0);
+    const completionDatasets = [{
+      label: 'Completed sessions',
+      data: days.map(d => m.expectedByDay?.[d]?.completed ?? m.observedByDay[d]?.completed ?? 0),
+      backgroundColor: green,
+      borderRadius: 2,
+      barPercentage: 0.62
+    }];
+    if (m.complianceAvailable) completionDatasets.push({
+      label: 'Scheduled misses',
+      data: days.map(d => m.expectedByDay?.[d]?.missed || 0),
+      backgroundColor: yellow,
+      borderRadius: 2,
+      barPercentage: 0.62
+    });
 
     this.charts.compliance.data = {
       labels: labels,
-      datasets: [
-        { label: 'Observed completed sessions', data: completedData, backgroundColor: '#3fb950', borderRadius: 4, barPercentage: 0.6 }
-      ]
+      datasets: completionDatasets
     };
     this.charts.compliance.update();
 
@@ -395,10 +516,10 @@ const AppUI = {
       datasets: [{
         label: 'Observed completed sessions',
         data: completedData,
-        borderColor: '#3fb950',
-        backgroundColor: 'rgba(63,185,80,0.1)',
+        borderColor: accent,
+        backgroundColor: `${accent}18`,
         borderWidth: 2, tension: 0.4, fill: true,
-        pointBackgroundColor: '#161b22', pointBorderColor: '#3fb950', pointRadius: 4
+        pointBackgroundColor: panel, pointBorderColor: accent, pointRadius: 4
       }]
     };
     this.charts.overview.update();
@@ -409,7 +530,7 @@ const AppUI = {
       labels: ['Not rapid-flagged', 'Rapid review flag'],
       datasets: [{
         data: [valid, m.totalRapid],
-        backgroundColor: ['#3fb950', '#e8716a'],
+        backgroundColor: [green, accent],
         borderWidth: 0, hoverOffset: 4
       }]
     };
@@ -421,10 +542,10 @@ const AppUI = {
       datasets: [{
         label: 'Avg Latency (mins)',
         data: latencyDataMins,
-        borderColor: '#388bfd',
-        backgroundColor: 'rgba(56,139,253,0.1)',
+        borderColor: accent,
+        backgroundColor: `${accent}14`,
         borderWidth: 2, tension: 0.4, fill: true,
-        pointBackgroundColor: '#161b22', pointBorderColor: '#388bfd', pointRadius: 4
+        pointBackgroundColor: panel, pointBorderColor: accent, pointRadius: 4
       }]
     };
     this.charts.latency.update();
@@ -444,9 +565,26 @@ const AppUI = {
       pStats[s.participantId].completed++;
     });
 
-    const rows = Object.keys(pStats).map(pId => {
-      return { id: pId, completed: pStats[pId].completed };
-    });
+    const expectedStats = {};
+    if (data.source === 'synthetic') {
+      const dayFilter = document.getElementById('filter-date').value;
+      const participantFilter = document.getElementById('filter-cohort').value;
+      (data.simulationManifest?.expectedEvents || []).forEach(event => {
+        if (dayFilter !== 'all' && event.day !== Number(dayFilter)) return;
+        if (participantFilter !== 'all' && event.participantId !== participantFilter) return;
+        if (!expectedStats[event.participantId]) expectedStats[event.participantId] = { expected: 0, completed: 0 };
+        expectedStats[event.participantId].expected++;
+        if (event.completed) expectedStats[event.participantId].completed++;
+      });
+    }
+
+    const participantIds = data.source === 'synthetic' ? Object.keys(expectedStats) : Object.keys(pStats);
+    const rows = participantIds.map(pId => ({
+      id: pId,
+      completed: pStats[pId]?.completed || 0,
+      expected: expectedStats[pId]?.expected || null,
+      protocolCompleted: expectedStats[pId]?.completed || 0
+    }));
 
     rows.sort((a,b) => a.id.localeCompare(b.id));
 
@@ -459,8 +597,9 @@ const AppUI = {
       countCell.textContent = String(r.completed);
       const statusCell = document.createElement('td');
       const badge = document.createElement('span');
-      badge.className = 'badge badge-neutral';
-      badge.textContent = 'Observed only';
+      const rate = r.expected ? r.protocolCompleted / r.expected : null;
+      badge.className = `badge ${rate === null ? 'badge-neutral' : rate >= 0.8 ? 'badge-good' : 'badge-warn'}`;
+      badge.textContent = rate === null ? 'Observed only' : `${Math.round(rate * 100)}% of ${r.expected} scheduled`;
       statusCell.appendChild(badge);
       tr.append(idCell, countCell, statusCell);
       tbody.appendChild(tr);
@@ -470,14 +609,40 @@ const AppUI = {
     const overviewTbody = document.getElementById('overview-watchlist-body');
     overviewTbody.innerHTML = '';
     
-    document.getElementById('overview-critical-count').textContent = 'N/A';
-    const row = document.createElement('tr');
-    const cell = document.createElement('td');
-    cell.colSpan = 2;
-    cell.style.cssText = 'text-align:center;color:var(--fg-3);padding-top:24px;';
-    cell.textContent = 'A roster and prompt-event log are required to identify missed sessions.';
-    row.appendChild(cell);
-    overviewTbody.appendChild(row);
+    if (data.source === 'synthetic') {
+      const watchlist = rows
+        .filter(item => item.expected && item.protocolCompleted / item.expected < 0.6)
+        .sort((a, b) => (a.protocolCompleted / a.expected) - (b.protocolCompleted / b.expected))
+        .slice(0, 5);
+      document.getElementById('overview-critical-count').textContent = String(watchlist.length);
+      if (!watchlist.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 2;
+        cell.textContent = 'No participants below 60% protocol completion.';
+        row.appendChild(cell);
+        overviewTbody.appendChild(row);
+      } else {
+        watchlist.forEach(item => {
+          const row = document.createElement('tr');
+          const id = document.createElement('td');
+          id.textContent = item.id;
+          const count = document.createElement('td');
+          count.textContent = `${item.protocolCompleted} of ${item.expected}`;
+          row.append(id, count);
+          overviewTbody.appendChild(row);
+        });
+      }
+    } else {
+      document.getElementById('overview-critical-count').textContent = 'N/A';
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 2;
+      cell.style.cssText = 'text-align:center;color:var(--fg-3);padding-top:24px;';
+      cell.textContent = 'A roster and prompt-event log are required to identify missed sessions.';
+      row.appendChild(cell);
+      overviewTbody.appendChild(row);
+    }
   }
 };
 

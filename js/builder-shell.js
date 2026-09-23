@@ -149,3 +149,6 @@ document.addEventListener("click", event => {
   if (menu.open && !menu.contains(event.target)) menu.open = false;
 });
 renderBuilderShell();
+if (window.location.hash === "#library") {
+  document.getElementById("import-modal").classList.add("open");
+}

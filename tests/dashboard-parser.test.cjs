@@ -62,3 +62,23 @@ test("long-format CSV preserves presented, unanswered, and condition-skipped sta
   assert.equal(phase.responses.q2, undefined);
   assert.equal(phase.skippedQuestions[0].questionId, "q3");
 });
+
+test("synthetic manifests make scheduled completion metrics available", () => {
+  const config = { study: { name: "Simulation" }, ema: { scheduling: { study_days: 1, windows: [{ id: "w1" }] }, questions: [] } };
+  const sessions = [{
+    participantId: "SIM-001", sessionId: "S1", day: 1, type: "w1", status: "complete",
+    startedAt: "2026-01-01T12:00:00.000Z", completedAt: "2026-01-01T12:02:00.000Z", synthetic: true, data: []
+  }];
+  const expectedEvents = [
+    { participantId: "SIM-001", sessionId: "S1", day: 1, delivered: true, completed: true },
+    { participantId: "SIM-001", sessionId: "S2", day: 1, delivered: true, completed: false }
+  ];
+
+  DataParser.loadSynthetic({ config, sessions, manifest: { synthetic: true, expectedEvents } });
+
+  assert.equal(DataParser.state.source, "synthetic");
+  assert.equal(DataParser.state.metrics.complianceAvailable, true);
+  assert.equal(DataParser.state.metrics.totalExpectedPings, 2);
+  assert.equal(DataParser.state.metrics.totalMissed, 1);
+  assert.equal(DataParser.state.metrics.complianceRate, 0.5);
+});

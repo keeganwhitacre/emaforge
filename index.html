@@ -24,7 +24,7 @@
   /* ── Topbar (no tabs, no actions — just brand) ─────────── */
   #home-topbar {
     display: flex; align-items: center;
-    padding: 0 28px; height: 52px;
+    padding: 0 30px; height: 58px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-1);
     gap: 14px; flex-shrink: 0;
@@ -32,12 +32,12 @@
   .home-brand {
     display: flex; align-items: center; gap: 10px;
     font-weight: 700; font-size: 14px;
-    letter-spacing: 0.06em; text-transform: uppercase;
+    letter-spacing: -0.01em;
     color: var(--fg);
   }
   .home-logo {
-    width: 26px; height: 26px;
-    background: var(--accent); border-radius: 6px;
+    width: 24px; height: 24px;
+    color: var(--accent); border: 1px solid var(--border); border-radius: 3px;
     display: flex; align-items: center; justify-content: center;
   }
   .home-logo svg { width: 15px; height: 15px; }
@@ -49,8 +49,8 @@
 
   /* ── Hero ───────────────────────────────────────────────── */
   #hero {
-    padding: 72px 28px 48px;
-    max-width: 860px;
+    padding: 82px 28px 46px;
+    max-width: 920px;
     margin: 0 auto;
     width: 100%;
   }
@@ -66,20 +66,25 @@
     background: var(--accent);
   }
   .hero-title {
-    font-size: 42px; font-weight: 700;
+    font-size: 46px; font-weight: 700;
     letter-spacing: -0.03em; line-height: 1.1;
     color: var(--fg); margin-bottom: 16px;
   }
   .hero-title span { color: var(--accent); }
   .hero-sub {
-    font-size: 15px; color: var(--fg-3);
-    line-height: 1.7; max-width: 520px;
+    font-size: 16px; color: var(--fg-2);
+    line-height: 1.65; max-width: 650px;
   }
+  .hero-actions { display: flex; gap: 9px; margin-top: 24px; }
+  .hero-actions a { min-height: 38px; text-decoration: none; }
+  .hero-primary { display: inline-flex; align-items: center; padding: 8px 14px; border: 1px solid var(--fg); border-radius: var(--radius); background: var(--fg); color: var(--bg); font-size: 12px; font-weight: 600; }
+  .hero-secondary { display: inline-flex; align-items: center; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg-2); font-size: 12px; font-weight: 500; }
+  .hero-secondary:hover { border-color: var(--border-hi); color: var(--fg); }
 
   /* ── Cards grid ─────────────────────────────────────────── */
   #cards {
     padding: 0 28px 72px;
-    max-width: 860px;
+    max-width: 920px;
     margin: 0 auto;
     width: 100%;
     display: grid;
@@ -88,43 +93,31 @@
   }
 
   .home-card {
-    background: var(--bg-1);
+    background: transparent;
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius);
     padding: 28px 24px 24px;
     display: flex; flex-direction: column; gap: 0;
     text-decoration: none; color: inherit;
-    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
-    cursor: pointer; position: relative; overflow: hidden;
-  }
-  .home-card::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, var(--card-tint, transparent) 0%, transparent 60%);
-    opacity: 0; transition: opacity 0.2s ease;
-    pointer-events: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    cursor: pointer; position: relative;
   }
   .home-card:hover {
     border-color: var(--border-hi);
     background: var(--bg-2);
-    transform: translateY(-2px);
   }
-  .home-card:hover::before { opacity: 1; }
 
   /* Primary card (Builder) gets accent tint on hover */
-  .home-card.card-primary { --card-tint: rgba(232,113,106,0.08); }
   .home-card.card-primary:hover { border-color: var(--accent); }
 
   .card-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
+    width: 28px; height: 28px;
     display: flex; align-items: center; justify-content: center;
-    margin-bottom: 20px; flex-shrink: 0;
+    margin-bottom: 22px; flex-shrink: 0;
   }
-  .card-icon svg { width: 20px; height: 20px; }
-  .card-icon-accent  { background: rgba(232,113,106,0.15); color: var(--accent); }
-  .card-icon-blue    { background: rgba(56,139,253,0.15);  color: var(--blue); }
-  .card-icon-muted   { background: var(--bg-3); color: var(--fg-3); }
+  .card-icon svg { width: 19px; height: 19px; }
+  .card-icon-accent, .card-icon-blue { color: var(--accent); }
+  .card-icon-muted { color: var(--fg-3); }
 
   .card-label {
     font-size: 10px; font-weight: 700;
@@ -166,10 +159,21 @@
 
   /* ── Divider line between hero and cards ────────────────── */
   .home-divider {
-    max-width: 860px; margin: 0 auto 40px;
+    max-width: 920px; margin: 0 auto 40px;
     width: calc(100% - 56px);
     height: 1px; background: var(--border);
   }
+
+  #principles {
+    max-width: 920px; width: calc(100% - 56px); margin: -28px auto 44px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border-hi); border-bottom: 1px solid var(--border);
+  }
+  .principle { padding: 13px 14px; border-right: 1px solid var(--border); }
+  .principle:first-child { padding-left: 0; }
+  .principle:last-child { border-right: 0; }
+  .principle strong { display: block; color: var(--fg); font-size: 11px; font-weight: 600; }
+  .principle span { color: var(--fg-3); font-size: 10px; }
 
   /* ── Footer ─────────────────────────────────────────────── */
   #home-footer {
@@ -185,6 +189,8 @@
     background: var(--bg-2); border: 1px solid var(--border);
     border-radius: 4px; padding: 2px 8px;
   }
+  #home-footer a { color: var(--fg-2); text-decoration: none; }
+  #home-footer a:hover { color: var(--accent); }
  /* --- Mobile Landing Page (Index) --- */
 @media (max-width: 850px) {
   #hero {
@@ -200,6 +206,10 @@
     padding: 0 24px 60px;
     gap: 12px;
   }
+  #principles { grid-template-columns: 1fr 1fr; margin-top: -22px; }
+  .principle:nth-child(2) { border-right: 0; }
+  .principle:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .principle:nth-child(3) { padding-left: 0; }
   
   /* Hide minor topbar text to save space */
   .home-topbar-right { display: none; }
@@ -231,11 +241,23 @@
 
   <!-- ── Hero ──────────────────────────────────────────── -->
   <section id="hero">
+    <div class="hero-eyebrow">Open physiological EMA infrastructure</div>
     <h1 class="hero-title">EMA Forge</h1>
     <p class="hero-sub">Build browser-based EMA with phone-camera physiology—free, open source, and designed to move research beyond the lab.</p>
+    <div class="hero-actions">
+      <a class="hero-primary" href="builder.html">Build a study</a>
+      <a class="hero-secondary" href="builder.html#library">Explore protocols</a>
+    </div>
   </section>
 
   <div class="home-divider"></div>
+
+  <section id="principles" aria-label="Platform principles">
+    <div class="principle"><strong>Browser based</strong><span>No participant app install</span></div>
+    <div class="principle"><strong>Physiology capable</strong><span>PPG, ePAT, and HCT</span></div>
+    <div class="principle"><strong>Inspectable</strong><span>Open configurations and runtime</span></div>
+    <div class="principle"><strong>Researcher controlled</strong><span>Choose hosting and data return</span></div>
+  </section>
 
   <!-- ── Cards ─────────────────────────────────────────── -->
   <section id="cards">
@@ -273,12 +295,12 @@
           </svg>
       </div>
       <div class="card-label">Analysis</div>
-      <div class="card-title">Data Dashboard</div>
+      <div class="card-title">Analyze</div>
       <div class="card-desc">
-        Import participant JSON files to view compliance rates, signal noise, and export aggregated CSVs locally.
+        Inspect returned data locally, review item and ePAT summaries, or simulate a complete protocol before deployment.
       </div>
       <div class="card-footer card-footer-accent">
-        Open dashboard
+        Open Analyze
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
       </div>
     </a>
@@ -310,8 +332,8 @@
 
   <!-- ── Footer ────────────────────────────────────────── -->
   <footer id="home-footer">
-    <span>EMA Forge — Keegan Whitacre</span>
-    <span class="footer-version">v2.0.0</span>
+    <span>EMA Forge — free and open-source research infrastructure</span>
+    <span><a href="https://github.com/keeganwhitacre/emaforge" target="_blank" rel="noopener noreferrer">Source code</a> · <span class="footer-version">v2.0.0</span></span>
   </footer>
 
 </div>

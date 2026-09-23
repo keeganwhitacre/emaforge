@@ -9,7 +9,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMA Forge - Dashboard</title>
+<title>EMA Forge — Analyze</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -202,6 +202,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 :root[data-theme="dark"]  { --accent-rgb: 232, 113, 106; }
 :root[data-theme="light"] { --accent-rgb: 210, 75, 68; }
 </style>
+<link rel="stylesheet" href="css/dashboard.css?v=20260923a">
 </head>
 <body>
 <div id="mobile-blocker">
@@ -212,7 +213,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       <line x1="12" y1="17" x2="12" y2="21"></line>
     </svg>
     <h2>Desktop Recommended</h2>
-    <p>EMA Forge's Builder and Data Dashboard are designed for larger screens. Please visit this page on a desktop or laptop computer to design your study.</p>
+    <p>EMA Forge's Builder and Analyze workspace are designed for larger screens. Please visit this page on a desktop or laptop computer to work with study data.</p>
     <a href="readme.html" class="btn" style="margin-top: 20px; text-decoration: none;">Read the Documentation</a>
   </div>
 </div>
@@ -233,27 +234,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       </div>
       EMA Forge
     </a>
-    <div class="topbar-sep"></div>
-    <nav class="topbar-tabs">
-      <button class="tab-btn active" data-target="view-overview">Overview</button>
-      <button class="tab-btn" data-target="view-compliance">Compliance</button>
-      <button class="tab-btn" data-target="view-signals">Signals & Noise</button>
-      <button class="tab-btn" data-target="view-participants">Participants</button>
-      <button class="tab-btn" data-target="view-content">Items</button>
-      <button class="tab-btn" data-target="view-pat">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round"
-            width="11" height="11" style="margin-right:4px;vertical-align:-1px">
-          <circle cx="8" cy="8" r="6.5"/>
-          <line x1="8" y1="1.5" x2="8" y2="4"/>
-          <line x1="8" y1="12" x2="8" y2="14.5"/>
-          <line x1="1.5" y1="8" x2="4" y2="8"/>
-          <line x1="12" y1="8" x2="14.5" y2="8"/>
-          <line x1="8" y1="8" x2="11" y2="5.5"/>
-        </svg>
-        PAT
-      </button>
-    </nav>
+    <div class="analyze-project"><strong>Analyze</strong><span>Local workspace</span></div>
     <div class="topbar-actions">
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -264,6 +245,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689V2a.75.75 0 00-1.5 0v5.689L3.53 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L7.25 7.689z"/></svg>
           Import Data (CSV or JSON)
         </button>
+      <button class="btn-ghost" id="btn-simulate-study">Simulate study</button>
       <button class="btn-export" id="export-csv-btn">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
         Export CSV
@@ -273,6 +255,18 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 
   <!-- ========== SIDEBAR CONTROLS ========== -->
   <aside id="sidebar-panel">
+    <div>
+      <span class="section-title">Analyze</span>
+      <nav class="topbar-tabs dashboard-nav" aria-label="Analysis sections">
+        <button class="tab-btn active" data-target="view-overview">Overview</button>
+        <button class="tab-btn" data-target="view-compliance">Completion</button>
+        <button class="tab-btn" data-target="view-participants">Participants</button>
+        <button class="tab-btn" data-target="view-content">Responses</button>
+        <button class="tab-btn" data-target="view-signals">Data quality</button>
+        <button class="tab-btn" data-target="view-pat">ePAT</button>
+      </nav>
+    </div>
+    <div class="divider"></div>
     <div>
       <span class="section-title">Study Progress</span>
       <div class="field-group">
@@ -304,7 +298,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     </div>
     <div class="divider"></div>
     <div>
-      <span class="section-title">Quality Controls (Recalculates charts)</span>
+      <span class="section-title">Review controls</span>
       <div class="toggle-row">
         <span class="toggle-label">Missed-prompt filtering unavailable without a roster/event log</span>
         <label class="toggle">
@@ -328,18 +322,19 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <!-- Empty State Overlay -->
     <div id="empty-state">
       <div class="empty-box">
-        <div class="empty-title">Ready for Analysis</div>
-        <div class="empty-desc">To begin, select the folder containing your EMA study's <code>config.json</code> and participant data exports or select your exported sheet <code>CSV</code> file and your <code>config.json</code>. Data is processed locally and never leaves your browser.</div>
-        <button class="btn-export" style="padding: 10px 20px; font-size: 13px;" onclick="document.getElementById('file-import-input').click()">
-          Browse Folder...
-        </button>
+        <div class="empty-title">Analyze a study locally</div>
+        <div class="empty-desc">Import an EMA Forge <code>config.json</code> with participant JSON or long-format CSV data. Nothing is uploaded. You can also generate a clearly labeled synthetic study to explore the workspace.</div>
+        <div class="empty-actions">
+          <button class="btn-export" onclick="document.getElementById('file-import-input').click()">Import study data</button>
+          <button class="btn-ghost" id="empty-simulate-study">Simulate a study</button>
+        </div>
       </div>
     </div>
 
     <!-- Static Header -->
     <div class="dashboard-header">
       <div>
-        <h1 class="dashboard-title" id="dash-study-name">Study Dashboard</h1>
+        <h1 class="dashboard-title" id="dash-study-name">Study overview</h1>
         <div class="dashboard-subtitle" id="dash-subtitle">No data loaded</div>
       </div>
       <div class="seg-ctrl">
@@ -352,22 +347,22 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div id="view-overview" class="dashboard-view active">
       <div class="kpi-grid">
         <div class="kpi-card" id="card-compliance">
-          <span class="kpi-title">Compliance Rate</span>
+          <span class="kpi-title">Protocol completion</span>
           <span class="kpi-value" id="kpi-compliance">--%</span>
           <div class="kpi-trend trend-neutral" id="trend-compliance">Awaiting data</div>
         </div>
         <div class="kpi-card" id="card-pings">
-          <span class="kpi-title">Prompts Delivered</span>
+          <span class="kpi-title">Delivery records</span>
           <span class="kpi-value" id="kpi-pings">--</span>
           <div class="kpi-trend trend-neutral" id="trend-pings">Awaiting data</div>
         </div>
         <div class="kpi-card" id="card-noise">
-          <span class="kpi-title">Rapid Session Flags</span>
+          <span class="kpi-title">Rapid-session flags</span>
           <span class="kpi-value" id="kpi-noise">--%</span>
           <div class="kpi-trend trend-neutral" id="trend-noise">Review flag; not an exclusion</div>
         </div>
         <div class="kpi-card" id="card-time">
-          <span class="kpi-title">Avg. Time to Complete</span>
+          <span class="kpi-title">Mean completion time</span>
           <span class="kpi-value" id="kpi-time">--m --s</span>
           <div class="kpi-trend trend-neutral" id="trend-time">Across all tasks</div>
         </div>
@@ -385,7 +380,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
         </div>
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">Attention Required</span>
+            <span class="chart-title">Records requiring review</span>
             <span class="badge badge-danger" id="overview-critical-count">0</span>
           </div>
           <div class="table-wrap">
@@ -393,7 +388,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
               <thead>
                 <tr>
                   <th>Participant</th>
-                  <th>Compliance</th>
+                  <th>Observed sessions</th>
                 </tr>
               </thead>
               <tbody id="overview-watchlist-body">
@@ -419,12 +414,12 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       </div>
     </div>
 
-    <!-- VIEW: SIGNALS & NOISE -->
+    <!-- VIEW: DATA QUALITY -->
     <div id="view-signals" class="dashboard-view">
       <div class="chart-grid chart-grid-halves">
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">Rapid-Duration Review Flags</span>
+            <span class="chart-title">Rapid-duration review flags</span>
           </div>
           <div class="chart-container">
             <canvas id="dispositionChart"></canvas>
@@ -432,8 +427,8 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
         </div>
         <div class="chart-card">
           <div class="chart-header">
-            <span class="chart-title">Signal Latency (Time to open)</span>
-            <span class="badge badge-neutral" id="latency-median-badge">Avg: --</span>
+            <span class="chart-title">Notification-to-open latency</span>
+            <span class="badge badge-neutral" id="latency-median-badge">Mean: --</span>
           </div>
           <div class="chart-container">
             <canvas id="latencyChart"></canvas>
@@ -446,7 +441,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div id="view-participants" class="dashboard-view">
       <div class="data-table-container">
         <div class="table-header-row">
-          <span class="chart-title">Participant Watchlist & Status</span>
+          <span class="chart-title">Observed participant records</span>
         </div>
         <div class="table-wrap">
           <table>
@@ -475,7 +470,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
   <!-- Composite score builder -->
   <div class="composite-wrap">
     <div class="composite-panel">
-      <div class="composite-panel-title">Build a Composite Score</div>
+      <div class="composite-panel-title">Build a composite score</div>
       <div class="composite-panel-sub">Select numeric items (sliders, number inputs) to compute a per-session mean or sum — for quick subscale checks. Flag items as reverse-scored to invert on the fly. Listwise-complete scoring is used.</div>
       <div class="composite-method-row">
         <label for="composite-method">Method:</label>
@@ -487,7 +482,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       <div id="composite-picker"></div>
     </div>
     <div class="composite-panel">
-      <div class="composite-panel-title">Score Distribution</div>
+      <div class="composite-panel-title">Score distribution</div>
       <div class="composite-panel-sub">Summary across all filtered sessions.</div>
       <div id="composite-output"></div>
     </div>
@@ -506,12 +501,35 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div class="pat-empty-inner">Import data to see PAT results.</div>
   </div>
 </div>
+
+    <div class="analysis-note" id="data-provenance-note">Import data or run a simulation to begin. Synthetic records are always labeled.</div>
  
   </main>
 </div>
 
+<div class="modal-overlay" id="simulation-modal" aria-hidden="true">
+  <div class="modal-box simulation-modal-box" role="dialog" aria-modal="true" aria-labelledby="simulation-title">
+    <div class="simulation-modal-head">
+      <div><div class="modal-title" id="simulation-title">Simulate an EMA study</div><div class="modal-subtitle">Generate reproducible, clearly labeled synthetic records from a curated EMA Forge protocol.</div></div>
+      <button class="modal-close" id="simulation-close" type="button" aria-label="Close simulation settings">✕</button>
+    </div>
+    <div class="simulation-grid">
+      <label class="field-group"><span class="field-label">Protocol</span><select id="simulation-protocol"><option value="daily-rhythm-sleep">Daily Rhythm &amp; Sleep</option><option value="community-stress-support">Community Stress &amp; Support</option><option value="interoception-daily-life">Interoception in Daily Life</option></select></label>
+      <label class="field-group"><span class="field-label">Participants</span><input id="simulation-participants" type="number" min="1" max="250" value="12"></label>
+      <label class="field-group"><span class="field-label">Study days</span><input id="simulation-days" type="number" min="1" max="60" value="7"></label>
+      <label class="field-group"><span class="field-label">Prompt completion (%)</span><input id="simulation-completion" type="number" min="5" max="100" value="85"></label>
+      <label class="field-group"><span class="field-label">Item missingness (%)</span><input id="simulation-missingness" type="number" min="0" max="50" value="5"></label>
+      <label class="field-group"><span class="field-label">Random seed</span><input id="simulation-seed" type="text" value="ema-forge-demo"></label>
+    </div>
+    <div class="simulation-disclosure"><strong>Synthetic data only.</strong> Simulation demonstrates the analysis workflow; it does not validate a measure, task, or statistical result.</div>
+    <div class="simulation-actions"><button class="btn-ghost" id="simulation-cancel" type="button">Cancel</button><button class="btn-export" id="simulation-run" type="button">Generate study</button></div>
+  </div>
+</div>
+
 <!-- Scripts -->
 <script src="js/dashboard/parser.js"></script>
+<script src="templates/runtime-utils.js"></script>
+<script src="js/dashboard/simulator.js?v=20260923a"></script>
 <script src="js/dashboard/content-stats.js"></script>
 <script src="js/dashboard/content-view.js"></script>
 <script src="js/dashboard/dashboard.js"></script>
@@ -524,6 +542,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       const newTheme = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('ema-forge-theme', newTheme);
+      if (typeof AppUI !== 'undefined' && DataParser.state.allSessions.length) AppUI.refreshData();
     });
   }
 </script>

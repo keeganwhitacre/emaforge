@@ -14,6 +14,8 @@ const DataParser = {
     filteredSessions: [],
     participants: new Set(),
     warnings: [],
+    source: "empty",
+    simulationManifest: null,
     metrics: {}
   },
 
@@ -23,6 +25,8 @@ const DataParser = {
     this.state.filteredSessions = [];
     this.state.participants = new Set();
     this.state.warnings = [];
+    this.state.source = "empty";
+    this.state.simulationManifest = null;
     this.state.metrics = this.emptyMetrics();
   },
 
@@ -34,16 +38,19 @@ const DataParser = {
       totalDelivered: null,
       totalCompleted: 0,
       totalMissed: null,
+      complianceRate: null,
       totalRapid: 0,
       avgTimeMs: null,
       avgLatencyMs: null,
       observedByDay: {},
+      expectedByDay: {},
       latencyByDay: {}
     };
   },
 
   async ingestFiles(fileList) {
     this.resetState();
+    this.state.source = "imported";
     const cachedConfig = localStorage.getItem("ema_forge_config");
     if (cachedConfig) {
       try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (error) { }
@@ -59,6 +66,22 @@ const DataParser = {
     if (!this.state.studyConfig && this.state.allSessions.length) {
       this.state.warnings.push("No config.json was imported; question labels and study structure may be incomplete.");
     }
+    return this.state;
+  },
+
+  loadSynthetic(result) {
+    if (!result?.config || !Array.isArray(result.sessions) || !result.manifest?.synthetic) {
+      throw new Error("Invalid synthetic study payload.");
+    }
+    this.resetState();
+    this.state.source = "synthetic";
+    this.state.studyConfig = result.config;
+    this.state.simulationManifest = result.manifest;
+    this.state.allSessions = result.sessions.map(session => this.normalizeSession(session));
+    this._deduplicateSessions();
+    for (const event of result.manifest.expectedEvents || []) this.state.participants.add(event.participantId);
+    this.state.allSessions.forEach(session => this.state.participants.add(session.participantId));
+    this.calculateMetrics({ excludeRapid: false, day: "all", participant: "all" });
     return this.state;
   },
 
@@ -257,6 +280,31 @@ const DataParser = {
         : null;
     });
 
+    let syntheticMetrics = {};
+    if (this.state.source === "synthetic" && this.state.simulationManifest) {
+      let expected = this.state.simulationManifest.expectedEvents || [];
+      if (filters.day && filters.day !== "all") expected = expected.filter(event => event.day === Number(filters.day));
+      if (filters.participant && filters.participant !== "all") expected = expected.filter(event => event.participantId === filters.participant);
+      const expectedByDay = {};
+      expected.forEach(event => {
+        if (!expectedByDay[event.day]) expectedByDay[event.day] = { expected: 0, delivered: 0, completed: 0, missed: 0 };
+        expectedByDay[event.day].expected += 1;
+        if (event.delivered) expectedByDay[event.day].delivered += 1;
+        if (event.completed) expectedByDay[event.day].completed += 1;
+        else expectedByDay[event.day].missed += 1;
+      });
+      const protocolCompleted = expected.filter(event => event.completed).length;
+      const totalExpectedPings = expected.length;
+      syntheticMetrics = {
+        complianceAvailable: true,
+        totalExpectedPings,
+        totalDelivered: expected.filter(event => event.delivered).length,
+        totalMissed: Math.max(0, totalExpectedPings - protocolCompleted),
+        complianceRate: totalExpectedPings ? protocolCompleted / totalExpectedPings : null,
+        expectedByDay
+      };
+    }
+
     this.state.metrics = {
       ...this.emptyMetrics(),
       latencyAvailable: latencies.length > 0,
@@ -265,7 +313,8 @@ const DataParser = {
       avgTimeMs: durations.length ? durations.reduce((sum, value) => sum + value, 0) / durations.length : null,
       avgLatencyMs: latencies.length ? latencies.reduce((sum, value) => sum + value, 0) / latencies.length : null,
       observedByDay,
-      latencyByDay
+      latencyByDay,
+      ...syntheticMetrics
     };
   }
 };
