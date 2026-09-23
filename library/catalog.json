@@ -1,0 +1,65 @@
+{
+  "library_schema": "1.0.0",
+  "items": [
+    {
+      "id": "daily-rhythm-sleep",
+      "kind": "protocol",
+      "name": "Daily Rhythm & Sleep",
+      "description": "A low-burden morning/evening diary with repeated affect, sleep follow-ups, response piping, and branching.",
+      "badge": "Starter",
+      "accent": "#4f6fbd",
+      "features": ["2 prompts/day", "Branching", "Repeated affect"],
+      "path": "library/protocols/daily-rhythm-sleep.json"
+    },
+    {
+      "id": "community-stress-support",
+      "kind": "protocol",
+      "name": "Community Stress & Support",
+      "description": "Context-sensitive EMA illustrating compound branching around daily stress, unfair treatment, safety, and available support.",
+      "badge": "Showcase",
+      "accent": "#2d8b70",
+      "features": ["3 prompts/day", "Compound logic", "Context piping"],
+      "path": "library/protocols/community-stress-support.json"
+    },
+    {
+      "id": "interoception-daily-life",
+      "kind": "protocol",
+      "name": "Interoception in Daily Life",
+      "description": "A physiology-forward demonstration combining repeated context EMA, camera PPG, ePAT, HCT, conditional task delivery, and post-task ratings.",
+      "badge": "Physiology",
+      "accent": "#c45445",
+      "features": ["PPG + ePAT + HCT", "Ordered steps", "Conditional tasks"],
+      "path": "library/protocols/interoception-daily-life.json"
+    },
+    {
+      "id": "context-stress-support-pack",
+      "kind": "question_pack",
+      "name": "Context, Stress & Support",
+      "description": "Original demonstration items for momentary context, stress, support, and an adaptive follow-up when strain is high or support is low.",
+      "badge": "7 items",
+      "accent": "#8056a6",
+      "features": ["Compound branch", "Multi-select", "No licensed scale"],
+      "path": "library/packs/context-stress-support.json"
+    },
+    {
+      "id": "brief-epat-preset",
+      "kind": "task_preset",
+      "name": "Brief ePAT",
+      "description": "A lower-burden ePAT configuration for feasibility work while retaining practice, confidence, body map, and signal-quality retries.",
+      "badge": "Built-in task",
+      "accent": "#c45445",
+      "features": ["8 trials", "≈5–7 min", "PPG quality checks"],
+      "path": "library/packs/brief-epat.json"
+    },
+    {
+      "id": "brief-hct-preset",
+      "kind": "task_preset",
+      "name": "Brief Heartbeat Counting",
+      "description": "A concise HCT configuration with randomized intervals, hidden numeric timer, confidence, and periodic body-location reporting.",
+      "badge": "Built-in task",
+      "accent": "#c58a28",
+      "features": ["3 intervals", "Randomized", "Objective PPG comparison"],
+      "path": "library/packs/brief-hct.json"
+    }
+  ]
+}

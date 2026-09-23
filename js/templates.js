@@ -1,155 +1,139 @@
 "use strict";
 
-const StarterTemplates = {
-    // ---------------------------------------------------------
-    // 1. Daily Reflections
-    // Features: Morning vs Evening windows, simple skip logic
-    // ---------------------------------------------------------
-    diary: {
-      schema_version: "2.0.0",
-      study: { 
-        name: "Daily Reflections", institution: "Department of Psychology", 
-        theme: "light", accent_color: "#388bfd", output_format: "csv", 
-        completion_lock: true, resume_enabled: true, 
-        greetings: { "w1": "Good Morning", "w2": "Good Evening" } 
-      },
-      onboarding: { enabled: true, ask_schedule: true, consent_text: "<h3>Welcome to Daily Reflections</h3><p>You will receive two prompts a day: a quick morning check-in and an evening reflection.</p>" },
-      modules: [], 
-      ema: {
-        randomize_questions: false,
-        questions: [
-          // Morning Only
-          { id: "q_sleep", type: "numeric", text: "How many hours of sleep did you get last night?", required: true, block: "both", windows: ["w1"] },
-          { id: "q_mood_m", type: "slider", text: "How are you feeling right now as you start your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w1"] },
-          
-          // Evening Only
-          { id: "q_mood_e", type: "slider", text: "Overall, how was your day?", min: 0, max: 100, step: 1, anchors: ["Terrible", "Excellent"], required: true, block: "both", windows: ["w2"] },
-          { id: "q_stress", type: "slider", text: "How stressed did you feel today?", min: 0, max: 100, step: 1, anchors: ["Not at all", "Extremely"], required: true, block: "both", windows: ["w2"] },
-          { id: "pb1", type: "page_break" },
-          
-          // Conditional Logic (Evening)
-          { id: "q_exercised", type: "choice", text: "Did you intentionally exercise today?", options: ["Yes", "No"], required: true, block: "both", windows: ["w2"] },
-          { id: "q_ex_type", type: "text", text: "What kind of exercise did you do?", required: false, condition: { logical_op: 'AND', rules: [{ question_id: "q_exercised", operator: "eq", value: "Yes" }] }, block: "both", windows: ["w2"] },
-          { id: "q_highlight", type: "text", text: "What was the highlight of your day?", required: false, block: "both", windows: ["w2"] }
-        ],
-        scheduling: {
-          study_days: 14, daily_prompts: 2, days_of_week: [1,2,3,4,5,6,7],
-          timing: { expiry_minutes: 120, grace_minutes: 15 },
-          windows: [
-            { id: "w1", label: "Morning", start: "08:00", end: "10:30", phase_sequence: [{ kind: "ema", block: "pre" }] },
-            { id: "w2", label: "Evening", start: "19:00", end: "21:30", phase_sequence: [{ kind: "ema", block: "pre" }] }
-          ]
-        }
-      }
-    },
+let protocolLibraryCatalog = null;
 
-    // ---------------------------------------------------------
-    // 2. Intensive Physiology
-    // Features: HR Capture, Affect Grid, Text Piping, Conditional Task Step
-    // ---------------------------------------------------------
-    physio: {
-      schema_version: "2.0.0",
-      study: { 
-        name: "Cardiac Interoception & Affect", institution: "Cognitive Neuroscience Lab", 
-        theme: "oled", accent_color: "#ff453a", output_format: "csv", 
-        completion_lock: true, resume_enabled: true, 
-        greetings: { "w1": "Morning Baseline", "w2": "Midday Check", "w3": "Evening Check" } 
-      },
-      onboarding: { enabled: true, ask_schedule: false, consent_text: "<h3>Overview</h3><p>This study uses your phone's camera to measure resting heart rate and tests interoceptive accuracy.</p>" },
-      modules: [
-        // We only mention the module we want to enable & modify
-        { id: "epat", enabled: true, settings: { trials: 15, trial_duration_sec: 30, retry_budget: 30, sqi_threshold: 0.008, confidence_ratings: true, two_phase_practice: true, body_map: true } }
-      ],
-      ema: {
-        randomize_questions: false,
-        questions: [
-          { id: "q_context", type: "choice", text: "What were you doing right before this prompt?", options: ["Working/Studying", "Resting", "Socializing", "Physical Activity", "Eating"], required: true, block: "pre" },
-          { id: "pb1", type: "page_break" },
-          
-          { id: "q_affect", type: "affect_grid", text: "Think about your recent time {{q_context}}. How are you feeling right now?", valence_labels: ['Unpleasant', 'Pleasant'], arousal_labels: ['Deactivated', 'Activated'], show_quadrant_labels: true, required: true, block: "pre" },
-          { id: "pb2", type: "page_break" },
-          
-          { id: "q_hr1", type: "heart_rate", text: "Resting Heart Rate Capture", duration_sec: 30, report_as: "bpm", required: true, block: "pre" },
-          
-          { id: "q_task_diff", type: "slider", text: "How challenging did you find the heartbeat task?", min: 0, max: 100, step: 1, anchors: ["Very Easy", "Very Hard"], required: true, block: "post" }
-        ],
-        scheduling: {
-          study_days: 7, daily_prompts: 3, days_of_week: [1,2,3,4,5,6,7],
-          timing: { expiry_minutes: 60, grace_minutes: 10 },
-          windows: [
-            { id: "w1", label: "Morning", start: "08:00", end: "10:00", phase_sequence: [{ kind: "ema", block: "pre" }, { kind: "task", id: "epat", condition: { question_id: "q_hr1", operator: "gt", value: 75 } }, { kind: "ema", block: "post" }] },
-            { id: "w2", label: "Afternoon", start: "13:00", end: "15:00", phase_sequence: [{ kind: "ema", block: "pre" }, { kind: "task", id: "epat", condition: { question_id: "q_hr1", operator: "gt", value: 75 } }, { kind: "ema", block: "post" }] },
-            { id: "w3", label: "Evening", start: "18:00", end: "20:00", phase_sequence: [{ kind: "ema", block: "pre" }, { kind: "task", id: "epat", condition: { question_id: "q_hr1", operator: "gt", value: 75 } }, { kind: "ema", block: "post" }] }
-          ]
-        }
-      }
-    },
+async function loadProtocolLibrary() {
+  const container = document.getElementById('library-items');
+  const status = document.getElementById('library-status');
+  if (!container) return;
+  if (status) status.textContent = 'Loading library…';
+  try {
+    const response = await fetch('library/catalog.json?v=20260923a');
+    if (!response.ok) throw new Error('Library catalog could not be loaded.');
+    const catalog = await response.json();
+    const result = EMAForgeLibraryUtils.validateCatalog(catalog);
+    if (!result.valid) throw new Error(result.errors[0]);
+    protocolLibraryCatalog = catalog;
+    renderProtocolLibrary(catalog.items);
+    if (status) status.textContent = `${catalog.items.length} curated items · every item is inspectable JSON`;
+  } catch (error) {
+    container.innerHTML = `<p class="questions-empty">${escH(error.message)}</p>`;
+    if (status) status.textContent = '';
+  }
+}
 
-    // ---------------------------------------------------------
-    // 3. Workplace Context
-    // Features: Weekdays only, Deep Piping, and Multi-rule Skip Logic
-    // ---------------------------------------------------------
-    workplace: {
-      schema_version: "2.0.0",
-      study: { 
-        name: "Workplace Flow Experience", institution: "Organizational Behavior Group", 
-        theme: "dark", accent_color: "#32d74b", output_format: "csv", 
-        completion_lock: true, resume_enabled: true, 
-        greetings: { "w1": "Morning Check-in", "w2": "Midday Sync", "w3": "Wrap-up" } 
-      },
-      onboarding: { enabled: true, ask_schedule: true, consent_text: "<h3>Workplace Study</h3><p>We are tracking focus and workflow context during standard business hours.</p>" },
-      modules: [], // Clean array!
-      ema: {
-        randomize_questions: false,
-        questions: [
-          { id: "q_activity", type: "choice", text: "What is your primary activity right now?", options: ["Deep Work / Focus", "Meetings / Calls", "Email / Admin", "Taking a break", "Other"], required: true, block: "both" },
-          { id: "pb1", type: "page_break" },
-          
-          { id: "q_focus", type: "slider", text: "How absorbed or 'in the zone' are you while doing {{q_activity}}?", min: 0, max: 100, step: 1, anchors: ["Distracted", "Completely focused"], required: true, block: "both" },
-          { id: "q_blocker", type: "choice", text: "Are you facing any blockers or frustrations right now?", options: ["Yes", "No"], required: true, block: "both" },
-          
-          { id: "q_blocker_text", type: "text", text: "Briefly describe the blocker regarding {{q_activity}}:", required: false, condition: { logical_op: 'AND', rules: [{ question_id: "q_blocker", operator: "eq", value: "Yes" }] }, block: "both" }
-        ],
-        scheduling: {
-          study_days: 5, daily_prompts: 3, 
-          days_of_week: [1,2,3,4,5], // Monday - Friday only
-          timing: { expiry_minutes: 45, grace_minutes: 10 },
-          windows: [
-            { id: "w1", label: "Morning", start: "09:00", end: "11:00", phase_sequence: [{ kind: "ema", block: "pre" }] },
-            { id: "w2", label: "Midday", start: "12:00", end: "14:00", phase_sequence: [{ kind: "ema", block: "pre" }] },
-            { id: "w3", label: "Afternoon", start: "15:00", end: "17:00", phase_sequence: [{ kind: "ema", block: "pre" }] }
-          ]
-        }
-      }
-    }
-};
+function renderProtocolLibrary(items) {
+  const container = document.getElementById('library-items');
+  if (!container) return;
+  const groups = [
+    ['protocol', 'Complete protocols'],
+    ['question_pack', 'Question packs'],
+    ['task_preset', 'Physiology task presets']
+  ];
+  container.innerHTML = groups.map(([kind, label]) => {
+    const matching = items.filter(item => item.kind === kind);
+    if (!matching.length) return '';
+    return `<section class="library-group"><h3>${label}</h3><div class="library-grid">${matching.map(item => `
+      <button type="button" class="library-card" data-library-id="${escH(item.id)}" style="--library-accent:${escH(item.accent || '#e8716a')}">
+        <span class="library-card-top"><strong>${escH(item.name)}</strong><span>${escH(item.badge || '')}</span></span>
+        <span class="library-card-desc">${escH(item.description)}</span>
+        <span class="library-features">${(item.features || []).map(feature => `<span>${escH(feature)}</span>`).join('')}</span>
+        <span class="library-action">${kind === 'protocol' ? 'Use protocol' : kind === 'question_pack' ? 'Add question pack' : 'Add task preset'} →</span>
+      </button>`).join('')}</div></section>`;
+  }).join('');
 
-// Keep example question lists readable while producing the same explicit
-// step membership as studies made in the builder.
-Object.values(StarterTemplates).forEach(template => {
-  const questions = template.ema.questions;
-  template.ema.scheduling.windows.forEach(window => {
-    window.phase_sequence.forEach(step => {
-      if (step.kind !== 'ema') return;
-      step.id = genSId();
-      step.question_ids = questions.filter(question =>
-        (question.type === 'page_break' || !Array.isArray(question.windows) || question.windows.includes(window.id)) &&
-        (question.type === 'page_break' || question.block === 'both' || question.block === step.block)
-      ).map(question => question.id);
-      delete step.block;
-    });
+  container.querySelectorAll('.library-card').forEach(card => {
+    card.addEventListener('click', () => installCatalogItem(card.dataset.libraryId));
   });
-  questions.forEach(question => { delete question.block; delete question.windows; });
-});
+}
 
-// Bind the template buttons
+async function fetchCatalogItem(id) {
+  const item = protocolLibraryCatalog?.items.find(candidate => candidate.id === id);
+  if (!item) throw new Error('Library item not found.');
+  const response = await fetch(item.path);
+  if (!response.ok) throw new Error('Library item could not be loaded.');
+  const payload = await response.json();
+  const result = EMAForgeLibraryUtils.validateItem(payload);
+  if (!result.valid) throw new Error(result.errors[0]);
+  if (payload.id !== item.id || payload.kind !== item.kind) throw new Error('Library catalog and item metadata do not match.');
+  return payload;
+}
+
+async function installCatalogItem(id) {
+  const status = document.getElementById('library-status');
+  try {
+    if (status) status.textContent = 'Preparing item…';
+    const item = await fetchCatalogItem(id);
+    if (item.kind === 'protocol') {
+      validateProtocolBeforeLoad(item);
+      StorageManager.loadTemplate(item.protocol);
+      return;
+    }
+    const action = item.kind === 'question_pack'
+      ? `Add “${item.name}” as a new survey step in the first session?`
+      : `Apply “${item.name}” to the first session?`;
+    if (!confirm(action)) return;
+    applyLibraryItem(item);
+  } catch (error) {
+    if (status) status.textContent = error.message;
+  }
+}
+
+function applyLibraryItem(item) {
+  if (item.kind === 'question_pack') {
+    EMAForgeLibraryUtils.installQuestionPack(state, item, { genQId, genSId });
+  } else if (item.kind === 'task_preset') {
+    EMAForgeLibraryUtils.installTaskPreset(state, item);
+  } else {
+    throw new Error('Unsupported library item.');
+  }
+  StorageManager.saveLocalState();
+  StorageManager.triggerUIRefresh();
+  const modal = document.getElementById('import-modal');
+  if (modal) modal.classList.remove('open');
+  const saveStatus = document.getElementById('save-status');
+  if (saveStatus) {
+    saveStatus.textContent = item.kind === 'question_pack' ? 'Question pack added' : 'Task preset added';
+    saveStatus.style.color = 'var(--accent)';
+  }
+}
+
+function validateProtocolBeforeLoad(item) {
+  if (typeof EMAForgeProtocolValidator === 'undefined') return;
+  const config = EMAForgeLibraryUtils.protocolForValidation(item.protocol);
+  const report = EMAForgeProtocolValidator.validate(config);
+  const blocking = report.errors.filter(issue => issue.code !== 'consent_placeholder');
+  if (blocking.length) throw new Error(`Protocol failed validation: ${blocking[0].message}`);
+}
+
+function importLibraryItem(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const status = document.getElementById('library-status');
+    try {
+      const item = JSON.parse(reader.result);
+      const result = EMAForgeLibraryUtils.validateItem(item);
+      if (!result.valid) throw new Error(result.errors[0]);
+      if (item.kind === 'protocol') {
+        validateProtocolBeforeLoad(item);
+        StorageManager.loadTemplate(item.protocol);
+      } else if (confirm(`Install the imported ${item.kind === 'question_pack' ? 'question pack' : 'task preset'} “${item.name}”?`)) {
+        applyLibraryItem(item);
+      }
+    } catch (error) {
+      if (status) status.textContent = `Import failed: ${error.message}`;
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.template-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const templateKey = e.currentTarget.dataset.template;
-            if (StarterTemplates[templateKey]) {
-                StorageManager.loadTemplate(StarterTemplates[templateKey]);
-            }
-        });
-    });
+  loadProtocolLibrary();
+  const importButton = document.getElementById('import-library-item');
+  const input = document.getElementById('library-item-file');
+  if (importButton && input) importButton.addEventListener('click', () => input.click());
+  if (input) input.addEventListener('change', importLibraryItem);
 });

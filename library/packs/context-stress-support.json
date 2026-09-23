@@ -1,0 +1,83 @@
+{
+  "library_schema": "1.0.0",
+  "id": "context-stress-support-pack",
+  "kind": "question_pack",
+  "name": "Context, Stress & Support",
+  "source": "Original EMA Forge demonstration items; not a validated instrument.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of context piping, compound branching, multi-select response, and affect capture.",
+  "estimated_burden": "Approximately 1–3 minutes per administration.",
+  "validation_status": "Demonstration items only; not a validated scale or clinical assessment.",
+  "device_requirements": "Any modern phone browser; no physiology hardware required.",
+  "questions": [
+    {
+      "id": "context",
+      "type": "choice",
+      "text": "Where are you right now?",
+      "options": ["Home", "Work", "School", "In transit", "Community or public space", "Somewhere else"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "stress",
+      "type": "slider",
+      "text": "How stressed do you feel right now at {{context}}?",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "anchors": ["Not at all", "Extremely"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "support",
+      "type": "slider",
+      "text": "If you needed help right now, how available would support feel?",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "anchors": ["Not available", "Very available"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "strain_followup",
+      "type": "choice",
+      "text": "What is contributing most to how you feel?",
+      "options": ["A demand or deadline", "Conflict or tension", "Money or material needs", "Health or fatigue", "Something in my surroundings", "Something else"],
+      "required": true,
+      "condition": {
+        "logical_op": "OR",
+        "rules": [
+          { "question_id": "stress", "operator": "gte", "value": 70 },
+          { "question_id": "support", "operator": "lte", "value": 30 }
+        ]
+      }
+    },
+    {
+      "id": "response_options",
+      "type": "checkbox",
+      "text": "What would be most helpful in the next hour? Select any that apply.",
+      "options": ["Time alone", "Talking with someone", "Practical help", "Food, rest, or physical comfort", "A safer or calmer place", "I am not sure"],
+      "required": false,
+      "condition": {
+        "logical_op": "OR",
+        "rules": [
+          { "question_id": "stress", "operator": "gte", "value": 70 },
+          { "question_id": "support", "operator": "lte", "value": 30 }
+        ]
+      }
+    },
+    { "id": "page", "type": "page_break" },
+    {
+      "id": "affect",
+      "type": "affect_grid",
+      "text": "Mark the point that best matches how you feel right now.",
+      "valence_labels": ["Unpleasant", "Pleasant"],
+      "arousal_labels": ["Low energy", "High energy"],
+      "show_quadrant_labels": true,
+      "required": true,
+      "condition": null
+    }
+  ]
+}

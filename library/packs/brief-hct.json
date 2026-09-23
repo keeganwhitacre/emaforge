@@ -1,0 +1,27 @@
+{
+  "library_schema": "1.0.0",
+  "id": "brief-hct-preset",
+  "kind": "task_preset",
+  "name": "Brief Heartbeat Counting",
+  "source": "EMA Forge demonstration preset; heartbeat-counting scores have known interpretive limitations.",
+  "license": "CC0-1.0",
+  "intended_use": "Concise feasibility configuration of the built-in heartbeat-counting task.",
+  "estimated_burden": "Approximately 3–5 minutes, depending on practice and signal-quality retries.",
+  "validation_status": "Research demonstration; scoring should not be treated as a pure measure of interoceptive accuracy.",
+  "device_requirements": "HTTPS plus a compatible rear camera and controllable torch for objective pulse comparison.",
+  "module_id": "hct",
+  "settings": {
+    "intervals": [25, 35, 45],
+    "randomize_order": true,
+    "include_practice": true,
+    "practice_duration_sec": 15,
+    "instruction_variant": "count",
+    "instructions": "",
+    "show_timer": false,
+    "show_progress_ring": true,
+    "confidence_ratings": true,
+    "body_map": true,
+    "body_map_every": 2,
+    "retry_budget": 8
+  }
+}

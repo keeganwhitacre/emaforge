@@ -13,6 +13,12 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 5. Export the static-hosting bundle and upload it to an HTTPS host such as GitHub Pages. Open the included `check.html` on the hosted site and confirm the synthetic record reached storage.
 6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment.
 
+## Protocol library
+
+Open **Protocol Library** from the builder overview to use a complete showcase protocol or add a reusable question pack or physiology task preset to your current study. The included protocols demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
+
+The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Community contributions can be proposed through GitHub. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
+
 The builder itself needs no account or backend. Hosting, automatic data return, and sending prompt links are separate so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 
 ## Included measures

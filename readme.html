@@ -840,6 +840,7 @@
           <a href="#feature-status" class="docs-nav-link">Feature Status Matrix</a>
           <a href="#requirements" class="docs-nav-link">System Requirements</a>
           <a href="#quickstart" class="docs-nav-link">Quick Start (5 min)</a>
+          <a href="#protocol-library" class="docs-nav-link">Protocol Library</a>
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">Building a Study</div>
@@ -1210,19 +1211,18 @@
           <!-- QUICK START                                                 -->
           <!-- ========================================================= -->
 
-          <h2 id="quickstart">Quick Start — 5 minutes to a working pilot</h2>
+          <h2 id="quickstart">Quick Start — 5 minutes to a working draft</h2>
           <p>You do not need to install anything. The Builder and Dashboard are hosted and ready to use.</p>
 
           <ol>
             <li>Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank"
                 rel="noopener"><strong>emaforge.keeganwhitacre.com</strong></a> and click <strong>Builder</strong>.</li>
-            <li>In the <strong>Study</strong> tab, name your study.</li>
-            <li>In <strong>Questions</strong>, click <code>+ Slider</code> and add one mood item. Keep the default
-              anchors.</li>
-            <li>In <strong>Schedule</strong>, set study length to <code>3</code> days and keep the default
-              morning/afternoon/evening windows.</li>
-            <li>Click <strong>Export</strong> → <strong>Single HTML file</strong>. You'll get a file you can email to
-              yourself.</li>
+            <li>Click <strong>Open protocol library</strong> and choose <strong>Daily Rhythm &amp; Sleep</strong>, or start
+              from the default draft and build your own ordered survey/task flow.</li>
+            <li>Replace the consent placeholder with approved study language. Review the questions, sessions, task
+              burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
+            <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and click <strong>Export Study</strong>
+              → <strong>Static-hosting bundle</strong>.</li>
             <li>Open that file on your phone with <code>?id=1&amp;day=1&amp;session=w1</code> appended. You're running a
               study.</li>
             <li>When you finish the session, your phone downloads a CSV. Go back to <a
@@ -1247,6 +1247,25 @@
                 self-host the <em>exported</em> study (see <a href="#hosting">Hosting Your Study</a>), because that's
                 the file participants actually open.</p>
             </div>
+          </div>
+
+          <h2 id="protocol-library">Protocol Library</h2>
+          <p>The Builder's Protocol Library provides three kinds of reusable building blocks:</p>
+          <ul>
+            <li><strong>Complete protocols</strong> replace the current draft and demonstrate end-to-end study flows.</li>
+            <li><strong>Question packs</strong> add a new survey step to the first session while safely remapping question,
+              branching, and response-piping IDs.</li>
+            <li><strong>Physiology task presets</strong> configure an existing built-in task such as ePAT or heartbeat
+              counting and add it to the first session.</li>
+          </ul>
+          <p>Every item is versioned, inspectable JSON. A local community item can be installed with
+            <strong>Install library JSON</strong>, and contributions can be proposed through the public GitHub repository.
+            Library JSON cannot execute uploaded JavaScript or introduce an unreviewed task engine.</p>
+          <div class="docs-callout warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <div class="docs-callout-content"><p><strong>A library item is a starting point, not an approved protocol.</strong>
+              Verify licensing, validation evidence, population fit, burden, consent, and safety procedures before use.</p></div>
           </div>
 
           <!-- ========================================================= -->

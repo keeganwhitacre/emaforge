@@ -1,0 +1,61 @@
+{
+  "library_schema": "1.0.0",
+  "id": "community-stress-support",
+  "kind": "protocol",
+  "name": "Community Stress & Support",
+  "source": "Original EMA Forge demonstration protocol; not a validated instrument.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of context-sensitive EMA and compound branching for community-based research design.",
+  "estimated_burden": "Approximately 2–4 minutes, three times daily for 14 days.",
+  "validation_status": "Demonstration items only; not a validated scale or clinical assessment.",
+  "device_requirements": "Any modern phone browser; no physiology hardware required.",
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Community Stress & Support",
+      "institution": "Your community research partnership",
+      "theme": "light",
+      "accent_color": "#2d8b70",
+      "output_format": "csv",
+      "completion_lock": true,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "morning": "Morning check-in", "afternoon": "Afternoon check-in", "evening": "Evening check-in" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": true,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with approved, community-reviewed language. Explain the sensitive questions, skip options, safety plan, data protections, resources, contacts, and withdrawal process.</p>"
+    },
+    "modules": [],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_place", "type": "choice", "text": "Where are you right now?", "options": ["Home", "Work", "School", "In transit", "Community or public space", "Somewhere else"], "required": true, "condition": null },
+        { "id": "q_company", "type": "choice", "text": "Who are you with?", "options": ["No one", "Family", "Friends or peers", "Coworkers or classmates", "People I do not know well", "Other"], "required": true, "condition": null },
+        { "id": "q_activity", "type": "choice", "text": "What are you mainly doing?", "options": ["Working or studying", "Caregiving", "Traveling", "Socializing", "Resting", "Household tasks", "Something else"], "required": true, "condition": null },
+        { "id": "pb_context", "type": "page_break" },
+        { "id": "q_safety", "type": "slider", "text": "How safe and at ease do you feel at {{q_place}} right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Completely"], "required": true, "condition": null },
+        { "id": "q_stress", "type": "slider", "text": "How stressed do you feel right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Extremely"], "required": true, "condition": null },
+        { "id": "q_support", "type": "slider", "text": "If you needed help right now, how available would support feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not available", "Very available"], "required": true, "condition": null },
+        { "id": "q_unfair", "type": "choice", "text": "Since the last check-in, did you feel dismissed, excluded, or treated unfairly?", "options": ["No", "Possibly", "Yes", "Prefer not to say"], "required": true, "condition": null },
+        { "id": "q_unfair_context", "type": "checkbox", "text": "Where did that happen? Select any that apply.", "options": ["Work or school", "Home", "Healthcare or services", "Online", "A store or public place", "Transit", "Somewhere else"], "required": false, "condition": { "question_id": "q_unfair", "operator": "includes", "value": ["Possibly", "Yes"] } },
+        { "id": "q_unfair_response", "type": "text", "text": "What about the situation mattered most to you?", "required": false, "condition": { "question_id": "q_unfair", "operator": "eq", "value": "Yes" } },
+        { "id": "q_need", "type": "checkbox", "text": "What would be most helpful in the next hour? Select any that apply.", "options": ["Time alone", "Talking with someone", "Practical help", "Food, rest, or physical comfort", "A safer or calmer place", "I am not sure"], "required": false, "condition": { "logical_op": "OR", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 70 }, { "question_id": "q_support", "operator": "lte", "value": 30 }, { "question_id": "q_safety", "operator": "lte", "value": 30 }] } },
+        { "id": "pb_affect", "type": "page_break" },
+        { "id": "q_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low energy", "High energy"], "show_quadrant_labels": true, "required": true, "condition": null }
+      ],
+      "scheduling": {
+        "study_days": 14,
+        "daily_prompts": 3,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 60, "grace_minutes": 15 },
+        "windows": [
+          { "id": "morning", "label": "Morning", "start": "08:00", "end": "10:30", "phase_sequence": [{ "kind": "ema", "id": "s_community_morning", "label": "Context, stress, and support", "question_ids": ["q_place", "q_company", "q_activity", "pb_context", "q_safety", "q_stress", "q_support", "q_unfair", "q_unfair_context", "q_unfair_response", "q_need", "pb_affect", "q_affect"] }] },
+          { "id": "afternoon", "label": "Afternoon", "start": "13:00", "end": "16:00", "phase_sequence": [{ "kind": "ema", "id": "s_community_afternoon", "label": "Context, stress, and support", "question_ids": ["q_place", "q_company", "q_activity", "pb_context", "q_safety", "q_stress", "q_support", "q_unfair", "q_unfair_context", "q_unfair_response", "q_need", "pb_affect", "q_affect"] }] },
+          { "id": "evening", "label": "Evening", "start": "19:00", "end": "22:00", "phase_sequence": [{ "kind": "ema", "id": "s_community_evening", "label": "Context, stress, and support", "question_ids": ["q_place", "q_company", "q_activity", "pb_context", "q_safety", "q_stress", "q_support", "q_unfair", "q_unfair_context", "q_unfair_response", "q_need", "pb_affect", "q_affect"] }] }
+        ]
+      }
+    }
+  }
+}

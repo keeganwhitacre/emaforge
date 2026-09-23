@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260922b">
-<link rel="stylesheet" href="css/builder.css?v=20260922d">
+<link rel="stylesheet" href="css/builder.css?v=20260923a">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -96,7 +96,7 @@
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
       <div class="section-title">Study Identity</div>
-      <button type="button" class="btn template-start" id="start-template-btn">Start from a template</button>
+      <button type="button" class="btn template-start" id="start-template-btn">Open protocol library</button>
       <div class="field-group">
         <label class="field-label">Study Name</label>
         <input type="text" id="study-name" placeholder="e.g. Affective Rhythms Study">
@@ -464,42 +464,43 @@
 
 <!-- IMPORT MODAL -->
 <div class="modal-overlay" id="import-modal">
-  <div class="modal-box">
+  <div class="modal-box library-modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="modal-title">Start or Import Project</div>
+      <div class="modal-title">Protocol Library</div>
       <button class="modal-close" id="import-modal-close">✕</button>
     </div>
-    <div class="modal-subtitle">Resume work on a saved project, or start fresh using a pre-configured template.</div>
-    
-    <div class="export-option" id="import-custom-file" style="margin-bottom: 24px;">
-      <div class="export-option-title">Upload config.json</div>
-      <div class="export-option-desc">Load a previously exported EMA Forge project from your computer.</div>
-      <input type="file" id="import-file" accept=".json" style="display:none;">
+    <div class="modal-subtitle">Start with a complete protocol, or add a reusable question pack or physiology preset to the study you already have.</div>
+
+    <div class="library-notice">
+      <strong>Designed to be inspectable.</strong>
+      <span>Library items are plain JSON. Complete protocols replace the current draft; packs and presets add to it.</span>
     </div>
 
-    <div class="modal-subtitle" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">Starter Templates</div>
+    <div id="library-status" class="library-status" aria-live="polite">Loading library…</div>
+    <div id="library-items" class="library-items"></div>
 
-    <div class="export-option template-btn" data-template="diary">
-      <div class="export-option-title" style="color: #388bfd;">1. Daily Reflections Diary</div>
-      <div class="export-option-desc">A simple, low-burden evening diary with mood sliders and text entry. Great for basic longitudinal tracking.</div>
-    </div>
-
-    <div class="export-option template-btn" data-template="physio">
-      <div class="export-option-title" style="color: #ff453a;">2. Intensive Physiology (ePAT)</div>
-      <div class="export-option-desc">Advanced protocol using Heart Rate capture, Affect Grid, and conditional ePAT task triggering based on resting HR.</div>
-    </div>
-
-    <div class="export-option template-btn" data-template="workplace">
-      <div class="export-option-title" style="color: #32d74b;">3. Workplace Context</div>
-      <div class="export-option-desc">Weekdays-only schedule. Demonstrates conditional question branching based on the participant's current self-reported activity.</div>
-    </div>
+    <section class="library-files">
+      <div>
+        <strong>Your files</strong>
+        <span>Resume a complete backup or install a compatible community library item.</span>
+      </div>
+      <div class="library-file-actions">
+        <button type="button" class="btn-ghost" id="import-custom-file">Upload project backup</button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden>
+        <button type="button" class="btn-ghost" id="import-library-item">Install library JSON</button>
+        <input type="file" id="library-item-file" accept=".json,application/json" hidden>
+        <a class="library-contribute" href="https://github.com/keeganwhitacre/emaforge/tree/main/library" target="_blank" rel="noopener noreferrer">Contribute on GitHub ↗</a>
+      </div>
+    </section>
+    <div class="library-safety">Community JSON can configure surveys and built-in tasks, but cannot run uploaded code. Review wording, burden, consent, and validation evidence before research use.</div>
   </div>
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
 <script src="js/state.js?v=20260922b"></script>
 <script src="js/storage.js?v=20260922b"></script>
-<script src="js/templates.js?v=20260922b"></script>
+<script src="js/library-utils.js?v=20260923a"></script>
+<script src="js/templates.js?v=20260923a"></script>
 <script src="js/drag-fix.js"></script>
 <script src="js/tabs/study.js"></script>
 <script src="js/tabs/onboarding.js"></script>

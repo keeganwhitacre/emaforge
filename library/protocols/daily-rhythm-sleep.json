@@ -1,0 +1,71 @@
+{
+  "library_schema": "1.0.0",
+  "id": "daily-rhythm-sleep",
+  "kind": "protocol",
+  "name": "Daily Rhythm & Sleep",
+  "source": "Original EMA Forge demonstration protocol; not a validated instrument.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of a low-burden morning and evening diary with repeated affect and adaptive follow-up.",
+  "estimated_burden": "Approximately 1–3 minutes, twice daily for 14 days.",
+  "validation_status": "Demonstration items only; not a validated sleep or mood instrument.",
+  "device_requirements": "Any modern phone browser; no physiology hardware required.",
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Daily Rhythm & Sleep",
+      "institution": "Your research team",
+      "theme": "light",
+      "accent_color": "#4f6fbd",
+      "output_format": "csv",
+      "completion_lock": true,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "morning": "Morning check-in", "evening": "Evening reflection" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": true,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with the exact language approved for your study. Describe the twice-daily schedule, questions, data return, risks, compensation, contacts, and withdrawal process.</p>"
+    },
+    "modules": [],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_sleep_hours", "type": "numeric", "text": "About how many hours did you sleep last night?", "required": true, "condition": null },
+        { "id": "q_sleep_quality", "type": "slider", "text": "How restful did your sleep feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all restful", "Extremely restful"], "required": true, "condition": null },
+        { "id": "q_sleep_disrupted", "type": "choice", "text": "Was your sleep interrupted more than once?", "options": ["Yes", "No", "Not sure"], "required": true, "condition": null },
+        { "id": "q_sleep_reason", "type": "checkbox", "text": "What contributed to the interruptions? Select any that apply.", "options": ["Noise or environment", "Stress or thoughts", "Caregiving or another person", "Physical discomfort", "Work or schedule", "Something else"], "required": false, "condition": { "question_id": "q_sleep_disrupted", "operator": "eq", "value": "Yes" } },
+        { "id": "pb_morning", "type": "page_break" },
+        { "id": "q_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low energy", "High energy"], "show_quadrant_labels": true, "required": true, "condition": null },
+        { "id": "q_day_outlook", "type": "slider", "text": "How manageable does the day ahead feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not manageable", "Very manageable"], "required": true, "condition": null },
+        { "id": "q_day_demand", "type": "slider", "text": "How demanding was your day overall?", "min": 0, "max": 100, "step": 1, "anchors": ["Not demanding", "Extremely demanding"], "required": true, "condition": null },
+        { "id": "q_activity", "type": "choice", "text": "What took up most of your time today?", "options": ["Work or school", "Caregiving", "Household responsibilities", "Social time", "Rest or recovery", "Something else"], "required": true, "condition": null },
+        { "id": "q_stress_event", "type": "choice", "text": "Did anything feel especially stressful today?", "options": ["Yes", "No", "Prefer not to say"], "required": true, "condition": null },
+        { "id": "q_stressor", "type": "text", "text": "In a few words, what felt especially stressful?", "required": false, "condition": { "question_id": "q_stress_event", "operator": "eq", "value": "Yes" } },
+        { "id": "q_coping", "type": "checkbox", "text": "What helped you respond? Select any that apply.", "options": ["Another person", "Changing the situation", "Taking a break", "Movement or exercise", "Rest, food, or physical comfort", "Nothing helped yet"], "required": false, "condition": { "question_id": "q_stress_event", "operator": "eq", "value": "Yes" } },
+        { "id": "pb_evening", "type": "page_break" },
+        { "id": "q_highlight", "type": "text", "text": "What is one moment from today you want to remember?", "required": false, "condition": null }
+      ],
+      "scheduling": {
+        "study_days": 14,
+        "daily_prompts": 2,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 120, "grace_minutes": 15 },
+        "windows": [
+          {
+            "id": "morning", "label": "Morning", "start": "07:30", "end": "10:30",
+            "phase_sequence": [
+              { "kind": "ema", "id": "s_morning", "label": "Sleep and morning state", "question_ids": ["q_sleep_hours", "q_sleep_quality", "q_sleep_disrupted", "q_sleep_reason", "pb_morning", "q_affect", "q_day_outlook"] }
+            ]
+          },
+          {
+            "id": "evening", "label": "Evening", "start": "19:00", "end": "22:00",
+            "phase_sequence": [
+              { "kind": "ema", "id": "s_evening", "label": "Day and evening state", "question_ids": ["q_affect", "q_day_demand", "q_activity", "q_stress_event", "q_stressor", "q_coping", "pb_evening", "q_highlight"] }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

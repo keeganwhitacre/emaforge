@@ -1,0 +1,22 @@
+{
+  "library_schema": "1.0.0",
+  "id": "brief-epat-preset",
+  "kind": "task_preset",
+  "name": "Brief ePAT",
+  "source": "EMA Forge demonstration preset; measurement properties require study-specific validation.",
+  "license": "CC0-1.0",
+  "intended_use": "Lower-burden feasibility configuration of the built-in ePAT engine.",
+  "estimated_burden": "Approximately 5–7 minutes, depending on signal-quality retries.",
+  "validation_status": "Research demonstration; not independently validated for clinical or confirmatory use.",
+  "device_requirements": "HTTPS plus a compatible rear camera and controllable torch.",
+  "module_id": "epat",
+  "settings": {
+    "trials": 8,
+    "trial_duration_sec": 25,
+    "retry_budget": 16,
+    "sqi_threshold": 0.008,
+    "confidence_ratings": true,
+    "two_phase_practice": true,
+    "body_map": true
+  }
+}

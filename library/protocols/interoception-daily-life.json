@@ -1,0 +1,80 @@
+{
+  "library_schema": "1.0.0",
+  "id": "interoception-daily-life",
+  "kind": "protocol",
+  "name": "Interoception in Daily Life",
+  "source": "EMA Forge demonstration protocol. ePAT, HCT, and camera PPG require independent validation for the intended devices, population, and inference.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of ordered EMA and physiology tasks in daily life; not a clinical or diagnostic protocol.",
+  "estimated_burden": "Approximately 2–4 minutes at midday and 5–8 minutes for morning/evening task sessions for 7 days.",
+  "validation_status": "Research demonstration; device, population, feasibility, and inferential validity must be established by the study team.",
+  "device_requirements": "HTTPS plus a compatible rear camera and controllable torch for camera PPG, ePAT, and HCT.",
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Interoception in Daily Life",
+      "institution": "Your psychophysiology research team",
+      "theme": "oled",
+      "accent_color": "#c45445",
+      "output_format": "csv",
+      "completion_lock": true,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "morning": "Morning perception task", "midday": "Midday body check", "evening": "Evening heartbeat task" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": false,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with approved language describing camera-based pulse measurement, device permissions, task burden, possible discomfort, data handling, alternatives, contacts, and withdrawal.</p>"
+    },
+    "modules": [
+      { "id": "epat", "enabled": true, "settings": { "trials": 8, "trial_duration_sec": 25, "retry_budget": 16, "sqi_threshold": 0.008, "confidence_ratings": true, "two_phase_practice": true, "body_map": true } },
+      { "id": "hct", "enabled": true, "settings": { "intervals": [25, 35, 45], "randomize_order": true, "include_practice": true, "practice_duration_sec": 15, "instruction_variant": "count", "instructions": "", "show_timer": false, "show_progress_ring": true, "confidence_ratings": true, "body_map": true, "body_map_every": 2, "retry_budget": 8 } }
+    ],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_context", "type": "choice", "text": "What were you mainly doing just before this prompt?", "options": ["Working or studying", "Resting", "Socializing", "Eating", "Walking or light movement", "Exercise or vigorous activity", "Something else"], "required": true, "condition": null },
+        { "id": "q_exertion", "type": "choice", "text": "How physically active have you been during the past 10 minutes?", "options": ["Still or resting", "Light movement", "Moderate activity", "Vigorous activity"], "required": true, "condition": null },
+        { "id": "q_body_attention", "type": "slider", "text": "How much attention are you paying to sensations inside your body right now?", "min": 0, "max": 100, "step": 1, "anchors": ["None", "Complete attention"], "required": true, "condition": null },
+        { "id": "q_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low arousal", "High arousal"], "show_quadrant_labels": true, "required": true, "condition": null },
+        { "id": "q_hr", "type": "heart_rate", "text": "Hold still while your phone measures your pulse.", "duration_sec": 30, "report_as": "bpm", "display_bpm": false, "required": true, "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+        { "id": "q_task_expect", "type": "slider", "text": "Before the heartbeat task, how confident are you that you can judge your heartbeat accurately?", "min": 0, "max": 100, "step": 1, "anchors": ["Not confident", "Very confident"], "required": true, "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+        { "id": "pb_post", "type": "page_break" },
+        { "id": "q_task_difficulty", "type": "slider", "text": "How difficult did the heartbeat task feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Very easy", "Very difficult"], "required": true, "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+        { "id": "q_task_confidence", "type": "slider", "text": "Now how confident are you in your responses?", "min": 0, "max": 100, "step": 1, "anchors": ["Not confident", "Very confident"], "required": true, "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+        { "id": "q_task_note", "type": "text", "text": "Was there anything that made the task especially difficult?", "required": false, "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }, { "question_id": "q_task_difficulty", "operator": "gte", "value": 70 }] } }
+      ],
+      "scheduling": {
+        "study_days": 7,
+        "daily_prompts": 3,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 60, "grace_minutes": 15 },
+        "windows": [
+          {
+            "id": "morning", "label": "Morning ePAT", "start": "08:00", "end": "10:30",
+            "phase_sequence": [
+              { "kind": "ema", "id": "s_epat_pre", "label": "Context before ePAT", "question_ids": ["q_context", "q_exertion", "q_body_attention", "q_affect", "q_task_expect"] },
+              { "kind": "task", "id": "epat", "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+              { "kind": "ema", "id": "s_epat_post", "label": "After ePAT", "question_ids": ["pb_post", "q_task_difficulty", "q_task_confidence", "q_task_note"] }
+            ]
+          },
+          {
+            "id": "midday", "label": "Midday PPG check", "start": "12:30", "end": "15:30",
+            "phase_sequence": [
+              { "kind": "ema", "id": "s_ppg", "label": "Context and pulse", "question_ids": ["q_context", "q_exertion", "q_body_attention", "q_affect", "q_hr"] }
+            ]
+          },
+          {
+            "id": "evening", "label": "Evening heartbeat counting", "start": "18:30", "end": "21:30",
+            "phase_sequence": [
+              { "kind": "ema", "id": "s_hct_pre", "label": "Context before heartbeat counting", "question_ids": ["q_context", "q_exertion", "q_body_attention", "q_affect", "q_task_expect"] },
+              { "kind": "task", "id": "hct", "condition": { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" } },
+              { "kind": "ema", "id": "s_hct_post", "label": "After heartbeat counting", "question_ids": ["pb_post", "q_task_difficulty", "q_task_confidence", "q_task_note"] }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
