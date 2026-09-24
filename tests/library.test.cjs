@@ -52,7 +52,7 @@ test("question packs remap IDs, conditions, and response piping without collisio
   assert.ok(!installed.includes("q_existing"));
   const stress = target.ema.questions.find(question => question.text.includes("How stressed"));
   const context = target.ema.questions.find(question => question.text === "Where are you right now?");
-  assert.ok(stress.text.includes(`{{${context.id}}}`));
+  assert.ok(stress.text.includes(`{{${context.id}|your current location}}`));
   const followup = target.ema.questions.find(question => question.text.includes("contributing most"));
   assert.ok(followup.condition.rules.every(rule => installed.includes(rule.question_id)));
   assert.deepEqual(target.ema.scheduling.windows[0].phase_sequence[0], {

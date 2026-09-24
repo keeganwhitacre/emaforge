@@ -71,6 +71,25 @@ test("step membership isolates questions while allowing deliberate reuse", () =>
   ];
   assert.deepEqual(utils.questionsForStep(questions, ["mood", "stress"]).map(q => q.id), ["mood", "stress"]);
   assert.deepEqual(utils.questionsForStep(questions, ["mood", "reflection"]).map(q => q.id), ["mood", "reflection"]);
+  assert.deepEqual(utils.questionsForStep(questions, ["reflection", "mood"]).map(q => q.id), ["reflection", "mood"]);
+});
+
+test("response piping reads naturally and never exposes raw placeholders", () => {
+  const responses = {
+    mood: { value: 72.349 },
+    contexts: { value: ["school", "with friends", "outside"] },
+    grid: { value: { valence: 0.5, arousal: -0.2 } }
+  };
+  assert.equal(
+    utils.interpolateText("You rated your mood {{mood}} and were {{contexts}}.", responses),
+    "You rated your mood 72.3 and were school, with friends, and outside."
+  );
+  assert.equal(
+    utils.interpolateText("Thinking about {{missing|what you shared earlier}}, what happened?", responses),
+    "Thinking about what you shared earlier, what happened?"
+  );
+  assert.equal(utils.interpolateText("Value: {{grid|your earlier response}}", responses), "Value: your earlier response");
+  assert.equal(utils.interpolateText("Value: {{missing}}.", responses), "Value:.");
 });
 
 test("survey back navigation is opt-in and cannot cross physiology pages", () => {

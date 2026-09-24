@@ -13,6 +13,43 @@
     return record;
   }
 
+  function parsePipingToken(rawToken) {
+    const parts = String(rawToken || "").split("|");
+    return {
+      questionId: (parts.shift() || "").trim(),
+      fallback: parts.join("|").trim()
+    };
+  }
+
+  function formatPipedValue(value) {
+    if (value === undefined || value === null || value === "") return null;
+    if (Array.isArray(value)) {
+      const items = value.map(item => String(item).trim()).filter(Boolean);
+      if (items.length === 0) return null;
+      if (items.length === 1) return items[0];
+      if (items.length === 2) return `${items[0]} and ${items[1]}`;
+      return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(Math.round(value * 10) / 10);
+    }
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (typeof value === "object") return null;
+    const text = String(value).trim();
+    if (!text) return null;
+    const numeric = Number(text);
+    return Number.isFinite(numeric) ? String(Math.round(numeric * 10) / 10) : text;
+  }
+
+  function interpolateText(text, responses) {
+    return String(text || "").replace(/\{\{([^{}]+)\}\}/g, (_match, rawToken) => {
+      const token = parsePipingToken(rawToken);
+      if (!token.questionId) return token.fallback;
+      const formatted = formatPipedValue(responseValue((responses || {})[token.questionId]));
+      return formatted === null ? token.fallback : formatted;
+    }).replace(/\s+([,.;!?])/g, "$1").replace(/[ \t]{2,}/g, " ").trim();
+  }
+
   function evaluateCondition(condition, responses) {
     if (!condition) return true;
 
@@ -80,8 +117,8 @@
   }
 
   function questionsForStep(questions, questionIds) {
-    const included = new Set(questionIds || []);
-    return (questions || []).filter(question => included.has(question.id));
+    const byId = new Map((questions || []).map(question => [question.id, question]));
+    return (questionIds || []).map(questionId => byId.get(questionId)).filter(Boolean);
   }
 
   function pageContainsPhysiology(page) {
@@ -237,6 +274,9 @@
 
   return {
     responseValue,
+    parsePipingToken,
+    formatPipedValue,
+    interpolateText,
     evaluateCondition,
     buildPhasePlan,
     questionsForStep,

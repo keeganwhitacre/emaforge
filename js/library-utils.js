@@ -86,6 +86,10 @@
       conditionRules(question?.condition).forEach(rule => {
         if (!ids.has(rule.question_id)) errors.push(`Question ${question.id} branches on an item that does not appear earlier in the pack.`);
       });
+      Array.from(String(question?.text || '').matchAll(/\{\{([^{}]+)\}\}/g)).forEach(match => {
+        const sourceId = match[1].split('|')[0].trim();
+        if (!ids.has(sourceId)) errors.push(`Question ${question.id} inserts an answer that does not appear earlier in the pack.`);
+      });
       ids.add(question?.id);
     });
   }
@@ -99,7 +103,13 @@
   }
 
   function rewritePiping(text, idMap) {
-    return String(text || '').replace(/\{\{([^}]+)\}\}/g, (match, id) => `{{${idMap.get(id) || id}}}`);
+    return String(text || '').replace(/\{\{([^{}]+)\}\}/g, (match, rawToken) => {
+      const parts = String(rawToken).split('|');
+      const id = (parts.shift() || '').trim();
+      const fallback = parts.join('|').trim();
+      const rewritten = idMap.get(id) || id;
+      return `{{${rewritten}${fallback ? `|${fallback}` : ''}}}`;
+    });
   }
 
   function installQuestionPack(targetState, item, generators) {

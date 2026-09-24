@@ -19,10 +19,10 @@ let templates = {
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260923e').then(r => r.text());
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260924f').then(r => r.text());
   if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260923c').then(r => r.text());
   if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260923c').then(r => r.text());
-  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260923e').then(r => r.text());
+  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260924f').then(r => r.text());
   if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js?v=20260923c').then(r => r.text());
   if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js?v=20260923c').then(r => r.text());
   if (!templates.modIat) templates.modIat = await fetch('templates/module-iat.js').then(r => r.text());

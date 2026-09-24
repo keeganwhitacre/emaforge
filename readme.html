@@ -1395,9 +1395,11 @@
               <code>eq, neq, gt, gte, lt, lte, includes</code>. When a condition evaluates false, the question is
               silently skipped and not recorded.
             </li>
-            <li><strong>Response piping:</strong> insert <code>{{q_id}}</code> in a later question's text to substitute
-              the participant's prior answer. Useful for contextualizing follow-ups ("You said your mood was
-              <code>{{q1}}</code>. What was the cause?").
+            <li><strong>Earlier-answer personalization:</strong> in a later question, use <strong>Insert earlier
+              answer</strong>, choose the source item, and set fallback wording for participants who did not answer it.
+              EMA Forge inserts the answer at the cursor, formats multi-select responses as readable prose, and checks
+              that the source really appears earlier in every session where the follow-up is used. In JSON, the stored
+              form is <code>{{q_id|fallback wording}}</code>; the builder handles this syntax for you.
             </li>
           </ul>
 

@@ -121,3 +121,28 @@ test("empty EMA steps and unsafe delivery settings are surfaced", () => {
   assert.ok(report.warnings.some(item => item.code === "webhook_missing"));
   assert.ok(report.warnings.some(item => item.code === "expiry_disabled"));
 });
+
+test("response piping requires a real answer presented earlier in each session", () => {
+  const config = validConfig();
+  config.ema.questions.push({ id: "followup", type: "text", text: "You said {{mood|something else}}. What contributed?" });
+  config.ema.scheduling.windows[0].phase_sequence[0].question_ids = ["mood", "followup"];
+  assert.equal(validator.validate(config).valid, true);
+
+  config.ema.scheduling.windows[0].phase_sequence[0].question_ids = ["followup", "mood"];
+  let report = validator.validate(config);
+  assert.ok(report.errors.some(item => item.code === "piping_source_unavailable_in_session"));
+
+  config.ema.questions[1].text = "Unknown {{deleted_question|earlier response}}";
+  report = validator.validate(config);
+  assert.ok(report.errors.some(item => item.code === "piping_source_unknown"));
+});
+
+test("conditional piping sources recommend fallback wording", () => {
+  const config = validConfig();
+  config.ema.questions[0].condition = { question_id: "context", operator: "eq", value: "home" };
+  config.ema.questions.unshift({ id: "context", type: "choice", text: "Where are you?", options: ["home", "away"] });
+  config.ema.questions.push({ id: "followup", type: "text", text: "Your mood was {{mood}}." });
+  config.ema.scheduling.windows[0].phase_sequence[0].question_ids = ["context", "mood", "followup"];
+  const report = validator.validate(config);
+  assert.ok(report.warnings.some(item => item.code === "piping_fallback_missing"));
+});

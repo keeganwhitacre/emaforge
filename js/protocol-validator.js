@@ -69,6 +69,52 @@
     });
   }
 
+  function pipingTokens(text) {
+    return Array.from(String(text || "").matchAll(/\{\{([^{}]+)\}\}/g)).map(match => {
+      const parts = match[1].split("|");
+      return { questionId: (parts.shift() || "").trim(), fallback: parts.join("|").trim() };
+    });
+  }
+
+  function validatePipingSyntax(text, questionId, declaredIds, path, issues) {
+    const value = String(text || "");
+    const tokens = pipingTokens(value);
+    const residue = value.replace(/\{\{[^{}]+\}\}/g, "");
+    if (residue.includes("{{") || residue.includes("}}")) {
+      issues.push(issue("error", "piping_syntax_invalid", path, "An earlier-answer placeholder is incomplete."));
+    }
+    tokens.forEach(token => {
+      if (!token.questionId || !declaredIds.has(token.questionId)) {
+        issues.push(issue("error", "piping_source_unknown", path, `Earlier-answer source "${token.questionId || "(missing)"}" does not exist.`));
+      } else if (token.questionId === questionId) {
+        issues.push(issue("error", "piping_source_self", path, "A question cannot insert its own answer."));
+      }
+    });
+  }
+
+  function validatePipingAvailability(text, targetId, allowedIds, questionsById, path, sessionLabel, issues) {
+    pipingTokens(text).forEach(token => {
+      if (!token.questionId || token.questionId === targetId || !questionsById.has(token.questionId)) return;
+      if (!allowedIds.has(token.questionId)) {
+        issues.push(issue(
+          "error",
+          "piping_source_unavailable_in_session",
+          path,
+          `Earlier answer "${token.questionId}" is not presented before this question in ${sessionLabel}.`
+        ));
+        return;
+      }
+      if (!token.fallback && questionsById.get(token.questionId)?.condition) {
+        issues.push(issue(
+          "warning",
+          "piping_fallback_missing",
+          path,
+          `Add fallback wording because "${token.questionId}" can be skipped by logic.`
+        ));
+      }
+    });
+  }
+
   function validate(config) {
     const issues = [];
     const study = config && config.study || {};
@@ -78,6 +124,9 @@
     const questions = Array.isArray(ema.questions) ? ema.questions : [];
     const windows = Array.isArray(scheduling.windows) ? scheduling.windows : [];
     const modules = config && config.modules || {};
+    const declaredQuestionIds = new Set(questions.map(question => question && question.id).filter(Boolean));
+    const questionsById = new Map(questions.map(question => [question && question.id, question]).filter(([id]) => id));
+    const questionIndexes = new Map(questions.map((question, index) => [question && question.id, index]).filter(([id]) => id));
 
     if (!String(study.name || "").trim()) {
       issues.push(issue("error", "study_name_missing", "study.name", "Study name is required."));
@@ -168,6 +217,9 @@
       if (question && question.type !== "page_break" && !String(question.text || "").trim()) {
         issues.push(issue("error", "question_text_missing", `${path}.text`, "Question text is required."));
       }
+      if (question && question.type !== "page_break") {
+        validatePipingSyntax(question.text, question.id, declaredQuestionIds, `${path}.text`, issues);
+      }
       if (question && (question.type === "choice" || question.type === "checkbox")) {
         const options = Array.isArray(question.options) ? question.options.map(option => String(option).trim()) : [];
         if (options.length < 2 || options.some(option => !option)) {
@@ -218,13 +270,22 @@
             issues.push(issue("error", "survey_question_ids_invalid", `${stepPath}.question_ids`, "Survey step contains duplicate or unknown question IDs."));
           }
           ids.forEach(id => assignedQuestionIds.add(id));
-          const included = new Set(ids);
-          const eligible = questions.filter(question => included.has(question.id) && question.type !== "page_break");
+          const eligible = ids.map(id => questionsById.get(id)).filter(question => question && question.type !== "page_break");
           if (eligible.length === 0) {
             issues.push(issue("error", "ema_step_empty", stepPath, `Survey step has no questions for "${window.label || window.id}".`));
           }
           eligible.forEach(question => {
             validateConditionAvailability(question.condition, availableResponses, `question:${question.id}.condition@${window.id}`, issues);
+            const questionIndex = questionIndexes.get(question.id);
+            validatePipingAvailability(
+              question.text,
+              question.id,
+              availableResponses,
+              questionsById,
+              `ema.questions[${questionIndex}].text`,
+              `session "${window.label || window.id}"`,
+              issues
+            );
             availableResponses.add(question.id);
           });
           return;

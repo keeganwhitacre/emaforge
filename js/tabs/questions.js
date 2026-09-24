@@ -140,7 +140,11 @@ function buildMeasureFlowCard(window, entries, entry, index) {
 
 function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
   const questionIndex = state.ema.questions.indexOf(question);
-  const card = buildQCard(question, questionIndex, flowIndex + 1, { flow: true });
+  const pipeSources = entries.slice(0, flowIndex)
+    .filter(candidate => candidate.kind === 'question')
+    .map(candidate => state.ema.questions.find(item => item.id === candidate.questionId))
+    .filter(candidate => candidate && candidate.type !== 'page_break' && candidate.type !== 'affect_grid');
+  const card = buildQCard(question, questionIndex, flowIndex + 1, { flow: true, pipeSources });
   card.classList.add('flow-item', 'flow-question-card');
   const header = card.querySelector('.q-header');
   const actions = document.createElement('span');
@@ -217,6 +221,76 @@ function setMeasureFeedback(message, isError = false) {
   feedback.style.color = isError ? 'var(--red)' : 'var(--fg-2)';
 }
 
+function questionPipingTokens(text) {
+  return Array.from(String(text || '').matchAll(/\{\{([^{}]+)\}\}/g)).map(match => {
+    const parts = match[1].split('|');
+    return { id: (parts.shift() || '').trim(), fallback: parts.join('|').trim() };
+  });
+}
+
+function pipingQuestionLabel(questionId) {
+  const source = state.ema.questions.find(question => question.id === questionId);
+  return source?.text?.replace(/\{\{[^{}]+\}\}/g, 'earlier answer').trim() || questionId;
+}
+
+function questionDisplayText(text) {
+  return String(text || '').replace(/\{\{([^{}]+)\}\}/g, (_match, rawToken) => {
+    const id = rawToken.split('|')[0].trim();
+    return `[Answer: ${pipingQuestionLabel(id)}]`;
+  });
+}
+
+function buildPipingControls(sources) {
+  if (!sources.length) {
+    return `<div class="q-piping-empty">Personalization becomes available after an earlier answerable question.</div>`;
+  }
+  return `<div class="q-piping" aria-label="Personalize question with an earlier answer">
+    <div class="q-piping-heading"><strong>Insert earlier answer</strong><span>Optional</span></div>
+    <div class="q-piping-row">
+      <select class="q-pipe-source" aria-label="Earlier answer">
+        <option value="">Choose an earlier question…</option>
+        ${sources.map(source => `<option value="${escH(source.id)}">${escH((source.text || source.id).slice(0, 72))} · ${escH(measureTypeLabel(source.type))}</option>`).join('')}
+      </select>
+      <input type="text" class="q-pipe-fallback" value="your earlier response" aria-label="Fallback wording" placeholder="Fallback if unanswered">
+      <button type="button" class="q-pipe-insert" disabled>Insert</button>
+    </div>
+    <div class="field-hint">Fallback wording is shown only if the earlier item was skipped or unanswered.</div>
+    <div class="q-pipe-summary" aria-live="polite"></div>
+  </div>`;
+}
+
+function renderPipingSummary(card, q) {
+  const summary = card.querySelector('.q-pipe-summary');
+  if (!summary) return;
+  const tokens = questionPipingTokens(q.text);
+  summary.innerHTML = tokens.map(token => {
+    const exists = state.ema.questions.some(question => question.id === token.id);
+    return `<span class="q-pipe-chip${exists ? '' : ' invalid'}"><span>Answer from</span> ${escH(pipingQuestionLabel(token.id))}${token.fallback ? `<small>Fallback: ${escH(token.fallback)}</small>` : '<small>No fallback</small>'}</span>`;
+  }).join('');
+}
+
+function bindPipingControls(card, q) {
+  const select = card.querySelector('.q-pipe-source');
+  const fallback = card.querySelector('.q-pipe-fallback');
+  const insert = card.querySelector('.q-pipe-insert');
+  const input = card.querySelector('.q-text');
+  if (!select || !insert || !input) return;
+  select.addEventListener('change', () => { insert.disabled = !select.value; });
+  insert.addEventListener('click', () => {
+    if (!select.value) return;
+    const safeFallback = String(fallback?.value || '').replace(/[{}|]/g, '').trim();
+    const token = `{{${select.value}${safeFallback ? `|${safeFallback}` : ''}}}`;
+    const start = Number.isInteger(input.selectionStart) ? input.selectionStart : input.value.length;
+    const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
+    input.value = `${input.value.slice(0, start)}${token}${input.value.slice(end)}`;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    input.setSelectionRange(start + token.length, start + token.length);
+    select.value = '';
+    insert.disabled = true;
+  });
+}
+
 // Add displayNum as the third argument here
 function buildQCard(q, index, displayNum, options = {}) {
   const card = document.createElement('div');
@@ -257,7 +331,7 @@ function buildQCard(q, index, displayNum, options = {}) {
     <div class="q-header">
       <span class="q-drag-handle">⠿</span>
       <span class="q-num">${displayNum}</span>
-      <span class="q-preview-text">${escH(q.text) || '<em style="color:var(--fg-3)">(no text)</em>'}</span>
+      <span class="q-preview-text">${escH(questionDisplayText(q.text)) || '<em style="color:var(--fg-3)">(no text)</em>'}</span>
       <span class="q-type-badge ${q.type}" style="${q.type==='heart_rate'?'background:rgba(246,201,14,0.12);color:#f6c90e;':''}"> ${typeLabel}</span>
       <svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg>
     </div>
@@ -268,9 +342,7 @@ function buildQCard(q, index, displayNum, options = {}) {
             <span style="font-size: 10px; color: var(--fg-muted); font-family: monospace;">ID: ${q.id}</span>
         </div>
         <input type="text" class="q-text" value="${escH(q.text)}" placeholder="${q.type === 'heart_rate' ? 'e.g. Measuring your heart rate…' : 'Enter question…'}">
-        <div class="field-hint" style="margin-top:4px">
-          To display this answer in later questions, type <code style="color:var(--accent)">{{${q.id}}}</code>
-        </div>
+        ${buildPipingControls(options.pipeSources || [])}
       </div>
 
       ${q.type === 'slider'                              ? buildSliderFields(q)     : ''}
@@ -303,9 +375,12 @@ function buildQCard(q, index, displayNum, options = {}) {
   });
   card.querySelector('.q-text').addEventListener('input', e => {
     q.text = e.target.value;
-    card.querySelector('.q-preview-text').textContent = q.text || '(no text)';
+    card.querySelector('.q-preview-text').textContent = questionDisplayText(q.text) || '(no text)';
+    renderPipingSummary(card, q);
     schedulePreview();
   });
+  bindPipingControls(card, q);
+  renderPipingSummary(card, q);
   const reqChk = card.querySelector('.q-required');
   if (reqChk) reqChk.addEventListener('change', e => { q.required = e.target.checked; schedulePreview(); });
   const delBtn = card.querySelector('.q-del-btn-full');

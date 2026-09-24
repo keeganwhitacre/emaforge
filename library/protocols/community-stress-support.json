@@ -35,7 +35,7 @@
         { "id": "q_company", "type": "choice", "text": "Who are you with?", "options": ["No one", "Family", "Friends or peers", "Coworkers or classmates", "People I do not know well", "Other"], "required": true, "condition": null },
         { "id": "q_activity", "type": "choice", "text": "What are you mainly doing?", "options": ["Working or studying", "Caregiving", "Traveling", "Socializing", "Resting", "Household tasks", "Something else"], "required": true, "condition": null },
         { "id": "pb_context", "type": "page_break" },
-        { "id": "q_safety", "type": "slider", "text": "How safe and at ease do you feel at {{q_place}} right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Completely"], "required": true, "condition": null },
+        { "id": "q_safety", "type": "slider", "text": "How safe and at ease do you feel at {{q_place|your current location}} right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Completely"], "required": true, "condition": null },
         { "id": "q_stress", "type": "slider", "text": "How stressed do you feel right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Extremely"], "required": true, "condition": null },
         { "id": "q_support", "type": "slider", "text": "If you needed help right now, how available would support feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not available", "Very available"], "required": true, "condition": null },
         { "id": "q_unfair", "type": "choice", "text": "Since the last check-in, did you feel dismissed, excluded, or treated unfairly?", "options": ["No", "Possibly", "Yes", "Prefer not to say"], "required": true, "condition": null },

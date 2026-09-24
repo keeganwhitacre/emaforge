@@ -21,7 +21,7 @@
     {
       "id": "stress",
       "type": "slider",
-      "text": "How stressed do you feel right now at {{context}}?",
+      "text": "How stressed do you feel right now at {{context|your current location}}?",
       "min": 0,
       "max": 100,
       "step": 1,

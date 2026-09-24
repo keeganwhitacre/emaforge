@@ -124,26 +124,6 @@ const EMA = (function() {
     furthestPageVisited = currentPageIndex;
   }
 
-function interpolate(text, responses) {
-    // Replace {{question_id}} tokens with the current response value.
-    return text.replace(/\{\{([^}]+)\}\}/g, (match, qid) => {
-      const rec = responses[qid.trim()];
-      if (rec === undefined || rec === null) return match;
-      
-      const val = (rec && typeof rec === 'object' && 'value' in rec) ? rec.value : rec;
-      if (val === null || val === undefined) return match;
-      if (typeof val === 'object') return JSON.stringify(val);
-      
-      // If it's a number, round it to 1 decimal place so it looks clean (e.g., 75.4 BPM)
-      if (!isNaN(val) && val !== "") {
-        return String(Math.round(Number(val) * 10) / 10);
-      }
-      
-      // If it's regular text (like "Taking a break"), just return the text!
-      return String(val); 
-    });
-  }
-
   // -----------------------------------------------------------------------
   // Affect grid builder — builds an SVG tap-target and wires pointer events.
   // Uses CSS variables for theming so it stays consistent across dark/light.
@@ -593,6 +573,10 @@ function interpolate(text, responses) {
     }
     checkSubmitFn = checkSubmit;  // share with builders
     refreshConditionalFn = changedQuestionId => {
+      document.querySelectorAll('.ema-question[data-question-id]').forEach(title => {
+        const question = visibleQuestions.find(item => item.id === title.dataset.questionId);
+        if (question) title.textContent = EMAForgeRuntimeUtils.interpolateText(question.text || '', emaResponses.responses);
+      });
       const pageQuestions = emaPages[currentPageIndex] || [];
       if (!pageQuestions.some(question => conditionReferencesQuestion(question.condition, changedQuestionId))) {
         checkSubmit();
@@ -625,7 +609,8 @@ function interpolate(text, responses) {
 
       const qTitle = document.createElement('div');
       qTitle.className = 'ema-question';
-      qTitle.textContent = interpolate(q.text || '', emaResponses.responses);
+      qTitle.dataset.questionId = q.id;
+      qTitle.textContent = EMAForgeRuntimeUtils.interpolateText(q.text || '', emaResponses.responses);
       wrapper.appendChild(qTitle);
 
       if (q.type === 'slider') {
