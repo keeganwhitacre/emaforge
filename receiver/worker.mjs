@@ -64,20 +64,30 @@ export default {
 
     const test = record.test === true;
     const key = `${test ? 'setup-tests' : 'sessions'}/${record.submission_id}.json`;
+    const receivedAt = new Date().toISOString();
+    const storedRecord = JSON.stringify({
+      ...record,
+      server_receipt: {
+        receiver: 'ema-forge-cloudflare-r2',
+        storage_state: 'stored',
+        received_at: receivedAt
+      }
+    });
     const metadata = {
       participant: record.participant_id,
       day: String(record.day),
       window: record.window_id,
-      digest: await sha256(raw)
+      digest: await sha256(raw),
+      receivedAt
     };
     try {
       // R2 evaluates this precondition atomically; retrying cannot overwrite an earlier response.
-      const saved = await env.STUDY_DATA.put(key, raw, {
+      const saved = await env.STUDY_DATA.put(key, storedRecord, {
         onlyIf: new Headers({ 'If-None-Match': '*' }),
         httpMetadata: { contentType: 'application/json' },
         customMetadata: metadata
       });
-      if (saved) return reply({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false }, 200, origin);
+      if (saved) return reply({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false, received_at: receivedAt }, 200, origin);
       const existing = await env.STUDY_DATA.head(key);
       if (!existing) return reply({ error: 'Unable to confirm storage' }, 503, origin);
       const previous = existing.customMetadata || {};
@@ -85,7 +95,7 @@ export default {
         return reply({ error: 'Submission ID already used for another session' }, 409, origin);
       }
       if (previous.digest !== metadata.digest) return reply({ error: 'Submission ID already used with different data' }, 409, origin);
-      return reply({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: true }, 200, origin);
+      return reply({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: true, received_at: previous.receivedAt || null }, 200, origin);
     } catch (_) {
       // Never claim success when the storage provider throws or cannot confirm a write.
       return reply({ error: 'Storage unavailable; keep a local copy' }, 503, origin);

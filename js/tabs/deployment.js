@@ -34,6 +34,7 @@ function bindDeploymentTab() {
   const hostedInput = document.getElementById('deploy-base-url');
   const receiverInput = document.getElementById('deploy-webhook-url');
   const studyReceiverInput = document.getElementById('study-webhook');
+  const adminBtn = document.getElementById('open-cloudflare-admin-btn');
   const checkBtn = document.getElementById('open-connection-check-btn');
   const receiverBtn = document.getElementById('download-receiver-btn');
   const cloudflareStudyBtn = document.getElementById('prepare-cloudflare-study-btn');
@@ -51,6 +52,14 @@ function bindDeploymentTab() {
     studyReceiverInput.addEventListener('input', () => { receiverInput.value = studyReceiverInput.value; });
   }
   if (hostedInput) hostedInput.addEventListener('input', updateDeploymentControls);
+  if (adminBtn) adminBtn.addEventListener('click', () => {
+    const adminUrl = cloudflareAdminUrl(hostedInput ? hostedInput.value.trim() : '');
+    if (!adminUrl) {
+      alert('Enter the real HTTPS URL of the deployed Cloudflare Worker first.');
+      return;
+    }
+    window.open(adminUrl, '_blank', 'noopener,noreferrer');
+  });
   if (checkBtn) checkBtn.addEventListener('click', () => {
     const checkUrl = connectionCheckUrl(hostedInput ? hostedInput.value.trim() : '');
     if (!checkUrl) {
@@ -182,7 +191,9 @@ function bindDeploymentTab() {
 async function downloadCloudflareStudy() {
   const button = document.getElementById('prepare-cloudflare-study-btn');
   const status = document.getElementById('cloudflare-study-status');
-  if (typeof confirmProtocolExport === 'function' && !confirmProtocolExport()) return;
+  const cloudflareConfig = buildConfig();
+  cloudflareConfig.study.webhook_url = '/submit';
+  if (typeof confirmProtocolExport === 'function' && !confirmProtocolExport(cloudflareConfig)) return;
   if (button) button.disabled = true;
   if (status) status.textContent = 'Preparing the participant study…';
   try {
@@ -261,14 +272,25 @@ function connectionCheckUrl(value) {
   return url.toString();
 }
 
+function cloudflareAdminUrl(value) {
+  if (!isDeployableBaseUrl(value)) return null;
+  const url = new URL(value);
+  url.pathname = '/admin';
+  return url.toString();
+}
+
 function updateDeploymentControls() {
   const hostedInput = document.getElementById('deploy-base-url');
+  const adminBtn = document.getElementById('open-cloudflare-admin-btn');
   const checkBtn = document.getElementById('open-connection-check-btn');
   const hint = document.getElementById('connection-check-hint');
-  const url = connectionCheckUrl(hostedInput ? hostedInput.value.trim() : '');
-  if (checkBtn) checkBtn.disabled = !url;
-  if (hint) hint.textContent = url
-    ? `Opens ${url}`
+  const value = hostedInput ? hostedInput.value.trim() : '';
+  const checkUrl = connectionCheckUrl(value);
+  const adminUrl = cloudflareAdminUrl(value);
+  if (adminBtn) adminBtn.disabled = !adminUrl;
+  if (checkBtn) checkBtn.disabled = !checkUrl;
+  if (hint) hint.textContent = checkUrl
+    ? `Admin: ${adminUrl} · Connection check: ${checkUrl}`
     : 'Available after entering a valid hosted HTTPS URL.';
 }
 

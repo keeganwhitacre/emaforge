@@ -43,9 +43,15 @@ test("receiver saves once and returns a verifiable receipt", async () => {
   const bucket = new MemoryBucket();
   const first = await send(bucket, payload());
   assert.equal(first.status, 200);
-  assert.deepEqual(await first.json(), {
-    status: "success", submission_id: "ses_123456", stored: true, duplicate: false
-  });
+  const receipt = await first.json();
+  assert.equal(receipt.status, "success");
+  assert.equal(receipt.submission_id, "ses_123456");
+  assert.equal(receipt.stored, true);
+  assert.equal(receipt.duplicate, false);
+  assert.ok(receipt.received_at);
+  const stored = JSON.parse(bucket.objects.get("sessions/ses_123456.json").body);
+  assert.equal(stored.server_receipt.storage_state, "stored");
+  assert.equal(stored.server_receipt.received_at, receipt.received_at);
   assert.equal(bucket.objects.size, 1);
 
   const retry = await send(bucket, payload());

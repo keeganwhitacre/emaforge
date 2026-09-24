@@ -1234,15 +1234,15 @@
               from the default draft and build your own ordered survey/task flow.</li>
             <li>Replace the consent placeholder with approved study language. Review the questions, sessions, task
               burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
-            <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and click <strong>Export Study</strong>
-              → <strong>Static-hosting bundle</strong>.</li>
-            <li>Upload the bundle to an HTTPS static host, then open the hosted study URL on your phone with
-              <code>?id=1&amp;day=1&amp;session=w1</code> appended. You're running a study.</li>
-            <li>When you finish the session, your phone downloads a CSV. Go back to <a
-                href="https://emaforge.keeganwhitacre.com" target="_blank"
-                rel="noopener">emaforge.keeganwhitacre.com</a>, open <strong>Analyze</strong>, import the returned files,
-              and inspect the observed sessions and item responses. Completion remains unavailable without scheduled
-              prompt events.</li>
+            <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and select <strong>Download prepared study</strong>.</li>
+            <li>Select <strong>Deploy to Cloudflare</strong>. After deployment, copy the Worker URL from
+              <strong>Settings → Domains &amp; Routes</strong>, paste it into EMA Forge, and select <strong>Open study admin</strong>
+              to install the prepared file.</li>
+            <li>Run the live <code>/check.html</code>, confirm its synthetic record reached the private R2 bucket, and then
+              complete a real test session on your phone.</li>
+            <li>Return to <code>/admin</code>, select <strong>Download responses</strong>, then open <strong>Analyze</strong>
+              and import the downloaded <code>.ndjson</code> file. Inspect the observed sessions and item responses.
+              Completion remains unavailable without scheduled prompt events.</li>
           </ol>
 
           <p>That round trip tells you whether your device can open sessions and whether your data is landing where you
@@ -1751,7 +1751,7 @@ git push -u origin main
               Written alongside the CSV, not instead of it.</li>
           </ul>
           <p>The participant returns these files via whatever channel your IRB approved (secure email, REDCap file
-            upload, institutional SFTP). Analyze accepts a folder of JSON files or compatible long-format CSV; a CSV-only workflow
+            upload, institutional SFTP). Analyze accepts Cloudflare NDJSON, a folder of JSON files, or compatible long-format CSV; a CSV-only workflow
             is also viable for simpler studies.</p>
 
           <h3>Webhook return (opt-in)</h3>
@@ -1937,10 +1937,14 @@ affect &lt;- df |&gt;
             generation run in your browser; EMA Forge does not upload the files to a central analysis service.</p>
 
           <h3 id="dashboard-inputs">What to feed it</h3>
-          <p>Analyze accepts three input shapes. You can mix compatible files in a single import — the parser sorts out which
+          <p>Analyze accepts four input shapes. You can mix compatible files in a single import — the parser sorts out which
             files are which.</p>
 
           <ul>
+            <li><strong>A Cloudflare response export.</strong> From the deployed study's <code>/admin</code> page, select
+              <strong>Download responses</strong> and import the resulting <code>.ndjson</code> file directly. Each line is
+              one complete, lossless session envelope. Import multiple export parts together when the admin page indicates
+              that more than one part is available.</li>
             <li><strong>A folder of JSON files.</strong> One per-session <code>.json</code> as produced by the
               participant app, plus a single <code>config.json</code> (the same one inside your exported study). This is
               the right shape when participants return files manually, or when you've downloaded them out of
@@ -2961,8 +2965,14 @@ iat_trials &lt;- sessions |&gt;
   <div class="callout-title">Fast path: deploy, then import once</div>
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
     Cloudflare clones the public template, provisions and binds private R2 storage, and asks for a unique admin token.
-    After deployment, open the Worker's <code>/admin</code> page and install the downloaded file. EMA Forge never receives
+    After deployment, open the Worker in Cloudflare, go to <strong>Settings → Domains &amp; Routes</strong>, and copy its
+    <code>https://…workers.dev</code> URL. Paste that URL into EMA Forge under <strong>Hosted study URL</strong>, select
+    <strong>Open study admin</strong>, and install the downloaded file. EMA Forge never receives
     the researcher's Cloudflare credentials, token, study file, or participant data.</p>
+  <p>If the admin page reports <strong>Unauthorized</strong>, do not recreate the deployment. Open
+    <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
+    <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
+    value in <code>wrangler.jsonc</code> or commit it to Git.</p>
 </div>
 
 <details>

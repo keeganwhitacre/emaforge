@@ -105,6 +105,62 @@
       (!Object.prototype.hasOwnProperty.call(receipt, "submission_id") || receipt.submission_id === submissionId);
   }
 
+  function parseUserAgentMetadata(userAgent) {
+    const ua = String(userAgent || "");
+    let deviceModel = "Unknown";
+    let osName = "Unknown";
+    let osVersion = "";
+    let browserName = "Unknown";
+    let browserVersion = "";
+
+    if (/iPhone/.test(ua)) {
+      deviceModel = "iPhone";
+      osName = "iOS";
+      const match = ua.match(/OS (\d+[_\.]\d+[_\.]?\d*)/);
+      if (match) osVersion = match[1].replace(/_/g, ".");
+    } else if (/iPad/.test(ua)) {
+      deviceModel = "iPad";
+      osName = "iPadOS";
+      const match = ua.match(/OS (\d+[_\.]\d+[_\.]?\d*)/);
+      if (match) osVersion = match[1].replace(/_/g, ".");
+    } else if (/Android/.test(ua)) {
+      osName = "Android";
+      const match = ua.match(/Android ([\d.]+)/);
+      if (match) osVersion = match[1];
+      const model = ua.match(/;\s*([^;)]+)\s*Build\//);
+      deviceModel = model ? model[1].trim() : "Android Device";
+    } else if (/Mac OS X/.test(ua)) {
+      osName = "macOS";
+      const match = ua.match(/Mac OS X ([\d_]+)/);
+      if (match) osVersion = match[1].replace(/_/g, ".");
+      deviceModel = "Mac";
+    } else if (/Windows/.test(ua)) {
+      osName = "Windows";
+      const match = ua.match(/Windows NT ([\d.]+)/);
+      if (match) osVersion = match[1];
+      deviceModel = "PC";
+    }
+
+    const browserPatterns = [
+      ["Edge", /EdgiOS\/([\d.]+)/],
+      ["Chrome", /CriOS\/([\d.]+)/],
+      ["Firefox", /FxiOS\/([\d.]+)/],
+      ["Edge", /Edg\/([\d.]+)/],
+      ["Chrome", /Chrome\/([\d.]+)/],
+      ["Firefox", /Firefox\/([\d.]+)/],
+      ["Safari", /Version\/([\d.]+).*Safari\//]
+    ];
+    for (const [name, pattern] of browserPatterns) {
+      const match = ua.match(pattern);
+      if (!match) continue;
+      browserName = name;
+      browserVersion = match[1];
+      break;
+    }
+
+    return { deviceModel, osName, osVersion, browserName, browserVersion };
+  }
+
   function parseEmaPhaseToken(token) {
     const match = /^survey(\d*)_(.+)$/.exec(token || "");
     if (!match) return null;
@@ -188,6 +244,7 @@
     canNavigateBack,
     questionIdsAfterPage,
     isWebhookAcknowledgement,
+    parseUserAgentMetadata,
     parseEmaPhaseToken,
     collectResponses,
     phaseMsFromKnob,

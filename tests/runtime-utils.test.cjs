@@ -105,6 +105,23 @@ test("a webhook HTTP response must acknowledge a successful submission", () => {
   assert.equal(utils.isWebhookAcknowledgement("<html>Sign in</html>", "s1"), false);
 });
 
+test("device metadata identifies mobile Safari and Chromium browsers", () => {
+  const safari = utils.parseUserAgentMetadata("Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1");
+  assert.deepEqual(safari, {
+    deviceModel: "iPhone",
+    osName: "iOS",
+    osVersion: "18.7",
+    browserName: "Safari",
+    browserVersion: "27.0"
+  });
+
+  const chrome = utils.parseUserAgentMetadata("Mozilla/5.0 (Linux; Android 15; Pixel 9 Build/AP3A.240905.015) AppleWebKit/537.36 Chrome/128.0.0.0 Mobile Safari/537.36");
+  assert.equal(chrome.deviceModel, "Pixel 9");
+  assert.equal(chrome.osName, "Android");
+  assert.equal(chrome.browserName, "Chrome");
+  assert.equal(chrome.browserVersion, "128.0.0.0");
+});
+
 test("ePAT phase uses the final participant-adjusted knob value", () => {
   assert.equal(utils.phaseMsFromKnob(0, 800), 0);
   assert.equal(utils.phaseMsFromKnob(0.5, 800), 200);

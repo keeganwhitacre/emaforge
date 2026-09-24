@@ -70,20 +70,30 @@ async function storeSubmission(request, env, origin) {
   if (!validRecord(record)) return json({ error: 'Invalid submission' }, 400);
 
   const key = `${record.test === true ? 'setup-tests' : 'sessions'}/${record.submission_id}.json`;
+  const receivedAt = new Date().toISOString();
+  const storedRecord = JSON.stringify({
+    ...record,
+    server_receipt: {
+      receiver: 'ema-forge-cloudflare-r2',
+      storage_state: 'stored',
+      received_at: receivedAt
+    }
+  });
   const metadata = {
     participant: record.participant_id,
     day: String(record.day),
     window: record.window_id,
-    digest: await sha256(raw)
+    digest: await sha256(raw),
+    receivedAt
   };
 
   try {
-    const saved = await env.STUDY_DATA.put(key, raw, {
+    const saved = await env.STUDY_DATA.put(key, storedRecord, {
       onlyIf: new Headers({ 'If-None-Match': '*' }),
       httpMetadata: { contentType: 'application/json' },
       customMetadata: metadata
     });
-    if (saved) return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false });
+    if (saved) return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false, received_at: receivedAt });
     const existing = await env.STUDY_DATA.head(key);
     if (!existing) return json({ error: 'Unable to confirm storage' }, 503);
     const previous = existing.customMetadata || {};
@@ -91,7 +101,7 @@ async function storeSubmission(request, env, origin) {
       return json({ error: 'Submission ID already used for another session' }, 409);
     }
     if (previous.digest !== metadata.digest) return json({ error: 'Submission ID already used with different data' }, 409);
-    return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: true });
+    return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: true, received_at: previous.receivedAt || null });
   } catch (_) {
     return json({ error: 'Storage unavailable; keep a local copy' }, 503);
   }

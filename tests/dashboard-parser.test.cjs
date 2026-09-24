@@ -82,3 +82,37 @@ test("synthetic manifests make scheduled completion metrics available", () => {
   assert.equal(DataParser.state.metrics.totalMissed, 1);
   assert.equal(DataParser.state.metrics.complianceRate, 0.5);
 });
+
+test("Cloudflare NDJSON exports unwrap complete session records", () => {
+  DataParser.resetState();
+  const envelope = {
+    submission_id: "ses_123456",
+    participant_id: "P001",
+    day: 1,
+    window_id: "morning",
+    server_receipt: {
+      receiver: "ema-forge-cloudflare-r2",
+      storage_state: "stored",
+      received_at: "2026-09-24T13:28:18.000Z"
+    },
+    session_data: {
+      participantId: "P001",
+      sessionId: "ses_123456",
+      day: 1,
+      type: "ema_only",
+      status: "complete",
+      startedAt: "2026-09-24T13:28:00.000Z",
+      completedAt: "2026-09-24T13:28:17.000Z",
+      data: []
+    }
+  };
+
+  DataParser._ingestNdjson(`${JSON.stringify(envelope)}\nnot-json\n`, "responses.ndjson");
+
+  assert.equal(DataParser.state.allSessions.length, 1);
+  const session = DataParser.state.allSessions[0];
+  assert.equal(session.sessionId, "ses_123456");
+  assert.equal(session.deliveryEnvelope.windowId, "morning");
+  assert.equal(session.receiverReceipt.storage_state, "stored");
+  assert.match(DataParser.state.warnings[0], /line 2/);
+});

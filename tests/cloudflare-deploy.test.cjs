@@ -86,9 +86,17 @@ test("Cloudflare template stores same-origin responses once and protects exports
   assert.equal((await send("https://other.example")).status, 403);
   const first = await send("https://study.example");
   assert.equal(first.status, 200);
-  assert.equal((await first.json()).duplicate, false);
+  const firstReceipt = await first.json();
+  assert.equal(firstReceipt.duplicate, false);
+  assert.ok(firstReceipt.received_at);
+  const stored = JSON.parse(await bucket.objects.get("sessions/ses_123456.json").text());
+  assert.equal(stored.server_receipt.storage_state, "stored");
+  assert.equal(stored.server_receipt.receiver, "ema-forge-cloudflare-r2");
+  assert.equal(stored.server_receipt.received_at, firstReceipt.received_at);
   const retry = await send("https://study.example");
-  assert.equal((await retry.json()).duplicate, true);
+  const retryReceipt = await retry.json();
+  assert.equal(retryReceipt.duplicate, true);
+  assert.equal(retryReceipt.received_at, firstReceipt.received_at);
 
   const unauthorized = await worker.fetch(new Request("https://study.example/admin/export"), env(bucket));
   assert.equal(unauthorized.status, 401);

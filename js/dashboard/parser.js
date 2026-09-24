@@ -56,8 +56,8 @@ const DataParser = {
       try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (error) { }
     }
 
-    const files = Array.from(fileList).filter(file => /\.(?:json|csv)$/i.test(file.name));
-    if (!files.length) throw new Error("No JSON or CSV files found.");
+    const files = Array.from(fileList).filter(file => /\.(?:json|ndjson|csv)$/i.test(file.name));
+    if (!files.length) throw new Error("No JSON, NDJSON, or CSV files found.");
 
     await Promise.all(files.map(file => this._ingestFile(file)));
     this._deduplicateSessions();
@@ -87,10 +87,13 @@ const DataParser = {
 
   _ingestFile(file) {
     return new Promise(resolve => {
-      if (/\.json$/i.test(file.name)) {
+      if (/\.(?:json|ndjson)$/i.test(file.name)) {
         const reader = new FileReader();
         reader.onload = event => {
-          try { this._routeJson(JSON.parse(event.target.result), event.target.result, file.name); }
+          try {
+            if (/\.ndjson$/i.test(file.name)) this._ingestNdjson(event.target.result, file.name);
+            else this._routeJson(JSON.parse(event.target.result), event.target.result, file.name);
+          }
           catch (error) { this.state.warnings.push(`Could not parse ${file.name}.`); }
           resolve();
         };
@@ -112,11 +115,38 @@ const DataParser = {
     if (json.schema_version && json.ema?.scheduling) {
       this.state.studyConfig = json;
       localStorage.setItem("ema_forge_config", raw);
+    } else if (json.session_data && json.submission_id) {
+      const session = {
+        ...json.session_data,
+        receiverReceipt: json.server_receipt || null,
+        deliveryEnvelope: {
+          submissionId: json.submission_id,
+          participantId: json.participant_id,
+          day: json.day,
+          windowId: json.window_id
+        }
+      };
+      this.state.allSessions.push(this.normalizeSession(session));
     } else if (json.participantId || json.sessionId) {
       this.state.allSessions.push(this.normalizeSession(json));
     } else {
       this.state.warnings.push(`${filename} is not a recognized EMA Forge config or session.`);
     }
+  },
+
+  _ingestNdjson(raw, filename) {
+    const lines = String(raw || "").split(/\r?\n/);
+    let records = 0;
+    lines.forEach((line, index) => {
+      if (!line.trim()) return;
+      try {
+        this._routeJson(JSON.parse(line), line, `${filename} line ${index + 1}`);
+        records += 1;
+      } catch (error) {
+        this.state.warnings.push(`Invalid JSON on line ${index + 1} of ${filename}.`);
+      }
+    });
+    if (!records) this.state.warnings.push(`${filename} did not contain any readable records.`);
   },
 
   _routeCsv(results, filename) {

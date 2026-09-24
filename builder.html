@@ -350,7 +350,8 @@
         <ol class="cloudflare-steps">
           <li>Download this study’s prepared HTML file.</li>
           <li>Deploy the EMA Forge template to your Cloudflare account.</li>
-          <li>Open <code>/admin</code> on the new Worker and install the file with your deployment token.</li>
+          <li>In the new Worker, open <strong>Settings → Domains &amp; Routes</strong> and copy its <code>workers.dev</code> URL.</li>
+          <li>Paste that URL below, open the study admin, and install the file with the same <code>ADMIN_TOKEN</code> secret used during deployment.</li>
         </ol>
         <div class="deploy-actions">
           <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
@@ -361,14 +362,18 @@
       </div>
 
       <div class="deploy-block">
-        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Confirm the live study</strong><span>Paste the deployed Worker URL, then verify a synthetic record reaches storage.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Install and confirm the live study</strong><span>Paste the deployed Worker URL, install the study, then verify storage.</span></div></div>
       <div class="field-group" style="margin-bottom: 16px;">
         <label class="field-label" for="deploy-base-url">Hosted study URL</label>
         <input type="url" id="deploy-base-url" placeholder="https://your-study.workers.dev/" value="">
-        <div class="field-hint" style="margin-top: 4px;">The participant URL shown after Cloudflare installation, or your independently hosted index.html.</div>
+        <div class="field-hint" style="margin-top: 4px;">Find it in Cloudflare under your Worker’s <strong>Settings → Domains &amp; Routes</strong>. Paste the complete <code>https://…workers.dev</code> URL.</div>
       </div>
-      <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open hosted connection check</button>
+      <div class="deploy-actions">
+        <button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open study admin</button>
+        <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open connection check</button>
+      </div>
       <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Available after entering a valid hosted HTTPS URL.</div>
+      <div class="deploy-note">Admin access requires a Cloudflare Worker <strong>Secret</strong> named exactly <code>ADMIN_TOKEN</code> with at least 32 characters. If it fails, reset it under <strong>Worker → Settings → Variables and Secrets</strong>; you do not need to redeploy from scratch.</div>
       </div>
 
       <details class="manual-deploy">
@@ -523,7 +528,7 @@
 <script src="js/tabs/schedule.js?v=20260923d"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
-<script src="js/tabs/deployment.js?v=20260923e"></script>
+<script src="js/tabs/deployment.js?v=20260924a"></script>
 <script src="js/preview.js?v=20260923c"></script>
 <script src="js/modals.js"></script>
 <script src="js/export.js?v=20260923e"></script>

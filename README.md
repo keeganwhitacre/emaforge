@@ -11,7 +11,7 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
 4. Download the prepared Cloudflare study, deploy the included Worker template, and install the file at the new Worker's token-protected `/admin` page. Cloudflare provisions the private R2 bucket and hosts the participant app in the researcher's account.
 5. Open the live `/check.html` page and confirm its synthetic record reached R2.
-6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment. Independent static hosting and receiver setup remain available under the manual deployment option.
+6. Use the hosted study URL to generate participant links in **Review & Deploy**. Complete and inspect one full test session before enrollment, then download the NDJSON response export from `/admin` and import it directly into **Analyze**. Independent static hosting and receiver setup remain available under the manual deployment option.
 
 ## Protocol library
 
@@ -29,7 +29,7 @@ The builder itself needs no account or backend. The Cloudflare deployment lives 
 
 ## Analyze and simulate
 
-Analyze imports EMA Forge JSON or long-format CSV locally in the browser. It provides study-day summaries, participant and item views, response-status-preserving CSV export, rapid-duration review flags, and dedicated ePAT summaries. Observed response files alone cannot establish how many prompts were missed, so completion and delivery metrics stay unavailable unless a roster plus prompt-event log exists.
+Analyze imports Cloudflare NDJSON exports, EMA Forge JSON, or long-format CSV locally in the browser. It provides study-day summaries, participant and item views, response-status-preserving CSV export, rapid-duration review flags, and dedicated ePAT summaries. Observed response files alone cannot establish how many prompts were missed, so completion and delivery metrics stay unavailable unless a roster plus prompt-event log exists.
 
 Use **Simulate study** to generate a deterministic, clearly labeled synthetic dataset from a curated protocol. The simulator follows session order, branching, item missingness, and physiological task envelopes; because it also creates an explicit schedule manifest, Analyze can demonstrate expected-versus-completed metrics. Synthetic exports include a `data_source` column and use a distinct filename. Simulation is for workflow testing, not measurement validation or statistical inference.
 

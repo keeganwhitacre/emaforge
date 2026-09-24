@@ -55,7 +55,7 @@ const AppUI = {
         this.setStatus(data.warnings.length ? `Imported with ${data.warnings.length} warning(s)` : "Imported locally", data.warnings.length ? "badge-warn" : "badge-good");
       } catch (err) {
         console.error(err);
-        alert("Error parsing folder. Make sure it contains EMA JSON exports.");
+        alert("Could not import these files. Choose EMA Forge JSON, Cloudflare NDJSON, or long-format CSV exports.");
         this.setStatus("Error", "badge-danger");
       }
       fileInput.value = "";

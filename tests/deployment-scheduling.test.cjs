@@ -162,6 +162,19 @@ test("connection check URL stays beside the hosted participant app", () => {
   assert.equal(context.connectionCheckUrl("http://localhost/study"), null);
 });
 
+test("Cloudflare admin URL is derived without requiring log inspection", () => {
+  const context = builderContext();
+  assert.equal(
+    context.cloudflareAdminUrl("https://ema-forge-test.example.workers.dev/"),
+    "https://ema-forge-test.example.workers.dev/admin"
+  );
+  assert.equal(
+    context.cloudflareAdminUrl("https://study.community.org/old/path"),
+    "https://study.community.org/admin"
+  );
+  assert.equal(context.cloudflareAdminUrl("http://localhost:8787"), null);
+});
+
 test("dispatcher serializes study names and URLs as safe JavaScript", () => {
   const context = builderContext();
   context.state.study.name = "Researcher's */ Study";

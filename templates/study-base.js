@@ -399,14 +399,10 @@ const Upload = {
 
 function collectDeviceMetadata() {
   const ua = navigator.userAgent;
-  let deviceModel = 'Unknown', osName = 'Unknown', osVersion = '', browserName = 'Unknown', browserVersion = '';
-  if (/iPhone/.test(ua)) { deviceModel = 'iPhone'; osName = 'iOS'; const m = ua.match(/OS (\d+[_\.]\d+[_\.]?\d*)/); if (m) osVersion = m[1].replace(/_/g, '.'); }
-  else if (/Android/.test(ua)) { osName = 'Android'; const m = ua.match(/Android ([\d.]+)/); if (m) osVersion = m[1]; const dm = ua.match(/;\s*([^;)]+)\s*Build\//); if (dm) deviceModel = dm[1].trim(); else deviceModel = 'Android Device'; }
-  else if (/Mac OS X/.test(ua)) { osName = 'macOS'; const m = ua.match(/Mac OS X ([\d_]+)/); if (m) osVersion = m[1].replace(/_/g, '.'); deviceModel = 'Mac'; }
-  else if (/Windows/.test(ua)) { osName = 'Windows'; const m = ua.match(/Windows NT ([\d.]+)/); if (m) osVersion = m[1]; deviceModel = 'PC'; }
+  const parsed = EMAForgeRuntimeUtils.parseUserAgentMetadata(ua);
 
   return {
-    userAgent: ua, deviceModel, osName, osVersion, browserName, browserVersion,
+    userAgent: ua, ...parsed,
     screenWidth: screen.width, screenHeight: screen.height,
     devicePixelRatio: window.devicePixelRatio || 1, platform: navigator.platform || ''
   };
