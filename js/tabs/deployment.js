@@ -40,6 +40,8 @@ function bindDeploymentTab() {
   const cloudflareStudyBtn = document.getElementById('prepare-cloudflare-study-btn');
   if (!generateBtn) return;
 
+  if (hostedInput) hostedInput.value = state.deployment?.hosted_url || '';
+
   if (receiverInput) {
     receiverInput.value = state.study.webhook_url || '';
     receiverInput.addEventListener('input', () => {
@@ -51,7 +53,10 @@ function bindDeploymentTab() {
   if (studyReceiverInput && receiverInput) {
     studyReceiverInput.addEventListener('input', () => { receiverInput.value = studyReceiverInput.value; });
   }
-  if (hostedInput) hostedInput.addEventListener('input', updateDeploymentControls);
+  if (hostedInput) hostedInput.addEventListener('input', () => {
+    rememberHostedStudyUrl(hostedInput.value);
+    updateDeploymentControls();
+  });
   if (adminBtn) adminBtn.addEventListener('click', () => {
     const adminUrl = cloudflareAdminUrl(hostedInput ? hostedInput.value.trim() : '');
     if (!adminUrl) {
@@ -270,6 +275,13 @@ function connectionCheckUrl(value) {
     url.pathname = url.pathname.replace(/\/?$/, '/') + 'check.html';
   }
   return url.toString();
+}
+
+function rememberHostedStudyUrl(value) {
+  if (!state.deployment || typeof state.deployment !== 'object') state.deployment = {};
+  state.deployment.hosted_url = String(value || '').trim();
+  if (typeof StorageManager !== 'undefined') StorageManager.debouncedSave();
+  return state.deployment.hosted_url;
 }
 
 function cloudflareAdminUrl(value) {

@@ -75,9 +75,12 @@ const StorageManager = {
             return false;
         }
 
-        ['study', 'onboarding', 'ema'].forEach(key => {
+        ['deployment', 'study', 'onboarding', 'ema'].forEach(key => {
             if (saved[key] !== undefined) state[key] = saved[key];
         });
+
+        if (!state.deployment || typeof state.deployment !== 'object') state.deployment = { hosted_url: '' };
+        if (typeof state.deployment.hosted_url !== 'string') state.deployment.hosted_url = '';
 
         if (Array.isArray(saved.modules)) {
             saved.modules.forEach(savedMod => {
@@ -163,6 +166,9 @@ const StorageManager = {
         if (Array.isArray(state.modules)) {
             state.modules.forEach(m => m.enabled = false);
         }
+        // A template is a new deployment target. Never carry the prior
+        // study's live URL into it.
+        state.deployment = { hosted_url: '' };
 
         // 2. Deep copy the template so we don't mutate the original dictionary
         const templateCopy = JSON.parse(JSON.stringify(templateObj));
@@ -191,6 +197,7 @@ const StorageManager = {
         if (el('institution'))   el('institution').value = state.study.institution || '';
         if (el('study-webhook')) el('study-webhook').value = state.study.webhook_url || '';
         if (el('deploy-webhook-url')) el('deploy-webhook-url').value = state.study.webhook_url || '';
+        if (el('deploy-base-url')) el('deploy-base-url').value = state.deployment?.hosted_url || '';
         
         if (el('accent-color')) {
             el('accent-color').value = state.study.accent_color || '#e8716a';

@@ -175,6 +175,12 @@ test("Cloudflare admin URL is derived without requiring log inspection", () => {
   assert.equal(context.cloudflareAdminUrl("http://localhost:8787"), null);
 });
 
+test("hosted study URL is retained as researcher workspace metadata", () => {
+  const context = builderContext();
+  assert.equal(context.rememberHostedStudyUrl("  https://study.community.org/  "), "https://study.community.org/");
+  assert.equal(context.state.deployment.hosted_url, "https://study.community.org/");
+});
+
 test("dispatcher serializes study names and URLs as safe JavaScript", () => {
   const context = builderContext();
   context.state.study.name = "Researcher's */ Study";

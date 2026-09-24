@@ -32,6 +32,12 @@
 const SCHEMA_VERSION = "2.0.0";
 
 let state = {
+  // Researcher-only workspace metadata. buildConfig() intentionally excludes
+  // this from the participant study payload.
+  deployment: {
+    hosted_url: ""
+  },
+
   study: {
     name: "",
     institution: "",

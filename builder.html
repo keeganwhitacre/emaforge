@@ -366,10 +366,10 @@
       <div class="field-group" style="margin-bottom: 16px;">
         <label class="field-label" for="deploy-base-url">Hosted study URL</label>
         <input type="url" id="deploy-base-url" placeholder="https://your-study.workers.dev/" value="">
-        <div class="field-hint" style="margin-top: 4px;">Find it in Cloudflare under your Worker’s <strong>Settings → Domains &amp; Routes</strong>. Paste the complete <code>https://…workers.dev</code> URL.</div>
+        <div class="field-hint" style="margin-top: 4px;">Find it in Cloudflare under your Worker’s <strong>Settings → Domains &amp; Routes</strong>. Paste the complete <code>https://…workers.dev</code> URL. EMA Forge saves it in this browser for return visits.</div>
       </div>
       <div class="deploy-actions">
-        <button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open study admin</button>
+        <button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open admin &amp; download responses</button>
         <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open connection check</button>
       </div>
       <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Available after entering a valid hosted HTTPS URL.</div>
@@ -517,8 +517,8 @@
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
-<script src="js/state.js?v=20260923e"></script>
-<script src="js/storage.js?v=20260923e"></script>
+<script src="js/state.js?v=20260924b"></script>
+<script src="js/storage.js?v=20260924b"></script>
 <script src="js/library-utils.js?v=20260923b"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20260923d"></script>
@@ -528,7 +528,7 @@
 <script src="js/tabs/schedule.js?v=20260923d"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
-<script src="js/tabs/deployment.js?v=20260924a"></script>
+<script src="js/tabs/deployment.js?v=20260924b"></script>
 <script src="js/preview.js?v=20260923c"></script>
 <script src="js/modals.js"></script>
 <script src="js/export.js?v=20260923e"></script>

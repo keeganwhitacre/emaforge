@@ -2969,6 +2969,8 @@ iat_trials &lt;- sessions |&gt;
     <code>https://…workers.dev</code> URL. Paste that URL into EMA Forge under <strong>Hosted study URL</strong>, select
     <strong>Open study admin</strong>, and install the downloaded file. EMA Forge never receives
     the researcher's Cloudflare credentials, token, study file, or participant data.</p>
+  <p>The hosted URL is saved with the local builder workspace, so returning to <strong>Review &amp; Deploy</strong> restores
+    the direct admin/download and connection-check buttons without requiring another search through Cloudflare.</p>
   <p>If the admin page reports <strong>Unauthorized</strong>, do not recreate the deployment. Open
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
