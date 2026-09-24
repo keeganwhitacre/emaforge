@@ -44,7 +44,10 @@ function bindStudyTab() {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => { setter(el.value); schedulePreview(); });
   };
-  bind('study-name',  v => state.study.name = v);
+  bind('study-name',  v => {
+    state.study.name = v;
+    if (typeof updateSuggestedWorkerName === 'function') updateSuggestedWorkerName();
+  });
   bind('institution', v => state.study.institution = v);
   bind('study-webhook', v => state.study.webhook_url = v);
 

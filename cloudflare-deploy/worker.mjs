@@ -1,6 +1,13 @@
-// EMA Forge Cloudflare host: participant app + private R2 response storage.
+import { adminHtml } from './admin-page.mjs';
+
+// EMA Forge Cloudflare host: participant app, private response storage,
+// researcher administration, and optional Twilio prompt delivery.
 const MAX_STUDY_BYTES = 10 * 1024 * 1024;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const MAX_ROSTER_SIZE = 5000;
+const MAX_ADMIN_LIST_OBJECTS = 50000;
+const DEFAULT_MESSAGE_TEMPLATE = '{study}: Your {window} check-in is ready: {link} Reply STOP to opt out.';
+const TERMINAL_DISPATCH_STATES = new Set(['delivered', 'undelivered', 'failed', 'canceled', 'read']);
 const textEncoder = new TextEncoder();
 
 async function sha256(value) {
@@ -21,7 +28,8 @@ function secureHeaders(contentType) {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
-    'Permissions-Policy': 'camera=(self), microphone=()'
+    'Permissions-Policy': 'camera=(self), microphone=()',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
   };
 }
 
@@ -51,6 +59,31 @@ function validRecord(record) {
     session && typeof session === 'object' && !Array.isArray(session) &&
     session.sessionId === id && String(session.participantId) === pid && session.day === day &&
     (record.test !== true || (pid === 'ema-forge-setup-test' && windowId === 'setup-test'));
+}
+
+async function readJson(env, key, fallback = null) {
+  const object = await env.STUDY_DATA.get(key);
+  if (!object) return fallback;
+  try { return JSON.parse(await object.text()); }
+  catch (_) { return fallback; }
+}
+
+async function putJson(env, key, value, options = {}) {
+  return env.STUDY_DATA.put(key, JSON.stringify(value), {
+    httpMetadata: { contentType: 'application/json' },
+    ...options
+  });
+}
+
+function extractStudyConfig(html) {
+  const marker = 'window.__CONFIG__ = ';
+  const start = html.indexOf(marker);
+  if (start === -1) return null;
+  const jsonStart = start + marker.length;
+  const end = html.indexOf(';</script>', jsonStart);
+  if (end === -1) return null;
+  try { return JSON.parse(html.slice(jsonStart, end)); }
+  catch (_) { return null; }
 }
 
 async function storeSubmission(request, env, origin) {
@@ -109,9 +142,7 @@ async function storeSubmission(request, env, origin) {
 
 async function serveStudy(env) {
   const study = await env.STUDY_DATA.get('study/current.html');
-  if (!study) {
-    return new Response(notInstalledHtml, { status: 503, headers: secureHeaders('text/html; charset=utf-8') });
-  }
+  if (!study) return new Response(notInstalledHtml, { status: 503, headers: secureHeaders('text/html; charset=utf-8') });
   return new Response(study.body, { headers: secureHeaders('text/html; charset=utf-8') });
 }
 
@@ -124,6 +155,8 @@ async function installStudy(request, env) {
   if (!html.includes('<meta name="generator" content="EMA Forge">') || !html.includes('window.__CONFIG__')) {
     return json({ error: 'Choose the Cloudflare study HTML exported by EMA Forge' }, 400);
   }
+  const config = extractStudyConfig(html);
+  if (!config || typeof config !== 'object') return json({ error: 'The embedded EMA Forge configuration could not be read' }, 400);
   const now = new Date().toISOString();
   const digest = await sha256(html);
   const versionKey = `study/versions/${now.replace(/[:.]/g, '-')}-${digest.slice(0, 12)}.html`;
@@ -131,25 +164,93 @@ async function installStudy(request, env) {
     httpMetadata: { contentType: 'text/html; charset=utf-8' },
     customMetadata: { installedAt: now, digest }
   };
-  await env.STUDY_DATA.put(versionKey, html, options);
-  await env.STUDY_DATA.put('study/current.html', html, options);
+  await Promise.all([
+    env.STUDY_DATA.put(versionKey, html, options),
+    env.STUDY_DATA.put('study/current.html', html, options),
+    putJson(env, 'study/current-config.json', config),
+    putJson(env, 'admin/host.json', { origin: new URL(request.url).origin, installed_at: now, digest })
+  ]);
   return json({ status: 'success', installed_at: now, digest, participant_url: new URL('/', request.url).toString() });
+}
+
+async function listAll(env, prefix, maximum = MAX_ADMIN_LIST_OBJECTS) {
+  let cursor;
+  const objects = [];
+  do {
+    const page = await env.STUDY_DATA.list({ prefix, limit: Math.min(1000, maximum - objects.length), cursor, include: ['customMetadata'] });
+    objects.push(...page.objects);
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor && objects.length < maximum);
+  return { objects, limited: !!cursor };
+}
+
+function twilioConfigured(env) {
+  const sid = String(env.TWILIO_ACCOUNT_SID || '');
+  const token = String(env.TWILIO_AUTH_TOKEN || '');
+  const from = String(env.TWILIO_FROM_NUMBER || '');
+  const service = String(env.TWILIO_MESSAGING_SERVICE_SID || '');
+  const senderValid = /^\+[1-9]\d{7,14}$/.test(from) || /^MG[a-zA-Z0-9]{20,}$/.test(service);
+  return /^AC[a-zA-Z0-9]{20,}$/.test(sid) && token.length >= 16 && senderValid;
+}
+
+async function getMessagingSettings(env) {
+  const stored = await readJson(env, 'admin/messaging.json', {});
+  return {
+    enabled: stored.enabled === true,
+    message_template: typeof stored.message_template === 'string' && stored.message_template.trim()
+      ? stored.message_template.trim()
+      : DEFAULT_MESSAGE_TEMPLATE,
+    updated_at: stored.updated_at || null
+  };
 }
 
 async function adminStatus(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  const [study, sessions] = await Promise.all([
+  const [study, config, sessionList, rosterDocument, dispatchList, messaging] = await Promise.all([
     env.STUDY_DATA.head('study/current.html'),
-    env.STUDY_DATA.list({ prefix: 'sessions/', limit: 1 })
+    readJson(env, 'study/current-config.json', null),
+    listAll(env, 'sessions/'),
+    readJson(env, 'admin/roster.json', { participants: [] }),
+    listAll(env, 'dispatch/'),
+    getMessagingSettings(env)
   ]);
-  return json({ installed: !!study, response_count_minimum: sessions.objects.length, has_more_responses: !!sessions.truncated });
+  const participants = new Set();
+  const windows = {};
+  let latest = null;
+  for (const item of sessionList.objects) {
+    const metadata = item.customMetadata || {};
+    if (metadata.participant) participants.add(metadata.participant);
+    if (metadata.window) windows[metadata.window] = (windows[metadata.window] || 0) + 1;
+    if (metadata.receivedAt && (!latest || metadata.receivedAt > latest)) latest = metadata.receivedAt;
+  }
+  const roster = Array.isArray(rosterDocument.participants) ? rosterDocument.participants : [];
+  const origin = new URL(request.url).origin;
+  return json({
+    installed: !!study,
+    study_name: config?.study?.name || null,
+    installed_at: study?.customMetadata?.installedAt || null,
+    participant_url: `${origin}/`,
+    admin_url: `${origin}/admin`,
+    connection_check_url: `${origin}/check.html`,
+    response_count: sessionList.objects.length,
+    response_count_limited: sessionList.limited,
+    observed_participants: participants.size || (sessionList.objects.length ? null : 0),
+    active_roster_count: roster.filter(person => person.status === 'active').length,
+    roster_count: roster.length,
+    latest_response_at: latest,
+    sessions_by_window: windows,
+    dispatch_count: dispatchList.objects.length,
+    dispatch_count_limited: dispatchList.limited,
+    messaging_enabled: messaging.enabled,
+    twilio_configured: twilioConfigured(env)
+  });
 }
 
-async function exportResponses(request, env) {
+async function exportPrefix(request, env, prefix, filename) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
   const url = new URL(request.url);
   const cursor = url.searchParams.get('cursor') || undefined;
-  const listed = await env.STUDY_DATA.list({ prefix: 'sessions/', limit: 1000, cursor });
+  const listed = await env.STUDY_DATA.list({ prefix, limit: 1000, cursor });
   const lines = [];
   for (let offset = 0; offset < listed.objects.length; offset += 20) {
     const batch = listed.objects.slice(offset, offset + 20);
@@ -157,28 +258,388 @@ async function exportResponses(request, env) {
     for (const object of objects) if (object) lines.push(await object.text());
   }
   const headers = secureHeaders('application/x-ndjson; charset=utf-8');
-  headers['Content-Disposition'] = 'attachment; filename="ema-forge-responses.ndjson"';
+  headers['Content-Disposition'] = `attachment; filename="${filename}"`;
   headers['X-EMA-Truncated'] = String(!!listed.truncated);
   if (listed.cursor) headers['X-EMA-Next-Cursor'] = listed.cursor;
   return new Response(lines.join('\n') + (lines.length ? '\n' : ''), { headers });
 }
 
-const adminHtml = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EMA Forge study setup</title><style>
-:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#18202a;background:#f7f7f4}*{box-sizing:border-box}body{margin:0;padding:40px 20px}main{max-width:680px;margin:auto}h1{font-family:Georgia,serif;font-size:2rem;margin:0 0 8px}p{color:#59626c;line-height:1.55}.panel{background:#fff;border:1px solid #cfd4d8;border-top:3px solid #a53c30;padding:22px;margin:22px 0}.field{display:grid;gap:7px;margin:16px 0}label{font-weight:650;font-size:.86rem}input{width:100%;padding:12px;border:1px solid #aeb5bb;border-radius:3px;font:inherit}button,a.button{display:inline-flex;align-items:center;justify-content:center;padding:11px 15px;border-radius:3px;border:1px solid #92352b;background:#a53c30;color:white;font-weight:650;text-decoration:none;cursor:pointer}button.secondary{background:white;color:#29323b;border-color:#aeb5bb}.actions{display:flex;gap:10px;flex-wrap:wrap}.status{min-height:1.5em;margin-top:12px;font-size:.9rem;color:#59626c}.quiet{font-size:.82rem;border-top:1px solid #e0e3e5;padding-top:14px}.ok{color:#22734f}.error{color:#a02f25}</style></head>
-<body><main><h1>EMA Forge study setup</h1><p>Install the study file generated in EMA Forge. Your token and study go directly to this Worker in your Cloudflare account.</p>
-<section class="panel"><div class="field"><label for="token">Admin token</label><input id="token" type="password" autocomplete="current-password" placeholder="Token set during deployment"></div>
-<div class="field"><label for="study">Prepared study HTML</label><input id="study" type="file" accept=".html,text/html"></div>
-<div class="actions"><button id="install">Install study</button><button class="secondary" id="status">Check status</button><button class="secondary" id="export">Download responses</button></div><div id="message" class="status" role="status"></div>
-<p class="quiet">The token is kept only in this browser tab. Response downloads are NDJSON, one complete submission per line. Larger studies may require multiple export parts.</p></section></main>
-<script>
-const token=document.getElementById('token');const file=document.getElementById('study');const message=document.getElementById('message');let cursor='';let part=1;
-function auth(){return {'Authorization':'Bearer '+token.value}}function say(text,ok){message.textContent=text;message.className='status '+(ok?'ok':'error')}
-document.getElementById('install').onclick=async()=>{if(!token.value||!file.files[0]){say('Enter the deployment token and choose the prepared study file.',false);return}say('Installing…',true);const response=await fetch('/admin/install',{method:'POST',headers:{...auth(),'Content-Type':'text/html'},body:await file.files[0].text()});const result=await response.json();if(!response.ok){say(result.error||'Installation failed.',false);return}say('Installed. Participant URL: '+result.participant_url,true)};
-document.getElementById('status').onclick=async()=>{const response=await fetch('/admin/status',{headers:auth()});const result=await response.json();if(!response.ok){say(result.error||'Status check failed.',false);return}say(result.installed?'Study installed; storage is reachable.':'No study installed yet.',result.installed)};
-document.getElementById('export').onclick=async()=>{const path='/admin/export'+(cursor?'?cursor='+encodeURIComponent(cursor):'');const response=await fetch(path,{headers:auth()});if(!response.ok){const result=await response.json();say(result.error||'Export failed.',false);return}const blob=await response.blob();const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='ema-forge-responses-part-'+part+'.ndjson';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);cursor=response.headers.get('X-EMA-Next-Cursor')||'';part++;say(cursor?'Export part downloaded. Click again for the next part.':'Response export downloaded.',true)};
-</script></body></html>`;
+async function parseJsonRequest(request, maximumBytes = 2 * 1024 * 1024) {
+  const length = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(length) && length > maximumBytes) throw new Error('Request is too large');
+  const raw = await request.text();
+  if (textEncoder.encode(raw).byteLength > maximumBytes) throw new Error('Request is too large');
+  return JSON.parse(raw);
+}
+
+function validTimezone(timezone) {
+  try { new Intl.DateTimeFormat('en-US', { timeZone: timezone }).format(new Date()); return true; }
+  catch (_) { return false; }
+}
+
+function normalizeSchedulePreferences(value) {
+  if (value == null || value === '') return null;
+  const preferences = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) throw new Error('Schedule preferences must be a JSON object');
+  return preferences;
+}
+
+function normalizeRoster(payload) {
+  const incoming = Array.isArray(payload?.participants) ? payload.participants : null;
+  if (!incoming) throw new Error('Roster must contain a participants array');
+  if (incoming.length > MAX_ROSTER_SIZE) throw new Error(`Roster cannot exceed ${MAX_ROSTER_SIZE} participants`);
+  const ids = new Set();
+  const phones = new Set();
+  return incoming.map((raw, index) => {
+    const participantId = String(raw.participant_id || '').trim();
+    const phone = String(raw.phone || '').replace(/[\s()-]/g, '');
+    const timezone = String(raw.timezone || '').trim();
+    const startDate = String(raw.start_date || '').trim();
+    const status = String(raw.status || 'active').trim().toLowerCase();
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(participantId)) throw new Error(`Row ${index + 1}: participant_id must use letters, numbers, dashes, or underscores`);
+    if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(`Row ${index + 1}: phone must use E.164 format`);
+    if (!validTimezone(timezone)) throw new Error(`Row ${index + 1}: timezone is not a valid IANA timezone`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || Number.isNaN(Date.parse(`${startDate}T00:00:00Z`))) throw new Error(`Row ${index + 1}: start_date must be YYYY-MM-DD`);
+    if (!['active', 'inactive', 'opted_out'].includes(status)) throw new Error(`Row ${index + 1}: status must be active, inactive, or opted_out`);
+    if (ids.has(participantId)) throw new Error(`Duplicate participant_id: ${participantId}`);
+    if (phones.has(phone)) throw new Error(`Duplicate phone number in roster: ${phone}`);
+    ids.add(participantId);
+    phones.add(phone);
+    return {
+      participant_id: participantId,
+      phone,
+      timezone,
+      start_date: startDate,
+      status,
+      schedule_preferences: normalizeSchedulePreferences(raw.schedule_preferences)
+    };
+  });
+}
+
+async function rosterRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (request.method === 'GET') return json(await readJson(env, 'admin/roster.json', { participants: [], updated_at: null }));
+  if (request.method !== 'PUT') return json({ error: 'GET or PUT required' }, 405);
+  try {
+    const participants = normalizeRoster(await parseJsonRequest(request));
+    const document = { participants, updated_at: new Date().toISOString() };
+    await putJson(env, 'admin/roster.json', document);
+    return json(document);
+  } catch (error) {
+    return json({ error: error.message || 'Invalid roster' }, 400);
+  }
+}
+
+async function messagingRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (request.method === 'GET') return json({ settings: await getMessagingSettings(env), configured: twilioConfigured(env) });
+  if (request.method !== 'PUT') return json({ error: 'GET or PUT required' }, 405);
+  try {
+    const incoming = await parseJsonRequest(request, 64 * 1024);
+    const template = String(incoming.message_template || '').trim();
+    if (!template || template.length > 500) throw new Error('Message template must contain 1–500 characters');
+    if (!template.includes('{link}')) throw new Error('Message template must include {link}');
+    if (incoming.enabled === true && !twilioConfigured(env)) throw new Error('Add the Twilio Cloudflare secrets before enabling messaging');
+    const settings = { enabled: incoming.enabled === true, message_template: template, updated_at: new Date().toISOString() };
+    await putJson(env, 'admin/messaging.json', settings);
+    return json({ settings, configured: twilioConfigured(env) });
+  } catch (error) {
+    return json({ error: error.message || 'Invalid messaging settings' }, 400);
+  }
+}
+
+function base64(value) {
+  const bytes = textEncoder.encode(value);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+async function sendTwilioMessage(env, { to, body, statusCallback }) {
+  if (!twilioConfigured(env)) throw new Error('Twilio secrets are not configured');
+  const sid = String(env.TWILIO_ACCOUNT_SID);
+  const form = new URLSearchParams({ To: to, Body: body, StatusCallback: statusCallback });
+  if (env.TWILIO_MESSAGING_SERVICE_SID) form.set('MessagingServiceSid', String(env.TWILIO_MESSAGING_SERVICE_SID));
+  else form.set('From', String(env.TWILIO_FROM_NUMBER));
+  const transport = typeof env.__TWILIO_FETCH === 'function' ? env.__TWILIO_FETCH : fetch;
+  let response;
+  try {
+    response = await transport(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${base64(`${sid}:${env.TWILIO_AUTH_TOKEN}`)}`,
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body: form.toString()
+    });
+  } catch (cause) {
+    const error = new Error(`Twilio request outcome is uncertain: ${cause?.message || cause}`);
+    error.uncertain = true;
+    throw error;
+  }
+  let result;
+  try { result = await response.json(); }
+  catch (_) { result = {}; }
+  if (!response.ok || !result.sid) throw new Error(result.message || `Twilio rejected the message (${response.status})`);
+  return { sid: result.sid, status: result.status || 'accepted', date_created: result.date_created || null };
+}
+
+async function testMessageRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  try {
+    const payload = await parseJsonRequest(request, 16 * 1024);
+    const phone = String(payload.phone || '').replace(/[\s()-]/g, '');
+    if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error('Enter a test phone number in E.164 format');
+    const host = await readJson(env, 'admin/host.json', null);
+    if (!host?.origin) throw new Error('Install the study before sending a test message');
+    const result = await sendTwilioMessage(env, {
+      to: phone,
+      body: `EMA Forge test: messaging is connected for ${host.origin}.`,
+      statusCallback: `${host.origin}/twilio/status`
+    });
+    await putJson(env, `twilio/tests/${result.sid}.json`, { message_sid: result.sid, state: result.status, sent_at: new Date().toISOString() });
+    return json({ status: 'accepted', message_sid: result.sid, twilio_status: result.status });
+  } catch (error) {
+    return json({ error: error.message || 'Test message failed' }, 400);
+  }
+}
+
+function localParts(date, timezone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short'
+  });
+  const parts = Object.fromEntries(formatter.formatToParts(date).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  return {
+    ymd: `${parts.year}-${parts.month}-${parts.day}`,
+    minute: Number(parts.hour) * 60 + Number(parts.minute),
+    weekday: ({ Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 })[parts.weekday]
+  };
+}
+
+function dayDiff(startYmd, currentYmd) {
+  const parse = value => {
+    const [year, month, day] = value.split('-').map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((parse(currentYmd) - parse(startYmd)) / 86400000);
+}
+
+function hmMinutes(value) {
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''))) return null;
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function deterministicMinute(participantId, day, windowId, start, end) {
+  let hash = 2166136261;
+  const seed = `${participantId}|${day}|${windowId}`;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return start + ((hash >>> 0) % (end - start + 1));
+}
+
+function participantSchedule(config, person) {
+  const scheduling = config?.ema?.scheduling || {};
+  const protocolDays = Array.isArray(scheduling.days_of_week) && scheduling.days_of_week.length
+    ? scheduling.days_of_week.map(Number)
+    : [1, 2, 3, 4, 5, 6, 7];
+  const preferences = person.schedule_preferences || {};
+  const dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+  const preferredDays = Array.isArray(preferences.days)
+    ? preferences.days.map(day => dayMap[day] || Number(day)).filter(day => day >= 1 && day <= 7)
+    : protocolDays;
+  const days = protocolDays.filter(day => preferredDays.includes(day));
+  const overrides = preferences.windows && typeof preferences.windows === 'object' ? preferences.windows : {};
+  const windows = (scheduling.windows || []).map(window => {
+    const override = overrides[window.id] || {};
+    const start = hmMinutes(override.start) == null ? window.start : override.start;
+    const end = hmMinutes(override.end) == null ? window.end : override.end;
+    return { id: window.id, label: window.label || window.id, start, end };
+  }).filter(window => hmMinutes(window.start) != null && hmMinutes(window.end) != null && hmMinutes(window.end) >= hmMinutes(window.start));
+  return { days, windows };
+}
+
+function renderMessage(template, values) {
+  return template.replace(/\{(study|participant_id|day|window|link)\}/g, (_, key) => String(values[key] ?? ''));
+}
+
+function dispatchMetadata(record) {
+  return {
+    state: String(record.state || 'unknown').slice(0, 40),
+    participant: String(record.participant_id || '').slice(0, 64),
+    day: String(record.day ?? ''),
+    window: String(record.window_id || '').slice(0, 120),
+    sentAt: String(record.sent_at || record.last_attempt_at || '').slice(0, 40)
+  };
+}
+
+async function saveDispatch(env, key, record, options = {}) {
+  return putJson(env, key, record, { ...options, customMetadata: dispatchMetadata(record) });
+}
+
+export async function dispatchDueMessages(env, now = new Date()) {
+  const settings = await getMessagingSettings(env);
+  if (!settings.enabled) return { sent: 0, skipped: 'disabled' };
+  if (!twilioConfigured(env)) return { sent: 0, skipped: 'twilio_not_configured' };
+  const [config, rosterDocument, host] = await Promise.all([
+    readJson(env, 'study/current-config.json', null),
+    readJson(env, 'admin/roster.json', { participants: [] }),
+    readJson(env, 'admin/host.json', null)
+  ]);
+  if (!config?.ema?.scheduling || !host?.origin) return { sent: 0, skipped: 'study_not_installed' };
+  const studyDays = Math.max(1, Number(config.ema.scheduling.study_days) || 1);
+  let sent = 0;
+  let failed = 0;
+  for (const person of rosterDocument.participants || []) {
+    if (person.status !== 'active') continue;
+    const local = localParts(now, person.timezone);
+    const day = dayDiff(person.start_date, local.ymd) + 1;
+    if (day < 1 || day > studyDays) continue;
+    const schedule = participantSchedule(config, person);
+    if (!schedule.days.includes(local.weekday)) continue;
+    for (const window of schedule.windows) {
+      const start = hmMinutes(window.start);
+      const end = hmMinutes(window.end);
+      const target = deterministicMinute(person.participant_id, day, window.id, start, end);
+      if (local.minute < target || local.minute > end) continue;
+      const key = `dispatch/${person.participant_id}/${String(day).padStart(4, '0')}/${window.id}.json`;
+      const existing = await readJson(env, key, null);
+      if (existing && existing.state !== 'failed') continue;
+      if (existing?.attempts >= 3) continue;
+      if (existing?.last_attempt_at && now.getTime() - Date.parse(existing.last_attempt_at) < 15 * 60000) continue;
+      const attempt = {
+        dispatch_id: `${person.participant_id}-${day}-${window.id}`,
+        participant_id: person.participant_id,
+        day,
+        window_id: window.id,
+        window_label: window.label,
+        scheduled_local_minute: target,
+        timezone: person.timezone,
+        state: 'attempting',
+        attempts: (existing?.attempts || 0) + 1,
+        last_attempt_at: now.toISOString(),
+        sent_at: null,
+        message_sid: null,
+        status_history: existing?.status_history || []
+      };
+      if (!existing) {
+        const claimed = await saveDispatch(env, key, attempt, { onlyIf: new Headers({ 'If-None-Match': '*' }) });
+        if (!claimed) continue;
+      } else {
+        await saveDispatch(env, key, attempt);
+      }
+      const participantUrl = new URL('/', host.origin);
+      participantUrl.searchParams.set('id', person.participant_id);
+      participantUrl.searchParams.set('day', String(day));
+      participantUrl.searchParams.set('session', window.id);
+      participantUrl.searchParams.set('t', String(now.getTime()));
+      const body = renderMessage(settings.message_template, {
+        study: config.study?.name || 'Study', participant_id: person.participant_id,
+        day, window: window.label, link: participantUrl.toString()
+      });
+      try {
+        const result = await sendTwilioMessage(env, {
+          to: person.phone,
+          body,
+          statusCallback: `${host.origin}/twilio/status`
+        });
+        attempt.state = result.status;
+        attempt.sent_at = now.toISOString();
+        attempt.message_sid = result.sid;
+        attempt.status_history.push({ state: result.status, at: now.toISOString(), source: 'api' });
+        await Promise.all([
+          saveDispatch(env, key, attempt),
+          putJson(env, `twilio/messages/${result.sid}.json`, { message_sid: result.sid, dispatch_key: key, created_at: now.toISOString() })
+        ]);
+        sent++;
+      } catch (error) {
+        attempt.state = error.uncertain ? 'uncertain' : 'failed';
+        attempt.error = String(error.message || error).slice(0, 500);
+        attempt.status_history.push({ state: attempt.state, at: now.toISOString(), source: 'api', error: attempt.error });
+        await saveDispatch(env, key, attempt);
+        failed++;
+      }
+    }
+  }
+  return { sent, failed };
+}
+
+async function twilioSignature(url, params, authToken) {
+  let payload = url;
+  const names = [...new Set([...params.keys()])].sort();
+  for (const name of names) {
+    const values = params.getAll(name).sort();
+    for (const value of values) payload += name + value;
+  }
+  const key = await crypto.subtle.importKey('raw', textEncoder.encode(authToken), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const signed = new Uint8Array(await crypto.subtle.sign('HMAC', key, textEncoder.encode(payload)));
+  let binary = '';
+  for (const byte of signed) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+export async function validateTwilioRequest(requestUrl, rawBody, signature, authToken) {
+  if (!signature || !authToken) return false;
+  const expected = await twilioSignature(requestUrl, new URLSearchParams(rawBody), authToken);
+  return safeEqual(signature, expected);
+}
+
+async function twilioStatusRoute(request, env) {
+  const raw = await request.text();
+  const valid = await validateTwilioRequest(request.url, raw, request.headers.get('X-Twilio-Signature'), env.TWILIO_AUTH_TOKEN);
+  if (!valid) return json({ error: 'Invalid Twilio signature' }, 403);
+  const params = new URLSearchParams(raw);
+  const sid = params.get('MessageSid') || params.get('SmsSid');
+  const state = String(params.get('MessageStatus') || params.get('SmsStatus') || 'unknown').toLowerCase();
+  if (!sid) return new Response(null, { status: 204 });
+  const mapping = await readJson(env, `twilio/messages/${sid}.json`, null);
+  if (!mapping?.dispatch_key) return new Response(null, { status: 204 });
+  const dispatch = await readJson(env, mapping.dispatch_key, null);
+  if (!dispatch) return new Response(null, { status: 204 });
+  const now = new Date().toISOString();
+  dispatch.state = state;
+  dispatch.status_history = Array.isArray(dispatch.status_history) ? dispatch.status_history.slice(-19) : [];
+  dispatch.status_history.push({
+    state, at: now, source: 'callback',
+    error_code: params.get('ErrorCode') || null,
+    error_message: params.get('ErrorMessage') || null
+  });
+  if (state === 'delivered') dispatch.delivered_at = now;
+  if (TERMINAL_DISPATCH_STATES.has(state)) dispatch.final_at = now;
+  await saveDispatch(env, mapping.dispatch_key, dispatch);
+  return new Response(null, { status: 204 });
+}
+
+async function twilioIncomingRoute(request, env) {
+  const raw = await request.text();
+  const valid = await validateTwilioRequest(request.url, raw, request.headers.get('X-Twilio-Signature'), env.TWILIO_AUTH_TOKEN);
+  if (!valid) return json({ error: 'Invalid Twilio signature' }, 403);
+  const params = new URLSearchParams(raw);
+  const from = String(params.get('From') || '').replace(/[\s()-]/g, '');
+  const body = String(params.get('Body') || '').trim().toUpperCase();
+  const optOutType = String(params.get('OptOutType') || '').toUpperCase();
+  const stopWords = new Set(['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT']);
+  if (optOutType === 'STOP' || stopWords.has(body)) {
+    const rosterDocument = await readJson(env, 'admin/roster.json', { participants: [] });
+    let changed = false;
+    rosterDocument.participants = (rosterDocument.participants || []).map(person => {
+      if (person.phone !== from) return person;
+      changed = true;
+      return { ...person, status: 'opted_out', opted_out_at: new Date().toISOString() };
+    });
+    if (changed) {
+      rosterDocument.updated_at = new Date().toISOString();
+      await putJson(env, 'admin/roster.json', rosterDocument);
+    }
+  }
+  return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+    headers: secureHeaders('application/xml; charset=utf-8')
+  });
+}
 
 const notInstalledHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EMA Forge setup required</title></head><body style="font-family:system-ui;max-width:620px;margin:12vh auto;padding:24px;color:#18202a"><h1>Study setup required</h1><p>This EMA Forge host is running, but no study has been installed.</p><p><a href="/admin">Open protected study setup</a></p></body></html>`;
 
@@ -193,9 +654,16 @@ export default {
     if (path === '/admin') return new Response(adminHtml, { headers: secureHeaders('text/html; charset=utf-8') });
     if (path === '/admin/install' && request.method === 'POST') return installStudy(request, env);
     if (path === '/admin/status' && request.method === 'GET') return adminStatus(request, env);
-    if (path === '/admin/export' && request.method === 'GET') return exportResponses(request, env);
+    if (path === '/admin/export' && request.method === 'GET') return exportPrefix(request, env, 'sessions/', 'ema-forge-responses.ndjson');
+    if (path === '/admin/dispatch-export' && request.method === 'GET') return exportPrefix(request, env, 'dispatch/', 'ema-forge-dispatch.ndjson');
+    if (path === '/admin/roster') return rosterRoute(request, env);
+    if (path === '/admin/messaging') return messagingRoute(request, env);
+    if (path === '/admin/test-message' && request.method === 'POST') return testMessageRoute(request, env);
     if (path.startsWith('/admin/')) return json({ error: 'Not found' }, 404);
-    if (path === '/health') return json({ status: 'ok', study_installed: !!(await env.STUDY_DATA.head('study/current.html')) });
+    if (path === '/twilio/status' && request.method === 'POST') return twilioStatusRoute(request, env);
+    if (path === '/twilio/incoming' && request.method === 'POST') return twilioIncomingRoute(request, env);
+    if (path.startsWith('/twilio/')) return json({ error: 'POST required' }, 405);
+    if (path === '/health') return json({ status: 'ok', study_installed: !!(await env.STUDY_DATA.head('study/current.html')), twilio_configured: twilioConfigured(env) });
     if (path === '/check.html') return new Response(checkHtml, { headers: secureHeaders('text/html; charset=utf-8') });
     if (path === '/submit' && request.method === 'OPTIONS') {
       const origin = request.headers.get('Origin');
@@ -206,5 +674,9 @@ export default {
     if (path === '/submit') return json({ error: 'POST required' }, 405);
     if ((path === '/' || path === '/index.html') && request.method === 'GET') return serveStudy(env);
     return json({ error: 'Not found' }, 404);
+  },
+
+  async scheduled(_event, env, context) {
+    context.waitUntil(dispatchDueMessages(env));
   }
 };

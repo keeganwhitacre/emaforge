@@ -1056,10 +1056,10 @@
 
           <p>Tradeoffs to be honest about (see <a href="#limitations">Known Limitations</a>):</p>
           <ul>
-            <li>There is no central "dashboard" of live enrollment — data is only visible once files are returned to the
-              researcher.</li>
-            <li>EMA Forge does not send notifications itself. You need an external scheduler/SMS service to deliver
-              links at the right time. The beta Twilio dispatcher ships this gap (see <a
+            <li>The recommended Cloudflare deployment includes a private study dashboard; a standalone static export
+              does not, and data are only visible after files are returned to the researcher.</li>
+            <li>SMS still requires the researcher's own Twilio account and sender. The Cloudflare study host provides
+              scheduling, signed callbacks, opt-out updates, and an auditable dispatch log (see <a
                 href="#twilio-integration">Twilio Integration</a>).</li>
             <li>The static host can see request metadata (IP, timestamp of page load). This is the same constraint as
               any web page — it's not a data transmission, but it's not nothing.</li>
@@ -1151,10 +1151,10 @@
                   timestamps remain explicitly unavailable.</td>
               </tr>
               <tr>
-                <td>Twilio SMS dispatcher (Apps Script)</td>
+                <td>Cloudflare-native Twilio delivery</td>
                 <td><span class="status-pill beta">BETA</span></td>
-                <td>Generated from Review &amp; Deploy; see <a href="#twilio-integration">Twilio Integration</a>.
-                  Awaiting external pilot.</td>
+                <td>Configured through the deployed Study Admin; see <a href="#twilio-integration">Twilio Integration</a>.
+                  Automated tests pass; live multi-participant pilot remains required.</td>
               </tr>
               <tr>
                 <td>Webhook auto-upload on session complete</td>
@@ -1659,14 +1659,14 @@ git push -u origin main
             should be sent.</p>
 
           <h2 id="notifications">Sending Prompts</h2>
-          <p>You have two paths. Both use the same routing CSV as their source of truth.</p>
+          <p>You have two paths. Both use the same participant, day, window, and send-time routing model.</p>
           <ul>
             <li><strong>Bring your own mechanism.</strong> Drop the routing CSV into an institutional email merge, a
               Qualtrics contacts list, a Power Automate flow, or any SMS tool that can schedule messages from a CSV. You
               handle timing and <code>t=</code> injection.</li>
-            <li><strong>Export the Twilio dispatcher.</strong> <span class="status-pill beta">BETA</span> Generates an
-              Apps Script that runs on a time trigger in a Google Sheet, handles timezone math, dedupes sends, and
-              enforces <code>t=</code> expiry. See <a href="#twilio-integration">Twilio Integration</a> for full setup.
+            <li><strong>Use Cloudflare Study Admin.</strong> <span class="status-pill beta">BETA</span> Add the roster
+              and connect Twilio inside the deployed study. The Worker handles timezone math, dedupes sends, records
+              delivery callbacks, and enforces <code>t=</code> expiry. See <a href="#twilio-integration">Twilio Integration</a>.
             </li>
           </ul>
           <!-- ========================================================= -->
@@ -2956,13 +2956,13 @@ iat_trials &lt;- sessions |&gt;
 
 <h3 id="webhook-cloudflare">Cloudflare study host → private R2 <span class="status-pill beta">BETA</span></h3>
 
-<p>This is EMA Forge's recommended starting path for hosting and automatic data return. One Worker serves the participant study and stores one JSON object per session,
+<p>This is EMA Forge's recommended path for hosting, study administration, optional messaging, and automatic data return. One Worker serves the participant study and stores one JSON object per session,
   uses the stable submission ID as its key, confirms a successful write before acknowledging the participant app,
   treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The private bucket has
-  no public read route. Study installation and browser exports require the deployment's admin token.</p>
+  no public read route. Study installation, roster management, monitoring, browser-local analysis, and exports require the deployment's admin token.</p>
 
 <div class="callout info">
-  <div class="callout-title">Fast path: deploy, then import once</div>
+  <div class="callout-title">Fast path: deploy, install, and manage</div>
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
     Cloudflare clones the public template, provisions and binds private R2 storage, and asks for a unique admin token.
     After deployment, open the Worker in Cloudflare, go to <strong>Settings → Domains &amp; Routes</strong>, and copy its
@@ -2970,7 +2970,7 @@ iat_trials &lt;- sessions |&gt;
     <strong>Open study admin</strong>, and install the downloaded file. EMA Forge never receives
     the researcher's Cloudflare credentials, token, study file, or participant data.</p>
   <p>The hosted URL is saved with the local builder workspace, so returning to <strong>Review &amp; Deploy</strong> restores
-    the direct admin/download and connection-check buttons without requiring another search through Cloudflare.</p>
+    clearly labeled participant, administration, and connection-check destinations without another search through Cloudflare.</p>
   <p>If the admin page reports <strong>Unauthorized</strong>, do not recreate the deployment. Open
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
@@ -3500,224 +3500,80 @@ export const handler = async (event) =&gt; {
           <h2 id="twilio-integration">Twilio Integration <span class="status-pill beta">BETA</span></h2>
 
           <div class="docs-callout warn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
             <div class="docs-callout-content">
-              <p><strong>Beta — functional but not yet externally piloted.</strong> The dispatcher handles DST
-                transitions, dedupes sends against a hidden log sheet, and enforces link expiry correctly. It has not
-                yet run a full multi-participant study end-to-end. Pilot on your own phone before enrolling.</p>
+              <p><strong>Cloudflare-native and optional.</strong> EMA Forge can schedule participant-specific SMS from
+                the same Worker that hosts the study and stores responses. The delivery pipeline has automated tests,
+                but it still requires a live test of scheduling, carrier delivery, status callbacks, and STOP handling
+                before enrollment.</p>
             </div>
           </div>
 
-          <p>EMA Forge can now emit a ready-to-deploy Google Apps Script that dispatches scheduled SMS to participants
-            via Twilio. It's a serverless companion to the serverless study app: the whole pipeline — scheduling,
-            sending, retry, dedupe — lives in a spreadsheet attached to your Google account.</p>
-
-          <p>From the Builder's <strong>Review &amp; Deploy</strong> tab, alongside the existing <em>Generate Routing CSV</em>
-            button, an <em>Export Twilio Dispatcher (.gs)</em> button produces a single <code>.gs</code> file
-            pre-configured with your study's URL, study length, expiry window, and schedule. You paste it into an Apps
-            Script project attached to a Google Sheet and it does the rest.</p>
+          <p>Twilio is configured inside the deployed study's protected <code>/admin</code> workspace. Google Sheets
+            and Apps Script are no longer part of the recommended path. The Worker reads the installed EMA Forge
+            schedule, evaluates it in each participant's IANA timezone every five minutes, sends an individualized
+            link, and stores an auditable dispatch record separately from response data.</p>
 
           <h3>Setup</h3>
-
           <ol>
-            <li>In the Builder's Review &amp; Deploy tab, set the <em>Hosted URL</em> to where your exported study lives (e.g.
-              <code>https://your-lab.github.io/study/</code>).
-            </li>
-            <li>Click <strong>Export Twilio Dispatcher (.gs)</strong>. You'll get a file named like
-              <code>my-study-twilio-dispatcher.gs</code>.
-            </li>
-            <li>Open <a href="https://sheets.google.com" target="_blank" rel="noopener">sheets.google.com</a> and create
-              a blank spreadsheet. <strong>Extensions → Apps Script.</strong></li>
-            <li>Delete the placeholder <code>myFunction</code>. Paste the entire contents of the <code>.gs</code> file.
-              Save.</li>
-            <li>Close and reopen the spreadsheet. You'll see a new <strong>EMA Forge 🛠️</strong> menu.</li>
-            <li>Click <strong>1. Setup Twilio & Roster</strong>. Supply your Twilio Account SID, Auth Token, and Twilio
-              phone number (E.164 format, e.g. <code>+15551234567</code>). The wizard creates a Roster sheet with the
-              schema below, plus a hidden <code>_Dispatch_Log</code> sheet for audit and dedupe.</li>
-            <li>In Apps Script, choose <strong>Deploy → New deployment → Web app</strong>. Execute as yourself and allow
-              anyone to invoke it. Then use <strong>EMA Forge 🛠️ → Show inbound webhook setup</strong> and copy the
-              protected URL into Twilio's incoming-message webhook with method <code>POST</code>. For a Messaging
-              Service, enable Advanced Opt-Out so the webhook receives <code>OptOutType=STOP</code>.</li>
-            <li>Fill in the Roster. One row per participant.</li>
-            <li>Click <strong>2. Start Automation (every 15 min)</strong>. A time-based trigger is installed that runs
-              <code>dispatchPrompts</code> every fifteen minutes.
-            </li>
+            <li>Complete the normal Cloudflare deployment and install the prepared study at <code>/admin</code>.</li>
+            <li>In Cloudflare, open <strong>Worker → Settings → Variables and Secrets</strong>.</li>
+            <li>Add encrypted secrets named <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and either
+              <code>TWILIO_FROM_NUMBER</code> or <code>TWILIO_MESSAGING_SERVICE_SID</code>.</li>
+            <li>In Twilio, set the incoming-message webhook to
+              <code>https://&lt;your-study-host&gt;/twilio/incoming</code> using POST. The Worker validates Twilio's
+              signed request before changing a roster record.</li>
+            <li>Open <strong>Participants &amp; delivery</strong> in Study Admin. Upload a CSV or add participants,
+              send a test message, and only then enable scheduled messaging.</li>
           </ol>
 
           <h3 id="twilio-roster-schema">Roster schema</h3>
-
           <table>
-            <thead>
-              <tr>
-                <th>Column</th>
-                <th>What to put in it</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
             <tbody>
-              <tr>
-                <td><code>Participant_ID</code></td>
-                <td>Matches the <code>?id=</code> parameter in the generated links. Must be unique.</td>
-              </tr>
-              <tr>
-                <td><code>Phone</code></td>
-                <td>E.164 format (<code>+15551234567</code>). Numbers without the country code will be rejected by
-                  Twilio.</td>
-              </tr>
-              <tr>
-                <td><code>Timezone</code></td>
-                <td>IANA zone string (<code>America/Los_Angeles</code>, <code>Europe/London</code>,
-                  <code>Asia/Tokyo</code>). <strong>Not a numeric offset</strong> — DST transitions would silently break
-                  a fixed-offset scheme twice a year.
-                </td>
-              </tr>
-              <tr>
-                <td><code>Start_Date</code></td>
-                <td><code>YYYY-MM-DD</code> or <code>MM/DD/YYYY</code>. Interpreted as midnight in the participant's
-                  timezone.</td>
-              </tr>
-              <tr>
-                <td><code>Status</code></td>
-                <td><code>Active</code> to enroll. <code>Paused</code> stops sends manually. <code>Opted Out</code> is set
-                  automatically when the inbound webhook receives STOP. <code>Completed</code> is set automatically
-                  after the study schedule ends.</td>
-              </tr>
-              <tr>
-                <td><code>Schedule_Preferences_JSON</code></td>
-                <td>Optional. Paste the onboarding record's top-level <code>schedulePreferences</code> object. The
-                  dispatcher intersects preferred days with protocol weekdays and applies valid per-window time
-                  overrides. Blank means use the protocol schedule unchanged.</td>
-              </tr>
-              <tr>
-                <td><code>Current_Day</code>, <code>Next_Window</code>, <code>Next_Study_Day</code>,
-                  <code>Next_Ping_ISO</code>, <code>Last_Sent_ISO</code>, <code>Opted_Out_At</code>
-                </td>
-                <td>Managed by the dispatcher. Don't write to these manually unless you're intentionally rescheduling.
-                </td>
-              </tr>
+              <tr><td><code>participant_id</code></td><td>Unique opaque ID used in the participant link and response envelope.</td></tr>
+              <tr><td><code>phone</code></td><td>E.164 phone number, such as <code>+15551234567</code>.</td></tr>
+              <tr><td><code>timezone</code></td><td>IANA timezone, such as <code>America/New_York</code>. This preserves daylight-saving behavior.</td></tr>
+              <tr><td><code>start_date</code></td><td>Calendar start date in <code>YYYY-MM-DD</code> format.</td></tr>
+              <tr><td><code>status</code></td><td><code>active</code>, <code>inactive</code>, or <code>opted_out</code>.</td></tr>
+              <tr><td><code>schedule_preferences_json</code></td><td>Optional onboarding preferences containing days and per-window time overrides.</td></tr>
             </tbody>
           </table>
 
-          <div class="docs-callout">
-            <div class="docs-callout-content">
-              <p>Columns are looked up <em>by header name</em>, not position. You can insert a <code>Notes</code> column
-                or reorder existing columns without breaking anything. The menu's <em>Setup</em> command reconciles
-                missing headers non-destructively on each run.</p>
-            </div>
-          </div>
-
-          <h3 id="twilio-how-it-works">How dispatch actually works</h3>
-
-          <p>Every 15 minutes the trigger runs <code>dispatchPrompts</code>, which for each Active participant:</p>
-
+          <h3 id="twilio-how-it-works">How delivery works</h3>
           <ol>
-            <li>Computes the participant's calendar study day in their own timezone. Handles DST correctly, skips
-              inactive weekdays without renumbering study days, and intersects optional onboarding preferences with
-              the protocol schedule.</li>
-            <li>If a ping is already scheduled and its time has passed, sends it via Twilio, then clears the scheduled
-              fields. The URL includes an <code>&t=</code> timestamp so the study's <code>expiry_minutes</code> setting
-              is actually enforced.</li>
-            <li>Otherwise, scans forward for the next eligible, unsent window and picks a random minute inside it. A
-              stale scheduled prompt caused by dispatcher downtime is recorded as
-              <code>missed:dispatcher_late</code> instead of being sent hours or days late.</li>
-            <li>Writes outcomes to the hidden <code>_Dispatch_Log</code> sheet with an <code>accepted:HTTPcode</code> or
-              <code>fail:HTTPcode:message</code> marker. Failures leave the ping scheduled for retry on the next tick;
-              API acceptances are recorded so a subsequent tick can't send a duplicate even if the sheet-write that clears
-              <code>Next_Ping_ISO</code> somehow failed mid-operation.
-            </li>
+            <li>A Cloudflare Cron Trigger invokes the Worker's scheduled handler every five minutes.</li>
+            <li>The Worker determines the participant's calendar study day and local time, intersects participant
+              preferences with protocol weekdays, and derives a stable randomized minute inside each window.</li>
+            <li>A prompt is claimed with a participant/day/window key before the Twilio request. This prevents
+              overlapping scheduler runs from sending the same prompt twice.</li>
+            <li>The link includes <code>id</code>, <code>day</code>, <code>session</code>, and a send-time <code>t</code>
+              value so the configured response window and grace period can be enforced.</li>
+            <li>Twilio API acceptance, sent, delivered, failed, and opt-out events are retained as separate states.
+              Signed delivery callbacks update the existing dispatch record.</li>
           </ol>
 
-          <p>The dedupe key is <code>(Participant_ID, Day, Window_ID)</code> across the study. A script-wide lock prevents
-            overlapping trigger runs. Explicit Twilio failures retry; ambiguous network failures are logged as
-            <code>uncertain:manual_review</code> rather than automatically risking a duplicate SMS.</p>
+          <p>Explicit send failures retry up to three times, no more frequently than every fifteen minutes. An API
+            acceptance is not labeled handset delivery. The Analyze tab reports exactly the states received from
+            Twilio and does not infer delivery from a successful API request.</p>
 
-          <h3 id="twilio-message-format">Message format</h3>
+          <h3>Admin and analysis</h3>
+          <p>The protected Admin workspace provides the participant link, connection check, live response counts,
+            roster, messaging controls, response summaries, physiology-session counts, recent submissions, raw NDJSON,
+            and the dispatch audit log. Operational analysis runs in the browser against protected Worker endpoints;
+            participant data are not uploaded back to EMA Forge.</p>
 
-          <p>The outbound SMS is templated from your study name and expiry window:</p>
-
-          <pre><code><em>StudyName</em>: time for your check-in. Expires in 60 min. <em>https://.../?id=104&day=2&session=morning&t=1732812000000</em>  Reply STOP to opt out.</code></pre>
-
-          <p>The <em>Reply STOP to opt out</em> line is not optional. US A2P 10DLC and Twilio's own messaging policy
-            require clear opt-out language in programmatic SMS. Your IRB will also want it.</p>
-
-          <h3 id="twilio-menu-reference">Menu reference</h3>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Menu item</th>
-                <th>What it does</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1. Setup Twilio & Roster</td>
-                <td>Stores credentials, creates/reconciles the Roster and <code>_Dispatch_Log</code> sheets. Safe to
-                  re-run; it won't clobber existing data.</td>
-              </tr>
-              <tr>
-                <td>2. Start Automation (every 15 min)</td>
-                <td>Installs the time trigger. Idempotent — running it twice doesn't double the trigger rate.</td>
-              </tr>
-              <tr>
-                <td>3. Pause Automation</td>
-                <td>Removes the dispatcher's triggers. The Roster is untouched; you can resume later by re-running
-                  Start.</td>
-              </tr>
-              <tr>
-                <td>Show inbound webhook setup</td>
-                <td>Shows the deployed Web App URL plus its generated secret. Configure this as Twilio's incoming
-                  message webhook to auto-pause matching roster rows on STOP.</td>
-              </tr>
-              <tr>
-                <td>Send test message to row 2</td>
-                <td>One-shot send to whatever phone is in row 2 of the Roster. Use this to verify credentials end-to-end
-                  before enrolling.</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <h3 id="twilio-caveats">Known beta caveats</h3>
-
+          <h3 id="twilio-caveats">Known limitations</h3>
           <ul>
-            <li><strong>Inbound opt-out requires webhook setup.</strong> Twilio blocks recognized STOP replies
-              carrier-side, but the roster only changes to <code>Opted Out</code> after you deploy the Apps Script Web
-              App and configure its protected URL as the incoming-message webhook. Test this before enrollment.</li>
-            <li><strong>Credentials are "script-private," not "secure."</strong> Anyone with edit access to the Apps
-              Script project can read them back with two lines of code. For the typical single-PI setup this is fine;
-              for a shared lab Sheet, restrict Apps Script edit access explicitly.</li>
-            <li><strong>Delivery-receipt latency is not captured.</strong> The dispatcher records when Twilio accepted
-              the request, not when the carrier delivered the SMS. True ping-to-open latency still needs a separate
-              Twilio status-callback integration (planned).</li>
-            <li><strong>Retry back-off is coarse.</strong> A transient Twilio failure retries on the next 15-minute
-              tick. If Twilio is down for an hour you'll accumulate four attempts per participant before success. This
-              is fine for Twilio's actual reliability profile but worth knowing.</li>
-            <li><strong>Apps Script has a 6-minute execution limit per trigger run.</strong> At 15-minute ticks and
-              typical send rates this is never an issue, but if you're running more than a few hundred participants in
-              one dispatcher, split them across multiple sheets.</li>
+            <li><strong>Twilio setup is still external.</strong> Researchers must obtain a Twilio sender, satisfy the
+              applicable messaging registration requirements, and add credentials to Cloudflare.</li>
+            <li><strong>Five-minute scheduling is approximate.</strong> It is appropriate for EMA windows, not exact-to-the-second interventions.</li>
+            <li><strong>Phone numbers are sensitive.</strong> They are kept in the private roster, separate from response
+              files, but remain the researcher's responsibility under the approved data-management plan.</li>
+            <li><strong>Admin summaries are descriptive.</strong> Download the lossless response and dispatch files for
+              confirmatory analysis and archived reproducibility.</li>
+            <li><strong>Test before enrollment.</strong> Verify at least two timezones, STOP, delivery callbacks, link expiry,
+              and one complete response on the actual participant devices.</li>
           </ul>
-
-          <div class="docs-callout wip">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M12 2v4" />
-              <path d="M12 18v4" />
-              <path d="M4.93 4.93l2.83 2.83" />
-              <path d="M16.24 16.24l2.83 2.83" />
-              <path d="M2 12h4" />
-              <path d="M18 12h4" />
-              <path d="M4.93 19.07l2.83-2.83" />
-              <path d="M16.24 7.76l2.83-2.83" />
-            </svg>
-            <div class="docs-callout-content">
-              <p>If you pilot this, please send a note about what broke. The beta caveats above are the ones I already
-                know about; you'll find the ones I don't.</p>
-            </div>
-          </div>
 
           <!-- ========================================================= -->
           <!-- UNDER THE HOOD                                              -->

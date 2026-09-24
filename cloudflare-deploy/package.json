@@ -2,7 +2,7 @@
   "name": "ema-forge-cloudflare-study",
   "version": "1.0.0",
   "private": true,
-  "description": "Host an EMA Forge participant study and store responses in a private Cloudflare R2 bucket.",
+  "description": "Host, administer, message, and analyze an EMA Forge study with private Cloudflare R2 storage.",
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"
@@ -16,7 +16,7 @@
         "description": "Create a unique random secret of at least 32 characters. You will enter it on /admin to install the study and export responses. EMA Forge never receives it."
       },
       "STUDY_DATA": {
-        "description": "Private R2 storage for the installed study file and participant response records. Do not enable public bucket access."
+        "description": "Private R2 storage for the installed study, roster, dispatch audit trail, and participant response records. Do not enable public bucket access."
       }
     }
   }

@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260923e">
+<link rel="stylesheet" href="css/builder.css?v=20260924c">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -349,10 +349,15 @@
         <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Deploy on Cloudflare</strong><span>Participant site and private response storage in one deployment.</span></div></div>
         <ol class="cloudflare-steps">
           <li>Download this study’s prepared HTML file.</li>
-          <li>Deploy the EMA Forge template to your Cloudflare account.</li>
+          <li>Deploy the EMA Forge template to your Cloudflare account. Use a recognizable, unique Worker name.</li>
           <li>In the new Worker, open <strong>Settings → Domains &amp; Routes</strong> and copy its <code>workers.dev</code> URL.</li>
           <li>Paste that URL below, open the study admin, and install the file with the same <code>ADMIN_TOKEN</code> secret used during deployment.</li>
         </ol>
+        <div class="deploy-name-suggestion">
+          <span>Suggested Worker name</span>
+          <code id="suggested-worker-name">ema-forge-study</code>
+          <button type="button" class="btn-ghost" id="copy-worker-name-btn">Copy</button>
+        </div>
         <div class="deploy-actions">
           <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
           <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Deploy to Cloudflare ↗</a>
@@ -368,11 +373,27 @@
         <input type="url" id="deploy-base-url" placeholder="https://your-study.workers.dev/" value="">
         <div class="field-hint" style="margin-top: 4px;">Find it in Cloudflare under your Worker’s <strong>Settings → Domains &amp; Routes</strong>. Paste the complete <code>https://…workers.dev</code> URL. EMA Forge saves it in this browser for return visits.</div>
       </div>
-      <div class="deploy-actions">
-        <button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open admin &amp; download responses</button>
-        <button type="button" class="btn btn-secondary" id="open-connection-check-btn">Open connection check</button>
+      <div class="deployment-destinations" id="deployment-destinations" hidden>
+        <article class="deployment-destination primary">
+          <span class="destination-label">Share this</span>
+          <strong>Participant study</strong>
+          <small>The live study link. Add participant routing parameters through Admin or the CSV below.</small>
+          <div class="deploy-actions"><button type="button" class="btn btn-primary" id="open-participant-study-btn">Open study</button><button type="button" class="btn btn-secondary" id="copy-participant-study-btn">Copy link</button></div>
+        </article>
+        <article class="deployment-destination">
+          <span class="destination-label">Private</span>
+          <strong>Study administration</strong>
+          <small>Install the study, manage messaging, monitor responses, analyze, and export data.</small>
+          <div class="deploy-actions"><button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open admin</button><button type="button" class="btn btn-secondary" id="copy-cloudflare-admin-btn">Copy link</button></div>
+        </article>
+        <article class="deployment-destination">
+          <span class="destination-label">Verify once</span>
+          <strong>Connection check</strong>
+          <small>Send a labeled synthetic record before enrolling participants.</small>
+          <div class="deploy-actions"><button type="button" class="btn btn-secondary" id="open-connection-check-btn">Run check</button></div>
+        </article>
       </div>
-      <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Available after entering a valid hosted HTTPS URL.</div>
+      <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Paste a valid hosted HTTPS URL to reveal the participant, admin, and connection-check destinations.</div>
       <div class="deploy-note">Admin access requires a Cloudflare Worker <strong>Secret</strong> named exactly <code>ADMIN_TOKEN</code> with at least 32 characters. If it fails, reset it under <strong>Worker → Settings → Variables and Secrets</strong>; you do not need to redeploy from scratch.</div>
       </div>
 
@@ -412,14 +433,14 @@
           <svg viewBox="0 0 16 16" fill="currentColor" style="width: 16px; height: 16px; margin-right: 6px;"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
           Generate Routing CSV
         </button>
-        <button class="btn btn-secondary" id="export-twilio-btn" style="margin-top: 12px; width: 100%;">
+        <button class="btn btn-secondary" id="open-cloudflare-messaging-btn" style="margin-top: 12px; width: 100%;">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: text-bottom;">
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
   </svg>
- Export Twilio Dispatcher (.gs)
+ Configure Twilio in Study Admin
 </button>
         <a href="readme.html#twilio-integration" target="_blank" rel="noopener" class="field-hint" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; color: var(--accent); text-decoration: none;">
-          Setup guide
+          Cloudflare messaging guide
           <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
         </a>
       </div>
@@ -528,7 +549,7 @@
 <script src="js/tabs/schedule.js?v=20260923d"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260922b"></script>
-<script src="js/tabs/deployment.js?v=20260924b"></script>
+<script src="js/tabs/deployment.js?v=20260924c"></script>
 <script src="js/preview.js?v=20260923c"></script>
 <script src="js/modals.js"></script>
 <script src="js/export.js?v=20260923e"></script>

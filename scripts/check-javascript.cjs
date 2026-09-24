@@ -5,7 +5,7 @@ const { readdirSync, statSync } = require("node:fs");
 const { join, relative } = require("node:path");
 
 const root = join(__dirname, "..");
-const roots = ["js", "templates", "tests"];
+const roots = ["js", "templates", "tests", "cloudflare-deploy", "receiver"];
 const files = [];
 
 function walk(directory) {

@@ -12,6 +12,7 @@ const deploymentSource = fs.readFileSync(
 
 function builderContext(overrides = {}) {
   const state = {
+    deployment: { hosted_url: "" },
     study: { name: "Scheduling Study" },
     onboarding: { enabled: true },
     modules: [{ id: "epat", label: "ePAT" }],
@@ -37,84 +38,6 @@ function builderContext(overrides = {}) {
   return context;
 }
 
-function dispatcherContext(generated) {
-  const utilities = {
-    formatDate(date, timezone, pattern) {
-      assert.equal(timezone, "Etc/UTC");
-      const iso = new Date(date).toISOString();
-      if (pattern === "yyyy-MM-dd") return iso.slice(0, 10);
-      if (pattern === "HH:mm") return iso.slice(11, 16);
-      if (pattern === "yyyy-MM-dd'T'HH:mm:ss") return iso.slice(0, 19);
-      throw new Error(`Unexpected date pattern: ${pattern}`);
-    }
-  };
-  const math = Object.create(Math);
-  math.random = () => 0;
-  const context = { console, Utilities: utilities, Math: math, Date };
-  vm.createContext(context);
-  vm.runInContext(generated, context);
-  return context;
-}
-
-function emptyLog() {
-  return { getLastRow: () => 1 };
-}
-
-test("dispatcher emits nested timing settings and auditable opt-out support", () => {
-  const context = builderContext();
-  const generated = context.generateTwilioScript("https://example.org/study/");
-
-  assert.doesNotThrow(() => new vm.Script(generated));
-  assert.match(generated, /const EXPIRY_MIN\s+= 45;/);
-  assert.match(generated, /const GRACE_MIN\s+= 12;/);
-  assert.match(generated, /const ACTIVE_DAYS = \[1,3,5\]/);
-  assert.match(generated, /function doPost\(e\)/);
-  assert.match(generated, /OptOutType/);
-  assert.match(generated, /Schedule_Preferences_JSON/);
-});
-
-test("weekday exclusions preserve calendar study-day numbering", () => {
-  const builder = builderContext();
-  const dispatcher = dispatcherContext(builder.generateTwilioScript("https://example.org/study/"));
-  const schedule = dispatcher.participantSchedule_("");
-
-  // Study starts Monday 2026-01-05. At Tuesday noon, Tuesday is excluded,
-  // so the next prompt is Wednesday, which remains calendar study day 3.
-  const next = dispatcher.computeNextPing_(
-    "Etc/UTC",
-    "2026-01-05",
-    new Date("2026-01-06T12:00:00.000Z"),
-    schedule,
-    "P001",
-    emptyLog()
-  );
-
-  assert.equal(next.forDay, 3);
-  assert.equal(next.windowId, "morning");
-  assert.equal(next.pingDate.toISOString(), "2026-01-07T08:00:00.000Z");
-});
-
-test("participant availability is intersected with protocol weekdays", () => {
-  const builder = builderContext();
-  const dispatcher = dispatcherContext(builder.generateTwilioScript("https://example.org/study/"));
-  const schedule = dispatcher.participantSchedule_(JSON.stringify({
-    days: ["Tue", "Fri"],
-    windows: { morning: { start: "09:15", end: "09:15" } }
-  }));
-
-  assert.deepEqual(Array.from(schedule.days), [5]);
-  const next = dispatcher.computeNextPing_(
-    "Etc/UTC",
-    "2026-01-05",
-    new Date("2026-01-05T07:00:00.000Z"),
-    schedule,
-    "P002",
-    emptyLog()
-  );
-  assert.equal(next.forDay, 5);
-  assert.equal(next.pingDate.toISOString(), "2026-01-09T09:15:00.000Z");
-});
-
 test("phase labels use the full ordered phase sequence", () => {
   const context = builderContext();
   const label = context.phaseLabel({
@@ -128,19 +51,6 @@ test("phase labels use the full ordered phase sequence", () => {
   assert.equal(label, "Survey questions → ePAT → Survey questions → Follow-up questions");
 });
 
-test("Twilio API acceptance is deduplicated without claiming handset delivery", () => {
-  const dispatcher = dispatcherContext(builderContext().generateTwilioScript("https://example.org/study/"));
-  const log = {
-    getLastRow: () => 3,
-    getRange: () => ({ getValues: () => [
-      ["2026-01-01", "P001", 1, "morning", "fail:429:rate limit"],
-      ["2026-01-01", "P002", 1, "morning", "accepted:201:SMexample"]
-    ] })
-  };
-  assert.equal(dispatcher.alreadySent_(log, "P001", 1, "morning"), false);
-  assert.equal(dispatcher.alreadySent_(log, "P002", 1, "morning"), true);
-});
-
 test("deployment URLs must be real HTTPS hosts", () => {
   const context = builderContext();
   assert.equal(context.isDeployableBaseUrl("https://community.example.org/study/"), true);
@@ -149,15 +59,15 @@ test("deployment URLs must be real HTTPS hosts", () => {
   assert.equal(context.isDeployableBaseUrl("not a url"), false);
 });
 
-test("connection check URL stays beside the hosted participant app", () => {
+test("participant and connection URLs stay beside the hosted app", () => {
   const context = builderContext();
   assert.equal(
     context.connectionCheckUrl("https://lab.example.org/studies/sleep/index.html"),
     "https://lab.example.org/studies/sleep/check.html"
   );
   assert.equal(
-    context.connectionCheckUrl("https://lab.example.org/studies/sleep"),
-    "https://lab.example.org/studies/sleep/check.html"
+    context.participantStudyUrl("https://lab.example.org/studies/sleep/index.html"),
+    "https://lab.example.org/"
   );
   assert.equal(context.connectionCheckUrl("http://localhost/study"), null);
 });
@@ -181,11 +91,12 @@ test("hosted study URL is retained as researcher workspace metadata", () => {
   assert.equal(context.state.deployment.hosted_url, "https://study.community.org/");
 });
 
-test("dispatcher serializes study names and URLs as safe JavaScript", () => {
+test("suggested Worker names retain EMA Forge identity and Cloudflare limits", () => {
   const context = builderContext();
-  context.state.study.name = "Researcher's */ Study";
-  const generated = context.generateTwilioScript("https://example.org/study/it's-ready/");
-  assert.doesNotThrow(() => new vm.Script(generated));
-  const dispatcher = dispatcherContext(generated);
-  assert.equal(vm.runInContext("STUDY_NAME", dispatcher), "Researcher's */ Study");
+  assert.equal(context.suggestedWorkerName(), "ema-forge-scheduling-study");
+  context.state.study.name = "A Very Long Community Study Name With More Words Than Cloudflare Can Accept In One Worker Name";
+  const name = context.suggestedWorkerName();
+  assert.ok(name.startsWith("ema-forge-"));
+  assert.ok(name.length <= 63);
+  assert.doesNotMatch(name, /-$/);
 });
