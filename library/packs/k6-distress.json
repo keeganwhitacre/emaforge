@@ -1,0 +1,80 @@
+{
+  "library_schema": "1.0.0",
+  "id": "k6-distress-pack",
+  "kind": "question_pack",
+  "name": "Kessler Psychological Distress Scale (K6)",
+  "description": "The six-item K6 for nonspecific psychological distress over the past 30 days, preserved with its standard response scale and scoring metadata.",
+  "source": "Kessler et al. (2003), Screening for serious mental illness in the general population. Instrument obtained from the National Comorbidity Survey.",
+  "license": "Free to use without formal permission; citation and copyright notice required. Copyright © Ronald C. Kessler, PhD.",
+  "intended_use": "Brief assessment of nonspecific psychological distress in adolescent or adult research. It is not a diagnostic instrument and is not a momentary EMA measure.",
+  "estimated_burden": "Approximately 1 minute.",
+  "validation_status": "Established instrument. Preserve the original 30-day timeframe and response coding when using validated scoring; evaluate appropriateness for the intended population and language.",
+  "device_requirements": "Any modern phone browser.",
+  "measure": {
+    "instrument": "Kessler Psychological Distress Scale (K6), self-administered English",
+    "timeframe": "Past 30 days",
+    "scoring": "Code None of the time=0, A little of the time=1, Some of the time=2, Most of the time=3, All of the time=4; sum six items for a 0–24 score. Follow the cited source for interpretation."
+  },
+  "references": [
+    {
+      "label": "National Comorbidity Survey — K6/K10 scales, permissions, and scoring",
+      "url": "https://www.hcp.med.harvard.edu/ncs/k6_scales.php",
+      "note": "Author-maintained instrument, permission, translations, and scoring information."
+    },
+    {
+      "label": "Kessler et al. (2003), Archives of General Psychiatry",
+      "url": "https://doi.org/10.1001/archpsyc.60.2.184",
+      "note": "Development and validation citation requested by the instrument author."
+    }
+  ],
+  "questions": [
+    {
+      "id": "k6_nervous",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel nervous?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "k6_hopeless",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel hopeless?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "k6_restless",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel restless or fidgety?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "k6_depressed",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel so depressed that nothing could cheer you up?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "k6_effort",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel that everything was an effort?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "k6_worthless",
+      "type": "choice",
+      "text": "During the past 30 days, about how often did you feel worthless?",
+      "options": ["None of the time", "A little of the time", "Some of the time", "Most of the time", "All of the time"],
+      "required": true,
+      "condition": null
+    }
+  ]
+}

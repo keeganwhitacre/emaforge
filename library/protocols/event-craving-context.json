@@ -1,0 +1,63 @@
+{
+  "library_schema": "1.0.0",
+  "id": "event-craving-context",
+  "kind": "protocol",
+  "name": "Craving, Context & Choice",
+  "source": "Original EMA Forge demonstration protocol; not a validated substance-use, craving, or clinical risk instrument.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of a participant-initiated or prompted event-contingent assessment with branching around craving, access, social context, and protective responses.",
+  "estimated_burden": "Approximately 1–3 minutes per event or prompt for 14 days.",
+  "validation_status": "Demonstration items and thresholds only. Adapt with population expertise, safety procedures, and appropriate validated measures before research use.",
+  "device_requirements": "Any modern phone browser; no physiology hardware required.",
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Craving, Context & Choice",
+      "institution": "Your developmental or addiction research team",
+      "theme": "light",
+      "accent_color": "#7b5a9d",
+      "output_format": "csv",
+      "completion_lock": false,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "event": "Event check-in", "evening": "Evening reflection" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": false,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with approved language describing participant-initiated and prompted assessments, sensitive questions, privacy limits, data handling, compensation, study contacts, safety resources, and withdrawal.</p>"
+    },
+    "modules": [],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_trigger", "type": "choice", "text": "What led you to open this check-in?", "options": ["I noticed a craving", "I encountered a cue or opportunity", "I used a substance", "A scheduled prompt", "Something else"], "required": true, "condition": null },
+        { "id": "q_location", "type": "choice", "text": "Where are you right now?", "options": ["Home", "Work or school", "In transit", "A social setting", "A public or community space", "Somewhere else"], "required": true, "condition": null },
+        { "id": "q_company", "type": "choice", "text": "Who are you with?", "options": ["Alone", "Friends or peers", "Family", "Coworkers or classmates", "Other people"], "required": true, "condition": null },
+        { "id": "q_craving", "type": "slider", "text": "How strong is the craving right now?", "min": 0, "max": 100, "step": 1, "anchors": ["No craving", "Strongest possible"], "required": true, "condition": null },
+        { "id": "q_access", "type": "choice", "text": "How easy would it be to access the substance right now?", "options": ["Not possible", "Difficult", "Possible", "Easy", "Already available"], "required": true, "condition": null },
+        { "id": "q_cue", "type": "checkbox", "text": "What seems connected to the craving? Select any that apply.", "options": ["Stress or negative emotion", "Positive emotion or celebration", "Another person", "A place or object", "Habit or routine", "Physical discomfort", "I am not sure"], "required": false, "condition": { "question_id": "q_craving", "operator": "gte", "value": 40 } },
+        { "id": "q_plan", "type": "choice", "text": "What are you most likely to do next?", "options": ["Use the substance", "Wait and reassess", "Leave or change the situation", "Contact someone", "Use another coping strategy", "Not sure"], "required": true, "condition": { "question_id": "q_craving", "operator": "gte", "value": 40 } },
+        { "id": "q_support", "type": "slider", "text": "How available does support feel right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not available", "Very available"], "required": true, "condition": null },
+        { "id": "q_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low arousal", "High arousal"], "show_quadrant_labels": true, "required": true, "condition": null },
+        { "id": "q_evening_events", "type": "numeric", "text": "How many craving or cue events did you notice today?", "required": true, "condition": null },
+        { "id": "q_evening_use", "type": "choice", "text": "Did you use the substance today?", "options": ["Yes", "No", "Prefer not to answer"], "required": true, "condition": null },
+        { "id": "q_evening_context", "type": "text", "text": "What context mattered most for your choices today?", "required": false, "condition": null }
+      ],
+      "scheduling": {
+        "study_days": 14,
+        "daily_prompts": 2,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 120, "grace_minutes": 15 },
+        "windows": [
+          { "id": "event", "label": "Event or daytime prompt", "start": "08:00", "end": "20:00", "phase_sequence": [
+            { "kind": "ema", "id": "s_event", "label": "Craving and context", "question_ids": ["q_trigger", "q_location", "q_company", "q_craving", "q_access", "q_cue", "q_plan", "q_support", "q_affect"] }
+          ] },
+          { "id": "evening", "label": "Evening reflection", "start": "20:00", "end": "23:00", "phase_sequence": [
+            { "kind": "ema", "id": "s_evening", "label": "Daily reflection", "question_ids": ["q_evening_events", "q_evening_use", "q_evening_context"] }
+          ] }
+        ]
+      }
+    }
+  }
+}

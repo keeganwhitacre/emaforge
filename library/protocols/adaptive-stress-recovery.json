@@ -1,0 +1,79 @@
+{
+  "library_schema": "1.0.0",
+  "id": "adaptive-stress-recovery",
+  "kind": "protocol",
+  "name": "Adaptive Stress & Recovery",
+  "source": "Original EMA Forge demonstration protocol; not a validated instrument or intervention.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of a low-burden EMA that conditionally adds camera PPG and ePAT only when momentary stress is elevated and recent activity is compatible with measurement.",
+  "estimated_burden": "Approximately 1–2 minutes for the usual check-in and 5–7 minutes when the adaptive physiology branch is shown, three times daily for 7 days.",
+  "validation_status": "Demonstration items and decision rules only. Validate thresholds, burden, devices, and interpretations before research use.",
+  "device_requirements": "HTTPS plus a compatible rear camera and controllable torch for camera PPG and ePAT.",
+  "references": [
+    {
+      "label": "Plans et al. (2021), Measuring interoception: The Phase Adjustment Task",
+      "url": "https://doi.org/10.1016/j.biopsycho.2021.108171",
+      "note": "Paradigm underlying ePAT."
+    }
+  ],
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Adaptive Stress & Recovery",
+      "institution": "Your ambulatory research team",
+      "theme": "light",
+      "accent_color": "#a63f35",
+      "output_format": "csv",
+      "completion_lock": true,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "morning": "Morning check-in", "afternoon": "Afternoon check-in", "evening": "Evening check-in" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": true,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with approved language describing repeated prompts, conditional camera-based pulse measurement and ePAT, data handling, burden, risks, compensation, contacts, and withdrawal.</p>"
+    },
+    "modules": [
+      { "id": "epat", "enabled": true, "settings": { "trials": 6, "trial_duration_sec": 20, "retry_budget": 12, "sqi_threshold": 0.008, "confidence_ratings": true, "two_phase_practice": true, "body_map": false } }
+    ],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_context", "type": "choice", "text": "What were you mainly doing just before this prompt?", "options": ["Working or studying", "Caregiving or household tasks", "Socializing", "Resting", "In transit", "Something else"], "required": true, "condition": null },
+        { "id": "q_stress", "type": "slider", "text": "How stressed do you feel right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all", "Extremely"], "required": true, "condition": null },
+        { "id": "q_support", "type": "slider", "text": "If you needed help right now, how available would support feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not available", "Very available"], "required": true, "condition": null },
+        { "id": "q_exertion", "type": "choice", "text": "How physically active have you been during the past 10 minutes?", "options": ["Still or resting", "Light movement", "Moderate activity", "Vigorous activity"], "required": true, "condition": null },
+        { "id": "q_stressor", "type": "checkbox", "text": "What is contributing to the stress right now? Select any that apply.", "options": ["Demand or deadline", "Conflict or tension", "Money or material needs", "Health or fatigue", "My surroundings", "Uncertainty", "Something else"], "required": false, "condition": { "question_id": "q_stress", "operator": "gte", "value": 65 } },
+        { "id": "q_hr", "type": "heart_rate", "text": "Hold still while your phone measures your pulse.", "duration_sec": 30, "report_as": "bpm", "display_bpm": false, "required": true, "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+        { "id": "q_epat_expect", "type": "slider", "text": "How confident are you that you can judge the timing of your heartbeat right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not confident", "Very confident"], "required": true, "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+        { "id": "pb_recovery", "type": "page_break" },
+        { "id": "q_recovery", "type": "slider", "text": "Compared with the start of this check-in, how settled do you feel now?", "min": 0, "max": 100, "step": 1, "anchors": ["Much less settled", "Much more settled"], "required": true, "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+        { "id": "q_next", "type": "choice", "text": "What are you most likely to do next?", "options": ["Continue the same activity", "Take a break", "Talk with someone", "Change the situation", "Rest or attend to physical needs", "Not sure"], "required": true, "condition": null }
+      ],
+      "scheduling": {
+        "study_days": 7,
+        "daily_prompts": 3,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 60, "grace_minutes": 15 },
+        "windows": [
+          { "id": "morning", "label": "Morning", "start": "08:00", "end": "10:30", "phase_sequence": [
+            { "kind": "ema", "id": "s_morning_pre", "label": "Context and stress", "question_ids": ["q_context", "q_stress", "q_support", "q_exertion", "q_stressor", "q_hr", "q_epat_expect"] },
+            { "kind": "task", "id": "epat", "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+            { "kind": "ema", "id": "s_morning_post", "label": "Recovery", "question_ids": ["pb_recovery", "q_recovery", "q_next"] }
+          ] },
+          { "id": "afternoon", "label": "Afternoon", "start": "12:30", "end": "15:30", "phase_sequence": [
+            { "kind": "ema", "id": "s_afternoon_pre", "label": "Context and stress", "question_ids": ["q_context", "q_stress", "q_support", "q_exertion", "q_stressor", "q_hr", "q_epat_expect"] },
+            { "kind": "task", "id": "epat", "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+            { "kind": "ema", "id": "s_afternoon_post", "label": "Recovery", "question_ids": ["pb_recovery", "q_recovery", "q_next"] }
+          ] },
+          { "id": "evening", "label": "Evening", "start": "18:30", "end": "21:30", "phase_sequence": [
+            { "kind": "ema", "id": "s_evening_pre", "label": "Context and stress", "question_ids": ["q_context", "q_stress", "q_support", "q_exertion", "q_stressor", "q_hr", "q_epat_expect"] },
+            { "kind": "task", "id": "epat", "condition": { "logical_op": "AND", "rules": [{ "question_id": "q_stress", "operator": "gte", "value": 65 }, { "question_id": "q_exertion", "operator": "neq", "value": "Vigorous activity" }] } },
+            { "kind": "ema", "id": "s_evening_post", "label": "Recovery", "question_ids": ["pb_recovery", "q_recovery", "q_next"] }
+          ] }
+        ]
+      }
+    }
+  }
+}

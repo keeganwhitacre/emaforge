@@ -60,5 +60,7 @@ html, body { min-height: 100%; height: auto; overflow: auto; background: var(--b
 .library-create-grid label { display: flex; flex-direction: column; gap: 6px; color: var(--fg-2); font-size: 11px; font-weight: 650; }
 .library-create-grid label.wide { grid-column: 1 / -1; }
 .library-create-grid textarea { resize: vertical; }
+.library-attestation { display: flex; gap: 9px; align-items: flex-start; margin-top: 18px; color: var(--fg-2); font-size: 11px; line-height: 1.5; }
+.library-attestation input { margin-top: 2px; }
 @media (max-width: 850px) { .library-page-grid { grid-template-columns: 1fr 1fr; } .library-toolbar { align-items: stretch; flex-direction: column; } }
 @media (max-width: 600px) { .library-shell { width: min(100% - 28px,1180px); padding-top: 38px; } .library-topbar nav a:not(:first-child) { display: none; } .library-page-grid { grid-template-columns: 1fr; } .library-principles span { border-bottom: 1px solid var(--border); } .library-contribution { align-items: flex-start; flex-direction: column; } .library-contribution-actions { justify-content: flex-start; } .library-detail dl { grid-template-columns: 1fr; } .library-detail dt { padding-bottom: 2px; border-bottom: 0; } .library-detail dd { padding-top: 2px; } .library-create-grid { grid-template-columns: 1fr; } .library-create-grid label.wide { grid-column: auto; } }

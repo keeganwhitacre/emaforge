@@ -2,7 +2,7 @@
 
 Free, open-source builder for web-based ecological momentary assessment (EMA) studies with physiological measurements. Build a survey-only study, a task-only study, or an ordered sequence of both without writing code.
 
-**[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
+**[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
 
 ## Create a study
 
@@ -17,7 +17,7 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 
 Browse the standalone **Protocol Library** to review descriptions, burden, device requirements, validation status, and evidence links before opening an item in the Builder. Complete showcase protocols, reusable survey packs, and physiology presets demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
 
-The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Researchers can create a protocol, survey pack, or physiology preset from their currently saved study, add it to **My Library** in one guided form, and download the contribution JSON without writing code. Official shared-catalog publication still uses review through GitHub. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
+The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Researchers can create a protocol, survey pack, or physiology preset from their currently saved study, add it to **My Library**, download validated JSON, or open a prefilled **Submit for review** request without writing code. Official shared-catalog publication remains human-reviewed through GitHub; submissions are never published automatically. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Instrument entries include provenance, permissions, timeframe, scoring, and validation metadata. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
 
 ## One ordered measure flow
 
@@ -35,7 +35,7 @@ Use **Simulate study** to generate a deterministic, clearly labeled synthetic da
 
 ## Included measures
 
-- Survey ratings, choices, open text, affect grid, branching, and camera-based PPG heart-rate capture.
+- Survey ratings, choices, open text, affect grid, branching, camera-based PPG heart-rate capture, and a source-documented K6 pack.
 - ePAT and heartbeat counting (beta), using a phone camera and flashlight for PPG. Check device compatibility and your research protocol before collecting data.
 - Implicit Association Task (experimental; not validated for confirmatory research).
 

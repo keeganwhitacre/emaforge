@@ -1274,7 +1274,10 @@
               counting and add it to the first session.</li>
           </ul>
           <p>Every item is versioned, inspectable JSON. A local community item can be installed with
-            <strong>Install library JSON</strong>, and contributions can be proposed through the public GitHub repository.
+            <strong>Install library JSON</strong>. The Library's guided creator can copy the current browser-saved study,
+            validate and download the contribution JSON, and open a prefilled <strong>Submit for review</strong> request.
+            Public items remain human-reviewed and are never published automatically. Established measures should disclose
+            the exact version, permissions, timeframe, scoring, validation status, and any adaptations.
             Library JSON cannot execute uploaded JavaScript or introduce an unreviewed task engine.</p>
           <div class="docs-callout warn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -3546,8 +3549,9 @@ export const handler = async (event) =&gt; {
               preferences with protocol weekdays, and derives a stable randomized minute inside each window.</li>
             <li>A prompt is claimed with a participant/day/window key before the Twilio request. This prevents
               overlapping scheduler runs from sending the same prompt twice.</li>
-            <li>The link includes <code>id</code>, <code>day</code>, <code>session</code>, and a send-time <code>t</code>
-              value so the configured response window and grace period can be enforced.</li>
+            <li>The Worker creates an opaque <code>/j/…</code> link. Its private R2 mapping contains the participant,
+              day, session, and send time needed to enforce the configured response window and grace period. The SMS does
+              not expose those routing parameters.</li>
             <li>Twilio API acceptance, sent, delivered, failed, and opt-out events are retained as separate states.
               Signed delivery callbacks update the existing dispatch record.</li>
           </ol>
@@ -3558,8 +3562,9 @@ export const handler = async (event) =&gt; {
 
           <h3>Admin and analysis</h3>
           <p>The protected Admin workspace provides the participant link, connection check, live response counts,
-            roster, messaging controls, response summaries, physiology-session counts, recent submissions, raw NDJSON,
-            and the dispatch audit log. Operational analysis runs in the browser against protected Worker endpoints;
+            roster, messaging controls, revocable participant invite links, response summaries, physiology-session counts,
+            recent submissions, raw NDJSON, and the dispatch audit log. Invite links are study-scoped rather than a
+            general-purpose URL shortener. Operational analysis runs in the browser against protected Worker endpoints;
             participant data are not uploaded back to EMA Forge.</p>
 
           <h3 id="twilio-caveats">Known limitations</h3>

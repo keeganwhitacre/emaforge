@@ -127,6 +127,54 @@ test("Cloudflare admin exposes a protected control center and validated roster",
   assert.equal(invalid.status, 400);
 });
 
+test("Cloudflare creates opaque and revocable participant invite links", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const config = {
+    study: { name: "Invite Study" },
+    ema: { scheduling: {
+      study_days: 7,
+      timing: { expiry_minutes: 60, grace_minutes: 15 },
+      windows: [{ id: "morning", label: "Morning", start: "08:00", end: "10:00" }]
+    } }
+  };
+  const html = `<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = ${JSON.stringify(config)};</script>`;
+  assert.equal((await worker.fetch(adminRequest("https://study.example/admin/install", {
+    method: "POST", headers: { "Content-Type": "text/html" }, body: html
+  }), environment)).status, 200);
+  assert.equal((await worker.fetch(adminRequest("https://study.example/admin/roster", {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ participants: [{
+      participant_id: "P001", phone: "+15551234567", timezone: "Etc/UTC",
+      start_date: "2026-01-05", status: "active"
+    }] })
+  }), environment)).status, 200);
+
+  const created = await worker.fetch(adminRequest("https://study.example/admin/invite-links", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ participant_id: "P001", day: 2, session_id: "morning" })
+  }), environment);
+  assert.equal(created.status, 201);
+  const invite = await created.json();
+  assert.match(invite.short_url, /^https:\/\/study\.example\/j\/[A-Za-z0-9_-]{16,64}$/);
+  assert.doesNotMatch(invite.short_url, /P001|morning|day=/);
+
+  const opened = await worker.fetch(new Request(invite.short_url), environment);
+  assert.equal(opened.status, 302);
+  const destination = new URL(opened.headers.get("Location"));
+  assert.equal(destination.searchParams.get("id"), "P001");
+  assert.equal(destination.searchParams.get("day"), "2");
+  assert.equal(destination.searchParams.get("session"), "morning");
+  assert.ok(destination.searchParams.get("t"));
+
+  const revoked = await worker.fetch(adminRequest(`https://study.example/admin/invite-links/${invite.token}`, {
+    method: "DELETE"
+  }), environment);
+  assert.equal(revoked.status, 200);
+  assert.equal((await worker.fetch(new Request(invite.short_url), environment)).status, 410);
+});
+
 test("Cloudflare scheduled delivery creates one auditable Twilio dispatch", async () => {
   const module = await modulePromise;
   const worker = module.default;
@@ -176,12 +224,13 @@ test("Cloudflare scheduled delivery creates one auditable Twilio dispatch", asyn
   assert.deepEqual(second, { sent: 0, failed: 0 });
   assert.equal(sentRequests.length, 1);
   const form = new URLSearchParams(sentRequests[0].options.body);
-  assert.match(form.get("Body"), /id=P001/);
-  assert.match(form.get("Body"), /session=morning/);
+  assert.match(form.get("Body"), /https:\/\/study\.example\/j\/[A-Za-z0-9_-]{16,64}/);
+  assert.doesNotMatch(form.get("Body"), /id=P001|session=morning/);
   assert.equal(form.get("StatusCallback"), "https://study.example/twilio/status");
   const dispatch = JSON.parse(await bucket.objects.get("dispatch/P001/0001/morning.json").text());
   assert.equal(dispatch.state, "queued");
   assert.equal(dispatch.message_sid, "SM1234567890");
+  assert.match(dispatch.short_link, /^https:\/\/study\.example\/j\//);
 });
 
 test("Twilio status callbacks require a valid signature and update delivery state", async () => {

@@ -88,7 +88,7 @@
     margin: 0 auto;
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 
@@ -164,6 +164,25 @@
     height: 1px; background: var(--border);
   }
 
+  /* ── Product workflow ──────────────────────────────────── */
+  #workflow {
+    max-width: 920px; width: calc(100% - 56px); margin: 0 auto 72px;
+    border-top: 2px solid var(--fg); border-bottom: 1px solid var(--border);
+    padding: 24px 0 26px;
+  }
+  .workflow-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+  .workflow-kicker { color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .workflow-head h2 { margin-top: 4px; font-size: 22px; letter-spacing: -.02em; }
+  .workflow-head p { max-width: 430px; color: var(--fg-3); font-size: 11px; line-height: 1.6; }
+  .workflow-track { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); position: relative; }
+  .workflow-track::before { content: ''; position: absolute; top: 15px; left: 7%; right: 7%; height: 1px; background: var(--border-hi); }
+  .workflow-step { --delay: 0s; position: relative; min-width: 0; padding: 0 10px; text-align: center; }
+  .workflow-dot { display: grid; place-items: center; position: relative; z-index: 1; width: 31px; height: 31px; margin: 0 auto 10px; border: 1px solid var(--border-hi); background: var(--bg); color: var(--fg-3); font: 700 10px var(--font-mono); animation: workflow-focus 12s var(--delay) infinite; }
+  .workflow-step strong { display: block; color: var(--fg); font-size: 11px; }
+  .workflow-step span { display: block; margin-top: 3px; color: var(--fg-3); font-size: 9px; line-height: 1.35; }
+  @keyframes workflow-focus { 0%,13% { border-color: var(--accent); background: var(--accent); color: #fff; transform: translateY(-2px); } 17%,100% { border-color: var(--border-hi); background: var(--bg); color: var(--fg-3); transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .workflow-dot { animation: none; } .workflow-step:first-child .workflow-dot { border-color: var(--accent); color: var(--accent); } }
+
   #principles {
     max-width: 920px; width: calc(100% - 56px); margin: -28px auto 44px;
     display: grid; grid-template-columns: repeat(4, 1fr);
@@ -210,6 +229,10 @@
   .principle:nth-child(2) { border-right: 0; }
   .principle:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
   .principle:nth-child(3) { padding-left: 0; }
+  #workflow { width: calc(100% - 48px); }
+  .workflow-head { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .workflow-track { grid-template-columns: repeat(3,1fr); row-gap: 22px; }
+  .workflow-track::before { display: none; }
   
   /* Hide minor topbar text to save space */
   .home-topbar-right { display: none; }
@@ -286,6 +309,25 @@
       </div>
     </a>
 
+    <!-- Protocol Library -->
+    <a href="library.html" class="home-card card-primary">
+      <div class="card-icon card-icon-accent">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 4.5A2.5 2.5 0 015.5 2H9v14H5.5A2.5 2.5 0 003 18.5z"/>
+          <path d="M17 4.5A2.5 2.5 0 0014.5 2H11v14h3.5a2.5 2.5 0 012.5 2.5z"/>
+        </svg>
+      </div>
+      <div class="card-label">Open library</div>
+      <div class="card-title">Protocols &amp; Measures</div>
+      <div class="card-desc">
+        Preview complete study designs, reusable measures, and physiology presets. Add an item to the Builder with one click or prepare your own contribution.
+      </div>
+      <div class="card-footer card-footer-accent">
+        Explore the library
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"/></svg>
+      </div>
+    </a>
+
     <a href="dashboard.html" class="home-card card-primary">
       <div class="card-icon card-icon-accent">
         <!-- Sliders / builder icon -->
@@ -316,8 +358,8 @@
           <line x1="7" y1="13" x2="10" y2="13"/>
         </svg>
       </div>
-      <div class="card-label">Documentation</div>
-      <div class="card-title">README</div>
+      <div class="card-label">Reference</div>
+      <div class="card-title">Documentation</div>
       <div class="card-desc">
         Setup instructions, deployment guide, config schema reference,
         and notes on extending EMA Forge with new task modules.
@@ -328,6 +370,21 @@
       </div>
     </a>
 
+  </section>
+
+  <section id="workflow" aria-labelledby="workflow-title">
+    <div class="workflow-head">
+      <div><div class="workflow-kicker">From idea to field study</div><h2 id="workflow-title">One continuous research workflow</h2></div>
+      <p>EMA Forge prepares the study; Cloudflare hosts the participant experience, private data, messaging, and monitoring without requiring a permanent EMA Forge account.</p>
+    </div>
+    <div class="workflow-track" aria-label="Study workflow">
+      <div class="workflow-step" style="--delay:0s"><div class="workflow-dot">01</div><strong>Choose</strong><span>Start blank or from the library</span></div>
+      <div class="workflow-step" style="--delay:2s"><div class="workflow-dot">02</div><strong>Build</strong><span>Arrange surveys and physiology</span></div>
+      <div class="workflow-step" style="--delay:4s"><div class="workflow-dot">03</div><strong>Preview</strong><span>Test branching and participant flow</span></div>
+      <div class="workflow-step" style="--delay:6s"><div class="workflow-dot">04</div><strong>Deploy</strong><span>Hand off to Cloudflare</span></div>
+      <div class="workflow-step" style="--delay:8s"><div class="workflow-dot">05</div><strong>Invite</strong><span>Share links or schedule Twilio</span></div>
+      <div class="workflow-step" style="--delay:10s"><div class="workflow-dot">06</div><strong>Monitor</strong><span>Review and export responses</span></div>
+    </div>
   </section>
 
   <!-- ── Footer ────────────────────────────────────────── -->

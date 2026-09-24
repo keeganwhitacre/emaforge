@@ -32,6 +32,36 @@
       "path": "library/protocols/interoception-daily-life.json"
     },
     {
+      "id": "adaptive-stress-recovery",
+      "kind": "protocol",
+      "name": "Adaptive Stress & Recovery",
+      "description": "A low-burden check-in that conditionally adds camera PPG and ePAT when stress is elevated and recent activity permits measurement.",
+      "badge": "Adaptive physiology",
+      "accent": "#a63f35",
+      "features": ["Conditional ePAT", "Camera PPG", "Recovery ratings"],
+      "path": "library/protocols/adaptive-stress-recovery.json"
+    },
+    {
+      "id": "sleep-physiology",
+      "kind": "protocol",
+      "name": "Sleep, Rhythm & Physiology",
+      "description": "Morning and evening sleep EMA with disrupted-sleep branching, affect, sleepiness, and a brief resting camera-PPG check.",
+      "badge": "Sleep + PPG",
+      "accent": "#4f6fbd",
+      "features": ["2 prompts/day", "Camera PPG", "Sleep branching"],
+      "path": "library/protocols/sleep-physiology.json"
+    },
+    {
+      "id": "event-craving-context",
+      "kind": "protocol",
+      "name": "Craving, Context & Choice",
+      "description": "An event-contingent and prompted protocol illustrating adaptive questions about craving, access, social context, and protective responses.",
+      "badge": "Event contingent",
+      "accent": "#7b5a9d",
+      "features": ["Participant initiated", "Branching", "Risk + protection"],
+      "path": "library/protocols/event-craving-context.json"
+    },
+    {
       "id": "context-stress-support-pack",
       "kind": "question_pack",
       "name": "Context, Stress & Support",
@@ -40,6 +70,16 @@
       "accent": "#8056a6",
       "features": ["Compound branch", "Multi-select", "No licensed scale"],
       "path": "library/packs/context-stress-support.json"
+    },
+    {
+      "id": "k6-distress-pack",
+      "kind": "question_pack",
+      "name": "Kessler Psychological Distress Scale (K6)",
+      "description": "The standard six-item K6 with its 30-day timeframe, response scale, permissions, citation, and scoring metadata.",
+      "badge": "Validated measure",
+      "accent": "#4f6fbd",
+      "features": ["6 items", "Past 30 days", "Scoring included"],
+      "path": "library/packs/k6-distress.json"
     },
     {
       "id": "brief-epat-preset",

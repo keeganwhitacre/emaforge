@@ -1,0 +1,63 @@
+{
+  "library_schema": "1.0.0",
+  "id": "sleep-physiology",
+  "kind": "protocol",
+  "name": "Sleep, Rhythm & Physiology",
+  "source": "Original EMA Forge demonstration protocol; not a validated sleep, circadian, or cardiovascular instrument.",
+  "license": "CC0-1.0",
+  "intended_use": "Demonstration of morning and evening sleep EMA with a brief resting camera-PPG check and conditional follow-up around disrupted sleep.",
+  "estimated_burden": "Approximately 2–3 minutes in the morning and 1–2 minutes in the evening for 14 days.",
+  "validation_status": "Demonstration items only. Validate sleep items, camera-PPG quality, device compatibility, and analytic decisions for the intended population.",
+  "device_requirements": "HTTPS plus a compatible rear camera and controllable torch for the morning PPG check.",
+  "protocol": {
+    "schema_version": "2.0.0",
+    "study": {
+      "name": "Sleep, Rhythm & Physiology",
+      "institution": "Your sleep research team",
+      "theme": "light",
+      "accent_color": "#4f6fbd",
+      "output_format": "csv",
+      "completion_lock": true,
+      "resume_enabled": true,
+      "webhook_url": "",
+      "greetings": { "morning": "Morning sleep and pulse", "evening": "Evening rhythm check" }
+    },
+    "onboarding": {
+      "enabled": true,
+      "ask_schedule": true,
+      "consent_text": "<h3>Consent template — researcher action required</h3><p>Replace this placeholder with approved language describing the twice-daily schedule, camera and flashlight use, sleep questions, data handling, burden, contacts, compensation, and withdrawal.</p>"
+    },
+    "modules": [],
+    "ema": {
+      "randomize_questions": false,
+      "questions": [
+        { "id": "q_sleep_hours", "type": "numeric", "text": "About how many hours did you sleep last night?", "required": true, "condition": null },
+        { "id": "q_sleep_quality", "type": "slider", "text": "How restful did your sleep feel?", "min": 0, "max": 100, "step": 1, "anchors": ["Not at all restful", "Extremely restful"], "required": true, "condition": null },
+        { "id": "q_sleep_disrupted", "type": "choice", "text": "Was your sleep interrupted more than once?", "options": ["Yes", "No", "Not sure"], "required": true, "condition": null },
+        { "id": "q_sleep_reason", "type": "checkbox", "text": "What contributed to the interruptions? Select any that apply.", "options": ["Noise or environment", "Stress or thoughts", "Caregiving or another person", "Physical discomfort", "Work or schedule", "Something else"], "required": false, "condition": { "question_id": "q_sleep_disrupted", "operator": "eq", "value": "Yes" } },
+        { "id": "q_rest_state", "type": "choice", "text": "Before measuring your pulse, have you been sitting or lying still for at least two minutes?", "options": ["Yes", "No"], "required": true, "condition": null },
+        { "id": "q_morning_hr", "type": "heart_rate", "text": "Remain still while your phone measures your pulse.", "duration_sec": 30, "report_as": "bpm", "display_bpm": false, "required": true, "condition": { "question_id": "q_rest_state", "operator": "eq", "value": "Yes" } },
+        { "id": "q_morning_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low energy", "High energy"], "show_quadrant_labels": true, "required": true, "condition": null },
+        { "id": "q_caffeine", "type": "choice", "text": "When did you last have caffeine today?", "options": ["I did not have caffeine", "Before noon", "Noon to 4 PM", "After 4 PM"], "required": true, "condition": null },
+        { "id": "q_day_demand", "type": "slider", "text": "How demanding did today feel overall?", "min": 0, "max": 100, "step": 1, "anchors": ["Not demanding", "Extremely demanding"], "required": true, "condition": null },
+        { "id": "q_evening_affect", "type": "affect_grid", "text": "Mark the point that best represents how you feel right now.", "valence_labels": ["Unpleasant", "Pleasant"], "arousal_labels": ["Low energy", "High energy"], "show_quadrant_labels": true, "required": true, "condition": null },
+        { "id": "q_sleepiness", "type": "slider", "text": "How sleepy do you feel right now?", "min": 0, "max": 100, "step": 1, "anchors": ["Not sleepy", "Extremely sleepy"], "required": true, "condition": null },
+        { "id": "q_bedtime", "type": "text", "text": "About what time do you expect to try to sleep tonight?", "required": false, "condition": null }
+      ],
+      "scheduling": {
+        "study_days": 14,
+        "daily_prompts": 2,
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "timing": { "expiry_minutes": 120, "grace_minutes": 15 },
+        "windows": [
+          { "id": "morning", "label": "Morning sleep and pulse", "start": "07:00", "end": "10:30", "phase_sequence": [
+            { "kind": "ema", "id": "s_morning_sleep", "label": "Sleep and resting pulse", "question_ids": ["q_sleep_hours", "q_sleep_quality", "q_sleep_disrupted", "q_sleep_reason", "q_rest_state", "q_morning_hr", "q_morning_affect"] }
+          ] },
+          { "id": "evening", "label": "Evening rhythm", "start": "19:00", "end": "22:30", "phase_sequence": [
+            { "kind": "ema", "id": "s_evening_rhythm", "label": "Day and evening state", "question_ids": ["q_caffeine", "q_day_demand", "q_evening_affect", "q_sleepiness", "q_bedtime"] }
+          ] }
+        ]
+      }
+    }
+  }
+}

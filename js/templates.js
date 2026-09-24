@@ -8,7 +8,7 @@ async function loadProtocolLibrary() {
   if (!container) return;
   if (status) status.textContent = 'Loading library…';
   try {
-    const response = await fetch('library/catalog.json?v=20260923a');
+    const response = await fetch('library/catalog.json?v=20260924d');
     if (!response.ok) throw new Error('Library catalog could not be loaded.');
     const catalog = await response.json();
     const result = EMAForgeLibraryUtils.validateCatalog(catalog);

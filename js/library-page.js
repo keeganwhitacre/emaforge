@@ -11,7 +11,7 @@ const LibraryPage = {
   async init() {
     const status = document.getElementById('library-page-status');
     try {
-      const response = await fetch('library/catalog.json?v=20260923c');
+      const response = await fetch('library/catalog.json?v=20260924d');
       if (!response.ok) throw new Error('The library catalog could not be loaded.');
       const catalog = await response.json();
       const result = EMAForgeLibraryUtils.validateCatalog(catalog);
@@ -73,6 +73,9 @@ const LibraryPage = {
     const rows = [
       ['Intended use', item.intended_use],
       ['Estimated burden', item.estimated_burden],
+      ['Instrument/version', item.measure?.instrument],
+      ['Recall period', item.measure?.timeframe],
+      ['Scoring', item.measure?.scoring],
       ['Validation status', item.validation_status],
       ['Device requirements', item.device_requirements || 'No special device requirements listed.'],
       ['Source', item.source],
@@ -127,23 +130,49 @@ const LibraryPage = {
       kind: value('contribution-kind'), module_id: value('contribution-module'), name: value('contribution-name'),
       description: value('contribution-description'), source: value('contribution-source'), license: value('contribution-license'),
       validation_status: value('contribution-validation'), intended_use: value('contribution-use'),
+      instrument: value('contribution-instrument'), timeframe: value('contribution-timeframe'), scoring: value('contribution-scoring'),
       estimated_burden: value('contribution-burden'), device_requirements: value('contribution-device'),
       features: value('contribution-features').split(',').map(part => part.trim()).filter(Boolean)
     };
   },
 
-  saveContribution(download) {
+  saveContribution(mode) {
     const status = document.getElementById('library-create-status');
     try {
+      if (mode === 'submit' && !document.getElementById('contribution-attest').checked) {
+        throw new Error('Confirm the contribution statement before submitting for review.');
+      }
       const item = EMAForgeLibraryUtils.createContribution(this.currentDraft(), this.metadata());
       EMAForgeLibraryUtils.savePersonalItem(item, localStorage);
-      if (download) this.download(item);
-      status.textContent = `“${item.name}” was added to My Library${download ? ' and downloaded' : ''}.`;
+      if (mode === 'download' || mode === 'submit') this.download(item);
+      if (mode === 'submit') this.openReviewRequest(item);
+      status.textContent = mode === 'submit'
+        ? `“${item.name}” was validated and downloaded. Attach the JSON file to the GitHub review request that just opened.`
+        : `“${item.name}” was added to My Library${mode === 'download' ? ' and downloaded' : ''}.`;
       this.refreshPersonal();
-      setTimeout(() => { document.getElementById('library-create-modal').classList.remove('open'); }, 450);
+      if (mode !== 'submit') setTimeout(() => { document.getElementById('library-create-modal').classList.remove('open'); }, 450);
     } catch (error) {
       status.textContent = error.message;
     }
+  },
+
+  openReviewRequest(item) {
+    const title = `Library contribution: ${item.name}`;
+    const body = [
+      '## EMA Forge library contribution', '',
+      `**Item:** ${item.name}`, `**Type:** ${this.kindLabel(item.kind)}`,
+      `**License:** ${item.license}`, `**Source:** ${item.source}`, '',
+      'The browser validator accepted this item. Please attach the downloaded JSON file to this issue.', '',
+      '- [ ] JSON file attached',
+      '- [ ] No participant data, credentials, or remote executable code',
+      '- [ ] I have the right to share the content under the stated license', '',
+      '_Submission does not imply scientific endorsement or automatic publication._'
+    ].join('\n');
+    const url = `https://github.com/keeganwhitacre/emaforge/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent('library contribution')}`;
+    const opened = window.open('', '_blank');
+    if (!opened) throw new Error('The JSON was downloaded, but the browser blocked the GitHub review window. Allow pop-ups and try Submit for review again.');
+    opened.opener = null;
+    opened.location.href = url;
   },
 
   download(item) {
@@ -184,8 +213,9 @@ document.getElementById('library-create-btn').addEventListener('click', () => Li
 document.getElementById('library-create-close').addEventListener('click', () => document.getElementById('library-create-modal').classList.remove('open'));
 document.getElementById('library-create-modal').addEventListener('click', event => { if (event.target.id === 'library-create-modal') event.currentTarget.classList.remove('open'); });
 document.getElementById('contribution-kind').addEventListener('change', () => LibraryPage.toggleModuleField());
-document.getElementById('library-create-form').addEventListener('submit', event => { event.preventDefault(); LibraryPage.saveContribution(false); });
-document.getElementById('library-create-download').addEventListener('click', () => LibraryPage.saveContribution(true));
+document.getElementById('library-create-form').addEventListener('submit', event => { event.preventDefault(); LibraryPage.saveContribution('local'); });
+document.getElementById('library-create-download').addEventListener('click', () => LibraryPage.saveContribution('download'));
+document.getElementById('library-create-submit').addEventListener('click', () => LibraryPage.saveContribution('submit'));
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
   LibraryPage.close();

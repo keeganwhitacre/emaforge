@@ -60,6 +60,16 @@ test("question packs remap IDs, conditions, and response piping without collisio
   });
 });
 
+test("curated measure packs disclose version, timeframe, scoring, and permissions", () => {
+  const item = readJson("library/packs/k6-distress.json");
+  assert.equal(library.validateItem(item).valid, true);
+  assert.match(item.measure.instrument, /K6/);
+  assert.equal(item.measure.timeframe, "Past 30 days");
+  assert.match(item.measure.scoring, /0–24/);
+  assert.match(item.license, /Free to use/);
+  assert.equal(item.questions.length, 6);
+});
+
 test("task presets configure a built-in task and never duplicate its step", () => {
   const item = readJson("library/packs/brief-epat.json");
   const target = {
@@ -104,7 +114,10 @@ test("a saved study can become a validated personal protocol and round-trip thro
     description: "A local reusable copy of the current study.",
     source: "Researcher-created draft",
     license: "CC0-1.0",
-    validation_status: "Contributor supplied; not independently reviewed."
+    validation_status: "Contributor supplied; not independently reviewed.",
+    instrument: "Researcher-created diary",
+    timeframe: "Right now",
+    scoring: "No validated total score."
   });
   const values = new Map();
   const storage = { getItem: key => values.get(key) || null, setItem: (key, value) => values.set(key, value) };
@@ -113,6 +126,7 @@ test("a saved study can become a validated personal protocol and round-trip thro
   assert.equal(restored.length, 1);
   assert.equal(restored[0].id, "personal-my-daily-rhythm-study");
   assert.equal(restored[0].protocol.study.name, "Daily Rhythm & Sleep");
+  assert.equal(restored[0].measure.timeframe, "Right now");
 });
 
 test("personal survey packs copy questions but cannot include executable content", () => {

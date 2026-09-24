@@ -6,6 +6,7 @@ const MAX_STUDY_BYTES = 10 * 1024 * 1024;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_ROSTER_SIZE = 5000;
 const MAX_ADMIN_LIST_OBJECTS = 50000;
+const MAX_INVITE_LINKS_RETURNED = 250;
 const DEFAULT_MESSAGE_TEMPLATE = '{study}: Your {window} check-in is ready: {link} Reply STOP to opt out.';
 const TERMINAL_DISPATCH_STATES = new Set(['delivered', 'undelivered', 'failed', 'canceled', 'read']);
 const textEncoder = new TextEncoder();
@@ -40,6 +41,14 @@ function safeEqual(a, b) {
   const length = Math.max(left.length, right.length);
   for (let i = 0; i < length; i++) mismatch |= (left.charCodeAt(i) || 0) ^ (right.charCodeAt(i) || 0);
   return mismatch === 0;
+}
+
+function randomToken(byteLength = 16) {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function hasAdminAccess(request, env) {
@@ -242,8 +251,111 @@ async function adminStatus(request, env) {
     dispatch_count: dispatchList.objects.length,
     dispatch_count_limited: dispatchList.limited,
     messaging_enabled: messaging.enabled,
-    twilio_configured: twilioConfigured(env)
+    twilio_configured: twilioConfigured(env),
+    study_days: Number(config?.ema?.scheduling?.study_days) || null,
+    schedule_windows: (config?.ema?.scheduling?.windows || []).map(window => ({ id: window.id, label: window.label || window.id }))
   });
+}
+
+function inviteExpiry(config, sentAtMs) {
+  const timing = config?.ema?.scheduling?.timing || {};
+  const expiryMinutes = Number(timing.expiry_minutes);
+  if (!Number.isFinite(expiryMinutes) || expiryMinutes <= 0) return null;
+  const graceMinutes = Math.max(0, Number(timing.grace_minutes) || 0);
+  return new Date(sentAtMs + (expiryMinutes + graceMinutes) * 60000).toISOString();
+}
+
+async function createInviteLink(env, { origin, config, participantId, day, sessionId, sentAtMs = Date.now(), source = 'admin' }) {
+  const record = {
+    participant_id: participantId,
+    day,
+    session_id: sessionId,
+    sent_at_ms: sentAtMs,
+    created_at: new Date().toISOString(),
+    expires_at: inviteExpiry(config, sentAtMs),
+    source,
+    state: 'active'
+  };
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const token = randomToken();
+    const saved = await putJson(env, `links/${token}.json`, { ...record, token }, {
+      onlyIf: new Headers({ 'If-None-Match': '*' }),
+      customMetadata: { participant: participantId, state: 'active', createdAt: record.created_at }
+    });
+    if (saved) return { ...record, token, short_url: `${origin}/j/${token}` };
+  }
+  throw new Error('Could not create a unique participant link');
+}
+
+async function inviteLinksRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  const url = new URL(request.url);
+  if (request.method === 'GET') {
+    const listed = await listAll(env, 'links/', 1000);
+    const selected = listed.objects.sort((a, b) => String(b.customMetadata?.createdAt || '').localeCompare(String(a.customMetadata?.createdAt || ''))).slice(0, MAX_INVITE_LINKS_RETURNED);
+    const stored = await Promise.all(selected.map(item => env.STUDY_DATA.get(item.key)));
+    const links = [];
+    for (const object of stored) {
+      if (!object) continue;
+      const record = JSON.parse(await object.text());
+      const visibleState = record.state === 'active' && record.expires_at && Date.now() > Date.parse(record.expires_at)
+        ? 'expired'
+        : record.state;
+      links.push({ ...record, state: visibleState, short_url: `${url.origin}/j/${record.token}` });
+    }
+    return json({ links, limited: listed.limited || listed.objects.length > MAX_INVITE_LINKS_RETURNED });
+  }
+  if (request.method !== 'POST') return json({ error: 'GET or POST required' }, 405);
+  try {
+    const payload = await parseJsonRequest(request, 16 * 1024);
+    const [config, rosterDocument] = await Promise.all([
+      readJson(env, 'study/current-config.json', null),
+      readJson(env, 'admin/roster.json', { participants: [] })
+    ]);
+    if (!config?.ema?.scheduling) throw new Error('Install the study before creating participant links');
+    const participantId = String(payload.participant_id || '').trim();
+    const person = (rosterDocument.participants || []).find(candidate => candidate.participant_id === participantId);
+    if (!person) throw new Error('Choose a participant from the saved roster');
+    if (person.status !== 'active') throw new Error('Participant links can be created only for active roster entries');
+    const day = Number(payload.day);
+    const studyDays = Math.max(1, Number(config.ema.scheduling.study_days) || 1);
+    if (!Number.isInteger(day) || day < 1 || day > studyDays) throw new Error(`Day must be between 1 and ${studyDays}`);
+    const sessionId = String(payload.session_id || '').trim();
+    if (!(config.ema.scheduling.windows || []).some(window => window.id === sessionId)) throw new Error('Choose a session from the installed study');
+    return json(await createInviteLink(env, {
+      origin: url.origin, config, participantId, day, sessionId, source: 'admin'
+    }), 201);
+  } catch (error) {
+    return json({ error: error.message || 'Could not create participant link' }, 400);
+  }
+}
+
+async function revokeInviteLink(request, env, token) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (request.method !== 'DELETE') return json({ error: 'DELETE required' }, 405);
+  if (!/^[a-zA-Z0-9_-]{16,64}$/.test(token)) return json({ error: 'Invalid link token' }, 400);
+  const record = await readJson(env, `links/${token}.json`, null);
+  if (!record) return json({ error: 'Participant link not found' }, 404);
+  const updated = { ...record, state: 'revoked', revoked_at: new Date().toISOString() };
+  await putJson(env, `links/${token}.json`, updated, {
+    customMetadata: { participant: record.participant_id, state: 'revoked', createdAt: record.created_at }
+  });
+  return json(updated);
+}
+
+async function resolveInviteLink(request, env, token) {
+  if (request.method !== 'GET') return json({ error: 'GET required' }, 405);
+  if (!/^[a-zA-Z0-9_-]{16,64}$/.test(token)) return json({ error: 'Participant link not found' }, 404);
+  const record = await readJson(env, `links/${token}.json`, null);
+  if (!record) return json({ error: 'Participant link not found' }, 404);
+  if (record.state !== 'active') return json({ error: 'This participant link has been revoked' }, 410);
+  if (record.expires_at && Date.now() > Date.parse(record.expires_at)) return json({ error: 'This participant link has expired' }, 410);
+  const destination = new URL('/', request.url);
+  destination.searchParams.set('id', record.participant_id);
+  destination.searchParams.set('day', String(record.day));
+  destination.searchParams.set('session', record.session_id);
+  destination.searchParams.set('t', String(record.sent_at_ms));
+  return new Response(null, { status: 302, headers: { Location: destination.toString(), 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
 }
 
 async function exportPrefix(request, env, prefix, filename) {
@@ -524,6 +636,8 @@ export async function dispatchDueMessages(env, now = new Date()) {
         last_attempt_at: now.toISOString(),
         sent_at: null,
         message_sid: null,
+        invite_token: existing?.invite_token || null,
+        short_link: existing?.short_link || null,
         status_history: existing?.status_history || []
       };
       if (!existing) {
@@ -532,16 +646,25 @@ export async function dispatchDueMessages(env, now = new Date()) {
       } else {
         await saveDispatch(env, key, attempt);
       }
-      const participantUrl = new URL('/', host.origin);
-      participantUrl.searchParams.set('id', person.participant_id);
-      participantUrl.searchParams.set('day', String(day));
-      participantUrl.searchParams.set('session', window.id);
-      participantUrl.searchParams.set('t', String(now.getTime()));
-      const body = renderMessage(settings.message_template, {
-        study: config.study?.name || 'Study', participant_id: person.participant_id,
-        day, window: window.label, link: participantUrl.toString()
-      });
       try {
+        if (!attempt.short_link) {
+          const invite = await createInviteLink(env, {
+            origin: host.origin,
+            config,
+            participantId: person.participant_id,
+            day,
+            sessionId: window.id,
+            sentAtMs: now.getTime(),
+            source: 'twilio'
+          });
+          attempt.invite_token = invite.token;
+          attempt.short_link = invite.short_url;
+          await saveDispatch(env, key, attempt);
+        }
+        const body = renderMessage(settings.message_template, {
+          study: config.study?.name || 'Study', participant_id: person.participant_id,
+          day, window: window.label, link: attempt.short_link
+        });
         const result = await sendTwilioMessage(env, {
           to: person.phone,
           body,
@@ -659,10 +782,13 @@ export default {
     if (path === '/admin/roster') return rosterRoute(request, env);
     if (path === '/admin/messaging') return messagingRoute(request, env);
     if (path === '/admin/test-message' && request.method === 'POST') return testMessageRoute(request, env);
+    if (path === '/admin/invite-links') return inviteLinksRoute(request, env);
+    if (path.startsWith('/admin/invite-links/')) return revokeInviteLink(request, env, path.slice('/admin/invite-links/'.length));
     if (path.startsWith('/admin/')) return json({ error: 'Not found' }, 404);
     if (path === '/twilio/status' && request.method === 'POST') return twilioStatusRoute(request, env);
     if (path === '/twilio/incoming' && request.method === 'POST') return twilioIncomingRoute(request, env);
     if (path.startsWith('/twilio/')) return json({ error: 'POST required' }, 405);
+    if (path.startsWith('/j/')) return resolveInviteLink(request, env, path.slice('/j/'.length));
     if (path === '/health') return json({ status: 'ok', study_installed: !!(await env.STUDY_DATA.head('study/current.html')), twilio_configured: twilioConfigured(env) });
     if (path === '/check.html') return new Response(checkHtml, { headers: secureHeaders('text/html; charset=utf-8') });
     if (path === '/submit' && request.method === 'OPTIONS') {

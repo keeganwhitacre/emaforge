@@ -38,6 +38,14 @@
     if (!item?.source || !item?.license || !item?.validation_status) {
       errors.push('Library item needs source, license, and validation-status metadata.');
     }
+    if (item?.measure != null) {
+      if (typeof item.measure !== 'object' || Array.isArray(item.measure)) errors.push('Measure metadata must be an object.');
+      else {
+        const fields = ['instrument', 'timeframe', 'scoring'];
+        if (!fields.some(field => String(item.measure[field] || '').trim())) errors.push('Measure metadata must identify an instrument, timeframe, or scoring rule.');
+        if (fields.some(field => typeof item.measure[field] !== 'string' || item.measure[field].length > 2000)) errors.push('Measure metadata fields must be text under 2,000 characters.');
+      }
+    }
     if (item?.kind === 'protocol') {
       const protocol = item.protocol;
       if (!protocol || protocol.schema_version !== '2.0.0') {
@@ -194,6 +202,13 @@
       device_requirements: String(metadata.device_requirements || 'Any modern phone browser.').trim(),
       features: Array.isArray(metadata.features) ? metadata.features.filter(Boolean).map(String) : []
     };
+    if (metadata.instrument || metadata.timeframe || metadata.scoring) {
+      item.measure = {
+        instrument: String(metadata.instrument || '').trim(),
+        timeframe: String(metadata.timeframe || '').trim(),
+        scoring: String(metadata.scoring || '').trim()
+      };
+    }
     if (kind === 'protocol') item.protocol = JSON.parse(JSON.stringify(draft));
     if (kind === 'question_pack') item.questions = JSON.parse(JSON.stringify(draft.ema?.questions || []));
     if (kind === 'task_preset') {

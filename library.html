@@ -73,17 +73,21 @@
         <label class="wide"><span>Source or attribution</span><input id="contribution-source" type="text" required placeholder="Original items, citation, or adaptation note"></label>
         <label><span>License</span><input id="contribution-license" type="text" value="CC0-1.0" required></label>
         <label><span>Validation status</span><input id="contribution-validation" type="text" value="Contributor supplied; not independently reviewed." required></label>
+        <label><span>Instrument/version</span><input id="contribution-instrument" type="text" placeholder="e.g. K6, original English"></label>
+        <label><span>Recall period</span><input id="contribution-timeframe" type="text" placeholder="e.g. Right now or past 30 days"></label>
+        <label class="wide"><span>Scoring or interpretation</span><input id="contribution-scoring" type="text" placeholder="Scoring rule, subscales, or note that no validated score is available"></label>
         <label class="wide"><span>Intended use</span><input id="contribution-use" type="text" placeholder="Research context and population"></label>
         <label><span>Estimated burden</span><input id="contribution-burden" type="text" placeholder="e.g. Approximately 3 minutes"></label>
         <label><span>Device requirements</span><input id="contribution-device" type="text" placeholder="e.g. Phone with rear camera and torch"></label>
         <label class="wide"><span>Feature tags</span><input id="contribution-features" type="text" placeholder="branching, PPG, sleep (comma separated)"></label>
       </div>
       <p id="library-create-status" class="library-page-status" aria-live="polite"></p>
-      <div class="library-detail-actions"><button class="btn btn-primary" type="submit">Add to My Library</button><button class="btn" type="button" id="library-create-download">Add + download JSON</button></div>
+      <label class="library-attestation"><input id="contribution-attest" type="checkbox"> I confirm that this item contains no participant data and that I have the right to share its content under the license above.</label>
+      <div class="library-detail-actions"><button class="btn btn-primary" type="submit">Add to My Library</button><button class="btn" type="button" id="library-create-download">Add + download JSON</button><button class="btn" type="button" id="library-create-submit">Submit for review ↗</button></div>
     </form>
   </div>
 
-  <script src="js/library-utils.js?v=20260923b"></script>
-  <script src="js/library-page.js?v=20260923d"></script>
+  <script src="js/library-utils.js?v=20260924d"></script>
+  <script src="js/library-page.js?v=20260924d"></script>
 </body>
 </html>

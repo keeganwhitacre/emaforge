@@ -20,11 +20,15 @@ The study works without Twilio; participant links can always be distributed manu
 1. Open **Worker → Settings → Variables and Secrets** in Cloudflare.
 2. Add encrypted secrets named `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and either `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`.
 3. In Twilio, set the incoming-message webhook to `https://<your-study-host>/twilio/incoming` using POST. Twilio delivery-status callbacks are attached automatically to outbound messages.
-4. Return to `/admin`, open **Participants & delivery**, upload or enter the roster, send a test message, and only then enable scheduled messaging.
+4. Return to `/admin`, open **Participants & delivery**, upload or enter the roster, send a test message, and only then enable scheduled messaging. Twilio automatically sends opaque `/j/...` links rather than exposing participant routing parameters in the SMS.
 
 The Worker runs every five minutes. It interprets the EMA Forge schedule in each participant's IANA timezone, intersects optional onboarding schedule preferences with protocol weekdays, chooses a stable randomized minute within each window, and deduplicates on participant/day/window. Twilio API acceptance and later handset-delivery callbacks remain separate audit states.
 
 Phone numbers are retained in the private roster object and are not copied into response files or dispatch exports. Use opaque participant IDs, restrict administrative access, and follow the approved consent, security, and retention plan.
+
+## Participant invite links
+
+The **Participants & delivery** screen can create a study-scoped invite link for a selected participant, study day, and session. These links use an opaque `/j/<token>` path, redirect internally to the required EMA routing parameters, inherit the configured response-window expiry, and can be revoked from Study Admin. They are not a public or general-purpose URL-shortening service.
 
 ## Stored records
 
@@ -33,6 +37,7 @@ Phone numbers are retained in the private roster object and are not copied into 
 - Installed protocol versions: `study/versions/`; the participant app is `study/current.html`.
 - Researcher roster and messaging settings: `admin/`.
 - Auditable prompt events: `dispatch/`; Twilio SID routing metadata is under `twilio/`.
+- Opaque participant-link mappings: `links/`. Revoked and expired links no longer redirect into the study.
 
 The Admin Analyze tab calculates descriptive operational summaries inside the browser. It does not send participant data to emaforge.org or another central service, and it does not replace confirmatory analysis in R, Python, or other validated workflows.
 
