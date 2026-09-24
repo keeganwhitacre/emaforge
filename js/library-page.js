@@ -11,7 +11,7 @@ const LibraryPage = {
   async init() {
     const status = document.getElementById('library-page-status');
     try {
-      const response = await fetch('library/catalog.json?v=20260924d');
+      const response = await fetch('library/catalog.json?v=20260924e');
       if (!response.ok) throw new Error('The library catalog could not be loaded.');
       const catalog = await response.json();
       const result = EMAForgeLibraryUtils.validateCatalog(catalog);

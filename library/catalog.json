@@ -82,6 +82,26 @@
       "path": "library/packs/k6-distress.json"
     },
     {
+      "id": "phq-4-pack",
+      "kind": "question_pack",
+      "name": "Patient Health Questionnaire-4 (PHQ-4)",
+      "description": "The standard four-item PHQ-4 anxiety and depression screener with its two-week timeframe, permissions, citation, and scoring metadata.",
+      "badge": "Validated measure",
+      "accent": "#4f6fbd",
+      "features": ["4 items", "Past 2 weeks", "Scoring included"],
+      "path": "library/packs/phq-4.json"
+    },
+    {
+      "id": "who-5-wellbeing-pack",
+      "kind": "question_pack",
+      "name": "WHO-5 Well-Being Index",
+      "description": "The official five-item WHO-5 mental well-being measure with its two-week timeframe, 2024 wording, license, and scoring metadata.",
+      "badge": "Validated measure",
+      "accent": "#2d8b70",
+      "features": ["5 items", "Well-being", "WHO 2024"],
+      "path": "library/packs/who-5-wellbeing.json"
+    },
+    {
       "id": "brief-epat-preset",
       "kind": "task_preset",
       "name": "Brief ePAT",

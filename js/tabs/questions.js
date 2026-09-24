@@ -240,29 +240,35 @@ function questionDisplayText(text) {
   });
 }
 
-function buildPipingControls(sources) {
-  if (!sources.length) {
-    return `<div class="q-piping-empty">Personalization becomes available after an earlier answerable question.</div>`;
-  }
-  return `<div class="q-piping" aria-label="Personalize question with an earlier answer">
-    <div class="q-piping-heading"><strong>Insert earlier answer</strong><span>Optional</span></div>
-    <div class="q-piping-row">
+function buildPipingControls(sources, question) {
+  const usedCount = questionPipingTokens(question?.text).length;
+  if (!sources.length && usedCount === 0) return '';
+  return `<details class="q-piping" aria-label="Personalize question with an earlier answer">
+    <summary><span>Personalize with an earlier answer</span><span class="q-pipe-count${usedCount ? ' active' : ''}">${usedCount ? `${usedCount} used` : 'Optional'}</span></summary>
+    <div class="q-piping-body">
+      <div class="q-piping-row">
       <select class="q-pipe-source" aria-label="Earlier answer">
         <option value="">Choose an earlier question…</option>
         ${sources.map(source => `<option value="${escH(source.id)}">${escH((source.text || source.id).slice(0, 72))} · ${escH(measureTypeLabel(source.type))}</option>`).join('')}
       </select>
       <input type="text" class="q-pipe-fallback" value="your earlier response" aria-label="Fallback wording" placeholder="Fallback if unanswered">
       <button type="button" class="q-pipe-insert" disabled>Insert</button>
+      </div>
+      <div class="field-hint">Inserted at the cursor. Fallback wording appears only when the earlier answer is unavailable.</div>
+      <div class="q-pipe-summary" aria-live="polite"></div>
     </div>
-    <div class="field-hint">Fallback wording is shown only if the earlier item was skipped or unanswered.</div>
-    <div class="q-pipe-summary" aria-live="polite"></div>
-  </div>`;
+  </details>`;
 }
 
 function renderPipingSummary(card, q) {
   const summary = card.querySelector('.q-pipe-summary');
   if (!summary) return;
   const tokens = questionPipingTokens(q.text);
+  const count = card.querySelector('.q-pipe-count');
+  if (count) {
+    count.textContent = tokens.length ? `${tokens.length} used` : 'Optional';
+    count.classList.toggle('active', tokens.length > 0);
+  }
   summary.innerHTML = tokens.map(token => {
     const exists = state.ema.questions.some(question => question.id === token.id);
     return `<span class="q-pipe-chip${exists ? '' : ' invalid'}"><span>Answer from</span> ${escH(pipingQuestionLabel(token.id))}${token.fallback ? `<small>Fallback: ${escH(token.fallback)}</small>` : '<small>No fallback</small>'}</span>`;
@@ -342,7 +348,6 @@ function buildQCard(q, index, displayNum, options = {}) {
             <span style="font-size: 10px; color: var(--fg-muted); font-family: monospace;">ID: ${q.id}</span>
         </div>
         <input type="text" class="q-text" value="${escH(q.text)}" placeholder="${q.type === 'heart_rate' ? 'e.g. Measuring your heart rate…' : 'Enter question…'}">
-        ${buildPipingControls(options.pipeSources || [])}
       </div>
 
       ${q.type === 'slider'                              ? buildSliderFields(q)     : ''}
@@ -351,6 +356,8 @@ function buildQCard(q, index, displayNum, options = {}) {
       ${q.type === 'heart_rate'                          ? buildHeartRateFields(q)  : ''}
       ${(q.type === 'text' || q.type === 'numeric')
         ? `<div class="field-hint" style="margin-top:6px">Participants type a ${q.type === 'numeric' ? 'number' : 'text'} response.</div>` : ''}
+
+      ${buildPipingControls(options.pipeSources || [], q)}
 
       <div class="field-group condition-wrapper" style="margin-top:10px;">
         <label class="field-label">Skip Logic</label>

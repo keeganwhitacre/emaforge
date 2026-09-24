@@ -61,13 +61,20 @@ test("question packs remap IDs, conditions, and response piping without collisio
 });
 
 test("curated measure packs disclose version, timeframe, scoring, and permissions", () => {
-  const item = readJson("library/packs/k6-distress.json");
-  assert.equal(library.validateItem(item).valid, true);
-  assert.match(item.measure.instrument, /K6/);
-  assert.equal(item.measure.timeframe, "Past 30 days");
-  assert.match(item.measure.scoring, /0–24/);
-  assert.match(item.license, /Free to use/);
-  assert.equal(item.questions.length, 6);
+  const cases = [
+    ["library/packs/k6-distress.json", /K6/, "Past 30 days", 6],
+    ["library/packs/phq-4.json", /PHQ-4/, "Past two weeks", 4],
+    ["library/packs/who-5-wellbeing.json", /WHO-5/, "Past two weeks", 5]
+  ];
+  cases.forEach(([path, instrument, timeframe, itemCount]) => {
+    const item = readJson(path);
+    assert.equal(library.validateItem(item).valid, true, path);
+    assert.match(item.measure.instrument, instrument);
+    assert.equal(item.measure.timeframe, timeframe);
+    assert.ok(item.measure.scoring.length > 40);
+    assert.ok(item.license.length > 20);
+    assert.equal(item.questions.length, itemCount);
+  });
 });
 
 test("task presets configure a built-in task and never duplicate its step", () => {

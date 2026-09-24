@@ -1,0 +1,72 @@
+{
+  "library_schema": "1.0.0",
+  "id": "who-5-wellbeing-pack",
+  "kind": "question_pack",
+  "name": "WHO-5 Well-Being Index",
+  "description": "The five-item WHO-5 measure of mental well-being over the past two weeks, using the official 2024 English wording and scoring metadata.",
+  "source": "World Health Organization (2024), The World Health Organization-Five Well-Being Index (WHO-5), WHO-UCN-MSD-MHE-2024.01.",
+  "license": "© World Health Organization 2024. Licensed under CC BY-NC-SA 3.0 IGO. Attribution, non-commercial use, and share-alike terms apply to the instrument content.",
+  "intended_use": "Brief assessment of subjective mental well-being in research or service evaluation. It is not a diagnostic instrument or a momentary EMA measure.",
+  "estimated_burden": "Less than 1 minute.",
+  "validation_status": "Established instrument published by WHO. The shared two-week instruction is repeated in each item for mobile presentation; item statements, response order, attribution, and scoring are otherwise preserved.",
+  "device_requirements": "Any modern phone browser.",
+  "measure": {
+    "instrument": "World Health Organization-Five Well-Being Index (WHO-5), 2024 English version",
+    "timeframe": "Past two weeks",
+    "scoring": "Code All of the time=5, Most of the time=4, More than half of the time=3, Less than half of the time=2, Some of the time=1, At no time=0. Sum for a raw score of 0–25; multiply by four for 0–100. WHO notes that a raw score below 13 (percentage below 50) has been suggested as indicating poor well-being and the need for further assessment."
+  },
+  "references": [
+    {
+      "label": "World Health Organization — WHO-5 publication page",
+      "url": "https://www.who.int/publications/m/item/WHO-UCN-MSD-MHE-2024.01",
+      "note": "Official instrument, translations, scoring, and CC BY-NC-SA 3.0 IGO license."
+    },
+    {
+      "label": "WHO-5 official English instrument and scoring guide",
+      "url": "https://cdn.who.int/media/docs/default-source/mental-health/who-5_english-original4da539d6ed4b49389e3afe47cda2326a.pdf",
+      "note": "Official 2024 English form used for the wording and scoring metadata in this pack."
+    }
+  ],
+  "questions": [
+    {
+      "id": "who5_cheerful",
+      "type": "choice",
+      "text": "Over the last two weeks, I have felt cheerful and in good spirits.",
+      "options": ["All of the time", "Most of the time", "More than half of the time", "Less than half of the time", "Some of the time", "At no time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "who5_calm",
+      "type": "choice",
+      "text": "Over the last two weeks, I have felt calm and relaxed.",
+      "options": ["All of the time", "Most of the time", "More than half of the time", "Less than half of the time", "Some of the time", "At no time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "who5_active",
+      "type": "choice",
+      "text": "Over the last two weeks, I have felt active and vigorous.",
+      "options": ["All of the time", "Most of the time", "More than half of the time", "Less than half of the time", "Some of the time", "At no time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "who5_rested",
+      "type": "choice",
+      "text": "Over the last two weeks, I woke up feeling fresh and rested.",
+      "options": ["All of the time", "Most of the time", "More than half of the time", "Less than half of the time", "Some of the time", "At no time"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "who5_interested",
+      "type": "choice",
+      "text": "Over the last two weeks, my daily life has been filled with things that interest me.",
+      "options": ["All of the time", "Most of the time", "More than half of the time", "Less than half of the time", "Some of the time", "At no time"],
+      "required": true,
+      "condition": null
+    }
+  ]
+}

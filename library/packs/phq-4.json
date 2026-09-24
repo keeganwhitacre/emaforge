@@ -1,0 +1,64 @@
+{
+  "library_schema": "1.0.0",
+  "id": "phq-4-pack",
+  "kind": "question_pack",
+  "name": "Patient Health Questionnaire-4 (PHQ-4)",
+  "description": "The four-item PHQ-4 ultra-brief screener for anxiety and depressive symptoms over the past two weeks, with standard response options and scoring metadata.",
+  "source": "Kroenke, Spitzer, Williams, and Löwe (2009), An ultra-brief screening scale for anxiety and depression: the PHQ-4.",
+  "license": "PHQ and GAD instruments were released by Pfizer without copyright restriction and at no charge. Preserve instrument wording and cite the developers.",
+  "intended_use": "Ultra-brief adult research screening for core anxiety and depressive symptoms. It is not a diagnosis, crisis assessment, or momentary EMA measure.",
+  "estimated_burden": "Less than 1 minute.",
+  "validation_status": "Established adult screening instrument. The shared two-week prompt is repeated in each item for mobile presentation; item content and response coding are otherwise preserved. A positive screen requires appropriate research or clinical follow-up procedures.",
+  "device_requirements": "Any modern phone browser.",
+  "measure": {
+    "instrument": "Patient Health Questionnaire-4 (PHQ-4), English",
+    "timeframe": "Past two weeks",
+    "scoring": "Code Not at all=0, Several days=1, More than half the days=2, Nearly every day=3. Sum all four items for 0–12 total distress (0–2 none, 3–5 mild, 6–8 moderate, 9–12 severe). Items 1–2 form GAD-2 and items 3–4 form PHQ-2; each subscale ranges 0–6, with 3 or greater commonly used as a positive screen. Follow the cited source for interpretation."
+  },
+  "references": [
+    {
+      "label": "Pfizer — unrestricted access announcement for PHQ and GAD instruments",
+      "url": "https://www.pfizer.com/news/press-release/press-release-detail/pfizer_to_offer_free_public_access_to_mental_health_assessment_tools_to_improve_diagnosis_and_patient_care",
+      "note": "Primary rights-holder statement that the PHQ and GAD instruments are available without copyright restriction and at no charge."
+    },
+    {
+      "label": "Kroenke et al. (2009), Psychosomatics",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/19996233/",
+      "note": "Original PHQ-4 development and validation report."
+    }
+  ],
+  "questions": [
+    {
+      "id": "phq4_nervous",
+      "type": "choice",
+      "text": "Over the last two weeks, how often have you been bothered by feeling nervous, anxious, or on edge?",
+      "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "phq4_worry",
+      "type": "choice",
+      "text": "Over the last two weeks, how often have you been bothered by not being able to stop or control worrying?",
+      "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "phq4_depressed",
+      "type": "choice",
+      "text": "Over the last two weeks, how often have you been bothered by feeling down, depressed, or hopeless?",
+      "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"],
+      "required": true,
+      "condition": null
+    },
+    {
+      "id": "phq4_interest",
+      "type": "choice",
+      "text": "Over the last two weeks, how often have you been bothered by little interest or pleasure in doing things?",
+      "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"],
+      "required": true,
+      "condition": null
+    }
+  ]
+}

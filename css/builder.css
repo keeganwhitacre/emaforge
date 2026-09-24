@@ -54,10 +54,15 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .q-type-badge { text-transform: none; letter-spacing: 0; font-size: 11px; }
 .q-card.expanded { box-shadow: none; }
 .q-body { padding: 0 18px 18px; }
-.q-piping { margin-top: 10px; padding: 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--bg); }
-.q-piping-heading { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 8px; }
-.q-piping-heading strong { color: var(--fg); font-size: 12px; }
-.q-piping-heading span { color: var(--fg-3); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.q-piping { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: transparent; }
+.q-piping > summary { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 9px 1px; color: var(--fg-2); font-size: 11px; font-weight: 650; cursor: pointer; list-style: none; }
+.q-piping > summary::-webkit-details-marker { display: none; }
+.q-piping > summary::before { content: "+"; display: inline-grid; place-items: center; width: 17px; height: 17px; margin-right: 1px; border: 1px solid var(--border); color: var(--fg-3); font-size: 12px; font-weight: 500; }
+.q-piping[open] > summary::before { content: "−"; }
+.q-piping > summary > span:first-child { margin-right: auto; }
+.q-pipe-count { color: var(--fg-3); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.q-pipe-count.active { color: var(--accent); }
+.q-piping-body { padding: 2px 0 11px; }
 .q-piping-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(150px, .65fr) auto; gap: 7px; }
 .q-piping-row select, .q-piping-row input { min-width: 0; font-size: 11px; }
 .q-pipe-insert { padding: 7px 12px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent); color: #fff; font: 600 11px var(--font); cursor: pointer; }
@@ -68,7 +73,6 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .q-pipe-chip > span { color: var(--accent); font-weight: 700; }
 .q-pipe-chip small { width: 100%; overflow: hidden; color: var(--fg-3); text-overflow: ellipsis; white-space: nowrap; }
 .q-pipe-chip.invalid { border-color: var(--red); }
-.q-piping-empty { margin-top: 7px; color: var(--fg-3); font-size: 11px; }
 #tab-questions { min-width: 0; }
 .questions-empty { border: 1px dashed var(--border-hi); border-radius: var(--radius); padding: 18px; color: var(--fg-2); font-size: 12px; }
 .measure-add-panel { display: grid; grid-template-columns: minmax(220px,1.4fr) minmax(180px,1fr); gap: 12px; padding: 16px; margin-bottom: 2px; border: 1px solid var(--border); border-top: 2px solid var(--accent); background: var(--bg); }
