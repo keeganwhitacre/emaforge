@@ -1,2 +1,2 @@
 ADMIN_TOKEN=replace-with-at-least-32-random-characters
-# Twilio is optional. Add its secrets later from Study Admin instructions.
+# Optional SMS is configured in the protected Study Admin after deployment.

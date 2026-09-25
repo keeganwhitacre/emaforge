@@ -202,6 +202,60 @@ function twilioConfigured(env) {
   return /^AC[a-zA-Z0-9]{20,}$/.test(sid) && token.length >= 16 && senderValid;
 }
 
+const TWILIO_CREDENTIALS_KEY = 'admin/twilio-credentials.json';
+
+async function twilioEncryptionKey(env) {
+  const secret = String(env.ADMIN_TOKEN || '');
+  if (secret.length < 32 || secret.startsWith('replace-with-')) throw new Error('Set a unique ADMIN_TOKEN before saving Twilio credentials');
+  const source = await crypto.subtle.importKey('raw', textEncoder.encode(secret), 'HKDF', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: textEncoder.encode('EMA Forge Twilio credentials v1'), info: textEncoder.encode('study admin R2') }, source, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+async function resolveTwilioEnv(env) {
+  const record = await readJson(env, TWILIO_CREDENTIALS_KEY, null);
+  if (!record) return env;
+  try {
+    const key = await twilioEncryptionKey(env);
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: Uint8Array.from(record.iv) }, key, Uint8Array.from(record.ciphertext));
+    return Object.assign(Object.create(env), JSON.parse(new TextDecoder().decode(plaintext)));
+  } catch (_) {
+    // An admin-token change must not lock the researcher out of the setup page.
+    return env;
+  }
+}
+
+async function twilioCredentialsRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  if (request.method === 'GET') {
+    const configured = twilioConfigured(await resolveTwilioEnv(env));
+    return json({ configured, source: (await env.STUDY_DATA.head(TWILIO_CREDENTIALS_KEY)) ? 'admin' : configured ? 'cloudflare' : null });
+  }
+  if (request.method === 'DELETE') {
+    await env.STUDY_DATA.delete(TWILIO_CREDENTIALS_KEY);
+    const messaging = await getMessagingSettings(env);
+    await putJson(env, 'admin/messaging.json', { ...messaging, enabled: false, updated_at: new Date().toISOString() });
+    return json({ configured: twilioConfigured(env), source: twilioConfigured(env) ? 'cloudflare' : null });
+  }
+  if (request.method !== 'PUT') return json({ error: 'GET, PUT or DELETE required' }, 405);
+  try {
+    const payload = await parseJsonRequest(request, 8 * 1024);
+    const credentials = {
+      TWILIO_ACCOUNT_SID: String(payload.account_sid || '').trim(),
+      TWILIO_AUTH_TOKEN: String(payload.auth_token || '').trim(),
+      TWILIO_FROM_NUMBER: String(payload.from_number || '').trim(),
+      TWILIO_MESSAGING_SERVICE_SID: String(payload.messaging_service_sid || '').trim()
+    };
+    if (!twilioConfigured(credentials)) throw new Error('Enter a valid Account SID, Auth Token, and sending number or Messaging Service SID');
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await twilioEncryptionKey(env);
+    const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, textEncoder.encode(JSON.stringify(credentials)));
+    await putJson(env, TWILIO_CREDENTIALS_KEY, { iv: Array.from(iv), ciphertext: Array.from(new Uint8Array(ciphertext)), updated_at: new Date().toISOString() });
+    return json({ configured: true, source: 'admin' });
+  } catch (error) {
+    return json({ error: error.message || 'Could not save Twilio credentials' }, 400);
+  }
+}
+
 async function getMessagingSettings(env) {
   const stored = await readJson(env, 'admin/messaging.json', {});
   return {
@@ -253,7 +307,7 @@ async function adminStatus(request, env) {
     dispatch_count: dispatchList.objects.length,
     dispatch_count_limited: dispatchList.limited,
     messaging_enabled: messaging.enabled,
-    twilio_configured: twilioConfigured(env),
+    twilio_configured: twilioConfigured(await resolveTwilioEnv(env)),
     study_days: Number(config?.ema?.scheduling?.study_days) || null,
     schedule_windows: (config?.ema?.scheduling?.windows || []).map(window => ({ id: window.id, label: window.label || window.id }))
   });
@@ -446,17 +500,18 @@ async function rosterRoute(request, env) {
 
 async function messagingRoute(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  if (request.method === 'GET') return json({ settings: await getMessagingSettings(env), configured: twilioConfigured(env) });
+  const twilioEnv = await resolveTwilioEnv(env);
+  if (request.method === 'GET') return json({ settings: await getMessagingSettings(env), configured: twilioConfigured(twilioEnv) });
   if (request.method !== 'PUT') return json({ error: 'GET or PUT required' }, 405);
   try {
     const incoming = await parseJsonRequest(request, 64 * 1024);
     const template = String(incoming.message_template || '').trim();
     if (!template || template.length > 500) throw new Error('Message template must contain 1–500 characters');
     if (!template.includes('{link}')) throw new Error('Message template must include {link}');
-    if (incoming.enabled === true && !twilioConfigured(env)) throw new Error('Add the Twilio Cloudflare secrets before enabling messaging');
+    if (incoming.enabled === true && !twilioConfigured(twilioEnv)) throw new Error('Connect Twilio in Study Admin before enabling messaging');
     const settings = { enabled: incoming.enabled === true, message_template: template, updated_at: new Date().toISOString() };
     await putJson(env, 'admin/messaging.json', settings);
-    return json({ settings, configured: twilioConfigured(env) });
+    return json({ settings, configured: twilioConfigured(twilioEnv) });
   } catch (error) {
     return json({ error: error.message || 'Invalid messaging settings' }, 400);
   }
@@ -506,7 +561,7 @@ async function testMessageRoute(request, env) {
     if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error('Enter a test phone number in E.164 format');
     const host = await readJson(env, 'admin/host.json', null);
     if (!host?.origin) throw new Error('Install the study before sending a test message');
-    const result = await sendTwilioMessage(env, {
+    const result = await sendTwilioMessage(await resolveTwilioEnv(env), {
       to: phone,
       body: `EMA Forge test: messaging is connected for ${host.origin}.`,
       statusCallback: `${host.origin}/twilio/status`
@@ -596,6 +651,7 @@ async function saveDispatch(env, key, record, options = {}) {
 }
 
 export async function dispatchDueMessages(env, now = new Date()) {
+  env = await resolveTwilioEnv(env);
   const settings = await getMessagingSettings(env);
   if (!settings.enabled) return { sent: 0, skipped: 'disabled' };
   if (!twilioConfigured(env)) return { sent: 0, skipped: 'twilio_not_configured' };
@@ -714,6 +770,7 @@ export async function validateTwilioRequest(requestUrl, rawBody, signature, auth
 }
 
 async function twilioStatusRoute(request, env) {
+  env = await resolveTwilioEnv(env);
   const raw = await request.text();
   const valid = await validateTwilioRequest(request.url, raw, request.headers.get('X-Twilio-Signature'), env.TWILIO_AUTH_TOKEN);
   if (!valid) return json({ error: 'Invalid Twilio signature' }, 403);
@@ -740,6 +797,7 @@ async function twilioStatusRoute(request, env) {
 }
 
 async function twilioIncomingRoute(request, env) {
+  env = await resolveTwilioEnv(env);
   const raw = await request.text();
   const valid = await validateTwilioRequest(request.url, raw, request.headers.get('X-Twilio-Signature'), env.TWILIO_AUTH_TOKEN);
   if (!valid) return json({ error: 'Invalid Twilio signature' }, 403);
@@ -783,6 +841,7 @@ export default {
     if (path === '/admin/dispatch-export' && request.method === 'GET') return exportPrefix(request, env, 'dispatch/', 'ema-forge-dispatch.ndjson');
     if (path === '/admin/roster') return rosterRoute(request, env);
     if (path === '/admin/messaging') return messagingRoute(request, env);
+    if (path === '/admin/twilio-credentials') return twilioCredentialsRoute(request, env);
     if (path === '/admin/test-message' && request.method === 'POST') return testMessageRoute(request, env);
     if (path === '/admin/invite-links') return inviteLinksRoute(request, env);
     if (path.startsWith('/admin/invite-links/')) return revokeInviteLink(request, env, path.slice('/admin/invite-links/'.length));
@@ -791,7 +850,7 @@ export default {
     if (path === '/twilio/incoming' && request.method === 'POST') return twilioIncomingRoute(request, env);
     if (path.startsWith('/twilio/')) return json({ error: 'POST required' }, 405);
     if (path.startsWith('/j/')) return resolveInviteLink(request, env, path.slice('/j/'.length));
-    if (path === '/health') return json({ status: 'ok', study_installed: !!(await env.STUDY_DATA.head('study/current.html')), twilio_configured: twilioConfigured(env) });
+    if (path === '/health') return json({ status: 'ok', study_installed: !!(await env.STUDY_DATA.head('study/current.html')), twilio_configured: twilioConfigured(await resolveTwilioEnv(env)) });
     if (path === '/check.html') return new Response(checkHtml, { headers: secureHeaders('text/html; charset=utf-8') });
     if (path === '/submit' && request.method === 'OPTIONS') {
       const origin = request.headers.get('Origin');

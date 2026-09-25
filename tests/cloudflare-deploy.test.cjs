@@ -6,9 +6,17 @@ const { pathToFileURL } = require("node:url");
 const { createHmac } = require("node:crypto");
 const vm = require("node:vm");
 const path = require("node:path");
+const fs = require("node:fs");
 
 const modulePromise = import(pathToFileURL(path.join(__dirname, "../cloudflare-deploy/worker.mjs")).href);
 const workerPromise = modulePromise.then(module => module.default);
+
+test("Cloudflare deploy keeps optional Twilio setup out of required secrets", () => {
+  const example = fs.readFileSync(path.join(__dirname, "../cloudflare-deploy/.dev.vars.example"), "utf8");
+  for (const name of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER", "TWILIO_MESSAGING_SERVICE_SID"]) {
+    assert.doesNotMatch(example, new RegExp(`^${name}=`, "m"));
+  }
+});
 
 class MemoryBucket {
   constructor() { this.objects = new Map(); }
@@ -24,6 +32,7 @@ class MemoryBucket {
   }
   async get(key) { return this.objects.get(key) || null; }
   async head(key) { return this.objects.get(key) || null; }
+  async delete(key) { this.objects.delete(key); }
   async list({ prefix = "", limit = 1000, cursor } = {}) {
     const keys = [...this.objects.keys()].filter(key => key.startsWith(prefix)).sort();
     const start = cursor ? Number(cursor) : 0;
@@ -127,6 +136,49 @@ test("Cloudflare admin exposes a protected control center and validated roster",
   assert.equal(invalid.status, 400);
 });
 
+test("Twilio can be connected from admin without exposing credentials", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const url = "https://study.example/admin/twilio-credentials";
+  const credentials = {
+    account_sid: "AC" + "12345678901234567890123456789012",
+    auth_token: "private-test-auth-token-with-length",
+    from_number: "+15557654321"
+  };
+  assert.equal((await worker.fetch(new Request(url), environment)).status, 401);
+  assert.equal((await worker.fetch(adminRequest(url, {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(credentials)
+  }), environment)).status, 200);
+  const stored = await bucket.get("admin/twilio-credentials.json");
+  assert.doesNotMatch(await stored.text(), /private-test-auth-token|AC123456/);
+  const status = await worker.fetch(adminRequest(url), environment);
+  assert.deepEqual(await status.json(), { configured: true, source: "admin" });
+  const messaging = await worker.fetch(adminRequest("https://study.example/admin/messaging"), environment);
+  assert.equal((await messaging.json()).configured, true);
+  const html = '<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = {};</script>';
+  assert.equal((await worker.fetch(adminRequest("https://study.example/admin/install", {
+    method: "POST", headers: { "Content-Type": "text/html" }, body: html
+  }), environment)).status, 200);
+  let sent = false;
+  const withTransport = { ...environment, __TWILIO_FETCH: async (_, options) => {
+    sent = true;
+    assert.match(options.headers.Authorization, /^Basic /);
+    return new Response(JSON.stringify({ sid: "SM1234567890", status: "queued" }), { status: 201 });
+  } };
+  const testMessage = await worker.fetch(adminRequest("https://study.example/admin/test-message", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone: "+15557654321" })
+  }), withTransport);
+  assert.equal(testMessage.status, 200);
+  assert.equal(sent, true);
+  const newToken = "this-is-a-new-unique-test-token-with-32-chars";
+  const rotated = await worker.fetch(new Request(url, { headers: { Authorization: `Bearer ${newToken}` } }), { ...environment, ADMIN_TOKEN: newToken });
+  assert.deepEqual(await rotated.json(), { configured: false, source: "admin" });
+  const removed = await worker.fetch(adminRequest(url, { method: "DELETE" }), environment);
+  assert.equal(removed.status, 200);
+  assert.deepEqual(await removed.json(), { configured: false, source: null });
+});
+
 test("Cloudflare creates opaque and revocable participant invite links", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();
@@ -182,9 +234,6 @@ test("Cloudflare scheduled delivery creates one auditable Twilio dispatch", asyn
   const sentRequests = [];
   const environment = {
     ...env(bucket),
-    TWILIO_ACCOUNT_SID: "AC" + "12345678901234567890123456789012",
-    TWILIO_AUTH_TOKEN: "test-auth-token-with-sufficient-length",
-    TWILIO_FROM_NUMBER: "+15557654321",
     __TWILIO_FETCH: async (url, options) => {
       sentRequests.push({ url, options });
       return new Response(JSON.stringify({ sid: "SM1234567890", status: "queued" }), {
@@ -212,6 +261,10 @@ test("Cloudflare scheduled delivery creates one auditable Twilio dispatch", asyn
   }] };
   assert.equal((await worker.fetch(adminRequest("https://study.example/admin/roster", {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(roster)
+  }), environment)).status, 200);
+  assert.equal((await worker.fetch(adminRequest("https://study.example/admin/twilio-credentials", {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ account_sid: "AC" + "12345678901234567890123456789012", auth_token: "test-auth-token-with-sufficient-length", from_number: "+15557654321" })
   }), environment)).status, 200);
   assert.equal((await worker.fetch(adminRequest("https://study.example/admin/messaging", {
     method: "PUT", headers: { "Content-Type": "application/json" },

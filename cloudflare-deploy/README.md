@@ -5,7 +5,7 @@ This template deploys a complete EMA Forge study workspace into **your Cloudflar
 ## Deploy
 
 1. In EMA Forge, open **Review & Deploy** and download the prepared Cloudflare study file.
-2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio fields are optional: enter your own credentials during deployment or leave them blank and configure them later. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
+2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio is connected later inside Study Admin. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
 3. The template enables its `workers.dev` route. Copy the address Cloudflare shows after deployment. Return to EMA Forge and paste either `your-study.workers.dev` or the full `https://…` URL under **Hosted study URL**.
 4. Choose **Open admin**, enter the same token, and upload the prepared `.html` file. A new deployment opens directly on the install screen.
 5. Open `/check.html`. It reports pass/fail in plain language and stores the synthetic check under `setup-tests/`; setup checks do not count as participant sessions. Then complete a real phone session and confirm it appears in Overview and Analyze.
@@ -15,12 +15,11 @@ If `/admin` reports **Unauthorized**, do not recreate the deployment. In Cloudfl
 
 ## Optional Twilio delivery
 
-The study works without Twilio; participant links can always be distributed manually. The deployment form has optional blank Twilio fields. Enter your own credentials there to enable SMS during deployment. If you leave them blank, enable SMS later:
+The study works without Twilio; participant links can always be distributed manually. Cloudflare's Deploy button currently treats every listed secret as required, so Twilio is not part of the initial deployment form. To enable SMS:
 
-1. Open **Worker → Settings → Variables and Secrets** in Cloudflare.
-2. Add encrypted secrets named `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and either `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`.
-3. In Twilio, set the incoming-message webhook to `https://<your-study-host>/twilio/incoming` using POST. Twilio delivery-status callbacks are attached automatically to outbound messages.
-4. Return to `/admin`, open **Participants & delivery**, upload or enter the roster, send a test message, and only then enable scheduled messaging. Twilio automatically sends opaque `/j/...` links rather than exposing participant routing parameters in the SMS.
+1. Open **Install study** in `/admin`, enter your Twilio Account SID and Auth Token, plus a sending number or Messaging Service SID, and choose **Connect Twilio**. The values are encrypted in private R2 storage using a key derived from your admin token and are not shown again. Changing that token requires reconnecting Twilio. Cloudflare runtime secrets added directly to the Worker also remain supported.
+2. In Twilio, set the incoming-message webhook to `https://<your-study-host>/twilio/incoming` using POST. Twilio delivery-status callbacks are attached automatically to outbound messages.
+3. Open **Participants & delivery**, upload or enter the roster, send a test message, and only then enable scheduled messaging. Twilio automatically sends opaque `/j/...` links rather than exposing participant routing parameters in the SMS.
 
 The Worker runs every five minutes. It interprets the EMA Forge schedule in each participant's IANA timezone, intersects optional onboarding schedule preferences with protocol weekdays, chooses a stable randomized minute within each window, and deduplicates on participant/day/window. Twilio API acceptance and later handset-delivery callbacks remain separate audit states.
 

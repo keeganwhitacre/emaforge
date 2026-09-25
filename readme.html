@@ -1236,7 +1236,7 @@
               burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
             <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and select <strong>Download prepared study</strong>.</li>
             <li>Select <strong>Deploy to Cloudflare</strong>. Replace the masked example <code>ADMIN_TOKEN</code> with
-              your own 32+ character password. Twilio fields are optional: enter your own credentials or leave them blank and configure them later. Copy the resulting
+              your own 32+ character password. Twilio is optional and can be connected inside Study Admin later. Copy the resulting
               <code>workers.dev</code> address; EMA Forge accepts it with or without <code>https://</code>.</li>
             <li>Paste the address into EMA Forge and select <strong>Open admin</strong>. A new deployment opens directly
               on <strong>Install study</strong>; upload the prepared file.</li>
@@ -2878,7 +2878,7 @@ iat_trials &lt;- sessions |&gt;
     <tr>
       <td><a href="#webhook-cloudflare">Cloudflare Worker → R2</a></td>
       <td>Free tiers available; billing setup required for R2</td>
-      <td>~15–25 min</td>
+      <td>Guided deploy; allow time for Cloudflare account and R2 setup</td>
       <td>Recommended reference path. Private object storage, verified receipts, duplicate protection.</td>
     </tr>
     <tr>
@@ -2990,13 +2990,19 @@ iat_trials &lt;- sessions |&gt;
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
     Cloudflare clones the public template, provisions and binds private R2 storage, and shows a masked example
     <code>ADMIN_TOKEN</code>. Replace that example with your own 32+ character password; EMA Forge cannot recover it.
-    Twilio fields are optional and blank; fill them with your own credentials or configure them later. The template enables its <code>workers.dev</code> route automatically.
+    Twilio is optional and can be connected from the protected Study Admin after deployment. The template enables its <code>workers.dev</code> route automatically.
     Copy the address Cloudflare shows and paste it into EMA Forge under <strong>Hosted study URL</strong>; a bare hostname
     or full HTTPS URL both work. Select <strong>Open admin</strong>. A new deployment opens directly on
     <strong>Install study</strong>; upload the downloaded file. EMA Forge never receives
     the researcher's Cloudflare credentials, token, study file, or participant data.</p>
   <p>The hosted URL is saved with the local builder workspace, so returning to <strong>Review &amp; Deploy</strong> restores
     clearly labeled participant, administration, and connection-check destinations without another search through Cloudflare.</p>
+  <p><strong>Cost:</strong> EMA Forge is free. A modest study may stay within
+    <a href="https://developers.cloudflare.com/workers/platform/limits/" target="_blank" rel="noopener">Workers Free limits</a>
+    and <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">R2 Standard free allowances</a>.
+    R2 still requires account activation/checkout, and overages can cost money. Twilio SMS, sending numbers, and carrier fees are separate.
+    Check expected usage and retention before recruiting.</p>
+  <p><strong>IRB and institutional review:</strong> Researcher-owned Cloudflare storage makes the data flow inspectable, but it does not establish approval or HIPAA compliance. Document the provider, data types, consent process, access controls, region, retention and deletion, and incident response for your IRB and IT/security review. If your institution requires an approved vendor or institutional storage, use that pathway instead.</p>
   <p>If the admin page reports <strong>Unauthorized</strong>, do not recreate the deployment. Open
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
@@ -3537,7 +3543,7 @@ export const handler = async (event) =&gt; {
             </div>
           </div>
 
-          <p>Twilio credentials are entered as optional Cloudflare secrets during deployment or later in Worker settings. Delivery is managed inside the protected <code>/admin</code> workspace. Google Sheets
+          <p>Twilio credentials can be entered on the protected <code>/admin</code> page after deployment. They are encrypted in private study storage using the admin token; Cloudflare Worker secrets remain an alternative. Google Sheets
             and Apps Script are no longer part of the recommended path. The Worker reads the installed EMA Forge
             schedule, evaluates it in each participant's IANA timezone every five minutes, sends an individualized
             link, and stores an auditable dispatch record separately from response data.</p>
@@ -3545,9 +3551,7 @@ export const handler = async (event) =&gt; {
           <h3>Setup</h3>
           <ol>
             <li>Complete the normal Cloudflare deployment and install the prepared study at <code>/admin</code>.</li>
-            <li>If you left the optional Twilio fields blank during deployment, open <strong>Worker → Settings → Variables and Secrets</strong> in Cloudflare.</li>
-            <li>Enter or add encrypted secrets named <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and either
-              <code>TWILIO_FROM_NUMBER</code> or <code>TWILIO_MESSAGING_SERVICE_SID</code>.</li>
+            <li>Open <strong>Install study</strong> in Study Admin. Enter your Account SID, Auth Token, and either a sending number or Messaging Service SID, then choose <strong>Connect Twilio</strong>. The credentials are not displayed again. If the admin token changes, reconnect Twilio.</li>
             <li>In Twilio, set the incoming-message webhook to
               <code>https://&lt;your-study-host&gt;/twilio/incoming</code> using POST. The Worker validates Twilio's
               signed request before changing a roster record.</li>
@@ -3595,8 +3599,8 @@ export const handler = async (event) =&gt; {
 
           <h3 id="twilio-caveats">Known limitations</h3>
           <ul>
-            <li><strong>Twilio setup is still external.</strong> Researchers must obtain a Twilio sender, satisfy the
-              applicable messaging registration requirements, and add credentials to Cloudflare.</li>
+            <li><strong>Twilio setup is still external.</strong> Researchers must obtain a Twilio sender and satisfy the
+              applicable messaging registration requirements. Credentials can then be entered in Study Admin.</li>
             <li><strong>Five-minute scheduling is approximate.</strong> It is appropriate for EMA windows, not exact-to-the-second interventions.</li>
             <li><strong>Phone numbers are sensitive.</strong> They are kept in the private roster, separate from response
               files, but remain the researcher's responsibility under the approved data-management plan.</li>

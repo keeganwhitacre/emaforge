@@ -2,6 +2,8 @@
 
 Free, open-source builder for web-based ecological momentary assessment (EMA) studies with physiological measurements. Build a survey-only study, a task-only study, or an ordered sequence of both without writing code.
 
+Move from a draft to a functioning study in one workflow: choose a protocol or start blank, arrange questions and optional phone-camera tasks, preview the participant flow, then deploy to your own Cloudflare account. The researcher controls the hosted study, participant links, and private response storage. EMA Forge itself requires no account or persistent project upload.
+
 **[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
 
 ## Create a study
@@ -9,10 +11,16 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 1. Enter study details and replace the consent template with approved text.
 2. In **Schedule**, set your session times. A new study begins with an ePAT session; add survey questions, PPG heart-rate capture, or other tasks as needed. Reorder steps in each session.
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
-4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password; Twilio is optional: enter your own credentials in the blank deployment fields or configure them later in Cloudflare. The template explicitly enables its `workers.dev` address and provisions private R2 storage.
+4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password. Twilio is optional and can be connected inside Study Admin after deployment. The template enables its `workers.dev` address and provisions private R2 storage.
 5. Copy the Worker address Cloudflare displays and paste it into **Review & Deploy**. A bare address such as `my-study.workers.dev` is accepted and normalized to HTTPS. Open `/admin`; a new deployment opens directly on **Install study**. Upload the prepared `-cloudflare-study.html` file.
 6. Run `/check.html`. It reports a clear pass or failure and saves its synthetic record under `setup-tests/`, never in participant response counts or exports. Then complete one full session on a supported phone and confirm it appears in Admin.
 7. Use `/admin` to monitor responses, run browser-local descriptive analysis, create participant links, manage optional Twilio delivery, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
+
+## Cost and study approval
+
+EMA Forge is free and open source. A small study may fit within [Cloudflare Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/) (currently 100,000 requests per day) and [R2 Standard free usage](https://developers.cloudflare.com/r2/pricing/) (currently 10 GB-month storage, 1 million Class A operations, and 10 million Class B operations monthly). An R2 subscription/checkout must still be activated in the Cloudflare account; usage beyond included allowances may cost money. Optional [Twilio SMS has separate usage and sender charges](https://www.twilio.com/en-us/pricing/messaging). Estimate expected traffic and retention before recruitment.
+
+Cloudflare hosting does not itself make a study IRB approved or suitable for protected health information. Before enrolling participants, give your IRB and institutional security staff the data flow, provider and region, data types, access controls, consent method, retention/deletion plan, and incident procedures. Use an institutionally approved platform when required. See the [HHS IRB review guidance](https://www.hhs.gov/ohrp/education-and-outreach/online-education/human-research-protection-training/lesson-4-irb-review-of-research/index.html).
 
 ## Protocol library
 
