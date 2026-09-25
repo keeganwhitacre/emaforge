@@ -317,6 +317,69 @@ const EMA = (function() {
     wrapper.appendChild(container);
   }
 
+  function buildPlaceContext(q, wrapper, checkSubmit) {
+    const group = document.createElement('div');
+    group.className = 'text-group';
+    const explanation = document.createElement('p');
+    explanation.style.cssText = 'font-size:.88rem;line-height:1.5;color:var(--fg-muted)';
+    const dataset = q.location_dataset;
+    explanation.textContent = `Optional: use your current location to describe this area using ${dataset?.metadata?.name || 'the study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}). Your precise coordinates are used briefly in this browser to match study-area categories. The study receives only the categories and a status, not your coordinates or an area ID. These categories may still be sensitive with your other answers. You may skip this question.`;
+    group.appendChild(explanation);
+    const status = document.createElement('p');
+    status.setAttribute('role', 'status');
+    status.style.cssText = 'font-size:.85rem;color:var(--fg-muted)';
+    const existing = valueOf(q.id);
+    if (existing) status.textContent = existing.status === 'classified' ? 'Area context added.' : `Location result: ${existing.status.replace(/_/g, ' ')}.`;
+    group.appendChild(status);
+    const action = document.createElement('button');
+    action.type = 'button'; action.className = 'btn btn-secondary'; action.textContent = 'Use my location';
+    let requestVersion = 0;
+    const skip = document.createElement('button');
+    skip.type = 'button'; skip.className = 'btn btn-secondary'; skip.textContent = 'Skip location';
+    skip.style.marginLeft = '8px';
+    group.append(action, skip);
+    skip.addEventListener('click', () => {
+      requestVersion++;
+      action.disabled = false;
+      recordResponse(q.id, { status: 'declined' });
+      status.textContent = 'Skipped. No location requested.';
+      checkSubmit();
+    });
+    action.addEventListener('click', () => {
+      if (window.__PREVIEW_MODE__) {
+        status.textContent = 'Simulated preview: location access is disabled here. Test on the published HTTPS study.';
+        return;
+      }
+      if (!dataset || EMAForgePlaceContext.validate(dataset) || !navigator.geolocation || !window.isSecureContext) {
+        recordResponse(q.id, { status: 'unavailable' });
+        status.textContent = 'Location is unavailable. You can continue without it.';
+        checkSubmit();
+        return;
+      }
+      action.disabled = true;
+      const requestId = ++requestVersion;
+      status.textContent = 'Finding your current area…';
+      navigator.geolocation.getCurrentPosition(position => {
+        if (requestId !== requestVersion || !wrapper.isConnected) return;
+        const result = EMAForgePlaceContext.classify(dataset,
+          position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+        recordResponse(q.id, result);
+        status.textContent = result.status === 'classified' ? 'Area context added. Precise coordinates were not saved.' :
+          `Could not classify this location (${result.status.replace(/_/g, ' ')}). You can continue.`;
+        action.disabled = false;
+        checkSubmit();
+      }, error => {
+        if (requestId !== requestVersion || !wrapper.isConnected) return;
+        const result = { status: error.code === 1 ? 'permission_denied' : 'unavailable' };
+        recordResponse(q.id, result);
+        status.textContent = 'Location was not available. You can continue without it.';
+        action.disabled = false;
+        checkSubmit();
+      }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 0 });
+    });
+    wrapper.appendChild(group);
+  }
+
   function buildHeartRateCapture(q, wrapper, checkSubmit) {
      const core = window.ePATCore;
     const durationSec = q.duration_sec || 30;
@@ -807,6 +870,9 @@ const EMA = (function() {
 
       } else if (q.type === 'heart_rate') {
         buildHeartRateCapture(q, wrapper, checkSubmit);
+
+      } else if (q.type === 'place_context') {
+        buildPlaceContext(q, wrapper, checkSubmit);
 
       } else {
         // Generic text / numeric input

@@ -102,7 +102,7 @@ const ContentView = {
     const typeLabel = {
       slider: 'Slider', numeric: 'Number', choice: 'Single Choice',
       checkbox: 'Multi Select', text: 'Text',
-      affect_grid: 'Affect Grid', body_map: 'Body Map', heart_rate: 'Heart Rate'
+      affect_grid: 'Affect Grid', body_map: 'Body Map', heart_rate: 'Heart Rate', place_context: 'Place context'
     }[s.type] || s.type;
 
     const headline = this._cardHeadline(s);
@@ -181,6 +181,12 @@ const ContentView = {
           <span class="q-stat-unit">bpm</span>
           <span class="q-stat-dim">±${fx(s.sdBpm, 1)} · ${s.nUsable}/${s.n} usable (SQI ≥ 0.5)</span>
         `;
+      case 'place_context': {
+        const statuses = Object.entries(s.statusCounts || {}).map(([status, count]) => `${this._esc(status.replace(/_/g, ' '))}: ${count}`).join(' · ');
+        const indicators = Object.entries(s.indicators || {}).map(([key, bands]) =>
+          `${this._esc(key)}: ${Object.entries(bands).map(([band, count]) => `${this._esc(band)} ${count}`).join(', ')}`).join(' · ');
+        return `<span class="q-stat-big">${s.statusCounts?.classified || 0}</span><span class="q-stat-unit">classified</span><span class="q-stat-dim">${statuses || 'no responses'}${indicators ? `<br>${indicators}` : ''}</span>`;
+      }
       default:
         return `<span class="q-stat-dim">${s.n || 0} responses</span>`;
     }

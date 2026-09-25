@@ -20,7 +20,8 @@ const surveyMeasureCatalog = [
   { value: 'text', label: 'Open text', description: 'Free response' },
   { value: 'numeric', label: 'Number', description: 'Numeric entry' },
   { value: 'affect_grid', label: 'Affect grid', description: 'Valence × arousal' },
-  { value: 'body_map', label: 'Body map', description: 'Select body regions' }
+  { value: 'body_map', label: 'Body map', description: 'Select body regions' },
+  { value: 'place_context', label: 'Place context', description: 'Optional location-derived area indicators' }
 ];
 
 const structureMeasureCatalog = [
@@ -98,8 +99,29 @@ function renderMeasurePicker(query = '') {
     ).join('')}</div></section>`;
   }).join('') || '<p class="questions-empty">No measures match that search.</p>';
   container.querySelectorAll('.measure-picker-item').forEach(button => button.addEventListener('click', () => {
-    addMeasureAt(button.dataset.measureType, measureInsertIndex);
+    if (button.dataset.measureType === 'place_context') {
+      confirmPlaceContext(() => addMeasureAt('place_context', measureInsertIndex));
+    } else addMeasureAt(button.dataset.measureType, measureInsertIndex);
   }));
+}
+
+function confirmPlaceContext(onAccept) {
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('aria-label', 'Place context setup');
+  dialog.style.cssText = 'max-width:min(540px,calc(100vw - 32px));padding:24px;border:1px solid #c9ced3;border-radius:8px;color:#222;background:#fff;line-height:1.55;box-shadow:0 20px 60px #0004';
+  dialog.innerHTML = `<h2 style="margin:0 0 12px">Add place context?</h2>
+    <p>This optional measure asks for the participant’s current location only when they tap Use my location. You must provide a licensed, study-area GeoJSON lookup with documented indicator sources. No index is supplied automatically.</p>
+    <p>Coordinates are matched in the participant’s browser and are not included in EMA Forge responses. Derived area categories can still be sensitive alongside participant IDs and response times. The browser and hosting provider may process location-related metadata. Check your consent, IRB and institutional requirements, source terms, geographic coverage, and device accuracy before enrollment.</p>
+    <label style="display:flex;gap:10px;align-items:start;margin:16px 0"><input type="checkbox" required style="margin-top:6px"><span>I understand the source, consent, and privacy limits.</span></label>
+    <div style="display:flex;gap:10px;justify-content:end"><button type="button" data-action="cancel">Cancel</button><button type="button" data-action="add" disabled>Add optional measure</button></div>`;
+  document.body.append(dialog);
+  const check = dialog.querySelector('input');
+  const add = dialog.querySelector('[data-action="add"]');
+  check.addEventListener('change', () => { add.disabled = !check.checked; });
+  dialog.querySelector('[data-action="cancel"]').addEventListener('click', () => dialog.close());
+  add.addEventListener('click', () => { if (check.checked) { dialog.close(); onAccept(); } });
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  dialog.showModal();
 }
 
 function openMeasurePicker(index = null) {
@@ -330,7 +352,7 @@ function wireQuestionFlowReordering(card, window, entries, entry, flowIndex) {
 function measureTypeLabel(type) {
   return ({ slider: 'Rating scale', choice: 'Single choice', text: 'Open text', numeric: 'Number',
     checkbox: 'Multiple choice', affect_grid: 'Affect grid', body_map: 'Body map',
-    instruction: 'Instruction screen', page_break: 'New screen', heart_rate: 'PPG heart-rate capture' })[type] || 'Survey item';
+    instruction: 'Instruction screen', page_break: 'New screen', heart_rate: 'PPG heart-rate capture', place_context: 'Place context' })[type] || 'Survey item';
 }
 
 function commitMeasureFlow(window, entries) {
@@ -478,6 +500,7 @@ function buildQCard(q, index, displayNum, options = {}) {
   if (q.type === 'body_map')    typeLabel = 'Body Map';
   if (q.type === 'instruction') typeLabel = 'Instruction';
   if (q.type === 'heart_rate')  typeLabel = 'Heart Rate';
+  if (q.type === 'place_context') typeLabel = 'Place context';
 
   card.innerHTML = `
     <div class="q-header">
@@ -501,6 +524,7 @@ function buildQCard(q, index, displayNum, options = {}) {
       ${q.type === 'affect_grid'                         ? buildAffectGridFields(q) : ''}
       ${q.type === 'body_map'                            ? buildBodyMapFields(q)    : ''}
       ${q.type === 'heart_rate'                          ? buildHeartRateFields(q)  : ''}
+      ${q.type === 'place_context'                       ? buildPlaceContextFields(q) : ''}
       ${q.type === 'instruction'
         ? '<div class="field-hint" style="margin-top:6px">Shown on its own screen. It collects no response and can be personalized or conditional.</div>' : ''}
       ${(q.type === 'text' || q.type === 'numeric')
@@ -512,7 +536,7 @@ function buildQCard(q, index, displayNum, options = {}) {
         <label class="field-label">Skip Logic</label>
         ${buildConditionBlock(q, index)}
       </div>
-      ${q.type !== 'instruction' ? `<div class="toggle-row">
+      ${q.type !== 'instruction' && q.type !== 'place_context' ? `<div class="toggle-row">
         <span class="toggle-label">Required</span>
         <label class="toggle">
           <input type="checkbox" class="q-required" ${q.required ? 'checked' : ''}>
@@ -551,9 +575,42 @@ function buildQCard(q, index, displayNum, options = {}) {
   if (q.type === 'affect_grid')                         bindAffectGridFields(card, q);
   if (q.type === 'body_map')                            bindBodyMapFields(card, q);
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
+  if (q.type === 'place_context')                       bindPlaceContextFields(card, q);
 
   bindConditionBlock(card, q, index);
   return card;
+}
+
+function buildPlaceContextFields(q) {
+  const dataset = q.location_dataset;
+  return `<div class="field-group"><strong>Study-area indicator lookup</strong>
+    <p class="field-hint">Upload a small GeoJSON FeatureCollection of Polygon or MultiPolygon areas. Each feature needs <code>properties.indicators</code> with categorized walkability, pollution, deprivation, or urbanicity. Metadata must document the source and method. Raw coordinates stay on the participant’s device; the lookup geometry is published with your study.</p>
+    <input type="file" class="place-dataset-file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Study-area GeoJSON lookup">
+    <p class="place-dataset-status field-hint" role="status">${dataset?.metadata && Array.isArray(dataset.features) ? `${escH(String(dataset.metadata.name || 'Unknown'))} · ${escH(String(dataset.metadata.version || '?'))} · ${dataset.features.length} areas` : 'No dataset yet. Export is blocked until you add one.'}</p>
+    <p class="field-hint">Up to 2 MB of lookup data. This first release supports researcher-prepared categories, not automatic national indices. Never include participant addresses or raw location records in the file.</p></div>`;
+}
+
+function bindPlaceContextFields(card, q) {
+  card.querySelector('.place-dataset-file')?.addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const status = card.querySelector('.place-dataset-status');
+    try {
+      if (file.size > 2 * 1024 * 1024) throw new Error('Dataset exceeds the 2 MB study lookup limit.');
+      const data = JSON.parse(await file.text());
+      const error = EMAForgePlaceContext.validate(data);
+      if (error) throw new Error(error);
+      q.location_dataset = data;
+      status.textContent = `${data.metadata.name} · ${data.metadata.version} · ${data.features.length} areas added`;
+      status.style.color = '';
+      schedulePreview();
+      renderBuilderShell();
+    } catch (error) {
+      status.textContent = error.message;
+      status.style.color = 'var(--accent-red)';
+    }
+    event.target.value = '';
+  });
 }
 
 function defaultBodyRegions() {
@@ -912,6 +969,9 @@ function addMeasureAt(type, insertionIndex = null) {
   });
   if (type === 'heart_rate') Object.assign(question, {
     text: 'Measuring your heart rate…', duration_sec: 30, report_as: 'bpm'
+  });
+  if (type === 'place_context') Object.assign(question, {
+    text: 'What is the area around you like right now?', required: false, location_terms_accepted: true
   });
   if (type === 'page_break') {
     delete question.text;

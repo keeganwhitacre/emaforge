@@ -47,6 +47,7 @@ Use **Simulate study** to generate a deterministic, clearly labeled synthetic da
 ## Included measures
 
 - Survey ratings, choices, open text, affect grid, branching, camera-based PPG heart-rate capture, and a source-documented K6 pack.
+- Optional **Place context** measure: after a researcher accepts a setup notice and adds a small, source-labeled study-area GeoJSON lookup, participants may request their current location. Polygon matching runs in their browser, and responses contain only categorical indicators (such as walkability or pollution bands), lookup version, and status. No coordinate or area identifier is submitted. The builder does not supply national indicator data or decide how to categorize them; researchers must prepare and license their data and verify consent and accuracy. Preview never requests real location.
 - ePAT and heartbeat counting (beta), using a phone camera and flashlight for PPG. Check device compatibility and your research protocol before collecting data.
 - Implicit Association Task (experimental; not validated for confirmatory research).
 

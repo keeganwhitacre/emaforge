@@ -195,6 +195,12 @@ const ContentStats = {
       case 'text': {
         return String(raw);
       }
+      case 'place_context': {
+        if (typeof raw === 'string') {
+          try { raw = JSON.parse(raw); } catch (_) { return undefined; }
+        }
+        return raw && typeof raw === 'object' && typeof raw.status === 'string' ? raw : undefined;
+      }
       case 'affect_grid': {
         if (raw && typeof raw === 'object' && 'valence' in raw && 'arousal' in raw) {
           return { valence: Number(raw.valence), arousal: Number(raw.arousal) };
@@ -262,6 +268,19 @@ const ContentStats = {
         return { ...base, ...this._summariseAffect(bucket) };
       case 'heart_rate':
         return { ...base, ...this._summariseHR(bucket) };
+      case 'place_context': {
+        const statusCounts = {};
+        const indicators = {};
+        bucket.values.forEach(value => {
+          statusCounts[value.status] = (statusCounts[value.status] || 0) + 1;
+          if (value.status !== 'classified') return;
+          Object.entries(value.indicators || {}).forEach(([key, band]) => {
+            if (!indicators[key]) indicators[key] = {};
+            indicators[key][band] = (indicators[key][band] || 0) + 1;
+          });
+        });
+        return { ...base, n: bucket.values.length, statusCounts, indicators };
+      }
       default:
         return base;
     }

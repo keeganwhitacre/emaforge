@@ -7,9 +7,11 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function createProtocolValidator() {
   const VALID_OPERATORS = new Set(["eq", "neq", "gt", "gte", "lt", "lte", "includes"]);
   const VALID_QUESTION_TYPES = new Set([
-    "instruction", "slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate", "page_break"
+    "instruction", "slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate", "place_context", "page_break"
   ]);
-  const RESPONSE_TYPES = new Set(["slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate"]);
+  const RESPONSE_TYPES = new Set(["slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate", "place_context"]);
+  const placeContext = typeof module !== "undefined" && module.exports
+    ? require('./place-context.js') : globalThis.EMAForgePlaceContext;
   const PLACEHOLDER_CONSENT = /researcher action required|replace this placeholder|lorem ipsum/i;
 
   function issue(severity, code, path, message) {
@@ -243,6 +245,12 @@
         if (!Number.isFinite(duration) || duration < 10 || duration > 120) {
           issues.push(issue("error", "heart_rate_duration_invalid", `${path}.duration_sec`, "Heart-rate capture duration must be 10–120 seconds."));
         }
+      }
+      if (question && question.type === "place_context") {
+        if (question.required) issues.push(issue("error", "place_context_optional", `${path}.required`, "Place context must allow participants to skip location access."));
+        if (!question.location_terms_accepted) issues.push(issue("error", "place_context_terms", path, "Review the place-context setup notice before adding this measure."));
+        const datasetError = placeContext.validate(question.location_dataset);
+        if (datasetError) issues.push(issue("error", "place_context_dataset", `${path}.location_dataset`, datasetError));
       }
       if (question && question.type === "body_map") {
         const regions = Array.isArray(question.regions) ? question.regions : [];

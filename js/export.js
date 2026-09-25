@@ -13,6 +13,7 @@
 
 let templates = {
     epatCore: null, runtimeUtils: null, studyBase: null,
+    placeContext: null,
     modOnboarding: null, modEma: null, modEpat: null, modHct: null, modIat: null,
     connectionCheck: null
   };
@@ -26,9 +27,10 @@ async function fetchTemplate(path) {
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetchTemplate('templates/epat-core.js');
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
-  if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260923c');
+  if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260925f');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
-  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925d');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925f');
+  if (!templates.placeContext) templates.placeContext = await fetchTemplate('js/place-context.js?v=20260925a');
   if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
   if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');
   if (!templates.modIat) templates.modIat = await fetchTemplate('templates/module-iat.js');
@@ -73,7 +75,7 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
   studyJs = studyJs.replace('// {{EXPIRY_CHECK}}', () => expiryCheck);
   studyJs = studyJs.replace('// {{PREVIEW_SESSION_FORCE}}', () => previewSessionForce);
 
-  const moduleParts = [templates.modOnboarding, templates.modEma];
+  const moduleParts = [templates.placeContext, templates.modOnboarding, templates.modEma];
   if (cfg.modules?.epat) moduleParts.push(templates.modEpat);
   if (cfg.modules?.hct) moduleParts.push(templates.modHct);
   if (cfg.modules?.iat) moduleParts.push(templates.modIat);

@@ -238,6 +238,10 @@ const DataParser = {
   },
 
   _parseCsvValue(type, raw, numeric) {
+    if (type === "place_context") {
+      try { const parsed = JSON.parse(raw); return parsed && typeof parsed.status === 'string' ? parsed : null; }
+      catch (_) { return null; }
+    }
     if (type === "checkbox" || type === "body_map") return String(raw || "").split(";").filter(Boolean);
     if (type === "affect_grid") {
       const [valence, arousal] = String(raw || "").split(";").map(Number);
