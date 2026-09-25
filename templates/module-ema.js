@@ -792,7 +792,11 @@ const EMA = (function() {
       container.appendChild(wrapper);
     });
 
-    requestAnimationFrame(updateScrollCue);
+    requestAnimationFrame(() => {
+      updateScrollCue();
+      requestAnimationFrame(updateScrollCue);
+    });
+    setTimeout(updateScrollCue, 150);
 
     checkSubmit();
 

@@ -17,16 +17,22 @@ let templates = {
     connectionCheck: null
   };
 
+async function fetchTemplate(path) {
+  const response = await fetch(path, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Could not load runtime template: ${path}`);
+  return response.text();
+}
+
 async function loadTemplates() {
-  if (!templates.epatCore) templates.epatCore = await fetch('templates/epat-core.js').then(r => r.text());
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetch('templates/runtime-utils.js?v=20260924f').then(r => r.text());
-  if (!templates.studyBase) templates.studyBase = await fetch('templates/study-base.js?v=20260923c').then(r => r.text());
-  if (!templates.modOnboarding) templates.modOnboarding = await fetch('templates/module-onboarding.js?v=20260923c').then(r => r.text());
-  if (!templates.modEma) templates.modEma = await fetch('templates/module-ema.js?v=20260924f').then(r => r.text());
-  if (!templates.modEpat) templates.modEpat = await fetch('templates/module-epat.js?v=20260923c').then(r => r.text());
-  if (!templates.modHct) templates.modHct = await fetch('templates/module-hct.js?v=20260923c').then(r => r.text());
-  if (!templates.modIat) templates.modIat = await fetch('templates/module-iat.js').then(r => r.text());
-  if (!templates.connectionCheck) templates.connectionCheck = await fetch('templates/connection-check.html?v=20260922d').then(r => r.text());
+  if (!templates.epatCore) templates.epatCore = await fetchTemplate('templates/epat-core.js');
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
+  if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260923c');
+  if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925b');
+  if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260923c');
+  if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925b');
+  if (!templates.modIat) templates.modIat = await fetchTemplate('templates/module-iat.js');
+  if (!templates.connectionCheck) templates.connectionCheck = await fetchTemplate('templates/connection-check.html?v=20260922d');
 }
 
 function getThemeCSS(theme, accent) {
@@ -503,7 +509,7 @@ function getRuntimeCss() {
     .input-group input:focus { border-color: var(--accent); background: var(--bg-elevated); }
     .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
     .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
-    .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding: 8px 4px; }
+    .ema-item-container { min-height: 0; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; padding: 8px 4px 34px; }
     .ema-scroll-cue { position: relative; z-index: 4; align-self: center; margin: -31px 0 5px; padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--bg) 94%, transparent); box-shadow: 0 4px 14px rgba(0,0,0,.12); color: var(--accent); font: 700 .72rem var(--font); cursor: pointer; animation: scroll-cue-bob 1.4s ease-in-out infinite; }
     .ema-scroll-cue[hidden] { display: none; }
     @keyframes scroll-cue-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
