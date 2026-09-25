@@ -166,6 +166,12 @@ async function installStudy(request, env) {
   }
   const config = extractStudyConfig(html);
   if (!config || typeof config !== 'object') return json({ error: 'The embedded EMA Forge configuration could not be read' }, 400);
+  const previous = await readJson(env, 'study/current-config.json', null);
+  const previousName = String(previous?.study?.name || '').trim();
+  const nextName = String(config?.study?.name || '').trim();
+  if (previousName && nextName && previousName.toLowerCase() !== nextName.toLowerCase()) {
+    return json({ error: `This deployment already hosts “${previousName}”. Create a separate Cloudflare Worker and R2 bucket for “${nextName}” so their responses stay separate.` }, 409);
+  }
   const now = new Date().toISOString();
   const digest = await sha256(html);
   const versionKey = `study/versions/${now.replace(/[:.]/g, '-')}-${digest.slice(0, 12)}.html`;

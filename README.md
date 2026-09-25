@@ -9,12 +9,14 @@ Move from a draft to a functioning study in one workflow: choose a protocol or s
 ## Create a study
 
 1. Enter study details and replace the consent template with approved text.
-2. In **Schedule**, set your session times. A new study begins with an ePAT session; add survey questions, PPG heart-rate capture, or other tasks as needed. Reorder steps in each session.
+2. In **Schedule**, set your session times. A new draft begins with one simple mood rating; replace it, add more questions, or add PPG heart-rate capture and physiology tasks as needed. Reorder steps in each session.
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
 4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password. Twilio is optional and can be connected inside Study Admin after deployment. The template enables its `workers.dev` address and provisions private R2 storage.
 5. Copy the Worker address Cloudflare displays and paste it into **Review & Deploy**. A bare address such as `my-study.workers.dev` is accepted and normalized to HTTPS. Open `/admin`; a new deployment opens directly on **Install study**. Upload the prepared `-cloudflare-study.html` file.
 6. Run `/check.html`. It reports a clear pass or failure and saves its synthetic record under `setup-tests/`, never in participant response counts or exports. Then complete one full session on a supported phone and confirm it appears in Admin.
 7. Use `/admin` to monitor responses, run browser-local descriptive analysis, create participant links, manage optional Twilio delivery, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
+
+Each Cloudflare deployment hosts **one study**. You can update that study through its protected admin page, but run a different study with a separate Worker and private R2 bucket in the same Cloudflare account. Reusing one Worker for multiple studies would mix response and roster records; the admin page rejects a differently named study.
 
 ## Cost and study approval
 

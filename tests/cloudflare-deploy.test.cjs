@@ -92,6 +92,22 @@ test("Cloudflare template requires its admin secret to install an EMA Forge stud
   assert.ok([...bucket.objects.keys()].some(key => key.startsWith("study/versions/")));
 });
 
+test("a second named study cannot replace an occupied study host", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const studyHtml = name => `<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = ${JSON.stringify({ study: { name } })};</script>`;
+  const install = name => worker.fetch(adminRequest("https://study.example/admin/install", {
+    method: "POST", headers: { "Content-Type": "text/html" }, body: studyHtml(name)
+  }), environment);
+  assert.equal((await install("Daily Rhythm")).status, 200);
+  assert.equal((await install("Daily Rhythm")).status, 200, "updates of the same study remain possible");
+  const other = await install("Stress Study");
+  assert.equal(other.status, 409);
+  assert.match((await other.json()).error, /separate Cloudflare Worker and R2 bucket/);
+  assert.match(await (await worker.fetch(new Request("https://study.example/"), environment)).text(), /Daily Rhythm/);
+});
+
 test("Cloudflare admin exposes a protected control center and validated roster", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

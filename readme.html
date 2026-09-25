@@ -2985,6 +2985,8 @@ iat_trials &lt;- sessions |&gt;
   treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The private bucket has
   no public read route. Study installation, roster management, monitoring, browser-local analysis, and exports require the deployment's admin token.</p>
 
+<p><strong>One deployment per study.</strong> A Worker binds one private R2 bucket and maintains one active study, roster, and response collection. Deploy another Worker with a different bucket for a separate study in the same Cloudflare account. Reinstalling a protocol for the current study preserves historical responses; installing a differently named study is blocked so those records are not mixed.</p>
+
 <div class="callout info">
   <div class="callout-title">Fast path: deploy, install, and manage</div>
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.

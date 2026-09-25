@@ -2,7 +2,21 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const vm = require("node:vm");
+const path = require("node:path");
 const validator = require("../js/protocol-validator.js");
+
+test("a fresh builder starts with a survey rather than a camera task", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../js/state.js"), "utf8");
+  const draft = vm.runInNewContext(`${source}\nstate`, {});
+  const first = draft.ema.scheduling.windows[0].phase_sequence[0];
+  assert.equal(first.kind, "ema");
+  assert.ok(first.question_ids.length > 0);
+  assert.ok(draft.ema.questions.some(question => first.question_ids.includes(question.id)));
+  assert.equal(draft.modules.find(module => module.id === "epat").enabled, false);
+  assert.equal(draft.onboarding.enabled, true);
+});
 
 function validConfig() {
   return {

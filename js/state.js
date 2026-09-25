@@ -62,7 +62,7 @@ let state = {
     label: "ePAT",
     desc: "Ecological Phase Adjustment Task — objective cardiac interoceptive accuracy via PPG. Requires rear camera + torch on participant device.",
     badge: "Beta",
-    enabled: true,
+    enabled: false,
     settings: {
     trials: 20,
     trial_duration_sec: 30,
@@ -137,14 +137,17 @@ let state = {
   ema: {
     randomize_questions: false,
     allow_back_navigation: false,
-    questions: [],
+    questions: [
+      { id: "q_daily_mood", type: "slider", text: "How are you feeling right now?", required: true,
+        min: 0, max: 10, step: 1, unit: null, anchors: ["Very bad", "Very good"] }
+    ],
     scheduling: {
       study_days: 14,
       daily_prompts: 1,
       days_of_week: [1,2,3,4,5],
       windows: [
         { id: "w1", label: "Daily session", start: "09:00", end: "11:00",
-          phase_sequence: [{ kind: "task", id: "epat", condition: null }] }
+          phase_sequence: [{ kind: "ema", id: "s_daily", question_ids: ["q_daily_mood"] }] }
       ],
       timing: { expiry_minutes: 60, grace_minutes: 10 }
     }
