@@ -1225,7 +1225,7 @@
           <!-- ========================================================= -->
 
           <h2 id="quickstart">Quick Start — 5 minutes to a working draft</h2>
-          <p>You do not need to install anything. Builder and Analyze are hosted and ready to use.</p>
+          <p>Go from an idea to a hosted web EMA study with surveys, branching, and optional camera-based physiology. Builder and Analyze need no installation or coding; Cloudflare deploys the participant study, private response storage, and study admin into your account. A draft can take minutes; review consent, measures, device support, and data handling before enrolling anyone.</p>
 
           <ol>
             <li>Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank"
@@ -1236,7 +1236,7 @@
               burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
             <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and select <strong>Download prepared study</strong>.</li>
             <li>Select <strong>Deploy to Cloudflare</strong>. Replace the masked example <code>ADMIN_TOKEN</code> with
-              your own 32+ character password. Twilio is optional and is configured later. Copy the resulting
+              your own 32+ character password. Twilio fields are optional: enter your own credentials or leave them blank and configure them later. Copy the resulting
               <code>workers.dev</code> address; EMA Forge accepts it with or without <code>https://</code>.</li>
             <li>Paste the address into EMA Forge and select <strong>Open admin</strong>. A new deployment opens directly
               on <strong>Install study</strong>; upload the prepared file.</li>
@@ -2990,7 +2990,7 @@ iat_trials &lt;- sessions |&gt;
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
     Cloudflare clones the public template, provisions and binds private R2 storage, and shows a masked example
     <code>ADMIN_TOKEN</code>. Replace that example with your own 32+ character password; EMA Forge cannot recover it.
-    Twilio is optional and is added later. The template enables its <code>workers.dev</code> route automatically.
+    Twilio fields are optional and blank; fill them with your own credentials or configure them later. The template enables its <code>workers.dev</code> route automatically.
     Copy the address Cloudflare shows and paste it into EMA Forge under <strong>Hosted study URL</strong>; a bare hostname
     or full HTTPS URL both work. Select <strong>Open admin</strong>. A new deployment opens directly on
     <strong>Install study</strong>; upload the downloaded file. EMA Forge never receives
@@ -3537,7 +3537,7 @@ export const handler = async (event) =&gt; {
             </div>
           </div>
 
-          <p>Twilio is configured inside the deployed study's protected <code>/admin</code> workspace. Google Sheets
+          <p>Twilio credentials are entered as optional Cloudflare secrets during deployment or later in Worker settings. Delivery is managed inside the protected <code>/admin</code> workspace. Google Sheets
             and Apps Script are no longer part of the recommended path. The Worker reads the installed EMA Forge
             schedule, evaluates it in each participant's IANA timezone every five minutes, sends an individualized
             link, and stores an auditable dispatch record separately from response data.</p>
@@ -3545,8 +3545,8 @@ export const handler = async (event) =&gt; {
           <h3>Setup</h3>
           <ol>
             <li>Complete the normal Cloudflare deployment and install the prepared study at <code>/admin</code>.</li>
-            <li>In Cloudflare, open <strong>Worker → Settings → Variables and Secrets</strong>.</li>
-            <li>Add encrypted secrets named <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and either
+            <li>If you left the optional Twilio fields blank during deployment, open <strong>Worker → Settings → Variables and Secrets</strong> in Cloudflare.</li>
+            <li>Enter or add encrypted secrets named <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, and either
               <code>TWILIO_FROM_NUMBER</code> or <code>TWILIO_MESSAGING_SERVICE_SID</code>.</li>
             <li>In Twilio, set the incoming-message webhook to
               <code>https://&lt;your-study-host&gt;/twilio/incoming</code> using POST. The Worker validates Twilio's

@@ -5,7 +5,7 @@ This template deploys a complete EMA Forge study workspace into **your Cloudflar
 ## Deploy
 
 1. In EMA Forge, open **Review & Deploy** and download the prepared Cloudflare study file.
-2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio is optional and is not requested during initial deployment. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
+2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio fields are optional: enter your own credentials during deployment or leave them blank and configure them later. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
 3. The template enables its `workers.dev` route. Copy the address Cloudflare shows after deployment. Return to EMA Forge and paste either `your-study.workers.dev` or the full `https://…` URL under **Hosted study URL**.
 4. Choose **Open admin**, enter the same token, and upload the prepared `.html` file. A new deployment opens directly on the install screen.
 5. Open `/check.html`. It reports pass/fail in plain language and stores the synthetic check under `setup-tests/`; setup checks do not count as participant sessions. Then complete a real phone session and confirm it appears in Overview and Analyze.
@@ -15,7 +15,7 @@ If `/admin` reports **Unauthorized**, do not recreate the deployment. In Cloudfl
 
 ## Optional Twilio delivery
 
-The study works without Twilio; participant links can always be distributed manually. Twilio placeholder credentials are intentionally not created during deployment. To enable SMS later:
+The study works without Twilio; participant links can always be distributed manually. The deployment form has optional blank Twilio fields. Enter your own credentials there to enable SMS during deployment. If you leave them blank, enable SMS later:
 
 1. Open **Worker → Settings → Variables and Secrets** in Cloudflare.
 2. Add encrypted secrets named `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and either `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`.

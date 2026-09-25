@@ -15,6 +15,18 @@
       "ADMIN_TOKEN": {
         "description": "REPLACE the masked example value with your own unique password of at least 32 characters. You will enter it on /admin. EMA Forge never receives or recovers it."
       },
+      "TWILIO_ACCOUNT_SID": {
+        "description": "Optional SMS: paste your Twilio Account SID (starts AC). Leave blank if you will share participant links yourself."
+      },
+      "TWILIO_AUTH_TOKEN": {
+        "description": "Optional SMS: paste your Twilio Auth Token as an encrypted secret. Never use a sample value."
+      },
+      "TWILIO_FROM_NUMBER": {
+        "description": "Optional SMS: your Twilio sending number in +15551234567 format. Leave blank if using a Messaging Service."
+      },
+      "TWILIO_MESSAGING_SERVICE_SID": {
+        "description": "Optional SMS alternative to a sending number: Twilio Messaging Service SID (starts MG). Leave blank when using a sending number."
+      },
       "STUDY_DATA": {
         "description": "Private R2 storage for the installed study, roster, dispatch audit trail, and participant response records. Do not enable public bucket access."
       }
