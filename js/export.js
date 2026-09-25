@@ -222,7 +222,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <h2 id="ema-greeting" style="margin-bottom:12px;font-weight:600;color:var(--fg);">Check-In</h2>
     <div class="ema-progress"><div class="ema-progress-fill" id="ema-progress-fill" style="width:0%"></div></div>
     <div class="ema-item-container" id="ema-single-container"></div>
-    <button class="ema-scroll-cue" id="ema-scroll-cue" type="button" hidden>More below <span aria-hidden="true">↓</span></button>
+    <button class="ema-scroll-cue" id="ema-scroll-cue" type="button" hidden><span>Scroll for more</span><span aria-hidden="true">↓</span></button>
     <div class="ema-navigation">
       <button class="btn btn-secondary" id="ema-back-btn" type="button" hidden>Back</button>
       <button class="btn btn-primary" id="ema-next-btn" type="button" disabled>Next</button>
@@ -510,9 +510,9 @@ function getRuntimeCss() {
     .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
     .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
     .ema-item-container { min-height: 0; flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; padding: 8px 4px 34px; }
-    .ema-scroll-cue { position: relative; z-index: 4; align-self: center; margin: -31px 0 5px; padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--bg) 94%, transparent); box-shadow: 0 4px 14px rgba(0,0,0,.12); color: var(--accent); font: 700 .72rem var(--font); cursor: pointer; animation: scroll-cue-bob 1.4s ease-in-out infinite; }
+    .ema-scroll-cue { position: relative; z-index: 4; align-self: stretch; display: flex; min-height: 38px; align-items: flex-end; justify-content: center; gap: 5px; margin: -38px 0 4px; padding: 12px 8px 2px; border: 0; border-radius: 0; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg) 96%, transparent) 58%); box-shadow: none; color: var(--fg-muted); font: 650 .7rem var(--font); letter-spacing: .01em; cursor: pointer; }
+    .ema-scroll-cue:hover, .ema-scroll-cue:focus-visible { color: var(--accent); outline: 0; }
     .ema-scroll-cue[hidden] { display: none; }
-    @keyframes scroll-cue-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
     .ema-navigation { display: flex; gap: 10px; margin-top: 28px; flex-shrink: 0; }
     .ema-navigation .btn { min-height: 56px; }
     .ema-navigation #ema-back-btn { flex: 0 0 auto; min-width: 96px; }
