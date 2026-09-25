@@ -50,8 +50,10 @@ function renderMeasureComposer() {
 function renderMeasureTypeOptions(select) {
   if (!select) return;
   const survey = [
+    ['instruction', 'Instruction screen'],
     ['slider', 'Rating scale'], ['choice', 'Single choice'], ['text', 'Open text'],
     ['numeric', 'Number'], ['checkbox', 'Multiple choice'], ['affect_grid', 'Affect grid'],
+    ['body_map', 'Body map'],
     ['page_break', 'Page break']
   ];
   const stable = (state.modules || []).filter(module => module.badge !== 'Experimental');
@@ -143,7 +145,7 @@ function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
   const pipeSources = entries.slice(0, flowIndex)
     .filter(candidate => candidate.kind === 'question')
     .map(candidate => state.ema.questions.find(item => item.id === candidate.questionId))
-    .filter(candidate => candidate && candidate.type !== 'page_break' && candidate.type !== 'affect_grid');
+    .filter(candidate => candidate && !['page_break', 'instruction', 'affect_grid'].includes(candidate.type));
   const card = buildQCard(question, questionIndex, flowIndex + 1, { flow: true, pipeSources });
   card.classList.add('flow-item', 'flow-question-card');
   const header = card.querySelector('.q-header');
@@ -202,7 +204,8 @@ function wireQuestionFlowReordering(card, window, entries, entry, flowIndex) {
 
 function measureTypeLabel(type) {
   return ({ slider: 'Rating scale', choice: 'Single choice', text: 'Open text', numeric: 'Number',
-    checkbox: 'Multiple choice', affect_grid: 'Affect grid', heart_rate: 'PPG heart-rate capture' })[type] || 'Survey item';
+    checkbox: 'Multiple choice', affect_grid: 'Affect grid', body_map: 'Body map',
+    instruction: 'Instruction screen', heart_rate: 'PPG heart-rate capture' })[type] || 'Survey item';
 }
 
 function commitMeasureFlow(window, entries) {
@@ -314,6 +317,11 @@ function buildQCard(q, index, displayNum, options = {}) {
     if (!q.report_as)    q.report_as    = 'bpm';
     if (q.display_bpm === undefined) q.display_bpm = true;   // backward-compat default
   }
+  if (q.type === 'body_map') {
+    if (!['single', 'multiple'].includes(q.selection_mode)) q.selection_mode = 'multiple';
+    if (!Array.isArray(q.regions) || !q.regions.length) q.regions = defaultBodyRegions();
+    if (q.allow_none === undefined) q.allow_none = true;
+  }
 
   if (q.type === 'page_break') {
     card.classList.add('page-break');
@@ -331,6 +339,8 @@ function buildQCard(q, index, displayNum, options = {}) {
   if (q.type === 'choice')      typeLabel = 'Single Choice';
   if (q.type === 'checkbox')    typeLabel = 'Multi Select';
   if (q.type === 'affect_grid') typeLabel = 'Affect Grid';
+  if (q.type === 'body_map')    typeLabel = 'Body Map';
+  if (q.type === 'instruction') typeLabel = 'Instruction';
   if (q.type === 'heart_rate')  typeLabel = 'Heart Rate';
 
   card.innerHTML = `
@@ -344,16 +354,19 @@ function buildQCard(q, index, displayNum, options = {}) {
     <div class="q-body">
       <div class="field-group" style="padding-top:10px">
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <label class="field-label">Label / Caption</label>
+            <label class="field-label">${q.type === 'instruction' ? 'Instruction text' : 'Label / Caption'}</label>
             <span style="font-size: 10px; color: var(--fg-muted); font-family: monospace;">ID: ${q.id}</span>
         </div>
-        <input type="text" class="q-text" value="${escH(q.text)}" placeholder="${q.type === 'heart_rate' ? 'e.g. Measuring your heart rate…' : 'Enter question…'}">
+        <input type="text" class="q-text" value="${escH(q.text)}" placeholder="${q.type === 'instruction' ? 'Tell participants what happens next…' : q.type === 'heart_rate' ? 'e.g. Measuring your heart rate…' : 'Enter question…'}">
       </div>
 
       ${q.type === 'slider'                              ? buildSliderFields(q)     : ''}
       ${(q.type === 'choice' || q.type === 'checkbox')   ? buildChoiceFields(q)     : ''}
       ${q.type === 'affect_grid'                         ? buildAffectGridFields(q) : ''}
+      ${q.type === 'body_map'                            ? buildBodyMapFields(q)    : ''}
       ${q.type === 'heart_rate'                          ? buildHeartRateFields(q)  : ''}
+      ${q.type === 'instruction'
+        ? '<div class="field-hint" style="margin-top:6px">Shown on its own screen. It collects no response and can be personalized or conditional.</div>' : ''}
       ${(q.type === 'text' || q.type === 'numeric')
         ? `<div class="field-hint" style="margin-top:6px">Participants type a ${q.type === 'numeric' ? 'number' : 'text'} response.</div>` : ''}
 
@@ -363,13 +376,13 @@ function buildQCard(q, index, displayNum, options = {}) {
         <label class="field-label">Skip Logic</label>
         ${buildConditionBlock(q, index)}
       </div>
-      <div class="toggle-row">
+      ${q.type !== 'instruction' ? `<div class="toggle-row">
         <span class="toggle-label">Required</span>
         <label class="toggle">
           <input type="checkbox" class="q-required" ${q.required ? 'checked' : ''}>
           <span class="toggle-track"></span>
         </label>
-      </div>
+      </div>` : ''}
       <div class="q-footer">
         <button class="q-del-btn-full">Delete Question</button>
       </div>
@@ -400,10 +413,42 @@ function buildQCard(q, index, displayNum, options = {}) {
   if (q.type === 'slider')                              bindSliderFields(card, q);
   if (q.type === 'choice' || q.type === 'checkbox')     bindChoiceFields(card, q);
   if (q.type === 'affect_grid')                         bindAffectGridFields(card, q);
+  if (q.type === 'body_map')                            bindBodyMapFields(card, q);
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
 
   bindConditionBlock(card, q, index);
   return card;
+}
+
+function defaultBodyRegions() {
+  return [
+    ['head', 'Head'], ['neck', 'Neck or throat'], ['chest', 'Chest'],
+    ['abdomen', 'Abdomen'], ['arms', 'Arms'], ['hands', 'Hands or fingers'],
+    ['legs', 'Legs'], ['feet', 'Feet'], ['whole_body', 'Whole body'],
+    ['other', 'Somewhere else']
+  ].map(([id, label]) => ({ id, label }));
+}
+
+function buildBodyMapFields(q) {
+  const rows = (q.regions || []).map((region, index) => `
+    <div class="option-row body-region-row" data-ri="${index}"><code>${escH(region.id)}</code>
+      <input type="text" class="body-region-label" value="${escH(region.label)}" aria-label="Label for ${escH(region.id)}">
+    </div>`).join('');
+  return `
+    <div class="field-hint" style="margin-top:6px;margin-bottom:8px;">Participants select named regions on an accessible body diagram. Stable region IDs are saved for analysis.</div>
+    <div class="q-row-2">
+      <div class="field-group"><label class="field-label">Selection</label><select class="body-map-mode"><option value="multiple" ${q.selection_mode !== 'single' ? 'selected' : ''}>Multiple regions</option><option value="single" ${q.selection_mode === 'single' ? 'selected' : ''}>One region</option></select></div>
+      <div class="toggle-row"><span class="toggle-label">Allow “None”</span><label class="toggle"><input type="checkbox" class="body-map-none" ${q.allow_none !== false ? 'checked' : ''}><span class="toggle-track"></span></label></div>
+    </div>
+    <details class="body-map-labels"><summary>Edit region labels</summary><div class="options-list">${rows}</div></details>`;
+}
+
+function bindBodyMapFields(card, q) {
+  card.querySelector('.body-map-mode')?.addEventListener('change', event => { q.selection_mode = event.target.value; schedulePreview(); });
+  card.querySelector('.body-map-none')?.addEventListener('change', event => { q.allow_none = event.target.checked; schedulePreview(); });
+  card.querySelectorAll('.body-region-label').forEach((input, index) => input.addEventListener('input', event => {
+    q.regions[index].label = event.target.value; schedulePreview();
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -569,7 +614,7 @@ function bindAffectGridFields(card, q) {
 // Skip Logic / Compound Condition block
 // ---------------------------------------------------------------------------
 function buildConditionBlock(q, index) {
-  const priors = state.ema.questions.slice(0, index).filter(p => p.type !== 'page_break' && p.type !== 'checkbox' && p.type !== 'affect_grid');
+  const priors = state.ema.questions.slice(0, index).filter(p => !['page_break', 'instruction', 'checkbox', 'affect_grid'].includes(p.type));
   if (priors.length === 0) return `<div style="font-size:11px;color:var(--fg-3);padding:4px 0">No prior questions available.</div>`;
 
   // Migrate legacy condition to compound array
@@ -780,6 +825,13 @@ document.getElementById('add-question-select').addEventListener('change', event 
     text: 'Right now, how are you feeling?', valence_labels: ['Unpleasant', 'Pleasant'],
     arousal_labels: ['Deactivated', 'Activated'], show_quadrant_labels: true
   });
+  if (type === 'instruction') Object.assign(question, {
+    text: 'Before you continue, please read the following instructions carefully.', required: false
+  });
+  if (type === 'body_map') Object.assign(question, {
+    text: 'Where in your body do you notice this sensation?', selection_mode: 'multiple',
+    regions: defaultBodyRegions(), allow_none: true
+  });
   if (type === 'heart_rate') Object.assign(question, {
     text: 'Measuring your heart rate…', duration_sec: 30, report_as: 'bpm'
   });
@@ -787,7 +839,7 @@ document.getElementById('add-question-select').addEventListener('change', event 
   addQ(question, targetStep);
   previewSession = targetWindow.id;
   renderPreviewTabs();
-  setMeasureFeedback(`${type === 'heart_rate' ? 'PPG heart-rate capture' : 'Survey item'} added to ${targetWindow.label}.`);
+  setMeasureFeedback(`${measureTypeLabel(type)} added to ${targetWindow.label}.`);
   event.target.value = '';
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {

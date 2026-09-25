@@ -274,7 +274,7 @@ const Upload = {
   _buildQuestionIndex(cfg) {
     const idx = {};
     (cfg.ema?.questions || []).forEach(q => {
-      if (q.type !== 'page_break') idx[q.id] = q;
+      if (q.type !== 'page_break' && q.type !== 'instruction') idx[q.id] = q;
     });
     return idx;
   },

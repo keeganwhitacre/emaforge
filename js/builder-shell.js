@@ -80,7 +80,7 @@ function renderBuilderShell() {
   document.getElementById("builder-project-name").textContent = name || "Untitled study";
 
   const questions = state.ema.questions || [];
-  const count = questions.filter(q => q.type !== "page_break").length;
+  const count = questions.filter(q => q.type !== "page_break" && q.type !== "instruction").length;
   const taskCount = state.ema.scheduling.windows.reduce((total, w) =>
     total + (w.phase_sequence || []).filter(step => step.kind === "task").length, 0) +
     questions.filter(question => question.type === "heart_rate").length;

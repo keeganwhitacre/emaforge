@@ -51,6 +51,24 @@ test("simulation follows question branching and preserves presented versus skipp
   assert.equal(survey.skippedQuestions[0].questionId, "q3");
 });
 
+test("simulation omits instructions and generates body-map region data", () => {
+  const config = {
+    study: { name: "Body map test" }, modules: [],
+    ema: {
+      questions: [
+        { id: "intro", type: "instruction", text: "Take a breath." },
+        { id: "body", type: "body_map", text: "Where?", selection_mode: "multiple", regions: [{ id: "head", label: "Head" }, { id: "chest", label: "Chest" }] }
+      ],
+      scheduling: { study_days: 1, windows: [{ id: "w1", start: "12:00", phase_sequence: [{ kind: "ema", id: "survey", question_ids: ["intro", "body"] }] }] }
+    }
+  };
+  const survey = Simulator.simulate(config, { participants: 1, days: 1, completionRate: 1, missingnessRate: 0, seed: "body" }).sessions[0].data[0];
+  assert.deepEqual(survey.eligibleQuestionIds, ["body"]);
+  assert.deepEqual(survey.presentationOrder[0], ["body"]);
+  assert.equal(survey.responses.intro, undefined);
+  assert.ok(Array.isArray(survey.responses.body.value));
+});
+
 test("interoception protocol simulation generates ePAT trial envelopes", () => {
   const config = loadProtocol("interoception-daily-life");
   const result = Simulator.simulate(config, { participants: 2, days: 1, completionRate: 1, missingnessRate: 0, seed: "physiology" });

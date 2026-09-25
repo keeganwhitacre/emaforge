@@ -238,7 +238,7 @@ const DataParser = {
   },
 
   _parseCsvValue(type, raw, numeric) {
-    if (type === "checkbox") return String(raw || "").split(";").filter(Boolean);
+    if (type === "checkbox" || type === "body_map") return String(raw || "").split(";").filter(Boolean);
     if (type === "affect_grid") {
       const [valence, arousal] = String(raw || "").split(";").map(Number);
       return Number.isFinite(valence) && Number.isFinite(arousal) ? { valence, arousal } : raw;

@@ -37,7 +37,7 @@ const ContentStats = {
   // -----------------------------------------------------------------
   compute(sessions, studyConfig) {
     const cfg = studyConfig || {};
-    const questions = (cfg.ema?.questions || []).filter(q => q.type !== 'page_break');
+    const questions = (cfg.ema?.questions || []).filter(q => q.type !== 'page_break' && q.type !== 'instruction');
 
     // Build a per-question record collector.
     const byQ = {};
@@ -186,7 +186,8 @@ const ContentStats = {
       case 'choice': {
         return String(raw);
       }
-      case 'checkbox': {
+      case 'checkbox':
+      case 'body_map': {
         if (Array.isArray(raw)) return raw.map(String);
         // CSV serialised as "a;b;c"
         return String(raw).split(';').filter(Boolean);
@@ -248,6 +249,13 @@ const ContentStats = {
         return { ...base, ...this._summariseCategorical(bucket, [q.options || []].flat()) };
       case 'checkbox':
         return { ...base, ...this._summariseMulti(bucket, [q.options || []].flat()) };
+      case 'body_map': {
+        const labels = Object.fromEntries((q.regions || []).map(region => [region.id, region.label]));
+        if (q.allow_none !== false) labels.none = 'None';
+        const multi = this._summariseMulti(bucket, Object.keys(labels));
+        multi.distribution = multi.distribution.map(item => ({ ...item, option: labels[item.option] || item.option }));
+        return { ...base, ...multi };
+      }
       case 'text':
         return { ...base, ...this._summariseText(bucket) };
       case 'affect_grid':

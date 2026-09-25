@@ -318,7 +318,7 @@ function buildConditionRow(step, w) {
   function getQuestionOptions(selectedId) {
     const precedingIds = new Set(w.phase_sequence.slice(0, w.phase_sequence.indexOf(step))
       .filter(s => s.kind === 'ema').flatMap(s => s.question_ids || []));
-    const allQ = state.ema.questions.filter(q => precedingIds.has(q.id) && q.type !== 'page_break' && q.type !== 'checkbox' && q.type !== 'choice' && q.type !== 'affect_grid');
+    const allQ = state.ema.questions.filter(q => precedingIds.has(q.id) && !['page_break', 'instruction', 'checkbox', 'choice', 'affect_grid'].includes(q.type));
     return allQ.map(q => `<option value="${q.id}" ${selectedId===q.id?'selected':''}>${escH(q.text?.slice(0,40)||q.id)}</option>`).join('');
   }
 

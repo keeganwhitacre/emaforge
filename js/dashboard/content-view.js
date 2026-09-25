@@ -102,12 +102,12 @@ const ContentView = {
     const typeLabel = {
       slider: 'Slider', numeric: 'Number', choice: 'Single Choice',
       checkbox: 'Multi Select', text: 'Text',
-      affect_grid: 'Affect Grid', heart_rate: 'Heart Rate'
+      affect_grid: 'Affect Grid', body_map: 'Body Map', heart_rate: 'Heart Rate'
     }[s.type] || s.type;
 
     const headline = this._cardHeadline(s);
     const canvasId = `qchart-${this._domId(s.id)}`;
-    const showChart = ['slider', 'numeric', 'choice', 'checkbox', 'heart_rate', 'affect_grid'].includes(s.type);
+    const showChart = ['slider', 'numeric', 'choice', 'checkbox', 'body_map', 'heart_rate', 'affect_grid'].includes(s.type);
 
     return `
       <div class="q-stat-card" data-qid="${this._esc(s.id)}">
@@ -151,7 +151,8 @@ const ContentView = {
           <span class="q-stat-dim">${this._fmtPct(top.pct)} chose · n=${s.n}</span>
         `;
       }
-      case 'checkbox': {
+      case 'checkbox':
+      case 'body_map': {
         if (s.n === 0) return `<span class="q-stat-dim">no responses</span>`;
         const top = s.distribution[0];
         return `
@@ -237,7 +238,7 @@ const ContentView = {
         },
         options: common
       });
-    } else if (s.type === 'choice' || s.type === 'checkbox') {
+    } else if (s.type === 'choice' || s.type === 'checkbox' || s.type === 'body_map') {
       const labels = s.distribution.map(d => d.option);
       const data = s.distribution.map(d => d.n);
       chart = new Chart(ctx, {

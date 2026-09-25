@@ -508,6 +508,8 @@ function getRuntimeCss() {
     .ema-navigation #ema-back-btn { flex: 0 0 auto; min-width: 96px; }
     .ema-navigation #ema-next-btn { flex: 1 1 auto; }
     .ema-question { font-size: 1.15rem; font-weight: 500; color: var(--fg); margin-bottom: 24px; line-height: 1.4; text-align: left; }
+    .ema-instruction { min-height: 55%; display: flex; align-items: center; justify-content: center; margin: 0 !important; }
+    .ema-instruction-text { max-width: 32rem; margin: 0; font-size: 1.35rem; line-height: 1.55; text-align: center; white-space: pre-line; }
     .slider-group { display: flex; flex-direction: column; gap: 12px; padding: 0 4px; }
     .slider-val-display { font-size: 2.2rem; font-weight: 600; color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
     .range-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; background: var(--bg-elevated); border-radius: 3px; outline: none; }
@@ -598,6 +600,14 @@ function getRuntimeCss() {
     .training-status { text-align: center; font-size: 0.95rem; color: var(--fg-muted); min-height: 1.4em; transition: color 0.3s; flex-shrink: 0; margin-bottom: 8px; }
     .training-status.aligned { color: var(--accent-green); }
     .affect-grid-container { width: 100%; max-width: 360px; margin: 0 auto; }
+    .body-map { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 18px; align-items: center; max-width: 430px; margin: 0 auto; }
+    .body-map-figure svg { display: block; width: 100%; max-height: 330px; overflow: visible; }
+    .body-map-figure [data-region] { fill: var(--bg-elevated); stroke: var(--border); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; transition: fill .15s, stroke .15s; }
+    .body-map-figure [data-region].selected { fill: color-mix(in srgb, var(--accent) 35%, var(--bg-elevated)); stroke: var(--accent); }
+    .body-map-regions { display: grid; gap: 7px; }
+    .body-region-btn { min-height: 38px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); color: var(--fg); font: 500 .82rem var(--font); text-align: left; cursor: pointer; }
+    .body-region-btn.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--bg-surface)); color: var(--accent); }
+    @media (max-width: 370px) { .body-map { grid-template-columns: 110px 1fr; gap: 12px; } .body-region-btn { font-size: .75rem; } }
   `;
 }
 

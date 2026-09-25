@@ -7,8 +7,9 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function createProtocolValidator() {
   const VALID_OPERATORS = new Set(["eq", "neq", "gt", "gte", "lt", "lte", "includes"]);
   const VALID_QUESTION_TYPES = new Set([
-    "slider", "choice", "checkbox", "text", "numeric", "affect_grid", "heart_rate", "page_break"
+    "instruction", "slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate", "page_break"
   ]);
+  const RESPONSE_TYPES = new Set(["slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate"]);
   const PLACEHOLDER_CONSENT = /researcher action required|replace this placeholder|lorem ipsum/i;
 
   function issue(severity, code, path, message) {
@@ -240,8 +241,19 @@
           issues.push(issue("error", "heart_rate_duration_invalid", `${path}.duration_sec`, "Heart-rate capture duration must be 10–120 seconds."));
         }
       }
+      if (question && question.type === "body_map") {
+        const regions = Array.isArray(question.regions) ? question.regions : [];
+        const ids = regions.map(region => String(region && region.id || "").trim());
+        const labels = regions.map(region => String(region && region.label || "").trim());
+        if (!["single", "multiple"].includes(question.selection_mode)) {
+          issues.push(issue("error", "body_map_mode_invalid", `${path}.selection_mode`, "Body map selection must be single or multiple."));
+        }
+        if (regions.length < 2 || ids.some(id => !id) || labels.some(label => !label) || new Set(ids).size !== ids.length) {
+          issues.push(issue("error", "body_map_regions_invalid", `${path}.regions`, "Body maps need at least two uniquely identified, labeled regions."));
+        }
+      }
       validateCondition(question && question.condition, priorQuestionIds, `${path}.condition`, issues);
-      if (question && question.type !== "page_break" && question.id) priorQuestionIds.add(question.id);
+      if (question && RESPONSE_TYPES.has(question.type) && question.id) priorQuestionIds.add(question.id);
     });
 
     const surveyStepIds = new Set();
@@ -286,7 +298,7 @@
               `session "${window.label || window.id}"`,
               issues
             );
-            availableResponses.add(question.id);
+            if (RESPONSE_TYPES.has(question.type)) availableResponses.add(question.id);
           });
           return;
         }

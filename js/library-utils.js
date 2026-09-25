@@ -7,7 +7,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function createLibraryUtils() {
   const ITEM_KINDS = new Set(['protocol', 'question_pack', 'task_preset']);
   const PERSONAL_LIBRARY_KEY = 'ema_forge_personal_library_v1';
-  const QUESTION_TYPES = new Set(['slider', 'choice', 'checkbox', 'text', 'numeric', 'affect_grid', 'heart_rate', 'page_break']);
+  const QUESTION_TYPES = new Set(['instruction', 'slider', 'choice', 'checkbox', 'text', 'numeric', 'affect_grid', 'body_map', 'heart_rate', 'page_break']);
   const TASK_IDS = new Set(['epat', 'hct', 'iat']);
   const TASK_SETTING_KEYS = {
     epat: new Set(['trials', 'trial_duration_sec', 'retry_budget', 'sqi_threshold', 'confidence_ratings', 'two_phase_practice', 'body_map']),

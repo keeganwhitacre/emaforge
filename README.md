@@ -21,7 +21,7 @@ The library is intentionally simple: every item is versioned, inspectable JSON i
 
 ## One ordered measure flow
 
-The Measures screen treats survey questions, PPG capture, ePAT, HCT, and every registered task module as peers in one draggable session list. A physiology task creates its own participant-screen boundary automatically. For example, dragging ePAT between two questions is compiled internally as `survey → ePAT → survey`; researchers do not have to build or name those phases. Page breaks are only needed when splitting adjacent survey questions across screens.
+The Measures screen treats survey questions, instruction screens, body maps, PPG capture, ePAT, HCT, and every registered task module as peers in one draggable session list. Instructions and physiology tasks create their own participant-screen boundaries automatically. For example, dragging ePAT between two questions is compiled internally as `survey → ePAT → survey`; researchers do not have to build or name those phases. Page breaks are only needed when splitting adjacent response questions across screens.
 
 Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
 

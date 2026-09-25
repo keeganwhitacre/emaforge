@@ -272,7 +272,7 @@ const AppUI = {
     // Build question lookup index
     const qIdx = {};
     (cfg.ema?.questions || []).forEach(q => {
-      if (q.type !== 'page_break') qIdx[q.id] = q;
+      if (q.type !== 'page_break' && q.type !== 'instruction') qIdx[q.id] = q;
     });
     const windows = cfg.ema?.scheduling?.windows || [];
 

@@ -85,6 +85,16 @@ const EMA = (function() {
         return;
       }
 
+      if (q.type === 'instruction') {
+        if (currentBlock.length > 0) {
+          if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
+          emaPages.push(currentBlock);
+          currentBlock = [];
+        }
+        emaPages.push([q]);
+        return;
+      }
+
       currentBlock.push(q);
     });
 
@@ -500,7 +510,56 @@ const EMA = (function() {
     });
   }
 
-  // Shared checkSubmit reference so affect-grid can call it.
+  function buildBodyMap(q, wrapper) {
+    const regions = Array.isArray(q.regions) ? q.regions : [];
+    const selected = new Set(Array.isArray(valueOf(q.id)) ? valueOf(q.id) : []);
+    const root = document.createElement('div');
+    root.className = 'body-map';
+    root.innerHTML = `<div class="body-map-figure" aria-hidden="true"><svg viewBox="0 0 180 360">
+      <circle data-region="head" cx="90" cy="35" r="26"/><rect data-region="neck" x="78" y="62" width="24" height="24" rx="8"/>
+      <path data-region="chest" d="M58 88 Q90 74 122 88 L116 158 L64 158 Z"/><path data-region="abdomen" d="M64 160 L116 160 L110 218 L70 218 Z"/>
+      <path data-region="arms" d="M56 92 L34 105 L16 210 L35 214 L60 132 M124 92 L146 105 L164 210 L145 214 L120 132"/>
+      <circle data-region="hands" cx="25" cy="231" r="15"/><circle data-region="hands" cx="155" cy="231" r="15"/>
+      <path data-region="legs" d="M72 220 L88 220 L84 326 L60 326 Z M92 220 L108 220 L120 326 L96 326 Z"/>
+      <ellipse data-region="feet" cx="68" cy="342" rx="21" ry="10"/><ellipse data-region="feet" cx="112" cy="342" rx="21" ry="10"/>
+    </svg></div><div class="body-map-regions" role="group" aria-label="Body regions"></div>`;
+    const list = root.querySelector('.body-map-regions');
+    const sync = () => {
+      root.querySelectorAll('[data-region]').forEach(element => element.classList.toggle('selected', selected.has(element.dataset.region)));
+      checkSubmitFn();
+    };
+    const choose = id => {
+      if (id === 'none') { selected.clear(); selected.add('none'); }
+      else {
+        selected.delete('none');
+        if (q.selection_mode === 'single') {
+          const active = selected.has(id); selected.clear(); if (!active) selected.add(id);
+        } else if (selected.has(id)) selected.delete(id); else selected.add(id);
+      }
+      recordResponse(q.id, Array.from(selected));
+      sync();
+      refreshConditionalFn(q.id);
+    };
+    regions.forEach(region => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'body-region-btn'; button.dataset.region = region.id; button.textContent = region.label;
+      button.addEventListener('click', () => choose(region.id));
+      list.appendChild(button);
+    });
+    if (q.allow_none !== false) {
+      const none = document.createElement('button');
+      none.type = 'button'; none.className = 'body-region-btn'; none.dataset.region = 'none'; none.textContent = 'None';
+      none.addEventListener('click', () => choose('none')); list.appendChild(none);
+    }
+    root.querySelectorAll('svg [data-region]').forEach(shape => {
+      shape.style.cursor = 'pointer';
+      shape.addEventListener('click', () => choose(shape.dataset.region));
+    });
+    wrapper.appendChild(root);
+    sync();
+  }
+
+  // Shared checkSubmit reference so affect-grid and body-map can call it.
   // Set inside renderCurrentPage before any question builder runs.
   let checkSubmitFn = () => {};
   let refreshConditionalFn = () => {};
@@ -519,12 +578,12 @@ const EMA = (function() {
       visibleQuestions = pageQuestions.filter(q => {
         return evalCond(q.condition, emaResponses.responses);
       });
-      emaResponses.presentationOrder[currentPageIndex] = visibleQuestions.map(q => q.id);
+      emaResponses.presentationOrder[currentPageIndex] = visibleQuestions.filter(q => q.type !== 'instruction').map(q => q.id);
       const pageIds = new Set(pageQuestions.map(q => q.id));
       emaResponses.skippedQuestions = emaResponses.skippedQuestions.filter(item => !pageIds.has(item.questionId));
       pageQuestions.forEach(q => {
         if (visibleQuestions.includes(q)) return;
-        if (!emaResponses.skippedQuestions.some(item => item.questionId === q.id)) {
+        if (q.type !== 'instruction' && !emaResponses.skippedQuestions.some(item => item.questionId === q.id)) {
           emaResponses.skippedQuestions.push({
             questionId: q.id,
             page: currentPageIndex + 1,
@@ -613,7 +672,10 @@ const EMA = (function() {
       qTitle.textContent = EMAForgeRuntimeUtils.interpolateText(q.text || '', emaResponses.responses);
       wrapper.appendChild(qTitle);
 
-      if (q.type === 'slider') {
+      if (q.type === 'instruction') {
+        wrapper.className = 'ema-instruction';
+        qTitle.classList.add('ema-instruction-text');
+      } else if (q.type === 'slider') {
         const grp = document.createElement('div');
         grp.className = 'slider-group';
         const cur = valueOf(q.id);
@@ -687,7 +749,10 @@ const EMA = (function() {
       } else if (q.type === 'affect_grid') {
         buildAffectGrid(q, wrapper);
 
-        } else if (q.type === 'heart_rate') {
+      } else if (q.type === 'body_map') {
+        buildBodyMap(q, wrapper);
+
+      } else if (q.type === 'heart_rate') {
         buildHeartRateCapture(q, wrapper, checkSubmit);
 
       } else {
@@ -779,7 +844,7 @@ const EMA = (function() {
       buildPages(phasePlan?.questionIds);
       currentPageIndex = 0;
       furthestPageVisited = 0;
-      emaResponses.eligibleQuestionIds = emaPages.flat().map(q => q.id);
+      emaResponses.eligibleQuestionIds = emaPages.flat().filter(q => q.type !== 'instruction').map(q => q.id);
 
       if (emaPages.length === 0) {
         emaResponses.submittedAt = emaResponses.startedAt;

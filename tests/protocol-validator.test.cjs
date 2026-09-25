@@ -43,6 +43,24 @@ test("a complete protocol passes without blocking errors", () => {
   assert.deepEqual(report.errors, []);
 });
 
+test("instruction screens and valid body maps are first-class survey items", () => {
+  const config = validConfig();
+  config.ema.questions = [
+    { id: "intro", type: "instruction", text: "Notice what is happening in your body.", required: false },
+    {
+      id: "body", type: "body_map", text: "Where do you notice it?", required: true,
+      selection_mode: "multiple", allow_none: true,
+      regions: [{ id: "head", label: "Head" }, { id: "chest", label: "Chest" }]
+    }
+  ];
+  config.ema.scheduling.windows[0].phase_sequence[0].question_ids = ["intro", "body"];
+  assert.equal(validator.validate(config).valid, true);
+
+  config.ema.questions[1].regions[1].id = "head";
+  const report = validator.validate(config);
+  assert.ok(report.errors.some(item => item.code === "body_map_regions_invalid"));
+});
+
 test("a physiology-only session does not require survey questions", () => {
   const config = validConfig();
   config.ema.questions = [];

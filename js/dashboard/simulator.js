@@ -73,6 +73,14 @@
       }
       return [first];
     }
+    if (question.type === "body_map") {
+      const regions = (question.regions || []).map(region => region.id).filter(Boolean);
+      const first = choose(regions.length ? regions : ["chest", "abdomen", "head"], random);
+      if (question.selection_mode !== "single" && regions.length > 2 && random() < 0.3) {
+        return [first, choose(regions.filter(region => region !== first), random)];
+      }
+      return [first];
+    }
     if (question.type === "affect_grid") {
       return {
         valence: Number(clamp(normal(random, 0.16, 0.42), -1, 1).toFixed(2)),
@@ -112,6 +120,7 @@
     for (const questionId of step.question_ids || []) {
       const question = questionMap[questionId];
       if (!question || question.type === "page_break") continue;
+      if (question.type === "instruction") continue;
       entry.eligibleQuestionIds.push(questionId);
       if (!runtimeUtils.evaluateCondition(question.condition, responses)) {
         entry.skippedQuestions.push({ questionId, reason: "condition_false" });
