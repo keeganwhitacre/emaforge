@@ -700,10 +700,15 @@ function updateExportAvailability() {
   });
 }
 
-document.getElementById('export-btn').addEventListener('click', () => {
+function openAdvancedExportModal() {
   renderExportReview();
   document.getElementById('export-modal').classList.add('open');
+}
+document.getElementById('export-btn').addEventListener('click', () => {
+  document.querySelector('.tab-btn[data-tab="deployment"]')?.click();
+  document.getElementById('tab-deployment')?.scrollTo({ top: 0, behavior: 'smooth' });
 });
+document.getElementById('advanced-export-btn')?.addEventListener('click', openAdvancedExportModal);
 document.getElementById('modal-close-btn').addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
 document.getElementById('export-single-file').addEventListener('click', async () => {
   if (document.getElementById('export-single-file').disabled) return;

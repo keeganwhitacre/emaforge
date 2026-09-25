@@ -149,7 +149,7 @@
         issues.push(issue("error", "webhook_url_invalid", "study.webhook_url", "Webhook URL must be an HTTPS address or a same-host path such as /submit."));
       }
     } else {
-      issues.push(issue("warning", "webhook_missing", "study.webhook_url", "No webhook is configured; participants must manually return downloaded data."));
+      issues.push(issue("warning", "webhook_missing", "study.webhook_url", "No independent receiver is configured. The prepared Cloudflare export will use its built-in private storage; other exports will require manual return."));
     }
 
     if (onboarding.enabled !== false) {

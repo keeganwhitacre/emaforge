@@ -144,6 +144,7 @@ test("empty EMA steps and unsafe delivery settings are surfaced", () => {
   const report = validator.validate(config);
   assert.ok(report.errors.some(item => item.code === "ema_step_empty"));
   assert.ok(report.warnings.some(item => item.code === "webhook_missing"));
+  assert.match(report.warnings.find(item => item.code === "webhook_missing").message, /prepared Cloudflare export/);
   assert.ok(report.warnings.some(item => item.code === "expiry_disabled"));
 });
 
