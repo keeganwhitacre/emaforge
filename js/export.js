@@ -28,11 +28,11 @@ async function loadTemplates() {
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
   if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260923c');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
-  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925b');
-  if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260923c');
-  if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925b');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925d');
+  if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
+  if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');
   if (!templates.modIat) templates.modIat = await fetchTemplate('templates/module-iat.js');
-  if (!templates.connectionCheck) templates.connectionCheck = await fetchTemplate('templates/connection-check.html?v=20260922d');
+  if (!templates.connectionCheck) templates.connectionCheck = await fetchTemplate('templates/connection-check.html?v=20260925d');
 }
 
 function getThemeCSS(theme, accent) {
