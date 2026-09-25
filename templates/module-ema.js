@@ -515,14 +515,19 @@ const EMA = (function() {
     const selected = new Set(Array.isArray(valueOf(q.id)) ? valueOf(q.id) : []);
     const root = document.createElement('div');
     root.className = 'body-map';
-    root.innerHTML = `<div class="body-map-figure" aria-hidden="true"><svg viewBox="0 0 180 360">
-      <circle data-region="head" cx="90" cy="35" r="26"/><rect data-region="neck" x="78" y="62" width="24" height="24" rx="8"/>
-      <path data-region="chest" d="M58 88 Q90 74 122 88 L116 158 L64 158 Z"/><path data-region="abdomen" d="M64 160 L116 160 L110 218 L70 218 Z"/>
-      <path data-region="arms" d="M56 92 L34 105 L16 210 L35 214 L60 132 M124 92 L146 105 L164 210 L145 214 L120 132"/>
-      <circle data-region="hands" cx="25" cy="231" r="15"/><circle data-region="hands" cx="155" cy="231" r="15"/>
-      <path data-region="legs" d="M72 220 L88 220 L84 326 L60 326 Z M92 220 L108 220 L120 326 L96 326 Z"/>
-      <ellipse data-region="feet" cx="68" cy="342" rx="21" ry="10"/><ellipse data-region="feet" cx="112" cy="342" rx="21" ry="10"/>
-    </svg></div><div class="body-map-regions" role="group" aria-label="Body regions"></div>`;
+    root.innerHTML = `<div class="body-map-figure" aria-hidden="true"><svg viewBox="0 0 220 500">
+      <ellipse class="body-outline" cx="110" cy="45" rx="27" ry="34"/>
+      <path class="body-outline" d="M95 76 L94 84 L78 89 C64 93 55 102 50 118 L28 205 C25 219 29 232 38 235 C47 238 53 230 55 219 L72 153 L77 217 L70 245 L70 449 C70 465 77 476 89 476 C99 476 104 467 105 452 L110 287 L115 452 C116 467 121 476 131 476 C143 476 150 465 150 449 L150 245 L143 217 L148 153 L165 219 C167 230 173 238 182 235 C191 232 195 219 192 205 L170 118 C165 102 156 93 142 89 L126 84 L125 76 Z"/>
+      <path class="body-detail" d="M94 84 C101 91 119 91 126 84 M78 89 C84 112 136 112 142 89 M77 217 C89 226 131 226 143 217 M110 287 L110 452"/>
+      <ellipse class="body-hotspot" data-region="head" cx="110" cy="45" rx="31" ry="38"/>
+      <path class="body-hotspot" data-region="neck" d="M94 72 H126 V102 H94 Z"/>
+      <path class="body-hotspot" data-region="chest" d="M77 93 C91 84 129 84 143 93 L140 174 H80 Z"/>
+      <path class="body-hotspot" data-region="abdomen" d="M80 174 H140 L145 230 C129 239 91 239 75 230 Z"/>
+      <path class="body-hotspot" data-region="arms" d="M76 94 L53 111 L27 211 L57 220 L76 151 Z M144 94 L167 111 L193 211 L163 220 L144 151 Z"/>
+      <ellipse class="body-hotspot" data-region="hands" cx="40" cy="229" rx="18" ry="21"/><ellipse class="body-hotspot" data-region="hands" cx="180" cy="229" rx="18" ry="21"/>
+      <path class="body-hotspot" data-region="legs" d="M72 232 H108 L105 454 C100 469 94 480 82 477 C72 474 67 462 69 449 Z M112 232 H148 L151 449 C153 462 148 474 138 477 C126 480 120 469 115 454 Z"/>
+      <path class="body-hotspot" data-region="feet" d="M69 448 C66 468 69 487 91 488 C105 487 108 477 104 463 Z M116 463 C112 477 115 487 129 488 C151 487 154 468 151 448 Z"/>
+    </svg><span>Front</span></div><div class="body-map-regions" role="group" aria-label="Body regions"></div>`;
     const list = root.querySelector('.body-map-regions');
     const sync = () => {
       root.querySelectorAll('[data-region]').forEach(element => element.classList.toggle('selected', selected.has(element.dataset.region)));
@@ -571,6 +576,7 @@ const EMA = (function() {
     const container = document.getElementById('ema-single-container');
     const nextBtn   = document.getElementById('ema-next-btn');
     const backBtn   = document.getElementById('ema-back-btn');
+    const scrollCue = document.getElementById('ema-scroll-cue');
 
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
@@ -615,6 +621,15 @@ const EMA = (function() {
     const pct = Math.round(((currentPageIndex + 1) / emaPages.length) * 100);
     document.getElementById('ema-progress-fill').style.width = pct + '%';
     container.innerHTML = '';
+    container.scrollTop = 0;
+    if (scrollCue) scrollCue.hidden = true;
+    const updateScrollCue = () => {
+      if (!scrollCue) return;
+      const hasMore = container.scrollHeight - container.clientHeight - container.scrollTop > 18;
+      scrollCue.hidden = !hasMore;
+    };
+    container.onscroll = updateScrollCue;
+    if (scrollCue) scrollCue.onclick = () => container.scrollBy({ top: Math.max(180, container.clientHeight * .62), behavior: 'smooth' });
 
     function checkSubmit() {
       const allAnswered = visibleQuestions.every(q => {
@@ -776,6 +791,8 @@ const EMA = (function() {
 
       container.appendChild(wrapper);
     });
+
+    requestAnimationFrame(updateScrollCue);
 
     checkSubmit();
 

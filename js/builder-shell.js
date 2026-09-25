@@ -35,9 +35,6 @@ function showBuilderIssue(issue) {
       previewSession = window.id;
       renderPreviewTabs();
       renderMeasureComposer();
-      const sessionSelect = document.getElementById("add-measure-session");
-      if (sessionSelect) sessionSelect.value = window.id;
-      renderMeasureComposer();
       target = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
     }
   }
@@ -138,7 +135,8 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").scrollTop = 0;
   if (button.dataset.tab === "onboarding" && state.onboarding.enabled) previewSession = "onboarding";
-  if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length) {
+  if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length &&
+      !state.ema.scheduling.windows.some(window => window.id === previewSession)) {
     previewSession = state.ema.scheduling.windows[0].id;
   }
   renderPreviewTabs();

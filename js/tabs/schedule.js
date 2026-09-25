@@ -135,11 +135,7 @@ function buildWindowCard(w, i) {
     previewSession = w.id;
     renderPreviewTabs();
     document.querySelector('.tab-btn[data-tab="questions"]')?.click();
-    const select = document.getElementById('add-measure-session');
-    if (select) {
-      select.value = w.id;
-      renderMeasureComposer();
-    }
+    renderMeasureComposer();
   });
 
   return el;

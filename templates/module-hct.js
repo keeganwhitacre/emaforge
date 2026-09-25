@@ -456,14 +456,13 @@ const HCT = (function() {
     const ringFill = document.getElementById("hct-counting-progress-circle");
     const circ = 2 * Math.PI * 85;
     if (ringFill) {
-      const prevTransition = ringFill.style.transition;
-      ringFill.style.transition = 'none';
+      ringFill.classList.add('resetting');
       ringFill.style.strokeDashoffset = circ;
-      // Reading offsetWidth forces the browser to commit the layout/style
-      // change synchronously. Without this, restoring transition on the
-      // next line could re-animate from the OLD offset to the new one.
-      void ringFill.offsetWidth;
-      ringFill.style.transition = prevTransition;
+      // Commit the empty state across two paint frames before restoring the
+      // fill transition. This prevents WebKit from interpolating backward
+      // from the completed ring when the next interval screen appears.
+      void ringFill.getBoundingClientRect();
+      requestAnimationFrame(() => requestAnimationFrame(() => ringFill.classList.remove('resetting')));
     }
 
     if (isPreview || !core) {

@@ -44,6 +44,9 @@ function renderPreviewTabs() {
       document.querySelectorAll('.preview-session-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       previewSession = btn.dataset.session;
+      if (document.getElementById('tab-questions')?.classList.contains('active') && previewSession !== 'onboarding') {
+        renderMeasureComposer();
+      }
       renderPreview();
     });
   });

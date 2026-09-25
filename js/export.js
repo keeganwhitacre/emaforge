@@ -216,6 +216,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <h2 id="ema-greeting" style="margin-bottom:12px;font-weight:600;color:var(--fg);">Check-In</h2>
     <div class="ema-progress"><div class="ema-progress-fill" id="ema-progress-fill" style="width:0%"></div></div>
     <div class="ema-item-container" id="ema-single-container"></div>
+    <button class="ema-scroll-cue" id="ema-scroll-cue" type="button" hidden>More below <span aria-hidden="true">↓</span></button>
     <div class="ema-navigation">
       <button class="btn btn-secondary" id="ema-back-btn" type="button" hidden>Back</button>
       <button class="btn btn-primary" id="ema-next-btn" type="button" disabled>Next</button>
@@ -503,6 +504,9 @@ function getRuntimeCss() {
     .ema-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 24px; flex-shrink: 0; }
     .ema-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease-out; border-radius: 2px; }
     .ema-item-container { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; padding: 8px 4px; }
+    .ema-scroll-cue { position: relative; z-index: 4; align-self: center; margin: -31px 0 5px; padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--bg) 94%, transparent); box-shadow: 0 4px 14px rgba(0,0,0,.12); color: var(--accent); font: 700 .72rem var(--font); cursor: pointer; animation: scroll-cue-bob 1.4s ease-in-out infinite; }
+    .ema-scroll-cue[hidden] { display: none; }
+    @keyframes scroll-cue-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
     .ema-navigation { display: flex; gap: 10px; margin-top: 28px; flex-shrink: 0; }
     .ema-navigation .btn { min-height: 56px; }
     .ema-navigation #ema-back-btn { flex: 0 0 auto; min-width: 96px; }
@@ -565,6 +569,7 @@ function getRuntimeCss() {
     .progress-ring circle { fill: none; stroke-width: 3; }
     .progress-ring circle.track { stroke: var(--bg-elevated); }
     .progress-ring circle.fill { stroke: var(--accent); stroke-dasharray: 534; stroke-dashoffset: 534; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .progress-ring circle.fill.resetting { transition: none !important; }
     .baseline-bpm-box { text-align: center; z-index: 3; }
     .baseline-bpm-number { font-size: 3.8rem; font-weight: 500; font-family: var(--font-mono); color: var(--fg); line-height: 1; letter-spacing: -0.04em; }
     .baseline-bpm-label { font-size: 0.8rem; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
@@ -600,10 +605,15 @@ function getRuntimeCss() {
     .training-status { text-align: center; font-size: 0.95rem; color: var(--fg-muted); min-height: 1.4em; transition: color 0.3s; flex-shrink: 0; margin-bottom: 8px; }
     .training-status.aligned { color: var(--accent-green); }
     .affect-grid-container { width: 100%; max-width: 360px; margin: 0 auto; }
-    .body-map { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 18px; align-items: center; max-width: 430px; margin: 0 auto; }
-    .body-map-figure svg { display: block; width: 100%; max-height: 330px; overflow: visible; }
-    .body-map-figure [data-region] { fill: var(--bg-elevated); stroke: var(--border); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; transition: fill .15s, stroke .15s; }
-    .body-map-figure [data-region].selected { fill: color-mix(in srgb, var(--accent) 35%, var(--bg-elevated)); stroke: var(--accent); }
+    .body-map { display: grid; grid-template-columns: minmax(115px, 155px) 1fr; gap: 18px; align-items: center; max-width: 430px; margin: 0 auto; }
+    .body-map-figure { text-align: center; }
+    .body-map-figure svg { display: block; width: 100%; max-height: 340px; overflow: visible; }
+    .body-map-figure > span { color: var(--fg-muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+    .body-map-figure .body-outline { fill: var(--bg-surface); stroke: color-mix(in srgb, var(--fg-muted) 65%, var(--border)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .body-map-figure .body-detail { fill: none; stroke: var(--border); stroke-width: 1.25; stroke-linecap: round; }
+    .body-map-figure .body-hotspot { fill: transparent; stroke: transparent; stroke-width: 1.5; transition: fill .15s, stroke .15s; }
+    .body-map-figure .body-hotspot:hover { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: color-mix(in srgb, var(--accent) 45%, transparent); }
+    .body-map-figure .body-hotspot.selected { fill: color-mix(in srgb, var(--accent) 32%, transparent); stroke: var(--accent); }
     .body-map-regions { display: grid; gap: 7px; }
     .body-region-btn { min-height: 38px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); color: var(--fg); font: 500 .82rem var(--font); text-align: left; cursor: pointer; }
     .body-region-btn.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--bg-surface)); color: var(--accent); }

@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260924e">
+<link rel="stylesheet" href="css/builder.css?v=20260925a">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -245,15 +245,26 @@
         <div><strong id="summary-issue-count">0</strong><span>Measure issues</span></div>
       </div>
 
-      <div class="measure-add-panel">
-        <label class="field-group"><span class="field-label">Add a measure</span>
-          <select id="add-question-select">
-            <option value="">Choose a measure…</option>
-          </select>
-        </label>
-        <label class="field-group"><span class="field-label">Add to session</span>
-          <select id="add-measure-session" aria-label="Session for new measure"></select>
-        </label>
+      <div class="measure-session-bar">
+        <div>
+          <span class="field-label">Editing session</span>
+          <div class="measure-session-tabs" id="measure-session-tabs" role="tablist" aria-label="Choose a session to edit"></div>
+        </div>
+        <button type="button" class="measure-add-button" id="open-measure-picker">+ Add measure</button>
+      </div>
+
+      <div class="measure-picker" id="measure-picker" hidden>
+        <div class="measure-picker-head">
+          <div><strong>Add a measure</strong><span id="measure-picker-context">Choose what participants do next.</span></div>
+          <button type="button" id="close-measure-picker" aria-label="Close measure picker">✕</button>
+        </div>
+        <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
+        <div class="measure-picker-groups" id="measure-picker-groups"></div>
+      </div>
+
+      <details class="measure-survey-settings">
+        <summary>Survey behavior <span>Randomization and back navigation</span></summary>
+        <div class="measure-settings-body">
         <div class="toggle-row measure-randomize-control">
           <span class="toggle-label">Randomize survey items within each page</span>
           <label class="toggle">
@@ -271,8 +282,10 @@
             <span class="toggle-track"></span>
           </label>
         </div>
-        <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
-      </div>
+        </div>
+      </details>
+
+      <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
 
       <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
     </div>
@@ -545,14 +558,14 @@
 <script src="js/templates.js?v=20260924e"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260924g"></script>
-<script src="js/tabs/schedule.js?v=20260923d"></script>
+<script src="js/tabs/questions.js?v=20260925a"></script>
+<script src="js/tabs/schedule.js?v=20260925a"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260924c"></script>
 <script src="js/tabs/deployment.js?v=20260924c"></script>
-<script src="js/preview.js?v=20260923c"></script>
+<script src="js/preview.js?v=20260925a"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260924f"></script>
+<script src="js/export.js?v=20260925a"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -590,6 +603,6 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260923e"></script>
+<script src="js/builder-shell.js?v=20260925a"></script>
 </body>
 </html>
