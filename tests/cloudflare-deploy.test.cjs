@@ -307,3 +307,37 @@ test("Cloudflare template stores same-origin responses once and protects exports
   assert.equal(exported.status, 200);
   assert.match(await exported.text(), /"submission_id":"ses_123456"/);
 });
+
+test("connection checks report clearly and never count as participant responses", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const checkPage = await worker.fetch(new Request("https://study.example/check.html"), environment);
+  const checkSource = await checkPage.text();
+  assert.match(checkSource, /Success — storage is connected/);
+  assert.doesNotMatch(checkSource, /JSON\.stringify\(await response\.json/);
+
+  const payload = {
+    test: true,
+    submission_id: "setup_123456",
+    participant_id: "ema-forge-setup-test",
+    day: null,
+    window_id: "setup-test",
+    session_data: { sessionId: "setup_123456", participantId: "ema-forge-setup-test", day: null, data: [], test: true }
+  };
+  const saved = await worker.fetch(new Request("https://study.example/submit", {
+    method: "POST",
+    headers: { Origin: "https://study.example", "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }), environment);
+  assert.equal(saved.status, 200);
+  assert.ok(bucket.objects.has("setup-tests/setup_123456.json"));
+
+  const status = await worker.fetch(adminRequest("https://study.example/admin/status"), environment);
+  const summary = await status.json();
+  assert.equal(summary.response_count, 0);
+  assert.equal(summary.connection_check_count, 1);
+
+  const exported = await worker.fetch(adminRequest("https://study.example/admin/export"), environment);
+  assert.equal((await exported.text()).trim(), "");
+});

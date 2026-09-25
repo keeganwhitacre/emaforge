@@ -36,7 +36,7 @@
       if (!configResponse.ok) throw new Error('Could not load config.json on this host.');
       const config = await configResponse.json();
       const endpoint = config.study && config.study.webhook_url;
-      if (!endpoint || !/^https:\/\//i.test(endpoint)) throw new Error('Set an HTTPS Webhook URL in the builder, then export and host the updated bundle.');
+      if (!endpoint || (!/^https:\/\//i.test(endpoint) && !/^\/(?!\/)/.test(endpoint))) throw new Error('Set an HTTPS receiver URL or same-host receiver path in the builder, then export and host the updated bundle.');
       const id = 'test_' + crypto.randomUUID().replace(/-/g, '');
       const data = {
         submission_id: id,

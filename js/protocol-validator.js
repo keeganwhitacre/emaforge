@@ -140,10 +140,13 @@
     }
     if (study.webhook_url) {
       try {
-        const url = new URL(study.webhook_url);
-        if (url.protocol !== "https:") throw new Error("HTTPS required");
+        const webhook = String(study.webhook_url).trim();
+        if (!/^\/(?!\/)/.test(webhook)) {
+          const url = new URL(webhook);
+          if (url.protocol !== "https:") throw new Error("HTTPS required");
+        }
       } catch (error) {
-        issues.push(issue("error", "webhook_url_invalid", "study.webhook_url", "Webhook URL must be a valid HTTPS URL."));
+        issues.push(issue("error", "webhook_url_invalid", "study.webhook_url", "Webhook URL must be an HTTPS address or a same-host path such as /submit."));
       }
     } else {
       issues.push(issue("warning", "webhook_missing", "study.webhook_url", "No webhook is configured; participants must manually return downloaded data."));

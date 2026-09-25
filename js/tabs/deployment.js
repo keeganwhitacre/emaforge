@@ -38,6 +38,13 @@ function bindDeploymentTab() {
     rememberHostedStudyUrl(hostedInput.value);
     updateDeploymentControls();
   });
+  if (hostedInput) hostedInput.addEventListener('blur', () => {
+    const normalized = normalizeHostedStudyUrl(hostedInput.value);
+    if (!normalized) return;
+    hostedInput.value = normalized;
+    rememberHostedStudyUrl(normalized);
+    updateDeploymentControls();
+  });
   if (adminBtn) adminBtn.addEventListener('click', () => {
     const adminUrl = cloudflareAdminUrl(hostedInput ? hostedInput.value.trim() : '');
     if (!adminUrl) {
@@ -81,7 +88,7 @@ function bindDeploymentTab() {
 
   generateBtn.addEventListener('click', () => {
     const baseUrlInput = document.getElementById('deploy-base-url').value.trim();
-    const baseUrl  = baseUrlInput || 'https://example.com/study/';
+    const baseUrl  = normalizeHostedStudyUrl(baseUrlInput) || 'https://example.com/study/';
     const startId  = Number(document.getElementById('deploy-start-id').value);
     const endId    = Number(document.getElementById('deploy-end-id').value);
 
@@ -219,8 +226,10 @@ function isValidScheduleWindow(window) {
 }
 
 function isDeployableBaseUrl(value) {
+  const normalized = normalizeHostedStudyUrl(value);
+  if (!normalized) return false;
   try {
-    const url = new URL(value);
+    const url = new URL(normalized);
     const blockedHosts = new Set(['example.com', 'www.example.com', 'localhost', '127.0.0.1', '0.0.0.0']);
     return url.protocol === 'https:' &&
       !blockedHosts.has(url.hostname.toLowerCase()) &&
@@ -231,9 +240,26 @@ function isDeployableBaseUrl(value) {
   }
 }
 
+function normalizeHostedStudyUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== 'https:' || !url.hostname) return '';
+    url.username = '';
+    url.password = '';
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch (error) {
+    return '';
+  }
+}
+
 function connectionCheckUrl(value) {
   if (!isDeployableBaseUrl(value)) return null;
-  const url = new URL(value);
+  const url = new URL(normalizeHostedStudyUrl(value));
   if (/\/[^/]+\.html$/i.test(url.pathname)) {
     url.pathname = url.pathname.replace(/[^/]+\.html$/i, 'check.html');
   } else {
@@ -244,7 +270,7 @@ function connectionCheckUrl(value) {
 
 function participantStudyUrl(value) {
   if (!isDeployableBaseUrl(value)) return null;
-  const url = new URL(value);
+  const url = new URL(normalizeHostedStudyUrl(value));
   url.pathname = '/';
   url.search = '';
   url.hash = '';
@@ -260,7 +286,7 @@ function rememberHostedStudyUrl(value) {
 
 function cloudflareAdminUrl(value) {
   if (!isDeployableBaseUrl(value)) return null;
-  const url = new URL(value);
+  const url = new URL(normalizeHostedStudyUrl(value));
   url.pathname = '/admin';
   return url.toString();
 }
@@ -310,8 +336,8 @@ function updateDeploymentControls() {
   if (messagingBtn) messagingBtn.disabled = !adminUrl;
   if (destinationGrid) destinationGrid.hidden = !participantUrl;
   if (hint) hint.textContent = participantUrl
-    ? 'Connected. Test storage once, then use Study Admin for installation, messaging, monitoring, analysis, and exports.'
-    : 'Paste a valid hosted HTTPS URL to reveal the participant, admin, and connection-check destinations.';
+    ? 'Address recognized. Open Study Admin next; it will take you directly to installation.'
+    : 'Paste the workers.dev address Cloudflare gives you. EMA Forge adds https:// automatically.';
 }
 
 async function downloadReceiverStarter() {
@@ -319,7 +345,7 @@ async function downloadReceiverStarter() {
   const status = document.getElementById('receiver-starter-status');
   const hosted = document.getElementById('deploy-base-url')?.value.trim() || '';
   let origin = 'https://your-study-host.example';
-  if (isDeployableBaseUrl(hosted)) origin = new URL(hosted).origin;
+  if (isDeployableBaseUrl(hosted)) origin = new URL(normalizeHostedStudyUrl(hosted)).origin;
 
   if (button) button.disabled = true;
   if (status) status.textContent = 'Preparing receiver files…';

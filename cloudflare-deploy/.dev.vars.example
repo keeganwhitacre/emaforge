@@ -1,7 +1,2 @@
 ADMIN_TOKEN=replace-with-at-least-32-random-characters
-# Optional SMS delivery. Add these as encrypted Worker secrets in production.
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=replace-with-twilio-auth-token
-TWILIO_FROM_NUMBER=+15551234567
-# Or use a Messaging Service instead of TWILIO_FROM_NUMBER:
-# TWILIO_MESSAGING_SERVICE_SID=MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# Twilio is optional. Add its secrets later from Study Admin instructions.

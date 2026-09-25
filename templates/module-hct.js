@@ -191,8 +191,38 @@ const HCT = (function() {
       runSensorCheck().then(() => {
         // Step 3: first interval (practice if enabled, else real).
         startInterval();
-      });
+      }).catch(error => showSensorUnavailable(error));
     });
+  }
+
+  function showSensorUnavailable(error) {
+    clearInterval(sensorCheckTimer);
+    clearInterval(intervalTimer);
+    stopSensorWatchdog();
+    try { core?.BeatDetector?.stop(); } catch (_) {}
+    detectorRunning = false;
+    show("screen-onboarding");
+    const container = document.getElementById("onboarding-container");
+    const nextBtn = document.getElementById("onboarding-next-btn");
+    container.innerHTML = `
+      <div style="max-width:360px;margin:auto;text-align:left;padding:18px 0;">
+        <div style="color:var(--accent-red);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Measurement unavailable</div>
+        <h1 style="text-align:left;margin-bottom:12px;">The camera could not start</h1>
+        <p style="text-align:left;margin-bottom:14px;">Allow camera access in your browser settings, close any other app using the camera, then try again.</p>
+        <p style="text-align:left;font-size:.88rem;">If this device cannot use the camera, you can continue. The task will be marked unavailable and all earlier survey responses will be kept.</p>
+        <button id="hct-skip-unavailable" type="button" class="btn btn-secondary btn-block" style="margin-top:16px;">Continue without this task</button>
+      </div>`;
+    nextBtn.textContent = 'Try camera again';
+    nextBtn.disabled = false;
+    nextBtn.onclick = () => { nextBtn.onclick = null; startTask(); };
+    document.getElementById('hct-skip-unavailable').onclick = () => {
+      sessionData.data.push({
+        type: 'hct_unavailable', status: 'not_completed', stage: 'sensor_check',
+        reason: 'camera_unavailable', recordedAt: new Date().toISOString()
+      });
+      advancePhase();
+    };
+    console.warn('HCT sensor unavailable', error);
   }
 
   // ----------------------------------------------------------

@@ -5,17 +5,17 @@ This template deploys a complete EMA Forge study workspace into **your Cloudflar
 ## Deploy
 
 1. In EMA Forge, open **Review & Deploy** and download the prepared Cloudflare study file.
-2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name, then set `ADMIN_TOKEN` to a unique random secret of at least 32 characters. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
-3. In Cloudflare, open the new Worker, go to **Settings → Domains & Routes**, and copy the listed `https://…workers.dev` URL. Return to EMA Forge, paste it under **Hosted study URL**, and choose **Open study admin**.
-4. Enter the same token at `/admin` and upload the prepared `.html` file.
-5. Open the participant URL shown after installation. Run `/check.html`, confirm the synthetic receipt, and inspect the private R2 bucket before enrollment.
+2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio is optional and is not requested during initial deployment. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
+3. The template enables its `workers.dev` route. Copy the address Cloudflare shows after deployment. Return to EMA Forge and paste either `your-study.workers.dev` or the full `https://…` URL under **Hosted study URL**.
+4. Choose **Open admin**, enter the same token, and upload the prepared `.html` file. A new deployment opens directly on the install screen.
+5. Open `/check.html`. It reports pass/fail in plain language and stores the synthetic check under `setup-tests/`; setup checks do not count as participant sessions. Then complete a real phone session and confirm it appears in Overview and Analyze.
 6. Complete a participant session, return to `/admin`, and confirm that the Overview and Analyze tabs show the stored session. Download raw NDJSON whenever you need a lossless research archive or external analysis.
 
 If `/admin` reports **Unauthorized**, do not recreate the deployment. In Cloudflare, open **Worker → Settings → Variables and Secrets**, add or replace a runtime **Secret** named exactly `ADMIN_TOKEN`, use a value of at least 32 characters, and deploy the settings change. Then enter that exact value at `/admin`. Never put the token value in `wrangler.jsonc` or commit it to Git.
 
 ## Optional Twilio delivery
 
-The study works without Twilio; participant links can always be distributed manually. To enable SMS:
+The study works without Twilio; participant links can always be distributed manually. Twilio placeholder credentials are intentionally not created during deployment. To enable SMS later:
 
 1. Open **Worker → Settings → Variables and Secrets** in Cloudflare.
 2. Add encrypted secrets named `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and either `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`.

@@ -483,7 +483,7 @@ const EMA = (function() {
         timer = setInterval(runCaptureTick, 250);
     }
 
-    core.BeatDetector.start({
+    const sensorCallbacks = {
       video: videoEl, canvas: canvasEl,
       onBeatCb: (beat) => {
           bpms.push(beat.averageBPM);
@@ -503,11 +503,49 @@ const EMA = (function() {
           previewCtx.drawImage(videoEl, 0, 0, previewCanvas.width, previewCanvas.height);
         }
       }
-    }).catch(() => {
-      recordResponse(q.id, null);
-      if (statusEl) statusEl.textContent = 'Camera unavailable';
-      checkSubmit();
-    });
+    };
+
+    function cameraUnavailable(error) {
+      clearInterval(timer);
+      captureStarted = false;
+      if (statusEl) {
+        statusEl.textContent = 'Camera access is unavailable on this device.';
+        statusEl.style.color = 'var(--accent-red)';
+      }
+      let actions = container.querySelector('.sensor-recovery-actions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'sensor-recovery-actions';
+        actions.style.cssText = 'display:grid;gap:8px;width:100%;max-width:320px;margin-top:4px;';
+        const retry = document.createElement('button');
+        retry.type = 'button'; retry.className = 'btn btn-secondary'; retry.textContent = 'Try camera again';
+        const continueButton = document.createElement('button');
+        continueButton.type = 'button'; continueButton.className = 'btn btn-secondary'; continueButton.textContent = 'Continue without measurement';
+        retry.onclick = () => {
+          actions.remove();
+          if (statusEl) statusEl.textContent = 'Requesting camera access…';
+          core.BeatDetector.start(sensorCallbacks).catch(cameraUnavailable);
+        };
+        continueButton.onclick = () => {
+          recordResponse(q.id, {
+            status: 'unavailable',
+            reason: 'camera_unavailable',
+            recordedAt: new Date().toISOString()
+          });
+          if (statusEl) {
+            statusEl.textContent = 'Measurement skipped; your other responses are preserved.';
+            statusEl.style.color = 'var(--fg-muted)';
+          }
+          actions.remove();
+          checkSubmit();
+        };
+        actions.append(retry, continueButton);
+        container.appendChild(actions);
+      }
+      console.warn('Heart-rate capture unavailable', error);
+    }
+
+    core.BeatDetector.start(sensorCallbacks).catch(cameraUnavailable);
   }
 
   function buildBodyMap(q, wrapper) {

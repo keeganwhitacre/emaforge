@@ -15,7 +15,8 @@ html, body { min-height: 100%; height: auto; overflow: auto; background: var(--b
 .library-principles span:first-child { padding-left: 0; }
 .library-toolbar { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-top: 52px; padding: 14px; border: 1px solid var(--border); background: var(--bg-1); }
 .library-toolbar label { flex: 1; }
-.library-toolbar input { max-width: 470px; background: var(--bg-1); }
+.library-toolbar input { width: min(100%,470px); min-height: 38px; padding: 8px 11px; border: 1px solid var(--border-hi); border-radius: var(--radius); background: var(--bg-1); color: var(--fg); font: 12px var(--font); outline: none; }
+.library-toolbar input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent); }
 .library-filters { display: flex; gap: 4px; }
 .library-filters button { padding: 7px 10px; border: 1px solid transparent; background: transparent; color: var(--fg-2); font: 11px var(--font); cursor: pointer; }
 .library-filters button.active { border-color: var(--border-hi); background: var(--bg-2); color: var(--fg); font-weight: 650; }

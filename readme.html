@@ -1235,11 +1235,13 @@
             <li>Replace the consent placeholder with approved study language. Review the questions, sessions, task
               burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
             <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and select <strong>Download prepared study</strong>.</li>
-            <li>Select <strong>Deploy to Cloudflare</strong>. After deployment, copy the Worker URL from
-              <strong>Settings → Domains &amp; Routes</strong>, paste it into EMA Forge, and select <strong>Open study admin</strong>
-              to install the prepared file.</li>
-            <li>Run the live <code>/check.html</code>, confirm its synthetic record reached the private R2 bucket, and then
-              complete a real test session on your phone.</li>
+            <li>Select <strong>Deploy to Cloudflare</strong>. Replace the masked example <code>ADMIN_TOKEN</code> with
+              your own 32+ character password. Twilio is optional and is configured later. Copy the resulting
+              <code>workers.dev</code> address; EMA Forge accepts it with or without <code>https://</code>.</li>
+            <li>Paste the address into EMA Forge and select <strong>Open admin</strong>. A new deployment opens directly
+              on <strong>Install study</strong>; upload the prepared file.</li>
+            <li>Run the live <code>/check.html</code>. It shows a plain-language pass or failure and stores the synthetic
+              check separately from participant responses. Then complete a real test session on your phone.</li>
             <li>Return to <code>/admin</code>, select <strong>Download responses</strong>, then open <strong>Analyze</strong>
               and import the downloaded <code>.ndjson</code> file. Inspect the observed sessions and item responses.
               Completion remains unavailable without scheduled prompt events.</li>
@@ -1510,6 +1512,8 @@
           <p>Click <strong>Reset</strong> to restart the rendered session without changing the study draft. Preview is for
             flow and usability checks, not device compatibility or measurement validation; those checks still require a
             deployed HTTPS study on a supported phone.</p>
+          <p>The compact <strong>Simulated preview ⓘ</strong> badge expands on demand, so the notice remains available
+            without displacing the participant screen.</p>
 
           <!-- ========================================================= -->
           <!-- EXPORT                                                      -->
@@ -1527,13 +1531,19 @@
             </thead>
             <tbody>
               <tr>
+                <td><strong>Prepared Cloudflare study</strong> <span class="status-pill stable">RECOMMENDED</span></td>
+                <td>One installable HTML file with the same-host <code>/submit</code> receiver already embedded.</td>
+                <td>Normal studies. Deploy the EMA Forge Cloudflare template, then upload this file in Study Admin.
+                  Do not paste the Worker hostname into the manual webhook field.</td>
+              </tr>
+              <tr>
                 <td><strong>Single HTML file</strong></td>
                 <td>One self-contained <code>.html</code> with config, JS, and CSS inlined.</td>
                 <td>Pilots, QA, or emailing a direct file to one participant. <em>Config is baked in — any edit means
                     re-exporting.</em></td>
               </tr>
               <tr>
-                <td><strong>Static-hosting bundle</strong> <span class="status-pill stable">RECOMMENDED</span></td>
+                <td><strong>Static-hosting bundle</strong></td>
                 <td>A <code>.zip</code> containing <code>index.html</code>, <code>config.json</code>,
                   <code>check.html</code>, <code>css/</code>, and <code>js/</code>.</td>
                 <td>Real deployment. <strong>Because <code>config.json</code> is separate, you can fix a typo in a
@@ -1558,8 +1568,10 @@
               href="https://emaforge.keeganwhitacre.com" target="_blank"
               rel="noopener">emaforge.keeganwhitacre.com</a>).</p>
 
-          <p>The simplest option for most academic labs is <strong>GitHub Pages</strong>. It is free, reliable, and
-            requires no command-line work. The minimal path:</p>
+          <p>The simplest complete option is the <strong>Cloudflare study host</strong> in Review &amp; Deploy: it serves
+            the participant app, stores responses privately, and provides the protected Admin workspace in one deployment.
+            The GitHub Pages path below is an advanced static-host alternative and still needs a separate approved receiver
+            for automatic response return.</p>
 
           <ol>
             <li>Create a free GitHub account if you don't have one.</li>
@@ -1746,7 +1758,7 @@ git push -u origin main
           <p>When the last phase completes, one of two things happens depending on whether you've configured a webhook
             (Study tab → Webhook URL):</p>
 
-          <h3>Manual return (default)</h3>
+          <h3>Manual return (when no receiver is configured)</h3>
           <p>The participant sees a "Save Local Copy" button. Tapping it downloads one or two files to their device:</p>
           <ul>
             <li><strong><code>ema_data_[ID]_[DAY]_[SESSION].csv</code></strong> — long-format, one row per question
@@ -1759,8 +1771,9 @@ git push -u origin main
             upload, institutional SFTP). Analyze accepts Cloudflare NDJSON, a folder of JSON files, or compatible long-format CSV; a CSV-only workflow
             is also viable for simpler studies.</p>
 
-          <h3>Webhook return (opt-in)</h3>
-          <p>If a Webhook URL is set, the data POSTs to your endpoint. The participant sees an upload confirmation only
+          <h3>Automatic return</h3>
+          <p>The prepared Cloudflare study uses same-host <code>/submit</code> automatically. For an independent host,
+            set an approved HTTPS Webhook URL. The participant sees an upload confirmation only
             after a readable success receipt. Otherwise "Save Local Copy" appears. Browser connectivity, receiver CORS,
             and actual server storage must be checked with a dummy submission before collecting participant data. See
             <a href="#webhook-upload">Auto-upload with Webhooks</a>.</p>
@@ -2042,6 +2055,10 @@ affect &lt;- df |&gt;
             <li>A standalone HR step in a window's phase sequence (identical capture, structural placement differs).
             </li>
           </ul>
+          <p>If camera access cannot start, heart-rate, ePAT, and HCT screens offer <strong>Try camera again</strong> and
+            <strong>Continue without measurement</strong>. Continuing records structured unavailable-task metadata,
+            preserves completed survey answers, and never invents a physiological value. Researchers should define
+            device eligibility and missing-data handling in the approved protocol before enrollment.</p>
 
           <details>
             <summary>How the PPG pipeline works (click to expand)</summary>
@@ -2694,7 +2711,9 @@ iat_trials &lt;- sessions |&gt;
 
           <h2 id="limitations">Known Limitations</h2>
           <ul>
-            <li><strong>No live enrollment dashboard.</strong> Data is only visible once files are returned.</li>
+            <li><strong>Admin is operational, not a full clinical data platform.</strong> The Cloudflare Admin workspace
+              provides live response counts, recent sessions, protected exports, roster/delivery controls, and descriptive
+              analysis; confirmatory analysis and higher-risk access controls remain the researcher's responsibility.</li>
             <li><strong>Missed-prompt detection requires event data.</strong> Response files alone cannot reveal prompts
               that produced no file. Analyze therefore leaves completion unavailable unless a roster and scheduled
               prompt-event log or a synthetic schedule manifest is present.</li>
@@ -2755,12 +2774,12 @@ iat_trials &lt;- sessions |&gt;
 
           <h2 id="webhook-upload">Auto-upload with Webhooks <span class="status-pill beta">BETA</span></h2>
 
-          <p>By default, each session ends with the participant tapping "Save Local Copy" and emailing the resulting
-            file to your lab. This works, but it has two costs: it depends on the participant remembering the step, and
-            it depends on your return channel being IRB-approved.</p>
+          <p>The recommended prepared Cloudflare study automatically posts each completed session to the deployment's
+            same-host <code>/submit</code> endpoint. "Save Local Copy" is the safety fallback when storage is unavailable.
+            Manual return remains available when no receiver is configured.</p>
 
-          <p>The <strong>webhook</strong> option removes both. When you paste a URL into the <em>Webhook URL</em> field
-            in the Builder's Study tab, the exported study silently POSTs the full session JSON to that URL at
+          <p>For independent hosting, the <strong>webhook</strong> option provides the same automation. When you paste an
+            approved HTTPS URL into the Receiver field, the exported study silently POSTs the full session JSON to that URL at
             save-time. The participant sees "Data uploaded successfully" only after the receiver responds with readable
             JSON containing <code>{"status":"success"}</code>. A failed or unreadable acknowledgment offers a local
             download. Confirm storage on the receiver before enrollment; an HTTP 200 alone does not prove data was saved.</p>
@@ -2969,10 +2988,12 @@ iat_trials &lt;- sessions |&gt;
 <div class="callout info">
   <div class="callout-title">Fast path: deploy, install, and manage</div>
   <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
-    Cloudflare clones the public template, provisions and binds private R2 storage, and asks for a unique admin token.
-    After deployment, open the Worker in Cloudflare, go to <strong>Settings → Domains &amp; Routes</strong>, and copy its
-    <code>https://…workers.dev</code> URL. Paste that URL into EMA Forge under <strong>Hosted study URL</strong>, select
-    <strong>Open study admin</strong>, and install the downloaded file. EMA Forge never receives
+    Cloudflare clones the public template, provisions and binds private R2 storage, and shows a masked example
+    <code>ADMIN_TOKEN</code>. Replace that example with your own 32+ character password; EMA Forge cannot recover it.
+    Twilio is optional and is added later. The template enables its <code>workers.dev</code> route automatically.
+    Copy the address Cloudflare shows and paste it into EMA Forge under <strong>Hosted study URL</strong>; a bare hostname
+    or full HTTPS URL both work. Select <strong>Open admin</strong>. A new deployment opens directly on
+    <strong>Install study</strong>; upload the downloaded file. EMA Forge never receives
     the researcher's Cloudflare credentials, token, study file, or participant data.</p>
   <p>The hosted URL is saved with the local builder workspace, so returning to <strong>Review &amp; Deploy</strong> restores
     clearly labeled participant, administration, and connection-check destinations without another search through Cloudflare.</p>
@@ -2980,6 +3001,9 @@ iat_trials &lt;- sessions |&gt;
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
     value in <code>wrangler.jsonc</code> or commit it to Git.</p>
+  <p>Run <code>/check.html</code> after installation. It presents a clear success or failure instead of raw JSON.
+    Synthetic checks are stored under <code>setup-tests/</code> and are excluded from response counts, Analyze, and
+    response exports. Real sessions are stored under <code>sessions/</code>.</p>
 </div>
 
 <details>

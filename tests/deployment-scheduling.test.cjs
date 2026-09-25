@@ -54,6 +54,8 @@ test("phase labels use the full ordered phase sequence", () => {
 test("deployment URLs must be real HTTPS hosts", () => {
   const context = builderContext();
   assert.equal(context.isDeployableBaseUrl("https://community.example.org/study/"), true);
+  assert.equal(context.isDeployableBaseUrl("my-study.example.workers.dev"), true);
+  assert.equal(context.normalizeHostedStudyUrl("my-study.example.workers.dev"), "https://my-study.example.workers.dev/");
   assert.equal(context.isDeployableBaseUrl("https://example.com/study/"), false);
   assert.equal(context.isDeployableBaseUrl("http://localhost:8080/study/"), false);
   assert.equal(context.isDeployableBaseUrl("not a url"), false);
@@ -81,6 +83,10 @@ test("Cloudflare admin URL is derived without requiring log inspection", () => {
   assert.equal(
     context.cloudflareAdminUrl("https://study.community.org/old/path"),
     "https://study.community.org/admin"
+  );
+  assert.equal(
+    context.cloudflareAdminUrl("ema-forge-study.example.workers.dev"),
+    "https://ema-forge-study.example.workers.dev/admin"
   );
   assert.equal(context.cloudflareAdminUrl("http://localhost:8787"), null);
 });

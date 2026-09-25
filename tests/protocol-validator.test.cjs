@@ -43,6 +43,13 @@ test("a complete protocol passes without blocking errors", () => {
   assert.deepEqual(report.errors, []);
 });
 
+test("same-host Cloudflare submission paths pass export validation", () => {
+  const config = validConfig();
+  config.study.webhook_url = "/submit";
+  const report = validator.validate(config);
+  assert.equal(report.valid, true, JSON.stringify(report.errors));
+});
+
 test("instruction screens and valid body maps are first-class survey items", () => {
   const config = validConfig();
   config.ema.questions = [

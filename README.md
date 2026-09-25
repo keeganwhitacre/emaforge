@@ -9,9 +9,10 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 1. Enter study details and replace the consent template with approved text.
 2. In **Schedule**, set your session times. A new study begins with an ePAT session; add survey questions, PPG heart-rate capture, or other tasks as needed. Reorder steps in each session.
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
-4. Download the prepared Cloudflare study, deploy the included Worker template, and install the file at the new Worker's token-protected `/admin` page. Cloudflare provisions the private R2 bucket and hosts the participant app in the researcher's account.
-5. Open the live `/check.html` page and confirm its synthetic record reached R2.
-6. Use the hosted study URL to reveal the participant, administration, and connection-check destinations in **Review & Deploy**. Complete one full test session, then use `/admin` to monitor responses, run browser-local descriptive analysis, manage an optional Twilio roster, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
+4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password; Twilio is optional and is configured later. The template explicitly enables its `workers.dev` address and provisions private R2 storage.
+5. Copy the Worker address Cloudflare displays and paste it into **Review & Deploy**. A bare address such as `my-study.workers.dev` is accepted and normalized to HTTPS. Open `/admin`; a new deployment opens directly on **Install study**. Upload the prepared `-cloudflare-study.html` file.
+6. Run `/check.html`. It reports a clear pass or failure and saves its synthetic record under `setup-tests/`, never in participant response counts or exports. Then complete one full session on a supported phone and confirm it appears in Admin.
+7. Use `/admin` to monitor responses, run browser-local descriptive analysis, create participant links, manage optional Twilio delivery, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
 
 ## Protocol library
 
@@ -25,7 +26,7 @@ The Measures screen treats survey questions, instruction screens, body maps, PPG
 
 Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
 
-The builder itself needs no account or backend. The Cloudflare deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, or participant responses. Hosting, automatic data return, and sending prompt links remain separable so a lab can use institutionally approved services. Without a receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
+The builder itself needs no account or backend. The recommended Cloudflare export embeds the same-host `/submit` receiver automatically, so researchers should not paste a Cloudflare address into the manual webhook field. The deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, credentials, or participant responses. Without an approved receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 
 ## Analyze and simulate
 
@@ -38,6 +39,8 @@ Use **Simulate study** to generate a deterministic, clearly labeled synthetic da
 - Survey ratings, choices, open text, affect grid, branching, camera-based PPG heart-rate capture, and a source-documented K6 pack.
 - ePAT and heartbeat counting (beta), using a phone camera and flashlight for PPG. Check device compatibility and your research protocol before collecting data.
 - Implicit Association Task (experimental; not validated for confirmatory research).
+
+If a camera cannot start, physiology screens now offer a retry and an explicit **Continue without measurement** path. The runtime records structured unavailable-task metadata and preserves earlier survey answers; it never fabricates a physiological value. Researchers should still define device eligibility and missing-data procedures before enrollment.
 
 The participant runtime and exported study files are inspectable. Run `npm run check` for syntax checks and protocol tests. See the [methods and limitations](https://emaforge.keeganwhitacre.com/readme.html) for measurement details.
 

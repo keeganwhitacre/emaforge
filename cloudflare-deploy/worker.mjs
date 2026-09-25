@@ -215,10 +215,11 @@ async function getMessagingSettings(env) {
 
 async function adminStatus(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  const [study, config, sessionList, rosterDocument, dispatchList, messaging] = await Promise.all([
+  const [study, config, sessionList, setupTestList, rosterDocument, dispatchList, messaging] = await Promise.all([
     env.STUDY_DATA.head('study/current.html'),
     readJson(env, 'study/current-config.json', null),
     listAll(env, 'sessions/'),
+    listAll(env, 'setup-tests/'),
     readJson(env, 'admin/roster.json', { participants: [] }),
     listAll(env, 'dispatch/'),
     getMessagingSettings(env)
@@ -243,6 +244,7 @@ async function adminStatus(request, env) {
     connection_check_url: `${origin}/check.html`,
     response_count: sessionList.objects.length,
     response_count_limited: sessionList.limited,
+    connection_check_count: setupTestList.objects.length,
     observed_participants: participants.size || (sessionList.objects.length ? null : 0),
     active_roster_count: roster.filter(person => person.status === 'active').length,
     roster_count: roster.length,
@@ -766,7 +768,7 @@ async function twilioIncomingRoute(request, env) {
 
 const notInstalledHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EMA Forge setup required</title></head><body style="font-family:system-ui;max-width:620px;margin:12vh auto;padding:24px;color:#18202a"><h1>Study setup required</h1><p>This EMA Forge host is running, but no study has been installed.</p><p><a href="/admin">Open protected study setup</a></p></body></html>`;
 
-const checkHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EMA Forge connection check</title></head><body style="font-family:system-ui;max-width:620px;margin:10vh auto;padding:24px;color:#18202a"><h1>Connection check</h1><p>This sends a clearly labeled synthetic record to the private study bucket.</p><button id="send" style="padding:12px 16px">Send test submission</button><pre id="result" style="white-space:pre-wrap"></pre><script>document.getElementById('send').onclick=async()=>{const id='setup_'+Date.now();const payload={test:true,submission_id:id,participant_id:'ema-forge-setup-test',day:null,window_id:'setup-test',session_data:{sessionId:id,participantId:'ema-forge-setup-test',day:null,data:[]}};const response=await fetch('/submit',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});document.getElementById('result').textContent=JSON.stringify(await response.json(),null,2)};<\/script></body></html>`;
+const checkHtml = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EMA Forge connection check</title><style>:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171b20;background:#f6f7f8}*{box-sizing:border-box}body{margin:0;padding:24px}.card{max-width:560px;margin:min(12vh,90px) auto;background:#fff;border:1px solid #c9ced3;border-top:3px solid #b44337;padding:28px}h1{font-size:1.65rem;letter-spacing:-.025em;margin:0 0 9px}p{color:#59636d;line-height:1.55}button{min-height:42px;padding:10px 16px;border:1px solid #b44337;border-radius:3px;background:#b44337;color:#fff;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.result{display:none;margin-top:18px;padding:14px;border:1px solid #c9ced3;line-height:1.5}.result.show{display:block}.result.good{border-color:#82ad98;background:#f0f8f4;color:#195c3f}.result.bad{border-color:#d3a09a;background:#fff4f2;color:#8d2f27}.detail{display:block;margin-top:4px;font-size:.82rem;color:inherit}</style></head><body><main class="card"><p style="margin:0 0 7px;color:#b44337;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase">EMA Forge setup</p><h1>Check response storage</h1><p>This sends one synthetic setup record to private storage. It is kept separately and never counted as a participant response.</p><button id="send" type="button">Run connection check</button><div id="result" class="result" role="status" aria-live="polite"></div><p style="margin-top:18px;font-size:.82rem">After this passes, complete one full participant session and confirm it appears in Study Admin.</p></main><script>const button=document.getElementById('send');const result=document.getElementById('result');button.onclick=async()=>{button.disabled=true;button.textContent='Checking…';result.className='result';try{const id='setup_'+Date.now();const payload={test:true,submission_id:id,participant_id:'ema-forge-setup-test',day:null,window_id:'setup-test',session_data:{sessionId:id,participantId:'ema-forge-setup-test',day:null,data:[],test:true}};const response=await fetch('/submit',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});const receipt=await response.json();if(!response.ok||receipt.status!=='success'||receipt.stored!==true)throw new Error(receipt.error||'Storage did not confirm the test');result.className='result show good';result.innerHTML='<strong>Success — storage is connected.</strong><span class="detail">Synthetic check '+id+' was stored separately from participant responses.</span>';button.textContent='Run again'}catch(error){result.className='result show bad';result.innerHTML='<strong>Connection check failed.</strong><span class="detail"></span>';result.querySelector('.detail').textContent=error.message+' Check the R2 binding and try again.';button.textContent='Try again'}finally{button.disabled=false}};<\/script></body></html>`;
 
 export default {
   async fetch(request, env) {
