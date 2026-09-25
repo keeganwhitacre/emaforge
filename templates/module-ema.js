@@ -323,7 +323,10 @@ const EMA = (function() {
     const explanation = document.createElement('p');
     explanation.style.cssText = 'font-size:.88rem;line-height:1.5;color:var(--fg-muted)';
     const dataset = q.location_dataset;
-    explanation.textContent = `Optional: use your current location to describe this area using ${dataset?.metadata?.name || 'the study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}). Your precise coordinates are used briefly in this browser to match study-area categories. The study receives only the categories and a status, not your coordinates or an area ID. These categories may still be sensitive with your other answers. You may skip this question.`;
+    const online = q.location_mode === 'epa_walkability';
+    explanation.textContent = online
+      ? 'Optional: use your current location to find an EPA walkability category. Your coordinates will be sent to this study’s Cloudflare Worker and EPA’s mapping service for the lookup. EMA Forge saves only a walkability band or a missing status in your study response. The services may process the request and metadata. This is an older area measure, not a reading of current conditions. You may skip this question.'
+      : `Optional: use your current location to describe this area using ${dataset?.metadata?.name || 'the study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}). Your precise coordinates are used briefly in this browser to match study-area categories. The study receives only the categories and a status, not your coordinates or an area ID. These categories may still be sensitive with your other answers. You may skip this question.`;
     group.appendChild(explanation);
     const status = document.createElement('p');
     status.setAttribute('role', 'status');
@@ -350,7 +353,7 @@ const EMA = (function() {
         status.textContent = 'Simulated preview: location access is disabled here. Test on the published HTTPS study.';
         return;
       }
-      if (!dataset || EMAForgePlaceContext.validate(dataset) || !navigator.geolocation || !window.isSecureContext) {
+      if ((!online && (!dataset || EMAForgePlaceContext.validate(dataset))) || !navigator.geolocation || !window.isSecureContext) {
         recordResponse(q.id, { status: 'unavailable' });
         status.textContent = 'Location is unavailable. You can continue without it.';
         checkSubmit();
@@ -359,12 +362,25 @@ const EMA = (function() {
       action.disabled = true;
       const requestId = ++requestVersion;
       status.textContent = 'Finding your current area…';
-      navigator.geolocation.getCurrentPosition(position => {
+      navigator.geolocation.getCurrentPosition(async position => {
         if (requestId !== requestVersion || !wrapper.isConnected) return;
-        const result = EMAForgePlaceContext.classify(dataset,
+        let result;
+        if (online) {
+          try {
+            const response = await fetch('/place/lookup', {
+              method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy })
+            });
+            if (!response.ok) throw new Error('Lookup service unavailable');
+            const reply = await response.json();
+            result = reply && typeof reply.status === 'string' ? reply : { status: 'service_unavailable' };
+          } catch (_) { result = { status: 'service_unavailable' }; }
+        } else result = EMAForgePlaceContext.classify(dataset,
           position.coords.latitude, position.coords.longitude, position.coords.accuracy);
+        if (requestId !== requestVersion || !wrapper.isConnected) return;
         recordResponse(q.id, result);
-        status.textContent = result.status === 'classified' ? 'Area context added. Precise coordinates were not saved.' :
+        status.textContent = result.status === 'classified' ? 'Area context added. Precise coordinates were not saved in the study response.' :
           `Could not classify this location (${result.status.replace(/_/g, ' ')}). You can continue.`;
         action.disabled = false;
         checkSubmit();

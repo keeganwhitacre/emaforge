@@ -253,7 +253,7 @@ const AppUI = {
       return `${val.valence};${val.arousal}`;
     }
     if (val && typeof val === 'object' && 'status' in val &&
-        ['classified', 'declined', 'permission_denied', 'unavailable', 'outside_study_area', 'uncertain_boundary'].includes(val.status)) {
+        ['classified', 'declined', 'permission_denied', 'unavailable', 'outside_study_area', 'uncertain_boundary', 'uncertain_accuracy', 'service_unavailable'].includes(val.status)) {
       return JSON.stringify(val);
     }
     return String(val);

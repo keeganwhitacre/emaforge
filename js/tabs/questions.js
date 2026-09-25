@@ -110,8 +110,8 @@ function confirmPlaceContext(onAccept) {
   dialog.setAttribute('aria-label', 'Place context setup');
   dialog.style.cssText = 'max-width:min(540px,calc(100vw - 32px));padding:24px;border:1px solid #c9ced3;border-radius:8px;color:#222;background:#fff;line-height:1.55;box-shadow:0 20px 60px #0004';
   dialog.innerHTML = `<h2 style="margin:0 0 12px">Add place context?</h2>
-    <p>This optional measure asks for the participant’s current location only when they tap Use my location. You must provide a licensed, study-area GeoJSON lookup with documented indicator sources. No index is supplied automatically.</p>
-    <p>Coordinates are matched in the participant’s browser and are not included in EMA Forge responses. Derived area categories can still be sensitive alongside participant IDs and response times. The browser and hosting provider may process location-related metadata. Check your consent, IRB and institutional requirements, source terms, geographic coverage, and device accuracy before enrollment.</p>
+    <p>This optional measure asks for the participant’s current location only when they tap Use my location. Automatic EPA walkability requires a Cloudflare study host and sends coordinates to the study Worker and EPA to make the lookup. Alternatively, upload a licensed area dataset so matching happens entirely in the participant browser.</p>
+    <p>Coordinates are not written to EMA Forge responses in either mode. Services involved in an online lookup may process requests and metadata; derived area categories can still be sensitive with participant IDs and response times. Check consent, IRB and institutional requirements, source terms, coverage, and device accuracy before enrollment.</p>
     <label style="display:flex;gap:10px;align-items:start;margin:16px 0"><input type="checkbox" required style="margin-top:6px"><span>I understand the source, consent, and privacy limits.</span></label>
     <div style="display:flex;gap:10px;justify-content:end"><button type="button" data-action="cancel">Cancel</button><button type="button" data-action="add" disabled>Add optional measure</button></div>`;
   document.body.append(dialog);
@@ -583,14 +583,34 @@ function buildQCard(q, index, displayNum, options = {}) {
 
 function buildPlaceContextFields(q) {
   const dataset = q.location_dataset;
+  const mode = q.location_mode || (dataset ? 'local_dataset' : 'epa_walkability');
   return `<div class="field-group"><strong>Study-area indicator lookup</strong>
-    <p class="field-hint">Upload a small GeoJSON FeatureCollection of Polygon or MultiPolygon areas. Each feature needs <code>properties.indicators</code> with categorized walkability, pollution, deprivation, or urbanicity. Metadata must document the source and method. Raw coordinates stay on the participant’s device; the lookup geometry is published with your study.</p>
-    <input type="file" class="place-dataset-file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Study-area GeoJSON lookup">
+    <label class="field-label">Lookup method</label>
+    <select class="place-mode"><option value="epa_walkability" ${mode === 'epa_walkability' ? 'selected' : ''}>Automatic EPA walkability (US; Cloudflare host)</option><option value="local_dataset" ${mode === 'local_dataset' ? 'selected' : ''}>On-device lookup from my study-area data</option></select>
+    <p class="place-mode-hint field-hint">${mode === 'epa_walkability'
+      ? 'No dataset upload needed. When a participant taps Use my location, their coordinates are sent briefly to the study Worker and EPA’s public mapping service. Neither is added to EMA Forge response files. This returns the historical EPA walkability band only, not current air quality or pollution.'
+      : 'Coordinates stay in the participant browser. Upload a small GeoJSON FeatureCollection of areas with documented indicator categories. Its geometry is published with the study.'}</p>
+    <input type="file" class="place-dataset-file" ${mode === 'local_dataset' ? '' : 'hidden'} accept=".geojson,.json,application/geo+json,application/json" aria-label="Study-area GeoJSON lookup">
     <p class="place-dataset-status field-hint" role="status">${dataset?.metadata && Array.isArray(dataset.features) ? `${escH(String(dataset.metadata.name || 'Unknown'))} · ${escH(String(dataset.metadata.version || '?'))} · ${dataset.features.length} areas` : 'No dataset yet. Export is blocked until you add one.'}</p>
-    <p class="field-hint">Up to 2 MB of lookup data. This first release supports researcher-prepared categories, not automatic national indices. Never include participant addresses or raw location records in the file.</p></div>`;
+    <p class="place-upload-hint field-hint">Up to 2 MB. Use licensed public data and document each band. Never include addresses or participant records in the file.</p></div>`;
 }
 
 function bindPlaceContextFields(card, q) {
+  const update = () => {
+    const local = q.location_mode === 'local_dataset';
+    card.querySelector('.place-dataset-file').hidden = !local;
+    card.querySelector('.place-dataset-status').hidden = !local;
+    card.querySelector('.place-upload-hint').hidden = !local;
+    card.querySelector('.place-mode-hint').textContent = local
+      ? 'Coordinates stay in the participant browser. Upload a GeoJSON lookup of areas and documented indicator categories. Its geometry is published with the study.'
+      : 'No upload needed. Coordinates are sent briefly to the study Worker and EPA’s public mapping service when participants choose to use location. Response files contain only a historical walkability band or a missing status.';
+  };
+  q.location_mode = q.location_mode || (q.location_dataset ? 'local_dataset' : 'epa_walkability');
+  card.querySelector('.place-mode').addEventListener('change', event => {
+    q.location_mode = event.target.value;
+    update(); schedulePreview(); renderBuilderShell();
+  });
+  update();
   card.querySelector('.place-dataset-file')?.addEventListener('change', async event => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -971,7 +991,8 @@ function addMeasureAt(type, insertionIndex = null) {
     text: 'Measuring your heart rate…', duration_sec: 30, report_as: 'bpm'
   });
   if (type === 'place_context') Object.assign(question, {
-    text: 'What is the area around you like right now?', required: false, location_terms_accepted: true
+    text: 'What is the area around you like right now?', required: false,
+    location_terms_accepted: true, location_mode: 'epa_walkability'
   });
   if (type === 'page_break') {
     delete question.text;

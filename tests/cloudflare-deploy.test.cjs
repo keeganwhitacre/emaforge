@@ -108,6 +108,41 @@ test("a second named study cannot replace an occupied study host", async () => {
   assert.match(await (await worker.fetch(new Request("https://study.example/"), environment)).text(), /Daily Rhythm/);
 });
 
+test("optional EPA lookup returns only a category and does not store coordinates", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const config = { study: { name: 'Walkability pilot' }, ema: { questions: [
+    { id: 'place', type: 'place_context', location_mode: 'epa_walkability' }
+  ] } };
+  const studyHtml = `<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = ${JSON.stringify(config)};</script>`;
+  assert.equal((await worker.fetch(adminRequest('https://study.example/admin/install', {
+    method: 'POST', headers: { 'Content-Type': 'text/html' }, body: studyHtml
+  }), environment)).status, 200);
+  const lookup = (accuracy = 20, origin = 'https://study.example') => worker.fetch(new Request('https://study.example/place/lookup', {
+    method: 'POST', headers: { Origin: origin, 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ latitude: 39.96, longitude: -83, accuracy })
+  }), environment);
+  assert.equal((await lookup(20, 'https://other.example')).status, 403);
+  assert.equal((await (await lookup(1000)).json()).status, 'uncertain_accuracy');
+  const originalFetch = global.fetch;
+  try {
+    global.fetch = async (url, options) => {
+      assert.match(url, /^https:\/\/geodata\.epa\.gov\//);
+      assert.equal(options.method, 'POST');
+      assert.equal(JSON.parse(options.body.get('geometry')).y, 39.96);
+      return new Response(JSON.stringify({ features: [{ attributes: { NatWalkInd: 12.3 } }] }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    };
+    const result = await (await lookup()).json();
+    assert.deepEqual(result, { status: 'classified', indicators: { walkability: 'high' },
+      dataset: 'EPA National Walkability Index', version: '2021' });
+    assert.doesNotMatch(JSON.stringify(result), /39\.96|-83|lat|lon|GEOID/);
+    assert.equal([...bucket.objects.keys()].filter(key => key.startsWith('sessions/')).length, 0);
+  } finally { global.fetch = originalFetch; }
+});
+
 test("Cloudflare admin exposes a protected control center and validated roster", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

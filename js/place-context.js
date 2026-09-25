@@ -80,5 +80,11 @@
     }
     return { status: 'classified', indicators: { ...indicators }, ...metadata };
   }
-  return { validate, classify };
+  function epaWalkability(score) {
+    if (!Number.isFinite(score) || score < 1 || score > 20) return null;
+    return { status: 'classified', indicators: { walkability: score <= 5.75 ? 'very_low' :
+      score <= 10.5 ? 'low' : score <= 15.25 ? 'high' : 'very_high' },
+      dataset: 'EPA National Walkability Index', version: '2021' };
+  }
+  return { validate, classify, epaWalkability };
 });

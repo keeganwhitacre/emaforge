@@ -29,7 +29,7 @@ function secureHeaders(contentType) {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
-    'Permissions-Policy': 'camera=(self), microphone=()',
+    'Permissions-Policy': 'camera=(self), geolocation=(self), microphone=()',
     'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
   };
 }
@@ -147,6 +147,53 @@ async function storeSubmission(request, env, origin) {
   } catch (_) {
     return json({ error: 'Storage unavailable; keep a local copy' }, 503);
   }
+}
+
+// The request body contains coordinates only while this request is handled.
+// Neither it nor the EPA response is written to R2 or echoed to clients.
+async function lookupWalkability(request, env) {
+  if (request.headers.get('Origin') !== new URL(request.url).origin) return json({ error: 'Study origin is not allowed' }, 403);
+  const length = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(length) && length > 256) return json({ error: 'Invalid location request' }, 400);
+  const config = await readJson(env, 'study/current-config.json', null);
+  if (!config?.ema?.questions?.some(question => question.type === 'place_context' && question.location_mode === 'epa_walkability')) {
+    return json({ error: 'Online place context is not enabled for this study' }, 403);
+  }
+  let payload;
+  try {
+    const raw = await request.text();
+    if (textEncoder.encode(raw).byteLength > 256) return json({ error: 'Invalid location request' }, 400);
+    payload = JSON.parse(raw);
+  } catch (_) { return json({ error: 'Invalid location request' }, 400); }
+  const { latitude, longitude, accuracy } = payload || {};
+  if (![latitude, longitude, accuracy].every(value => typeof value === 'number' && Number.isFinite(value)) ||
+      Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || accuracy < 0) {
+    return json({ error: 'Invalid location request' }, 400);
+  }
+  if (accuracy > 250) return json({ status: 'uncertain_accuracy' });
+  const form = new URLSearchParams({
+    f: 'json', geometry: JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } }),
+    geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'NatWalkInd', returnGeometry: 'false'
+  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('https://geodata.epa.gov/arcgis/rest/services/OA/WalkabilityIndex/MapServer/0/query', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form, signal: controller.signal
+    });
+    if (!response.ok) return json({ status: 'service_unavailable' });
+    const data = await response.json();
+    if (!Array.isArray(data.features)) return json({ status: 'service_unavailable' });
+    const score = data.features[0]?.attributes?.NatWalkInd;
+    if (score == null) return json({ status: 'outside_study_area' });
+    if (typeof score !== 'number' || !Number.isFinite(score) || score < 1 || score > 20) return json({ status: 'service_unavailable' });
+    const band = score <= 5.75 ? 'very_low' : score <= 10.5 ? 'low' : score <= 15.25 ? 'high' : 'very_high';
+    return json({ status: 'classified', indicators: { walkability: band },
+      dataset: 'EPA National Walkability Index', version: '2021' });
+  } catch (_) { return json({ status: 'service_unavailable' }); }
+  finally { clearTimeout(timeout); }
 }
 
 async function serveStudy(env) {
@@ -865,6 +912,8 @@ export default {
     }
     if (path === '/submit' && request.method === 'POST') return storeSubmission(request, env, request.headers.get('Origin'));
     if (path === '/submit') return json({ error: 'POST required' }, 405);
+    if (path === '/place/lookup' && request.method === 'POST') return lookupWalkability(request, env);
+    if (path === '/place/lookup') return json({ error: 'POST required' }, 405);
     if ((path === '/' || path === '/index.html') && request.method === 'GET') return serveStudy(env);
     return json({ error: 'Not found' }, 404);
   },

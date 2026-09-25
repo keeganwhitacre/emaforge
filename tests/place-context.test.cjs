@@ -50,11 +50,18 @@ test('place context export needs a lookup, researcher acknowledgement, and an op
       ] } }
   };
   const codes = () => validator.validate(config).errors.map(issue => issue.code);
-  assert.ok(codes().includes('place_context_dataset'));
+  assert.ok(codes().includes('place_context_mode'));
   assert.ok(codes().includes('place_context_optional'));
   assert.ok(codes().includes('place_context_terms'));
-  Object.assign(config.ema.questions[0], { required: false, location_terms_accepted: true, location_dataset: dataset });
+  config.ema.questions[0].location_mode = 'local_dataset';
+  assert.ok(codes().includes('place_context_dataset'));
+  Object.assign(config.ema.questions[0], { required: false, location_terms_accepted: true,
+    location_mode: 'local_dataset', location_dataset: dataset });
   assert.ok(!codes().some(code => code.startsWith('place_context_')));
+  Object.assign(config.ema.questions[0], { location_mode: 'epa_walkability', location_dataset: undefined });
+  assert.ok(!codes().some(code => code.startsWith('place_context_')));
+  assert.deepEqual(place.epaWalkability(5.7).indicators, { walkability: 'very_low' });
+  assert.deepEqual(place.epaWalkability(16).indicators, { walkability: 'very_high' });
 });
 
 test('long-format CSV can preserve place statuses and Analyze counts categorized values', () => {
