@@ -324,15 +324,19 @@ const EMA = (function() {
     explanation.className = 'place-context-intro';
     const dataset = q.location_dataset;
     const census = q.location_mode === 'census_urbanicity';
-    const online = q.location_mode === 'epa_walkability' || census;
-    explanation.textContent = census ? 'Add a broad urban or rural category for the area you are in right now.' : online
+    const selected = q.location_mode === 'online_indicators' ? q.location_indicators || [] :
+      census ? ['urbanicity'] : ['walkability'];
+    const online = q.location_mode === 'online_indicators' || q.location_mode === 'epa_walkability' || census;
+    const both = online && selected.length === 2;
+    explanation.textContent = both ? 'Add broad walkability and urban/rural categories for the area you are in right now.' :
+      selected[0] === 'urbanicity' && online ? 'Add a broad urban or rural category for the area you are in right now.' : online
       ? 'Add a broad walkability category for the area you are in right now.'
       : `Add area information using ${dataset?.metadata?.name || 'the study-area lookup'}.`;
     group.appendChild(explanation);
     const privacy = document.createElement('p');
     privacy.className = 'place-context-privacy';
     privacy.textContent = online
-      ? `If you choose to continue, your coordinates go to this study’s Cloudflare Worker and the ${census ? 'U.S. Census Bureau' : 'EPA'} for a one-time lookup. The study response saves only a category or a missing status.`
+      ? `If you choose to continue, your coordinates go to this study’s Cloudflare Worker and ${both ? 'EPA and the U.S. Census Bureau' : selected[0] === 'urbanicity' ? 'the U.S. Census Bureau' : 'EPA'} for a one-time lookup. The study response saves only categories or missing statuses.`
       : 'If you choose to continue, this browser uses your coordinates to look up categories. The study response saves only categories or a status, never coordinates or an area ID.';
     group.appendChild(privacy);
     const details = document.createElement('details');
@@ -340,7 +344,9 @@ const EMA = (function() {
     const summary = document.createElement('summary');
     summary.textContent = 'More about privacy and the data';
     const more = document.createElement('p');
-    more.textContent = census
+    more.textContent = both
+      ? 'Cloudflare, EPA, and the Census Bureau may process request metadata. EPA walkability uses a 2021 area measure; Census urban/rural uses 2020 boundaries. A provider may fail while the other succeeds. Neither measures current conditions or identifies suburban areas. Categories may still be sensitive with other answers. You can skip this question.'
+      : selected[0] === 'urbanicity' && online
       ? 'Cloudflare and the Census Bureau may process request metadata. This uses 2020 Census urban-area boundaries. It does not identify suburban areas or measure current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
       : online ? 'Cloudflare and EPA may process request metadata. The EPA National Walkability Index is a historical area measure, not current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
       : `The ${dataset?.metadata?.name || 'study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}) runs in this browser. Categories may still be sensitive when combined with other answers. You can skip this question.`;
@@ -350,7 +356,9 @@ const EMA = (function() {
     status.setAttribute('role', 'status');
     status.className = 'place-context-status';
     const existing = valueOf(q.id);
-    if (existing) status.textContent = existing.status === 'classified' ? 'Area context added.' : `Location result: ${existing.status.replace(/_/g, ' ')}.`;
+    if (existing) status.textContent = existing.status === 'classified' ? 'Area context added.' :
+      existing.status === 'partial' ? 'Some area information was added; another lookup was unavailable.' :
+      `Location result: ${existing.status.replace(/_/g, ' ')}.`;
     const action = document.createElement('button');
     action.type = 'button'; action.className = 'btn btn-primary'; action.textContent = 'Use my location';
     let requestVersion = 0;
@@ -389,7 +397,8 @@ const EMA = (function() {
             const response = await fetch('/place/lookup', {
               method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy, mode: q.location_mode })
+                accuracy: position.coords.accuracy, mode: q.location_mode,
+                ...(q.location_mode === 'online_indicators' ? { indicators: selected } : {}) })
             });
             if (!response.ok) throw new Error('Lookup service unavailable');
             const reply = await response.json();
@@ -400,6 +409,7 @@ const EMA = (function() {
         if (requestId !== requestVersion || !wrapper.isConnected) return;
         recordResponse(q.id, result);
         status.textContent = result.status === 'classified' ? 'Area context added. Precise coordinates were not saved in the study response.' :
+          result.status === 'partial' ? 'Some area information was added; another lookup was unavailable. Precise coordinates were not saved in the study response.' :
           `Could not classify this location (${result.status.replace(/_/g, ' ')}). You can continue.`;
         action.disabled = false;
         checkSubmit();

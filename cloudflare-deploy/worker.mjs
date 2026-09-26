@@ -150,7 +150,7 @@ async function storeSubmission(request, env, origin) {
 }
 
 // The request body contains coordinates only while this request is handled.
-// Neither it nor the EPA response is written to R2 or echoed to clients.
+// Neither it nor provider responses are written to R2 or echoed to clients.
 async function lookupPlaceContext(request, env) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return json({ error: 'Study origin is not allowed' }, 403);
   const length = Number(request.headers.get('Content-Length'));
@@ -162,9 +162,15 @@ async function lookupPlaceContext(request, env) {
     if (textEncoder.encode(raw).byteLength > 256) return json({ error: 'Invalid location request' }, 400);
     payload = JSON.parse(raw);
   } catch (_) { return json({ error: 'Invalid location request' }, 400); }
-  const { latitude, longitude, accuracy, mode = 'epa_walkability' } = payload || {};
-  if (!['epa_walkability', 'census_urbanicity'].includes(mode) ||
-      !config?.ema?.questions?.some(question => question.type === 'place_context' && question.location_mode === mode)) {
+  const { latitude, longitude, accuracy, mode = 'epa_walkability', indicators } = payload || {};
+  const selected = mode === 'online_indicators' ? indicators :
+    mode === 'census_urbanicity' ? ['urbanicity'] : mode === 'epa_walkability' ? ['walkability'] : [];
+  if (!Array.isArray(selected) || !selected.length || selected.length > 2 ||
+      new Set(selected).size !== selected.length || selected.some(key => !['walkability', 'urbanicity'].includes(key)) ||
+      !config?.ema?.questions?.some(question => question.type === 'place_context' &&
+        (mode === 'online_indicators' ? question.location_mode === mode &&
+          Array.isArray(question.location_indicators) && question.location_indicators.length === selected.length &&
+          question.location_indicators.every(key => selected.includes(key)) : question.location_mode === mode))) {
     return json({ error: 'This place lookup is not enabled for this study' }, 403);
   }
   if (![latitude, longitude, accuracy].every(value => typeof value === 'number' && Number.isFinite(value)) ||
@@ -172,7 +178,30 @@ async function lookupPlaceContext(request, env) {
     return json({ error: 'Invalid location request' }, 400);
   }
   if (accuracy > 250) return json({ status: 'uncertain_accuracy' });
-  if (mode === 'census_urbanicity') return lookupUrbanicity(latitude, longitude);
+  if (selected.length === 1) return selected[0] === 'urbanicity' ? lookupUrbanicity(latitude, longitude) : lookupWalkability(latitude, longitude);
+  const [walkability, urbanicity] = await Promise.all([
+    lookupWalkability(latitude, longitude).then(response => response.json()),
+    lookupUrbanicity(latitude, longitude).then(response => response.json())
+  ]);
+  const sources = { walkability, urbanicity };
+  const values = {};
+  const statuses = {};
+  const datasets = {};
+  for (const key of selected) {
+    const result = sources[key];
+    statuses[key] = result.status;
+    if (result.status === 'classified') {
+      values[key] = result.indicators[key];
+      datasets[key] = { name: result.dataset, version: result.version };
+    }
+  }
+  const classified = Object.keys(values).length;
+  return json({ status: classified === selected.length ? 'classified' : classified ? 'partial' :
+    Object.values(statuses).every(status => status === 'outside_study_area') ? 'outside_study_area' : 'service_unavailable',
+    indicators: values, indicator_statuses: statuses, datasets });
+}
+
+async function lookupWalkability(latitude, longitude) {
   const form = new URLSearchParams({
     f: 'json', geometry: JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } }),
     geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects',

@@ -273,7 +273,7 @@ const ContentStats = {
         const indicators = {};
         bucket.values.forEach(value => {
           statusCounts[value.status] = (statusCounts[value.status] || 0) + 1;
-          if (value.status !== 'classified') return;
+          if (!['classified', 'partial'].includes(value.status)) return;
           Object.entries(value.indicators || {}).forEach(([key, band]) => {
             if (!indicators[key]) indicators[key] = {};
             indicators[key][band] = (indicators[key][band] || 0) + 1;

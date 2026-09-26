@@ -62,6 +62,12 @@ test('place context export needs a lookup, researcher acknowledgement, and an op
   assert.ok(!codes().some(code => code.startsWith('place_context_')));
   config.ema.questions[0].location_mode = 'census_urbanicity';
   assert.ok(!codes().some(code => code.startsWith('place_context_')));
+  config.ema.questions[0].location_mode = 'online_indicators';
+  assert.ok(codes().includes('place_context_indicators'));
+  config.ema.questions[0].location_indicators = ['walkability', 'urbanicity'];
+  assert.ok(!codes().some(code => code.startsWith('place_context_')));
+  config.ema.questions[0].location_indicators = ['walkability', 'walkability'];
+  assert.ok(codes().includes('place_context_indicators'));
   assert.deepEqual(place.epaWalkability(5.7).indicators, { walkability: 'very_low' });
   assert.deepEqual(place.epaWalkability(16).indicators, { walkability: 'very_high' });
 });
@@ -77,4 +83,10 @@ test('long-format CSV can preserve place statuses and Analyze counts categorized
   }], { ema: { questions: [{ id: 'place', type: 'place_context', text: 'Area?' }] } });
   assert.equal(result.questions[0].statusCounts.classified, 1);
   assert.equal(result.questions[0].indicators.walkability.high, 1);
+  const partial = stats.compute([{ participantId: 'P1', day: 1, data: [{ type: 'ema_response',
+    responses: { place: { value: { status: 'partial', indicators: { walkability: 'high' },
+      indicator_statuses: { walkability: 'classified', urbanicity: 'service_unavailable' } } } } }] }],
+    { ema: { questions: [{ id: 'place', type: 'place_context' }] } });
+  assert.equal(partial.questions[0].statusCounts.partial, 1);
+  assert.equal(partial.questions[0].indicators.walkability.high, 1);
 });

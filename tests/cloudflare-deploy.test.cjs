@@ -195,6 +195,46 @@ test("Census urbanicity returns only an explicit urban/rural flag and keeps miss
   } finally { global.fetch = originalFetch; }
 });
 
+test("one location request returns both configured indicators with explicit partial status", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const config = { study: { name: 'Combined context pilot' }, ema: { questions: [
+    { id: 'place', type: 'place_context', location_mode: 'online_indicators',
+      location_indicators: ['walkability', 'urbanicity'] }
+  ] } };
+  const html = `<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = ${JSON.stringify(config)};</script>`;
+  assert.equal((await worker.fetch(adminRequest('https://study.example/admin/install', {
+    method: 'POST', headers: { 'Content-Type': 'text/html' }, body: html
+  }), environment)).status, 200);
+  const lookup = indicators => worker.fetch(new Request('https://study.example/place/lookup', {
+    method: 'POST', headers: { Origin: 'https://study.example', 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ latitude: 39.96, longitude: -83, accuracy: 20,
+      mode: 'online_indicators', indicators })
+  }), environment);
+  assert.equal((await lookup(['walkability'])).status, 403);
+  assert.equal((await lookup(['walkability', 'walkability'])).status, 403);
+  const originalFetch = global.fetch;
+  try {
+    let censusAvailable = true;
+    global.fetch = async url => new Response(JSON.stringify(url.includes('epa.gov')
+      ? { features: [{ attributes: { NatWalkInd: 12.3 } }] }
+      : censusAvailable ? { features: [{ attributes: { UR: 'U' } }] } : { error: 'down' }),
+      { headers: { 'Content-Type': 'application/json' } });
+    const complete = await (await lookup(['urbanicity', 'walkability'])).json();
+    assert.equal(complete.status, 'classified');
+    assert.deepEqual(complete.indicators, { urbanicity: 'urban', walkability: 'high' });
+    assert.deepEqual(complete.indicator_statuses, { urbanicity: 'classified', walkability: 'classified' });
+    assert.doesNotMatch(JSON.stringify(complete), /39\.96|-83|lat|lon|GEOID/);
+    censusAvailable = false;
+    const partial = await (await lookup(['walkability', 'urbanicity'])).json();
+    assert.equal(partial.status, 'partial');
+    assert.deepEqual(partial.indicators, { walkability: 'high' });
+    assert.equal(partial.indicator_statuses.urbanicity, 'service_unavailable');
+    assert.equal([...bucket.objects.keys()].filter(key => key.startsWith('sessions/')).length, 0);
+  } finally { global.fetch = originalFetch; }
+});
+
 test("Cloudflare admin exposes a protected control center and validated roster", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

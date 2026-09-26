@@ -250,8 +250,14 @@
         if (question.required) issues.push(issue("error", "place_context_optional", `${path}.required`, "Place context must allow participants to skip location access."));
         if (!question.location_terms_accepted) issues.push(issue("error", "place_context_terms", path, "Review the place-context setup notice before adding this measure."));
         const locationMode = question.location_mode || (question.location_dataset ? 'local_dataset' : null);
-        if (!['epa_walkability', 'census_urbanicity', 'local_dataset'].includes(locationMode)) {
-          issues.push(issue("error", "place_context_mode", `${path}.location_mode`, "Choose EPA walkability, Census urbanicity, or an on-device dataset."));
+        if (!['epa_walkability', 'census_urbanicity', 'online_indicators', 'local_dataset'].includes(locationMode)) {
+          issues.push(issue("error", "place_context_mode", `${path}.location_mode`, "Choose automatic public indicators or an on-device dataset."));
+        } else if (locationMode === 'online_indicators' &&
+          (!Array.isArray(question.location_indicators) || !question.location_indicators.length ||
+            question.location_indicators.length > 2 ||
+            new Set(question.location_indicators).size !== question.location_indicators.length ||
+            question.location_indicators.some(key => !['walkability', 'urbanicity'].includes(key)))) {
+          issues.push(issue("error", "place_context_indicators", `${path}.location_indicators`, "Select at least one supported public indicator."));
         } else if (locationMode === 'local_dataset') {
           const datasetError = placeContext.validate(question.location_dataset);
           if (datasetError) issues.push(issue("error", "place_context_dataset", `${path}.location_dataset`, datasetError));
