@@ -234,6 +234,7 @@ input[type="text"], input[type="time"], input[type="number"], select, textarea {
 .deploy-name-suggestion code { color: var(--fg); font-family: var(--font-mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
 .deploy-name-suggestion .btn-ghost { margin-left: auto; flex-shrink: 0; }
 .deployment-destinations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.deployment-destinations[hidden] { display: none; }
 .deployment-destination { display: flex; flex-direction: column; min-height: 178px; padding: 14px; border: 1px solid var(--border); background: var(--bg-1); }
 .deployment-destination.primary { border-top: 2px solid var(--accent); }
 .deployment-destination .destination-label { color: var(--accent); font-size: 9px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
