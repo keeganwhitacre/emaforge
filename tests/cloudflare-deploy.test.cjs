@@ -18,6 +18,17 @@ test("Cloudflare deploy keeps optional Twilio setup out of required secrets", ()
   }
 });
 
+test("deployed admin serves the same branded icon as the builder", async () => {
+  const worker = await workerPromise;
+  const icon = await worker.fetch(new Request('https://study.example/favicon.svg'), env(new MemoryBucket()));
+  assert.equal(icon.status, 200);
+  assert.match(icon.headers.get('Content-Type'), /image\/svg\+xml/);
+  const served = await icon.text();
+  assert.equal(served.trim(), fs.readFileSync(path.join(__dirname, '../favicon.svg'), 'utf8').trim());
+  const admin = await worker.fetch(new Request('https://study.example/admin'), env(new MemoryBucket()));
+  assert.match(await admin.text(), /rel="icon" type="image\/svg\+xml" href="\/favicon.svg"/);
+});
+
 class MemoryBucket {
   constructor() { this.objects = new Map(); }
   async put(key, body, options = {}) {

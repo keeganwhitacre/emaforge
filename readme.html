@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentation — EMA Forge</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/studio.css?v=20260923c">
   <script>
     // Apply theme immediately to prevent flashing
@@ -987,35 +988,41 @@
           <!-- ========================================================= -->
 
           <h1 id="overview">Overview &amp; Architecture</h1>
-          <p><strong>EMA Forge</strong> is an open-source toolkit for building, deploying, and analyzing Ecological
-            Momentary Assessment (EMA) and digital-phenotyping studies. It is <strong>end-to-end serverless</strong>:
-            your study is compiled into a static web app, participants complete it in their mobile browser, and response
-            data is generated, stored, and downloaded <em>entirely on the participant's device</em>.</p>
+          <p><strong>EMA Forge</strong> is an open-source browser-based toolkit for designing mobile ecological
+            momentary assessment (EMA) studies and handing them off to a deployment in the researcher's own Cloudflare
+            account. In one workflow, you can arrange surveys and branching, add optional phone-camera tasks, preview
+            the participant experience, deploy the study with private response storage, and monitor or export responses.
+            The Builder needs no account and does not upload your draft study to EMA Forge.</p>
 
-          <p>There are three things you'll interact with as a researcher, and one thing your participants will interact
-            with:</p>
+          <p><strong>The key workflow is from idea to a working study link:</strong> a participant opens the study in
+            their phone browser without installing an app, while the research team manages its own deployment and data.
+            The guided Cloudflare setup can take minutes for a draft; reviewing measures, consent, costs, device support,
+            and institutional approval takes additional work. Phone physiology tasks are experimental and require
+            study-specific validation.</p>
+
+          <p>The workflow has four parts:</p>
 
           <div class="feature-grid">
             <div class="feature-item">
               <div class="feature-item-title">Study Builder</div>
-              <div class="feature-item-desc">Where you design the study — questions, schedule, tasks. Hosted at <a
+              <div class="feature-item-desc">Arrange questions, sessions, branching, and optional physiology tasks. Hosted at <a
                   href="https://emaforge.keeganwhitacre.com" target="_blank"
                   rel="noopener">emaforge.keeganwhitacre.com</a>.</div>
             </div>
             <div class="feature-item">
               <div class="feature-item-title">Analyze Workspace</div>
-              <div class="feature-item-desc">Where you inspect returned participant files, review item and ePAT
-                summaries, export long-format data, or simulate a protocol. Same site.</div>
+              <div class="feature-item-desc">Import response exports for browser-local summaries and long-format data,
+                or simulate a protocol. The deployed Study Admin also provides live monitoring.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">Exported Study Bundle</div>
-              <div class="feature-item-desc">What the Builder produces — a small set of files you host somewhere (e.g.
-                GitHub Pages) so participants can reach it.</div>
+              <div class="feature-item-title">Researcher-owned Cloudflare host</div>
+              <div class="feature-item-desc">The recommended Worker serves the prepared study, stores responses in
+                private R2 storage, and provides Study Admin. SMS delivery is optional and requires Twilio.</div>
             </div>
             <div class="feature-item">
               <div class="feature-item-title">Participant App</div>
-              <div class="feature-item-desc">What your participants actually open on their phone. Generated
-                automatically from the bundle above; no install needed.</div>
+              <div class="feature-item-desc">What participants open in their phone browser from a study link. It can
+                contain surveys, optional camera tasks, and an opt-in area-context lookup; no app install is needed.</div>
             </div>
           </div>
 
@@ -1029,29 +1036,31 @@
             <div class="docs-callout-content">
               <p><strong>You do not host the Builder yourself.</strong> Go to <a
                   href="https://emaforge.keeganwhitacre.com" target="_blank"
-                  rel="noopener">emaforge.keeganwhitacre.com</a>, design your study there, click Export, and host the
-                resulting <em>bundle</em> for participants. The Builder runs entirely in your browser — nothing you type
-                gets sent to the server — so using the hosted version does not compromise privacy in any way.</p>
-              <p>No account or backend is required to build or run a study. Automatic data return is optional and uses
-                a receiver selected by the research team; manual return remains available when that better matches the
-                approved protocol.</p>
+                  rel="noopener">emaforge.keeganwhitacre.com</a>, design a study, download the prepared HTML, and
+                install it in the Cloudflare host provisioned in your account. The Builder runs locally in your browser;
+                the deployed Worker and R2 bucket receive responses. Hosting providers may process request metadata,
+                and optional place lookups or SMS involve additional providers.</p>
+              <p>Building requires no EMA Forge account. The recommended deployment uses your Cloudflare account and
+                R2 billing activation; optional Twilio messaging carries separate charges. Manual static hosting and
+                researcher-approved data-return routes are available as advanced options.</p>
             </div>
           </div>
 
           <h2 id="why-serverless">Why Serverless?</h2>
-          <p>Traditional EMA platforms require standing up a backend server, authenticating users, and handling
-            data-in-transit through a database that becomes a named component of every IRB protocol. The tradeoffs EMA
-            Forge makes to avoid that:</p>
+          <p>The guided deployment provisions a study-specific Worker and private R2 bucket in the researcher's
+            Cloudflare account. You do not maintain an application server, while still documenting these services and
+            the data flow in your protocol. The independent static-host route remains available for teams with an
+            approved receiver or manual data-return process:</p>
           <ul>
-            <li><strong>Static participant app.</strong> Host on GitHub Pages, Netlify, Vercel, Cloudflare Pages,
-              or an institutional static web server. A small receiver is needed only when automatic data return is enabled.</li>
-            <li><strong>Data stays local until the participant hands it over.</strong> Response data is written to the
-              participant's device as a file. You collect it via whatever channel your IRB has already approved for data
-              return (secure email, REDCap upload, institutional SFTP, etc.).</li>
-            <li><strong>Offline-tolerant.</strong> Once the study app is loaded in the browser, it keeps functioning
-              without network. Completed sessions queue locally and download when the participant taps "Save."</li>
-            <li><strong>Full transparency.</strong> Every line of runtime code is visible in the exported HTML.
-              Reviewers, participants, and IRBs can inspect exactly what runs on a participant's device.</li>
+            <li><strong>Guided Cloudflare handoff.</strong> Install a prepared study in a Worker with its own private
+              response bucket and protected Study Admin. Use a separate deployment for each study.</li>
+            <li><strong>Researcher-controlled exports.</strong> Inspect live response summaries and download response
+              and dispatch logs from the protected deployment. The independent hosting route can instead use a
+              researcher-approved receiver or manual return.</li>
+            <li><strong>Phone-browser participation.</strong> Participants open links without an app installation.
+              Test connectivity, supported devices, submission acknowledgments, and recovery before recruitment.</li>
+            <li><strong>Inspectable runtime.</strong> The prepared study HTML includes the participant-side code and
+              configuration. Researchers can inspect what runs on the phone and document external providers separately.</li>
           </ul>
 
           <p>Tradeoffs to be honest about (see <a href="#limitations">Known Limitations</a>):</p>

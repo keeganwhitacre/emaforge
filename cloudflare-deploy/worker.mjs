@@ -1,4 +1,4 @@
-import { adminHtml } from './admin-page.mjs';
+import { adminHtml, faviconSvg } from './admin-page.mjs';
 
 // EMA Forge Cloudflare host: participant app, private response storage,
 // researcher administration, and optional Twilio prompt delivery.
@@ -913,6 +913,7 @@ export default {
     const path = url.pathname;
 
     if (path === '/admin') return new Response(adminHtml, { headers: secureHeaders('text/html; charset=utf-8') });
+    if (path === '/favicon.svg') return new Response(faviconSvg, { headers: secureHeaders('image/svg+xml; charset=utf-8') });
     if (path === '/admin/install' && request.method === 'POST') return installStudy(request, env);
     if (path === '/admin/status' && request.method === 'GET') return adminStatus(request, env);
     if (path === '/admin/export' && request.method === 'GET') return exportPrefix(request, env, 'sessions/', 'ema-forge-responses.ndjson');
