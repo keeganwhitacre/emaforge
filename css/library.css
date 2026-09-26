@@ -32,8 +32,8 @@ html, body { min-height: 100%; height: auto; overflow: auto; background: var(--b
 .library-kind { padding: 2px 6px; background: var(--bg-2); color: var(--fg-3); font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .library-page-card p { margin-top: 15px; color: var(--fg-2); font-size: 12px; line-height: 1.55; }
 .library-page-features { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 20px; }
-.library-page-features span { padding: 3px 6px; border: 1px solid var(--border); color: var(--fg-2); font-size: 9px; }
-.library-view { margin-top: 15px; color: var(--accent); font-size: 11px; font-weight: 700; }
+.library-page-features span { padding: 3px 6px; border: 1px solid var(--border); color: var(--fg-2); font-size: 11px; }
+.library-view { margin-top: 15px; color: var(--accent); font-size: 12px; font-weight: 700; }
 .library-contribution { display: flex; justify-content: space-between; gap: 30px; align-items: center; margin-top: 54px; padding: 28px 0; border-top: 2px solid var(--fg); border-bottom: 1px solid var(--border); }
 .library-contribution h2 { font-size: 21px; }
 .library-contribution p:not(.library-eyebrow) { max-width: 670px; margin-top: 7px; color: var(--fg-2); font-size: 12px; }
@@ -44,7 +44,7 @@ html, body { min-height: 100%; height: auto; overflow: auto; background: var(--b
 .library-detail h2 { padding-right: 40px; font-size: 25px; }
 .library-detail-description { margin-top: 10px; color: var(--fg-2); line-height: 1.6; }
 .library-detail dl { display: grid; grid-template-columns: 145px 1fr; margin-top: 20px; border-top: 1px solid var(--border-hi); }
-.library-detail dt, .library-detail dd { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+.library-detail dt, .library-detail dd { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
 .library-detail dt { color: var(--fg-3); font-weight: 650; }
 .library-detail dd { color: var(--fg-2); }
 .library-detail-references { margin-top: 22px; }
@@ -60,10 +60,10 @@ html, body { min-height: 100%; height: auto; overflow: auto; background: var(--b
 .library-create > .modal-close { position: absolute; top: 19px; right: 20px; }
 .library-create h2 { padding-right: 40px; font-size: 25px; }
 .library-create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
-.library-create-grid label { display: flex; flex-direction: column; gap: 6px; color: var(--fg-2); font-size: 11px; font-weight: 650; }
+.library-create-grid label { display: flex; flex-direction: column; gap: 6px; color: var(--fg-2); font-size: 12px; font-weight: 650; }
 .library-create-grid label.wide { grid-column: 1 / -1; }
 .library-create-grid textarea { resize: vertical; }
-.library-attestation { display: flex; gap: 9px; align-items: flex-start; margin-top: 18px; color: var(--fg-2); font-size: 11px; line-height: 1.5; }
+.library-attestation { display: flex; gap: 9px; align-items: flex-start; margin-top: 18px; color: var(--fg-2); font-size: 12px; line-height: 1.5; }
 .library-attestation input { margin-top: 2px; }
 @media (max-width: 850px) { .library-page-grid { grid-template-columns: 1fr 1fr; } .library-toolbar { align-items: stretch; flex-direction: column; } }
 @media (max-width: 600px) { .library-shell { width: min(100% - 28px,1180px); padding-top: 38px; } .library-topbar { flex-wrap: wrap; padding: 8px 14px; } .library-topbar nav { order: 3; width: 100%; margin: 7px 0 2px; gap: 18px; overflow-x: auto; white-space: nowrap; } .library-theme-toggle { margin-left: auto; } .library-page-grid { grid-template-columns: 1fr; } .library-principles span { border-bottom: 1px solid var(--border); } .library-contribution { align-items: flex-start; flex-direction: column; } .library-contribution-actions { justify-content: flex-start; } .library-detail dl { grid-template-columns: 1fr; } .library-detail dt { padding-bottom: 2px; border-bottom: 0; } .library-detail dd { padding-top: 2px; } .library-create-grid { grid-template-columns: 1fr; } .library-create-grid label.wide { grid-column: auto; } }

@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260926a">
+<link rel="stylesheet" href="css/builder.css?v=20260926b">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -361,11 +361,11 @@
       <div class="deploy-block deploy-cloudflare">
         <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Deploy on Cloudflare</strong><span>Participant site and private response storage in one deployment.</span></div></div>
         <ol class="cloudflare-steps">
-          <li><strong>Download prepared study</strong> below. This version is already connected to Cloudflare storage.</li>
-          <li><strong>Deploy to Cloudflare.</strong> Give the Worker a unique name and replace the masked example <code>ADMIN_TOKEN</code> with your own 32+ character password. The dots/stars shown by Cloudflare are an example value, not a password EMA Forge knows. Add optional Twilio credentials later in Study Admin.</li>
-          <li>When deployment finishes, copy the <code>workers.dev</code> address Cloudflare shows. The template now enables that address automatically.</li>
-          <li>Paste the address below. It is okay if Cloudflare copied it without <code>https://</code>.</li>
+          <li><strong>Download</strong> your prepared study, then <strong>deploy</strong> the Worker.</li>
+          <li>Give the Worker a unique name. Replace the sample <code>ADMIN_TOKEN</code> with your own 32+ character token.</li>
+          <li>Paste the <code>workers.dev</code> address below. Then open Study Admin and install the downloaded HTML.</li>
         </ol>
+        <details class="deploy-help"><summary>About the admin token and optional SMS</summary><p>Cloudflare may show dots or stars for the sample <code>ADMIN_TOKEN</code>. That is an example value, not a token EMA Forge knows. Save the token you choose; you will use it to sign in to Study Admin. Twilio can be connected later and is not required to install a study.</p></details>
         <div class="deploy-name-suggestion">
           <span>Suggested Worker name</span>
           <code id="suggested-worker-name">ema-forge-study</code>
@@ -407,7 +407,7 @@
         </article>
       </div>
       <div class="field-hint" id="connection-check-hint" style="margin-top: 7px;">Paste the workers.dev address Cloudflare gives you. EMA Forge adds https:// automatically.</div>
-      <div class="deploy-note"><strong>Next: open Study Admin.</strong> Sign in with the exact <code>ADMIN_TOKEN</code> you entered during deployment. If it fails, replace the Cloudflare secret under <strong>Worker → Settings → Variables and Secrets</strong>; you do not need to start over.</div>
+      <details class="deploy-help"><summary>Having trouble signing in?</summary><p>Use the exact <code>ADMIN_TOKEN</code> you set during deployment. If it fails, replace the Cloudflare secret under <strong>Worker → Settings → Variables and Secrets</strong>; you do not need to start over.</p></details>
       </div>
 
       <details class="manual-deploy">
