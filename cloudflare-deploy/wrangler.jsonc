@@ -9,8 +9,7 @@
   },
   "r2_buckets": [
     {
-      "binding": "STUDY_DATA",
-      "bucket_name": "ema-forge-study-data"
+      "binding": "STUDY_DATA"
     }
   ]
 }

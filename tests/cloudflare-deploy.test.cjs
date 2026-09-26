@@ -18,6 +18,11 @@ test("Cloudflare deploy keeps optional Twilio setup out of required secrets", ()
   }
 });
 
+test("new Cloudflare study hosts provision their own R2 bucket", () => {
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, "../cloudflare-deploy/wrangler.jsonc"), "utf8"));
+  assert.deepEqual(config.r2_buckets, [{ binding: "STUDY_DATA" }]);
+});
+
 test("deployed admin serves the same branded icon as the builder", async () => {
   const worker = await workerPromise;
   const icon = await worker.fetch(new Request('https://study.example/favicon.svg'), env(new MemoryBucket()));

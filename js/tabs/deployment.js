@@ -18,6 +18,7 @@ function bindDeploymentTab() {
   const copyWorkerNameBtn = document.getElementById('copy-worker-name-btn');
   const receiverBtn = document.getElementById('download-receiver-btn');
   const cloudflareStudyBtn = document.getElementById('prepare-cloudflare-study-btn');
+  const workerUpdateBtn = document.getElementById('download-worker-update-btn');
   if (!generateBtn) return;
 
   if (hostedInput) hostedInput.value = state.deployment?.hosted_url || '';
@@ -84,6 +85,7 @@ function bindDeploymentTab() {
   });
   if (receiverBtn) receiverBtn.addEventListener('click', downloadReceiverStarter);
   if (cloudflareStudyBtn) cloudflareStudyBtn.addEventListener('click', downloadCloudflareStudy);
+  if (workerUpdateBtn) workerUpdateBtn.addEventListener('click', downloadWorkerUpdate);
   updateDeploymentControls();
 
   generateBtn.addEventListener('click', () => {
@@ -181,9 +183,48 @@ async function downloadCloudflareStudy() {
     link.download = `${slugifyStudyName()}-cloudflare-study.html`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    if (status) status.textContent = 'Downloaded. Deploy the template, then upload this file at your Worker’s /admin page.';
+    if (status) status.textContent = 'Downloaded. If this study already has a host, install this file in its existing Study Admin. Create a new host only for a new study.';
   } catch (error) {
     if (status) status.textContent = `Could not prepare the study: ${error.message}`;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function bundleWorkerUpdate(workerSource, adminSource) {
+  const workerImport = "import { adminHtml, faviconSvg } from './admin-page.mjs';";
+  if (!workerSource.startsWith(workerImport) ||
+      !adminSource.includes('export const adminHtml =') || !adminSource.includes('export const faviconSvg =')) {
+    throw new Error('The Worker sources changed; download the latest deployment files from GitHub.');
+  }
+  return '// EMA Forge single-file Worker update. Preserve the existing Cloudflare bindings and secrets.\n' +
+    adminSource.replace('export const faviconSvg =', 'const faviconSvg =')
+      .replace('export const adminHtml =', 'const adminHtml =') + '\n' +
+    workerSource.slice(workerImport.length).trimStart();
+}
+
+async function downloadWorkerUpdate() {
+  const button = document.getElementById('download-worker-update-btn');
+  const status = document.getElementById('worker-update-status');
+  if (button) button.disabled = true;
+  if (status) status.textContent = 'Preparing the Worker update…';
+  try {
+    const files = await Promise.all(['cloudflare-deploy/worker.mjs', 'cloudflare-deploy/admin-page.mjs']
+      .map(async path => {
+        const response = await fetch(path, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Could not fetch the Worker update. Reload EMA Forge and try again.');
+        return response.text();
+      }));
+    const source = bundleWorkerUpdate(...files);
+    const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'ema-forge-worker-update.mjs';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (status) status.textContent = 'Downloaded. Replace the code of the existing Worker in Cloudflare and deploy. Keep its current binding and secret.';
+  } catch (error) {
+    if (status) status.textContent = error.message;
   } finally {
     if (button) button.disabled = false;
   }

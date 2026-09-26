@@ -359,10 +359,10 @@
       <p class="field-hint">Take the study from this browser to a working participant link with confirmed data storage.</p>
 
       <div class="deploy-block deploy-cloudflare">
-        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Deploy on Cloudflare</strong><span>Participant site and private response storage in one deployment.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Create a Cloudflare host for a new study</strong><span>Each new study gets its own Worker and private R2 bucket. Skip this step if you already have a host for this study.</span></div></div>
         <ol class="cloudflare-steps">
-          <li><strong>Download</strong> your prepared study, then <strong>deploy</strong> the Worker.</li>
-          <li>Give the Worker a unique name. Replace the sample <code>ADMIN_TOKEN</code> with your own 32+ character token.</li>
+          <li><strong>Download</strong> your prepared study. Deploy the Worker only when creating a new host.</li>
+          <li>Give this study a unique Worker name. Cloudflare creates its own R2 bucket. Replace the sample <code>ADMIN_TOKEN</code> with your own 32+ character token.</li>
           <li>Paste the <code>workers.dev</code> address below. Then open Study Admin and install the downloaded HTML.</li>
         </ol>
         <details class="deploy-help"><summary>About the admin token and optional SMS</summary><p>Cloudflare may show dots or stars for the sample <code>ADMIN_TOKEN</code>. That is an example value, not a token EMA Forge knows. Save the token you choose; you will use it to sign in to Study Admin. Twilio can be connected later and is not required to install a study.</p></details>
@@ -373,10 +373,11 @@
         </div>
         <div class="deploy-actions">
           <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
-          <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Deploy to Cloudflare ↗</a>
+          <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Create new study host ↗</a>
         </div>
+        <details class="deploy-help"><summary>Update an existing Worker’s code</summary><p>Download the single-file Worker update. In Cloudflare, open your existing Worker → <strong>Edit code</strong>, replace its code with the downloaded file, and select <strong>Deploy</strong>. Keep the same <code>STUDY_DATA</code> binding, admin secret, and URL. Then install the prepared study file in its existing Study Admin. Repeat the code update for each Worker using the new feature.</p><button type="button" class="btn btn-secondary" id="download-worker-update-btn">Download Worker update</button><p class="field-hint" id="worker-update-status" role="status"></p></details>
         <div class="field-hint" id="cloudflare-study-status" style="margin-top: 8px;"></div>
-        <div class="deploy-note">Cloudflare provisions the Worker and private R2 bucket. EMA Forge never sees your Cloudflare login, admin token, study file, or participant responses.</div>
+        <div class="deploy-note"><strong>Updating this study?</strong> Download the prepared HTML and install it in the same Study Admin. If the update adds Worker features, use <strong>Update an existing Worker’s code</strong> above first. The create-host button starts a separate deployment. EMA Forge never sees your Cloudflare login, admin token, study file, or participant responses.</div>
       </div>
 
       <div class="deploy-block">

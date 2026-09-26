@@ -106,3 +106,18 @@ test("suggested Worker names retain EMA Forge identity and Cloudflare limits", (
   assert.ok(name.length <= 63);
   assert.doesNotMatch(name, /-$/);
 });
+
+test("single-file update serves the admin icon without source imports", async () => {
+  const context = builderContext();
+  const root = require('node:path').join(__dirname, '..');
+  const worker = fs.readFileSync(require('node:path').join(root, 'cloudflare-deploy/worker.mjs'), 'utf8');
+  const admin = fs.readFileSync(require('node:path').join(root, 'cloudflare-deploy/admin-page.mjs'), 'utf8');
+  const source = context.bundleWorkerUpdate(worker, admin);
+  assert.doesNotMatch(source, /import \{ adminHtml, faviconSvg \}/);
+  const bundled = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+  const response = await bundled.default.fetch(new Request('https://study.example/favicon.svg'), {
+    STUDY_DATA: { async get() { return null; }, async head() { return null; } }
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await response.text()).trim(), fs.readFileSync(require('node:path').join(root, 'favicon.svg'), 'utf8').trim());
+});
