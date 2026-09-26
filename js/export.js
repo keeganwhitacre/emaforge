@@ -29,7 +29,7 @@ async function loadTemplates() {
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
   if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260925g');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
-  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926c');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926d');
   if (!templates.placeContext) templates.placeContext = await fetchTemplate('js/place-context.js?v=20260925g');
   if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
   if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');
@@ -544,6 +544,7 @@ function getRuntimeCss() {
     .place-context-details summary { color: var(--accent); cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
     .place-context-details p { margin: 4px 0 0; font-size: .82rem; }
     .place-context-actions { display: flex; flex-direction: column; gap: 9px; }
+    .place-context-actions[hidden] { display: none; }
     .place-context-actions .btn { width: 100%; min-height: 48px; padding: 12px 16px; font-size: .95rem; }
     .place-context-status { min-height: 1.3em; margin: 12px 0 0; font-size: .82rem; line-height: 1.4; color: var(--fg-muted); }
     .text-input { width: 100%; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; outline: none; transition: border-color 0.2s, background 0.2s; }

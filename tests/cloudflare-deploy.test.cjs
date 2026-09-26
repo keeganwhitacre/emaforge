@@ -557,6 +557,8 @@ test("connection checks report clearly and never count as participant responses"
   const checkPage = await worker.fetch(new Request("https://study.example/check.html"), environment);
   const checkSource = await checkPage.text();
   assert.match(checkSource, /Success — storage is connected/);
+  assert.match(checkSource, /Failure — storage could not be confirmed/);
+  assert.match(checkSource, /href="\/admin">Back to Study Admin<\/a>/);
   assert.doesNotMatch(checkSource, /JSON\.stringify\(await response\.json/);
 
   const payload = {

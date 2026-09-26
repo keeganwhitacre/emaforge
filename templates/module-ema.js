@@ -367,6 +367,7 @@ const EMA = (function() {
     const actions = document.createElement('div');
     actions.className = 'place-context-actions';
     actions.append(action, skip);
+    if (existing && ['classified', 'partial'].includes(existing.status)) actions.hidden = true;
     group.append(actions, status);
     skip.addEventListener('click', () => {
       requestVersion++;
@@ -412,6 +413,7 @@ const EMA = (function() {
           result.status === 'partial' ? 'Some area information was added; another lookup was unavailable. Precise coordinates were not saved in the study response.' :
           `Could not classify this location (${result.status.replace(/_/g, ' ')}). You can continue.`;
         action.disabled = false;
+        if (result.status === 'classified' || result.status === 'partial') actions.hidden = true;
         checkSubmit();
       }, error => {
         if (requestId !== requestVersion || !wrapper.isConnected) return;
@@ -718,8 +720,9 @@ const EMA = (function() {
   // -----------------------------------------------------------------------
   // renderCurrentPage
   // -----------------------------------------------------------------------
-  function renderCurrentPage() {
+  function renderCurrentPage(preserveScroll = false) {
     const container = document.getElementById('ema-single-container');
+    const previousScrollTop = preserveScroll ? container.scrollTop : 0;
     const nextBtn   = document.getElementById('ema-next-btn');
     const backBtn   = document.getElementById('ema-back-btn');
     const scrollCue = document.getElementById('ema-scroll-cue');
@@ -767,7 +770,6 @@ const EMA = (function() {
     const pct = Math.round(((currentPageIndex + 1) / emaPages.length) * 100);
     document.getElementById('ema-progress-fill').style.width = pct + '%';
     container.innerHTML = '';
-    container.scrollTop = 0;
     if (scrollCue) scrollCue.hidden = true;
     const updateScrollCue = () => {
       if (!scrollCue) return;
@@ -818,7 +820,7 @@ const EMA = (function() {
             delete emaResponses.responses[question.id];
           }
         });
-        renderCurrentPage();
+        renderCurrentPage(true);
       }
       else checkSubmit();
     };
@@ -941,6 +943,7 @@ const EMA = (function() {
       container.appendChild(wrapper);
     });
 
+    container.scrollTop = previousScrollTop;
     requestAnimationFrame(() => {
       updateScrollCue();
       requestAnimationFrame(updateScrollCue);
