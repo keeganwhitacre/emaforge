@@ -11,6 +11,34 @@ global.localStorage = {
 
 const DataParser = require("../js/dashboard/parser.js");
 
+test("a one-file analysis import uses its own config and response envelopes", async () => {
+  const oldConfig = { schema_version: "1", study: { name: "Other study" }, ema: { scheduling: { windows: [] } } };
+  localStorage.setItem("ema_forge_config", JSON.stringify(oldConfig));
+  const config = { schema_version: "1", study: { name: "Study A" }, ema: { scheduling: { windows: [] } } };
+  const bundle = {
+    format: "ema_forge_analysis_bundle", version: 1, config,
+    sessions: [{
+      submission_id: "ses_1", participant_id: "P001", day: 1, window_id: "morning",
+      session_data: { participantId: "P001", sessionId: "ses_1", day: 1, type: "ema_only", status: "complete", data: [] }
+    }]
+  };
+  const OriginalFileReader = global.FileReader;
+  global.FileReader = class {
+    readAsText(file) { this.onload({ target: { result: file.content } }); }
+  };
+  try {
+    const state = await DataParser.ingestFiles([{ name: "ema-forge-analysis.json", content: JSON.stringify(bundle) }]);
+    assert.equal(state.studyConfig.study.name, "Study A");
+    assert.equal(state.allSessions.length, 1);
+    assert.equal(state.allSessions[0].participantId, "P001");
+    const raw = await DataParser.ingestFiles([{ name: "responses.ndjson", content: JSON.stringify(bundle.sessions[0]) }]);
+    assert.equal(raw.studyConfig, null);
+    assert.match(raw.warnings.join(" "), /No config.json/);
+  } finally {
+    global.FileReader = OriginalFileReader;
+  }
+});
+
 test("dashboard does not invent compliance or notification latency", () => {
   DataParser.resetState();
   DataParser.state.allSessions = [DataParser.normalizeSession({

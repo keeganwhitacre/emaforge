@@ -51,15 +51,11 @@ const DataParser = {
   async ingestFiles(fileList) {
     this.resetState();
     this.state.source = "imported";
-    const cachedConfig = localStorage.getItem("ema_forge_config");
-    if (cachedConfig) {
-      try { this.state.studyConfig = JSON.parse(cachedConfig); } catch (error) { }
-    }
-
     const files = Array.from(fileList).filter(file => /\.(?:json|ndjson|csv)$/i.test(file.name));
     if (!files.length) throw new Error("No JSON, NDJSON, or CSV files found.");
 
     await Promise.all(files.map(file => this._ingestFile(file)));
+    if (!this.state.allSessions.length) throw new Error("No participant sessions were found in these files.");
     this._deduplicateSessions();
     this.state.allSessions.forEach(session => this.state.participants.add(session.participantId));
     this.calculateMetrics({ excludeRapid: false, day: "all", participant: "all" });
@@ -112,9 +108,14 @@ const DataParser = {
   },
 
   _routeJson(json, raw, filename) {
-    if (json.schema_version && json.ema?.scheduling) {
+    if (json.format === 'ema_forge_analysis_bundle') {
+      if (json.version !== 1 || !json.config?.schema_version || !json.config?.ema?.scheduling || !Array.isArray(json.sessions)) {
+        throw new Error('Invalid EMA Forge analysis bundle.');
+      }
+      this.state.studyConfig = json.config;
+      json.sessions.forEach((session, index) => this._routeJson(session, '', `${filename} session ${index + 1}`));
+    } else if (json.schema_version && json.ema?.scheduling) {
       this.state.studyConfig = json;
-      localStorage.setItem("ema_forge_config", raw);
     } else if (json.session_data && json.submission_id) {
       const session = {
         ...json.session_data,

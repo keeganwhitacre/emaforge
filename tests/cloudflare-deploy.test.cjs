@@ -29,6 +29,19 @@ test("deployed admin serves the same branded icon as the builder", async () => {
   assert.match(await admin.text(), /rel="icon" type="image\/svg\+xml" href="\/favicon.svg"/);
 });
 
+test("analysis configuration is available only to the study admin", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const config = { schema_version: "1", study: { name: "Study A" }, ema: { scheduling: { windows: [] } } };
+  await bucket.put("study/current-config.json", JSON.stringify(config));
+  const url = "https://study.example/admin/study-config";
+  assert.equal((await worker.fetch(new Request(url), env(bucket))).status, 401);
+  const response = await worker.fetch(adminRequest(url), env(bucket));
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Cache-Control"), "no-store");
+  assert.deepEqual(await response.json(), config);
+});
+
 class MemoryBucket {
   constructor() { this.objects = new Map(); }
   async put(key, body, options = {}) {

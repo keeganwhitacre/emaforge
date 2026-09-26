@@ -1251,8 +1251,8 @@
               on <strong>Install study</strong>; upload the prepared file.</li>
             <li>Run the live <code>/check.html</code>. It shows a plain-language pass or failure and stores the synthetic
               check separately from participant responses. Then complete a real test session on your phone.</li>
-            <li>Return to <code>/admin</code>, select <strong>Download responses</strong>, then open <strong>Analyze</strong>
-              and import the downloaded <code>.ndjson</code> file. Inspect the observed sessions and item responses.
+            <li>Return to <code>/admin</code>, open <strong>Analyze</strong>, and select <strong>Download analysis file</strong>.
+              Open detailed Analyze and import that single <code>.json</code> file to inspect observed sessions and item responses.
               Completion remains unavailable without scheduled prompt events.</li>
           </ol>
 
@@ -1975,10 +1975,14 @@ affect &lt;- df |&gt;
             generation run in your browser; EMA Forge does not upload the files to a central analysis service.</p>
 
           <h3 id="dashboard-inputs">What to feed it</h3>
-          <p>Analyze accepts four input shapes. You can mix compatible files in a single import — the parser sorts out which
+          <p>Analyze accepts five input shapes. You can mix compatible files in a single import — the parser sorts out which
             files are which.</p>
 
           <ul>
+            <li><strong>One analysis file from Study Admin (recommended).</strong> In the deployed study's
+              <code>/admin</code> page, open <strong>Analyze</strong> and select <strong>Download analysis file</strong>.
+              It includes the installed study's question configuration and all exported responses in one JSON file.
+              Import just that file into detailed Analyze. Keep it in an institutionally approved location: it contains participant responses.</li>
             <li><strong>A Cloudflare response export.</strong> From the deployed study's <code>/admin</code> page, select
               <strong>Download responses</strong> and import the resulting <code>.ndjson</code> file directly. Each line is
               one complete, lossless session envelope. Import multiple export parts together when the admin page indicates
@@ -2000,9 +2004,9 @@ affect &lt;- df |&gt;
 
           <div class="docs-callout">
             <div class="docs-callout-content">
-              <p><strong>Config caching.</strong> After your first successful import Analyze caches your
-                <code>config.json</code> in browser storage. On subsequent visits you only need to drop in the data
-                file(s) — the config is remembered. Clearing site data resets this.
+              <p><strong>Study matching.</strong> If importing raw responses, select the matching
+                <code>config.json</code> in the same import. Analyze no longer silently reuses a configuration
+                cached from a different study. The single analysis file already contains its matching configuration.
               </p>
             </div>
           </div>

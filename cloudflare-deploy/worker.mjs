@@ -374,6 +374,13 @@ async function getMessagingSettings(env) {
   };
 }
 
+async function adminStudyConfig(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  const config = await readJson(env, 'study/current-config.json', null);
+  if (!config) return json({ error: 'Install a study before exporting analysis data' }, 404);
+  return json(config);
+}
+
 async function adminStatus(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
   const [study, config, sessionList, setupTestList, rosterDocument, dispatchList, messaging] = await Promise.all([
@@ -945,6 +952,7 @@ export default {
     if (path === '/favicon.svg') return new Response(faviconSvg, { headers: secureHeaders('image/svg+xml; charset=utf-8') });
     if (path === '/admin/install' && request.method === 'POST') return installStudy(request, env);
     if (path === '/admin/status' && request.method === 'GET') return adminStatus(request, env);
+    if (path === '/admin/study-config' && request.method === 'GET') return adminStudyConfig(request, env);
     if (path === '/admin/export' && request.method === 'GET') return exportPrefix(request, env, 'sessions/', 'ema-forge-responses.ndjson');
     if (path === '/admin/dispatch-export' && request.method === 'GET') return exportPrefix(request, env, 'dispatch/', 'ema-forge-dispatch.ndjson');
     if (path === '/admin/roster') return rosterRoute(request, env);
