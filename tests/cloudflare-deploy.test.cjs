@@ -132,6 +132,39 @@ test("a second named study cannot replace an occupied study host", async () => {
   assert.match(await (await worker.fetch(new Request("https://study.example/"), environment)).text(), /Daily Rhythm/);
 });
 
+test("a Worker bound to another deployment's bucket cannot treat its study as installed or expose data", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const studyHtml = '<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = {"study":{"name":"Study A"}};</script>';
+  const install = origin => worker.fetch(adminRequest(origin + '/admin/install', {
+    method: 'POST', headers: { 'Content-Type': 'text/html' }, body: studyHtml
+  }), env(bucket));
+  assert.equal((await install('https://first.example')).status, 200);
+  assert.equal((await (await worker.fetch(adminRequest('https://first.example/admin/status'), env(bucket))).json()).installed, true);
+
+  const second = 'https://second.example';
+  const status = await worker.fetch(adminRequest(second + '/admin/status'), env(bucket));
+  assert.equal(status.status, 200);
+  const state = await status.json();
+  assert.equal(state.installed, false);
+  assert.equal(state.storage_conflict, true);
+  assert.equal(state.study_name, undefined);
+  assert.match(state.storage_message, /separate R2 bucket/);
+  assert.equal((await worker.fetch(new Request(second + '/admin/status'), env(bucket))).status, 401);
+  assert.equal((await worker.fetch(adminRequest(second + '/admin/export'), env(bucket))).status, 409);
+  assert.equal((await worker.fetch(new Request(second + '/'), env(bucket))).status, 409);
+  assert.equal((await install(second)).status, 409, 'same-name installs cannot overwrite another deployment');
+  assert.equal((await worker.fetch(new Request('https://first.example/'), env(bucket))).status, 200);
+
+  const clean = await worker.fetch(adminRequest(second + '/admin/status'), env(new MemoryBucket()));
+  assert.equal((await clean.json()).installed, false);
+
+  const orphaned = new MemoryBucket();
+  await orphaned.put('study/current.html', studyHtml);
+  const orphanedStatus = await worker.fetch(adminRequest(second + '/admin/status'), env(orphaned));
+  assert.equal((await orphanedStatus.json()).storage_conflict, true);
+});
+
 test("optional EPA lookup returns only a category and does not store coordinates", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

@@ -7,6 +7,7 @@ const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_ROSTER_SIZE = 5000;
 const MAX_ADMIN_LIST_OBJECTS = 50000;
 const MAX_INVITE_LINKS_RETURNED = 250;
+const STORAGE_CONFLICT_MESSAGE = 'This Worker is connected to study storage assigned to another deployment. Connect a separate R2 bucket to STUDY_DATA in Cloudflare before installing or viewing this study. Do not overwrite the existing bucket.';
 const DEFAULT_MESSAGE_TEMPLATE = '{study}: Your {window} check-in is ready: {link} Reply STOP to opt out.';
 const TERMINAL_DISPATCH_STATES = new Set(['delivered', 'undelivered', 'failed', 'canceled', 'read']);
 const textEncoder = new TextEncoder();
@@ -258,6 +259,10 @@ async function serveStudy(env) {
 
 async function installStudy(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  const previousHost = await readJson(env, 'admin/host.json', null);
+  if (previousHost?.origin && previousHost.origin !== new URL(request.url).origin) {
+    return json({ error: STORAGE_CONFLICT_MESSAGE }, 409);
+  }
   const length = Number(request.headers.get('Content-Length'));
   if (Number.isFinite(length) && length > MAX_STUDY_BYTES) return json({ error: 'Study file is too large' }, 413);
   const html = await request.text();
@@ -383,9 +388,10 @@ async function adminStudyConfig(request, env) {
 
 async function adminStatus(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  const [study, config, sessionList, setupTestList, rosterDocument, dispatchList, messaging] = await Promise.all([
+  const [study, config, host, sessionList, setupTestList, rosterDocument, dispatchList, messaging] = await Promise.all([
     env.STUDY_DATA.head('study/current.html'),
     readJson(env, 'study/current-config.json', null),
+    readJson(env, 'admin/host.json', null),
     listAll(env, 'sessions/'),
     listAll(env, 'setup-tests/'),
     readJson(env, 'admin/roster.json', { participants: [] }),
@@ -404,7 +410,7 @@ async function adminStatus(request, env) {
   const roster = Array.isArray(rosterDocument.participants) ? rosterDocument.participants : [];
   const origin = new URL(request.url).origin;
   return json({
-    installed: !!study,
+    installed: !!(study && config && host?.origin === origin && study.customMetadata?.installedAt),
     study_name: config?.study?.name || null,
     installed_at: study?.customMetadata?.installedAt || null,
     participant_url: `${origin}/`,
@@ -950,6 +956,15 @@ export default {
 
     if (path === '/admin') return new Response(adminHtml, { headers: secureHeaders('text/html; charset=utf-8') });
     if (path === '/favicon.svg') return new Response(faviconSvg, { headers: secureHeaders('image/svg+xml; charset=utf-8') });
+    const boundHost = await readJson(env, 'admin/host.json', null);
+    if ((boundHost?.origin && boundHost.origin !== url.origin) ||
+        (!boundHost?.origin && await env.STUDY_DATA.head('study/current.html'))) {
+      if (path === '/admin/status' && request.method === 'GET') {
+        if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+        return json({ installed: false, storage_conflict: true, storage_message: STORAGE_CONFLICT_MESSAGE });
+      }
+      return json({ error: STORAGE_CONFLICT_MESSAGE }, 409);
+    }
     if (path === '/admin/install' && request.method === 'POST') return installStudy(request, env);
     if (path === '/admin/status' && request.method === 'GET') return adminStatus(request, env);
     if (path === '/admin/study-config' && request.method === 'GET') return adminStudyConfig(request, env);

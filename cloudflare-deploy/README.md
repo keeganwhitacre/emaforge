@@ -6,6 +6,7 @@ This template deploys a complete EMA Forge study workspace into **your Cloudflar
 
 1. In EMA Forge, open **Review & Deploy** and download the prepared Cloudflare study file.
 2. Use the **Deploy to Cloudflare** button. Choose a unique Worker and R2 bucket name. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio is connected later inside Study Admin. A useful Worker naming pattern is `ema-forge-<short-study-name>`.
+   Confirm the `STUDY_DATA` R2 binding points to a separate bucket for this study. If Study Admin reports a storage conflict on first sign-in, change that binding to a new empty bucket before installing. Do not clear or reuse the bucket belonging to another study.
 3. The template enables its `workers.dev` route. Copy the address Cloudflare shows after deployment. Return to EMA Forge and paste either `your-study.workers.dev` or the full `https://…` URL under **Hosted study URL**.
 4. Choose **Open admin**, enter the same token, and upload the prepared `.html` file. A new deployment opens directly on the install screen.
 5. Open `/check.html`. It reports pass/fail in plain language and stores the synthetic check under `setup-tests/`; setup checks do not count as participant sessions. Then complete a real phone session and confirm it appears in Overview and Analyze.
