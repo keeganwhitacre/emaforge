@@ -319,28 +319,45 @@ const EMA = (function() {
 
   function buildPlaceContext(q, wrapper, checkSubmit) {
     const group = document.createElement('div');
-    group.className = 'text-group';
+    group.className = 'place-context-card';
     const explanation = document.createElement('p');
-    explanation.style.cssText = 'font-size:.88rem;line-height:1.5;color:var(--fg-muted)';
+    explanation.className = 'place-context-intro';
     const dataset = q.location_dataset;
     const online = q.location_mode === 'epa_walkability';
     explanation.textContent = online
-      ? 'Optional: use your current location to find an EPA walkability category. Your coordinates will be sent to this study’s Cloudflare Worker and EPA’s mapping service for the lookup. EMA Forge saves only a walkability band or a missing status in your study response. The services may process the request and metadata. This is an older area measure, not a reading of current conditions. You may skip this question.'
-      : `Optional: use your current location to describe this area using ${dataset?.metadata?.name || 'the study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}). Your precise coordinates are used briefly in this browser to match study-area categories. The study receives only the categories and a status, not your coordinates or an area ID. These categories may still be sensitive with your other answers. You may skip this question.`;
+      ? 'Add a broad walkability category for the area you are in right now.'
+      : `Add area information using ${dataset?.metadata?.name || 'the study-area lookup'}.`;
     group.appendChild(explanation);
+    const privacy = document.createElement('p');
+    privacy.className = 'place-context-privacy';
+    privacy.textContent = online
+      ? 'If you choose to continue, your coordinates go to this study’s Cloudflare Worker and EPA for a one-time lookup. The study response saves only a category or a missing status.'
+      : 'If you choose to continue, this browser uses your coordinates to look up categories. The study response saves only categories or a status, never coordinates or an area ID.';
+    group.appendChild(privacy);
+    const details = document.createElement('details');
+    details.className = 'place-context-details';
+    const summary = document.createElement('summary');
+    summary.textContent = 'More about privacy and the data';
+    const more = document.createElement('p');
+    more.textContent = online
+      ? 'Cloudflare and EPA may process request metadata. The EPA National Walkability Index is a historical area measure, not current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
+      : `The ${dataset?.metadata?.name || 'study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}) runs in this browser. Categories may still be sensitive when combined with other answers. You can skip this question.`;
+    details.append(summary, more);
+    group.appendChild(details);
     const status = document.createElement('p');
     status.setAttribute('role', 'status');
-    status.style.cssText = 'font-size:.85rem;color:var(--fg-muted)';
+    status.className = 'place-context-status';
     const existing = valueOf(q.id);
     if (existing) status.textContent = existing.status === 'classified' ? 'Area context added.' : `Location result: ${existing.status.replace(/_/g, ' ')}.`;
-    group.appendChild(status);
     const action = document.createElement('button');
-    action.type = 'button'; action.className = 'btn btn-secondary'; action.textContent = 'Use my location';
+    action.type = 'button'; action.className = 'btn btn-primary'; action.textContent = 'Use my location';
     let requestVersion = 0;
     const skip = document.createElement('button');
     skip.type = 'button'; skip.className = 'btn btn-secondary'; skip.textContent = 'Skip location';
-    skip.style.marginLeft = '8px';
-    group.append(action, skip);
+    const actions = document.createElement('div');
+    actions.className = 'place-context-actions';
+    actions.append(action, skip);
+    group.append(actions, status);
     skip.addEventListener('click', () => {
       requestVersion++;
       action.disabled = false;

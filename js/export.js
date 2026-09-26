@@ -29,7 +29,7 @@ async function loadTemplates() {
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
   if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260925g');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
-  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260925g');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926a');
   if (!templates.placeContext) templates.placeContext = await fetchTemplate('js/place-context.js?v=20260925g');
   if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
   if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');
@@ -536,6 +536,16 @@ function getRuntimeCss() {
     .choice-btn.selected { border-color: var(--accent); background: var(--bg-elevated); color: var(--accent); font-weight: 600; }
     .choice-btn.selected::before { content: '✓'; display: inline-block; margin-right: 10px; color: var(--accent); font-weight: 700; }
     .text-group { width: 100%; }
+    .place-context-card { width: 100%; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); text-align: left; }
+    .place-context-card p { text-align: left; }
+    .place-context-intro { margin: 0 0 12px; color: var(--fg); font-size: 1rem; line-height: 1.4; font-weight: 600; }
+    .place-context-privacy { margin: 0 0 12px; color: var(--fg-muted); font-size: .88rem; line-height: 1.5; }
+    .place-context-details { margin-bottom: 18px; color: var(--fg-muted); font-size: .82rem; line-height: 1.5; }
+    .place-context-details summary { color: var(--accent); cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+    .place-context-details p { margin: 4px 0 0; font-size: .82rem; }
+    .place-context-actions { display: flex; flex-direction: column; gap: 9px; }
+    .place-context-actions .btn { width: 100%; min-height: 48px; padding: 12px 16px; font-size: .95rem; }
+    .place-context-status { min-height: 1.3em; margin: 12px 0 0; font-size: .82rem; line-height: 1.4; color: var(--fg-muted); }
     .text-input { width: 100%; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 1rem; outline: none; transition: border-color 0.2s, background 0.2s; }
     .text-input:focus { border-color: var(--accent); background: var(--bg-elevated); }
     .ob-progress { height: 3px; background: var(--bg-surface); border-radius: 2px; overflow: hidden; margin-bottom: 20px; flex-shrink: 0; }
