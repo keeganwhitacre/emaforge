@@ -323,15 +323,16 @@ const EMA = (function() {
     const explanation = document.createElement('p');
     explanation.className = 'place-context-intro';
     const dataset = q.location_dataset;
-    const online = q.location_mode === 'epa_walkability';
-    explanation.textContent = online
+    const census = q.location_mode === 'census_urbanicity';
+    const online = q.location_mode === 'epa_walkability' || census;
+    explanation.textContent = census ? 'Add a broad urban or rural category for the area you are in right now.' : online
       ? 'Add a broad walkability category for the area you are in right now.'
       : `Add area information using ${dataset?.metadata?.name || 'the study-area lookup'}.`;
     group.appendChild(explanation);
     const privacy = document.createElement('p');
     privacy.className = 'place-context-privacy';
     privacy.textContent = online
-      ? 'If you choose to continue, your coordinates go to this study’s Cloudflare Worker and EPA for a one-time lookup. The study response saves only a category or a missing status.'
+      ? `If you choose to continue, your coordinates go to this study’s Cloudflare Worker and the ${census ? 'U.S. Census Bureau' : 'EPA'} for a one-time lookup. The study response saves only a category or a missing status.`
       : 'If you choose to continue, this browser uses your coordinates to look up categories. The study response saves only categories or a status, never coordinates or an area ID.';
     group.appendChild(privacy);
     const details = document.createElement('details');
@@ -339,8 +340,9 @@ const EMA = (function() {
     const summary = document.createElement('summary');
     summary.textContent = 'More about privacy and the data';
     const more = document.createElement('p');
-    more.textContent = online
-      ? 'Cloudflare and EPA may process request metadata. The EPA National Walkability Index is a historical area measure, not current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
+    more.textContent = census
+      ? 'Cloudflare and the Census Bureau may process request metadata. This uses 2020 Census urban-area boundaries. It does not identify suburban areas or measure current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
+      : online ? 'Cloudflare and EPA may process request metadata. The EPA National Walkability Index is a historical area measure, not current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
       : `The ${dataset?.metadata?.name || 'study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}) runs in this browser. Categories may still be sensitive when combined with other answers. You can skip this question.`;
     details.append(summary, more);
     group.appendChild(details);
@@ -387,7 +389,7 @@ const EMA = (function() {
             const response = await fetch('/place/lookup', {
               method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy })
+                accuracy: position.coords.accuracy, mode: q.location_mode })
             });
             if (!response.ok) throw new Error('Lookup service unavailable');
             const reply = await response.json();

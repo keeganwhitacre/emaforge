@@ -47,7 +47,7 @@ Use **Simulate study** to generate a deterministic, clearly labeled synthetic da
 ## Included measures
 
 - Survey ratings, choices, open text, affect grid, branching, camera-based PPG heart-rate capture, and a source-documented K6 pack.
-- Optional **Place context** measure: after a researcher accepts a setup notice, participants may request their current location. The recommended Cloudflare deployment can automatically look up a historical walkability band using the EPA National Walkability Index, with no researcher dataset preparation. This **sends coordinates transiently to the study Worker and EPA**; no coordinate or area ID is saved in response files. For studies that cannot transmit coordinates to a lookup provider, a researcher can instead upload a licensed GeoJSON of study-area indicator bands and match it entirely in the participant browser. Neither mode collects current air quality by default. Preview never requests real location; researchers must review consent, privacy, and accuracy before enrollment.
+- Optional **Place context** measure: after a researcher accepts a setup notice, participants may request their current location. The recommended Cloudflare deployment offers either a historical walkability band from the EPA National Walkability Index or a 2020 urban/rural classification from U.S. Census blocks, without dataset preparation. Each lookup **sends coordinates transiently to the study Worker and the selected government service**; no coordinate, block ID, or area ID is saved in response files. Census urban/rural does not identify suburban places. For studies that cannot transmit coordinates to a lookup provider, a researcher can upload a licensed GeoJSON of documented study-area indicator bands (walkability, pollution, deprivation, urbanicity) and match them in the participant browser. Researcher-supplied pollution bands must specify the pollutant and reference period; no mode collects live air quality by default. Preview never requests real location; researchers must review consent, privacy, and accuracy before enrollment.
 - ePAT and heartbeat counting (beta), using a phone camera and flashlight for PPG. Check device compatibility and your research protocol before collecting data.
 - Implicit Association Task (experimental; not validated for confirmatory research).
 
@@ -57,4 +57,4 @@ The participant runtime and exported study files are inspectable. Run `npm run c
 
 ## License and contact
 
-[MIT License](LICENSE). Questions: keeganwhitacre at gmail dot com.
+[MIT License](LICENSE). To cite EMA Forge, use GitHub's **Cite this repository** menu, populated by [`CITATION.cff`](CITATION.cff). Once a versioned release is archived on Zenodo, cite that release's DOI. A software citation does not imply that a measure or deployment has been validated. Questions: keeganwhitacre at gmail dot com.

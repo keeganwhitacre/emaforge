@@ -143,6 +143,47 @@ test("optional EPA lookup returns only a category and does not store coordinates
   } finally { global.fetch = originalFetch; }
 });
 
+test("Census urbanicity returns only an explicit urban/rural flag and keeps missing distinct", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const config = { study: { name: 'Urbanicity pilot' }, ema: { questions: [
+    { id: 'place', type: 'place_context', location_mode: 'census_urbanicity' }
+  ] } };
+  const studyHtml = `<!doctype html><meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = ${JSON.stringify(config)};</script>`;
+  assert.equal((await worker.fetch(adminRequest('https://study.example/admin/install', {
+    method: 'POST', headers: { 'Content-Type': 'text/html' }, body: studyHtml
+  }), environment)).status, 200);
+  const lookup = (mode = 'census_urbanicity') => worker.fetch(new Request('https://study.example/place/lookup', {
+    method: 'POST', headers: { Origin: 'https://study.example', 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ latitude: 39.96, longitude: -83, accuracy: 20, mode })
+  }), environment);
+  assert.equal((await lookup('epa_walkability')).status, 403);
+  const originalFetch = global.fetch;
+  try {
+    let flag = 'U';
+    global.fetch = async (url, options) => {
+      assert.match(url, /^https:\/\/tigerweb\.geo\.census\.gov\//);
+      assert.equal(options.body.get('outFields'), 'UR');
+      assert.equal(JSON.parse(options.body.get('geometry')).y, 39.96);
+      return new Response(JSON.stringify({ features: flag === null ? [] : [{ attributes: { UR: flag } }] }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    };
+    const urban = await (await lookup()).json();
+    assert.deepEqual(urban, { status: 'classified', indicators: { urbanicity: 'urban' },
+      dataset: 'U.S. Census Bureau 2020 Census Blocks', version: '2020' });
+    assert.doesNotMatch(JSON.stringify(urban), /39\.96|-83|lat|lon|GEOID/);
+    flag = 'R';
+    assert.equal((await (await lookup()).json()).indicators.urbanicity, 'rural');
+    flag = null;
+    assert.equal((await (await lookup()).json()).status, 'outside_study_area');
+    flag = 'x';
+    assert.equal((await (await lookup()).json()).status, 'uncertain_boundary');
+    assert.equal([...bucket.objects.keys()].filter(key => key.startsWith('sessions/')).length, 0);
+  } finally { global.fetch = originalFetch; }
+});
+
 test("Cloudflare admin exposes a protected control center and validated roster", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

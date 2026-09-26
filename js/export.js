@@ -29,7 +29,7 @@ async function loadTemplates() {
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
   if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260925g');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
-  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926a');
+  if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926b');
   if (!templates.placeContext) templates.placeContext = await fetchTemplate('js/place-context.js?v=20260925g');
   if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
   if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');

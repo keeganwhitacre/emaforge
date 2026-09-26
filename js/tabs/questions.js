@@ -586,8 +586,10 @@ function buildPlaceContextFields(q) {
   const mode = q.location_mode || (dataset ? 'local_dataset' : 'epa_walkability');
   return `<div class="field-group"><strong>Study-area indicator lookup</strong>
     <label class="field-label">Lookup method</label>
-    <select class="place-mode"><option value="epa_walkability" ${mode === 'epa_walkability' ? 'selected' : ''}>Automatic EPA walkability (US; Cloudflare host)</option><option value="local_dataset" ${mode === 'local_dataset' ? 'selected' : ''}>On-device lookup from my study-area data</option></select>
-    <p class="place-mode-hint field-hint">${mode === 'epa_walkability'
+    <select class="place-mode"><option value="epa_walkability" ${mode === 'epa_walkability' ? 'selected' : ''}>Automatic EPA walkability (US; Cloudflare host)</option><option value="census_urbanicity" ${mode === 'census_urbanicity' ? 'selected' : ''}>Automatic Census urban / rural (US; Cloudflare host)</option><option value="local_dataset" ${mode === 'local_dataset' ? 'selected' : ''}>On-device lookup from my study-area data</option></select>
+    <p class="place-mode-hint field-hint">${mode === 'census_urbanicity'
+      ? 'No dataset upload needed. Coordinates go briefly to the study Worker and U.S. Census Bureau. Only a 2020 urban/rural category or missing status is saved. Suburban is not a Census category here.'
+      : mode === 'epa_walkability'
       ? 'No dataset upload needed. When a participant taps Use my location, their coordinates are sent briefly to the study Worker and EPA’s public mapping service. Neither is added to EMA Forge response files. This returns the historical EPA walkability band only, not current air quality or pollution.'
       : 'Coordinates stay in the participant browser. Upload a small GeoJSON FeatureCollection of areas with documented indicator categories. Its geometry is published with the study.'}</p>
     <input type="file" class="place-dataset-file" ${mode === 'local_dataset' ? '' : 'hidden'} accept=".geojson,.json,application/geo+json,application/json" aria-label="Study-area GeoJSON lookup">
@@ -603,6 +605,8 @@ function bindPlaceContextFields(card, q) {
     card.querySelector('.place-upload-hint').hidden = !local;
     card.querySelector('.place-mode-hint').textContent = local
       ? 'Coordinates stay in the participant browser. Upload a GeoJSON lookup of areas and documented indicator categories. Its geometry is published with the study.'
+      : q.location_mode === 'census_urbanicity'
+      ? 'No upload needed. Coordinates go briefly to the study Worker and U.S. Census Bureau. Only a 2020 urban/rural category or missing status is saved. Suburban needs a separate, documented definition.'
       : 'No upload needed. Coordinates are sent briefly to the study Worker and EPA’s public mapping service when participants choose to use location. Response files contain only a historical walkability band or a missing status.';
   };
   q.location_mode = q.location_mode || (q.location_dataset ? 'local_dataset' : 'epa_walkability');

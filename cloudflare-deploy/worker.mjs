@@ -151,26 +151,28 @@ async function storeSubmission(request, env, origin) {
 
 // The request body contains coordinates only while this request is handled.
 // Neither it nor the EPA response is written to R2 or echoed to clients.
-async function lookupWalkability(request, env) {
+async function lookupPlaceContext(request, env) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return json({ error: 'Study origin is not allowed' }, 403);
   const length = Number(request.headers.get('Content-Length'));
   if (Number.isFinite(length) && length > 256) return json({ error: 'Invalid location request' }, 400);
   const config = await readJson(env, 'study/current-config.json', null);
-  if (!config?.ema?.questions?.some(question => question.type === 'place_context' && question.location_mode === 'epa_walkability')) {
-    return json({ error: 'Online place context is not enabled for this study' }, 403);
-  }
   let payload;
   try {
     const raw = await request.text();
     if (textEncoder.encode(raw).byteLength > 256) return json({ error: 'Invalid location request' }, 400);
     payload = JSON.parse(raw);
   } catch (_) { return json({ error: 'Invalid location request' }, 400); }
-  const { latitude, longitude, accuracy } = payload || {};
+  const { latitude, longitude, accuracy, mode = 'epa_walkability' } = payload || {};
+  if (!['epa_walkability', 'census_urbanicity'].includes(mode) ||
+      !config?.ema?.questions?.some(question => question.type === 'place_context' && question.location_mode === mode)) {
+    return json({ error: 'This place lookup is not enabled for this study' }, 403);
+  }
   if (![latitude, longitude, accuracy].every(value => typeof value === 'number' && Number.isFinite(value)) ||
       Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || accuracy < 0) {
     return json({ error: 'Invalid location request' }, 400);
   }
   if (accuracy > 250) return json({ status: 'uncertain_accuracy' });
+  if (mode === 'census_urbanicity') return lookupUrbanicity(latitude, longitude);
   const form = new URLSearchParams({
     f: 'json', geometry: JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } }),
     geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects',
@@ -192,6 +194,29 @@ async function lookupWalkability(request, env) {
     const band = score <= 5.75 ? 'very_low' : score <= 10.5 ? 'low' : score <= 15.25 ? 'high' : 'very_high';
     return json({ status: 'classified', indicators: { walkability: band },
       dataset: 'EPA National Walkability Index', version: '2021' });
+  } catch (_) { return json({ status: 'service_unavailable' }); }
+  finally { clearTimeout(timeout); }
+}
+
+// Census 2020 block attributes explicitly distinguish urban (U) and rural
+// (R). A missing block or missing flag is never inferred to mean rural.
+async function lookupUrbanicity(latitude, longitude) {
+  const geometry = JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } });
+  const query = new URLSearchParams({ f: 'json', geometry, geometryType: 'esriGeometryPoint',
+    inSR: '4326', spatialRel: 'esriSpatialRelIntersects', outFields: 'UR', returnGeometry: 'false' });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/2/query', { method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: query, signal: controller.signal });
+    if (!response.ok) return json({ status: 'service_unavailable' });
+    const data = await response.json();
+    if (!Array.isArray(data.features) || data.error) return json({ status: 'service_unavailable' });
+    if (!data.features.length) return json({ status: 'outside_study_area' });
+    const flags = new Set(data.features.map(feature => feature?.attributes?.UR));
+    if (flags.size !== 1 || !['U', 'R'].includes([...flags][0])) return json({ status: 'uncertain_boundary' });
+    return json({ status: 'classified', indicators: { urbanicity: flags.has('U') ? 'urban' : 'rural' },
+      dataset: 'U.S. Census Bureau 2020 Census Blocks', version: '2020' });
   } catch (_) { return json({ status: 'service_unavailable' }); }
   finally { clearTimeout(timeout); }
 }
@@ -912,7 +937,7 @@ export default {
     }
     if (path === '/submit' && request.method === 'POST') return storeSubmission(request, env, request.headers.get('Origin'));
     if (path === '/submit') return json({ error: 'POST required' }, 405);
-    if (path === '/place/lookup' && request.method === 'POST') return lookupWalkability(request, env);
+    if (path === '/place/lookup' && request.method === 'POST') return lookupPlaceContext(request, env);
     if (path === '/place/lookup') return json({ error: 'POST required' }, 405);
     if ((path === '/' || path === '/index.html') && request.method === 'GET') return serveStudy(env);
     return json({ error: 'Not found' }, 404);

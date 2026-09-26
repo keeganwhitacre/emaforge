@@ -60,6 +60,8 @@ test('place context export needs a lookup, researcher acknowledgement, and an op
   assert.ok(!codes().some(code => code.startsWith('place_context_')));
   Object.assign(config.ema.questions[0], { location_mode: 'epa_walkability', location_dataset: undefined });
   assert.ok(!codes().some(code => code.startsWith('place_context_')));
+  config.ema.questions[0].location_mode = 'census_urbanicity';
+  assert.ok(!codes().some(code => code.startsWith('place_context_')));
   assert.deepEqual(place.epaWalkability(5.7).indicators, { walkability: 'very_low' });
   assert.deepEqual(place.epaWalkability(16).indicators, { walkability: 'very_high' });
 });

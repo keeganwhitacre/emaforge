@@ -250,8 +250,8 @@
         if (question.required) issues.push(issue("error", "place_context_optional", `${path}.required`, "Place context must allow participants to skip location access."));
         if (!question.location_terms_accepted) issues.push(issue("error", "place_context_terms", path, "Review the place-context setup notice before adding this measure."));
         const locationMode = question.location_mode || (question.location_dataset ? 'local_dataset' : null);
-        if (!['epa_walkability', 'local_dataset'].includes(locationMode)) {
-          issues.push(issue("error", "place_context_mode", `${path}.location_mode`, "Choose EPA online walkability or an on-device dataset."));
+        if (!['epa_walkability', 'census_urbanicity', 'local_dataset'].includes(locationMode)) {
+          issues.push(issue("error", "place_context_mode", `${path}.location_mode`, "Choose EPA walkability, Census urbanicity, or an on-device dataset."));
         } else if (locationMode === 'local_dataset') {
           const datasetError = placeContext.validate(question.location_dataset);
           if (datasetError) issues.push(issue("error", "place_context_dataset", `${path}.location_dataset`, datasetError));

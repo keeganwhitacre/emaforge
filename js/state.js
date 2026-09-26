@@ -223,7 +223,7 @@ function buildConfig() {
   if (cfg.study.resume_enabled  === undefined) cfg.study.resume_enabled  = true;
   cfg.onboarding.consent_text = sanitizeConsentHtml(cfg.onboarding.consent_text);
   (cfg.ema?.questions || []).forEach(question => {
-    if (question.type === 'place_context' && question.location_mode === 'epa_walkability') delete question.location_dataset;
+    if (question.type === 'place_context' && ['epa_walkability', 'census_urbanicity'].includes(question.location_mode)) delete question.location_dataset;
   });
 
   // Emit only the ordered sequence consumed by the participant runtime.

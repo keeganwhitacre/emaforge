@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use EMA Forge in research, please cite the software release you used."
+title: "EMA Forge"
+type: software
+authors:
+  - family-names: Whitacre
+    given-names: Keegan
+repository-code: "https://github.com/keeganwhitacre/emaforge"
+url: "https://emaforge.keeganwhitacre.com/"
+license: MIT
+abstract: "Open-source browser-based builder and Cloudflare-hosted runtime for ecological momentary assessment studies, with optional smartphone physiology tasks and area-context lookups."
