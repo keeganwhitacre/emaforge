@@ -110,7 +110,7 @@ function confirmPlaceContext(onAccept) {
   dialog.setAttribute('aria-label', 'Place context setup');
   dialog.style.cssText = 'max-width:min(540px,calc(100vw - 32px));padding:24px;border:1px solid #c9ced3;border-radius:8px;color:#222;background:#fff;line-height:1.55;box-shadow:0 20px 60px #0004';
   dialog.innerHTML = `<h2 style="margin:0 0 12px">Add place context?</h2>
-    <p>This optional measure asks for the participant’s current location only when they tap Use my location. Automatic EPA walkability and Census urban/rural require a Cloudflare study host and send coordinates to the study Worker and each selected provider. Alternatively, upload a licensed area dataset so matching happens entirely in the participant browser.</p>
+    <p>This optional measure asks for the participant’s current location only when they tap Use my location. Automatic EPA built-environment measures and Census urban/rural require a Cloudflare study host and send coordinates to the study Worker and each selected provider. Alternatively, upload a licensed area dataset so matching happens entirely in the participant browser.</p>
     <p>Coordinates are not written to EMA Forge responses in either mode. Services involved in an online lookup may process requests and metadata; derived area categories can still be sensitive with participant IDs and response times. Check consent, IRB and institutional requirements, source terms, coverage, and device accuracy before enrollment.</p>
     <label style="display:flex;gap:10px;align-items:start;margin:16px 0"><input type="checkbox" required style="margin-top:6px"><span>I understand the source, consent, and privacy limits.</span></label>
     <div style="display:flex;gap:10px;justify-content:end"><button type="button" data-action="cancel">Cancel</button><button type="button" data-action="add" disabled>Add optional measure</button></div>`;
@@ -592,10 +592,13 @@ function buildPlaceContextFields(q) {
     <div class="place-online-options" ${mode === 'local_dataset' ? 'hidden' : ''}>
       <label class="toggle-row"><input type="checkbox" value="walkability" ${selected.includes('walkability') ? 'checked' : ''}> EPA walkability (2021)</label>
       <label class="toggle-row"><input type="checkbox" value="urbanicity" ${selected.includes('urbanicity') ? 'checked' : ''}> Census urban / rural (2020)</label>
+      <label class="toggle-row"><input type="checkbox" value="population_density" ${selected.includes('population_density') ? 'checked' : ''}> EPA population density (2018 estimate; people per developable acre)</label>
+      <label class="toggle-row"><input type="checkbox" value="transit_distance" ${selected.includes('transit_distance') ? 'checked' : ''}> EPA distance to transit (historical block-group centroid)</label>
+      <label class="toggle-row"><input type="checkbox" value="car_free_households" ${selected.includes('car_free_households') ? 'checked' : ''}> EPA share of households without a car (2018 estimate)</label>
     </div>
     <p class="place-mode-hint field-hint">${mode === 'local_dataset'
       ? 'Coordinates stay in the participant browser. Upload a small GeoJSON FeatureCollection of areas with documented indicator categories. Its geometry is published with the study.'
-      : 'Select one or both. One location permission request sends coordinates through the study Worker to each selected provider. Only categories and per-indicator statuses are stored; suburban and live pollution are not included.'}</p>
+      : 'Select any combination. One permission request sends coordinates through the Worker to EPA and/or Census as needed. Only broad categories and per-indicator statuses are stored. Combining categories with response times and participant IDs can still narrow a location.'}</p>
     <input type="file" class="place-dataset-file" ${mode === 'local_dataset' ? '' : 'hidden'} accept=".geojson,.json,application/geo+json,application/json" aria-label="Study-area GeoJSON lookup">
     <p class="place-dataset-status field-hint" role="status">${dataset?.metadata && Array.isArray(dataset.features) ? `${escH(String(dataset.metadata.name || 'Unknown'))} · ${escH(String(dataset.metadata.version || '?'))} · ${dataset.features.length} areas` : 'No dataset yet. Export is blocked until you add one.'}</p>
     <p class="place-upload-hint field-hint">Up to 2 MB. Use licensed public data and document each band. Never include addresses or participant records in the file.</p></div>`;
@@ -616,7 +619,7 @@ function bindPlaceContextFields(card, q) {
     card.querySelector('.place-upload-hint').hidden = !local;
     card.querySelector('.place-mode-hint').textContent = local
       ? 'Coordinates stay in the participant browser. Upload a GeoJSON lookup of areas and documented indicator categories. Its geometry is published with the study.'
-      : 'Select one or both. One location permission request sends coordinates through the study Worker to each selected provider. Only categories and per-indicator statuses are stored; suburban and live pollution are not included.';
+      : 'Select any combination. One permission request sends coordinates through the Worker to EPA and/or Census as needed. Only broad categories and per-indicator statuses are stored. Combining categories with response times and participant IDs can still narrow a location.';
   };
   card.querySelector('.place-mode').addEventListener('change', event => {
     q.location_mode = event.target.value;

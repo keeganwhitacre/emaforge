@@ -327,16 +327,17 @@ const EMA = (function() {
     const selected = q.location_mode === 'online_indicators' ? q.location_indicators || [] :
       census ? ['urbanicity'] : ['walkability'];
     const online = q.location_mode === 'online_indicators' || q.location_mode === 'epa_walkability' || census;
-    const both = online && selected.length === 2;
-    explanation.textContent = both ? 'Add broad walkability and urban/rural categories for the area you are in right now.' :
-      selected[0] === 'urbanicity' && online ? 'Add a broad urban or rural category for the area you are in right now.' : online
-      ? 'Add a broad walkability category for the area you are in right now.'
+    const labels = { walkability: 'walkability', urbanicity: 'urban/rural status',
+      population_density: 'population density', transit_distance: 'distance to transit',
+      car_free_households: 'share of households without a car' };
+    explanation.textContent = online
+      ? `Add broad area context (${selected.map(key => labels[key] || key).join(', ')}) for where you are right now.`
       : `Add area information using ${dataset?.metadata?.name || 'the study-area lookup'}.`;
     group.appendChild(explanation);
     const privacy = document.createElement('p');
     privacy.className = 'place-context-privacy';
     privacy.textContent = online
-      ? `If you choose to continue, your coordinates go to this study’s Cloudflare Worker and ${both ? 'EPA and the U.S. Census Bureau' : selected[0] === 'urbanicity' ? 'the U.S. Census Bureau' : 'EPA'} for a one-time lookup. The study response saves only categories or missing statuses.`
+      ? `If you choose to continue, your coordinates go to this study’s Cloudflare Worker and ${selected.includes('urbanicity') ? selected.length > 1 ? 'EPA and the U.S. Census Bureau' : 'the U.S. Census Bureau' : 'EPA'} for a one-time lookup. The study response saves only categories or missing statuses.`
       : 'If you choose to continue, this browser uses your coordinates to look up categories. The study response saves only categories or a status, never coordinates or an area ID.';
     group.appendChild(privacy);
     const details = document.createElement('details');
@@ -344,11 +345,8 @@ const EMA = (function() {
     const summary = document.createElement('summary');
     summary.textContent = 'More about privacy and the data';
     const more = document.createElement('p');
-    more.textContent = both
-      ? 'Cloudflare, EPA, and the Census Bureau may process request metadata. EPA walkability uses a 2021 area measure; Census urban/rural uses 2020 boundaries. A provider may fail while the other succeeds. Neither measures current conditions or identifies suburban areas. Categories may still be sensitive with other answers. You can skip this question.'
-      : selected[0] === 'urbanicity' && online
-      ? 'Cloudflare and the Census Bureau may process request metadata. This uses 2020 Census urban-area boundaries. It does not identify suburban areas or measure current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
-      : online ? 'Cloudflare and EPA may process request metadata. The EPA National Walkability Index is a historical area measure, not current conditions. Categories may still be sensitive when combined with other answers. You can skip this question.'
+    more.textContent = online
+      ? 'Cloudflare and selected government data providers may process request metadata. EPA measures are historical block-group estimates; Census urban/rural uses 2020 blocks. Transit distance is from an area centroid, not your position. The no-car share describes the area, not your household. There is no suburban or live pollution result. Combined categories and response times may narrow an area. You can skip this question.'
       : `The ${dataset?.metadata?.name || 'study-area lookup'} (${dataset?.metadata?.version || 'unconfigured'}) runs in this browser. Categories may still be sensitive when combined with other answers. You can skip this question.`;
     details.append(summary, more);
     group.appendChild(details);

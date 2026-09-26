@@ -166,8 +166,8 @@ async function lookupPlaceContext(request, env) {
   const { latitude, longitude, accuracy, mode = 'epa_walkability', indicators } = payload || {};
   const selected = mode === 'online_indicators' ? indicators :
     mode === 'census_urbanicity' ? ['urbanicity'] : mode === 'epa_walkability' ? ['walkability'] : [];
-  if (!Array.isArray(selected) || !selected.length || selected.length > 2 ||
-      new Set(selected).size !== selected.length || selected.some(key => !['walkability', 'urbanicity'].includes(key)) ||
+  if (!Array.isArray(selected) || !selected.length || selected.length > 5 ||
+      new Set(selected).size !== selected.length || selected.some(key => !['walkability', 'urbanicity', 'population_density', 'transit_distance', 'car_free_households'].includes(key)) ||
       !config?.ema?.questions?.some(question => question.type === 'place_context' &&
         (mode === 'online_indicators' ? question.location_mode === mode &&
           Array.isArray(question.location_indicators) && question.location_indicators.length === selected.length &&
@@ -179,12 +179,23 @@ async function lookupPlaceContext(request, env) {
     return json({ error: 'Invalid location request' }, 400);
   }
   if (accuracy > 250) return json({ status: 'uncertain_accuracy' });
-  if (selected.length === 1) return selected[0] === 'urbanicity' ? lookupUrbanicity(latitude, longitude) : lookupWalkability(latitude, longitude);
-  const [walkability, urbanicity] = await Promise.all([
-    lookupWalkability(latitude, longitude).then(response => response.json()),
-    lookupUrbanicity(latitude, longitude).then(response => response.json())
+  // Keep the original single-indicator response shape for older prepared studies.
+  if (selected.length === 1 && ['walkability', 'urbanicity'].includes(selected[0]))
+    return selected[0] === 'urbanicity' ? lookupUrbanicity(latitude, longitude) : lookupWalkability(latitude, longitude);
+  const needsSmartLocation = selected.some(key => ['population_density', 'transit_distance', 'car_free_households'].includes(key));
+  const [walkability, urbanicity, smartLocation] = await Promise.all([
+    selected.includes('walkability') ? lookupWalkability(latitude, longitude).then(response => response.json()) : null,
+    selected.includes('urbanicity') ? lookupUrbanicity(latitude, longitude).then(response => response.json()) : null,
+    needsSmartLocation ? lookupSmartLocation(latitude, longitude).then(response => response.json()) : null
   ]);
   const sources = { walkability, urbanicity };
+  for (const key of ['population_density', 'transit_distance', 'car_free_households']) {
+    if (selected.includes(key)) sources[key] = {
+      status: smartLocation.statuses?.[key] || smartLocation.status,
+      indicators: smartLocation.indicators,
+      dataset: smartLocation.dataset, version: smartLocation.version
+    };
+  }
   const values = {};
   const statuses = {};
   const datasets = {};
@@ -197,9 +208,46 @@ async function lookupPlaceContext(request, env) {
     }
   }
   const classified = Object.keys(values).length;
+  const missing = Object.values(statuses);
   return json({ status: classified === selected.length ? 'classified' : classified ? 'partial' :
-    Object.values(statuses).every(status => status === 'outside_study_area') ? 'outside_study_area' : 'service_unavailable',
+    missing.every(status => status === 'outside_study_area') ? 'outside_study_area' :
+    missing.every(status => status === 'data_unavailable') ? 'data_unavailable' : 'service_unavailable',
     indicators: values, indicator_statuses: statuses, datasets });
+}
+
+// EPA SLD v3 block-group context. Fixed descriptive bands, not clinical or
+// individual measures. Return only categorical results; discard provider IDs.
+async function lookupSmartLocation(latitude, longitude) {
+  const form = new URLSearchParams({ f: 'json',
+    geometry: JSON.stringify({ x: longitude, y: latitude, spatialReference: { wkid: 4326 } }),
+    geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'D1B,D4A,Pct_AO0', returnGeometry: 'false' });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('https://geodata.epa.gov/arcgis/rest/services/OA/SmartLocationDatabase/MapServer/2/query', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form, signal: controller.signal
+    });
+    if (!response.ok) return json({ status: 'service_unavailable' });
+    const data = await response.json();
+    if (!Array.isArray(data.features) || data.error) return json({ status: 'service_unavailable' });
+    if (!data.features.length) return json({ status: 'outside_study_area' });
+    if (data.features.length !== 1) return json({ status: 'uncertain_boundary' });
+    const { D1B: density, D4A: transit, Pct_AO0: noCar } = data.features[0].attributes || {};
+    const valid = value => typeof value === 'number' && Number.isFinite(value);
+    const indicators = {};
+    const statuses = {};
+    const add = (key, value, inRange, band) => {
+      statuses[key] = valid(value) && inRange(value) ? 'classified' : 'data_unavailable';
+      if (statuses[key] === 'classified') indicators[key] = band(value);
+    };
+    add('population_density', density, n => n >= 0, n => n < 1 ? 'low' : n < 10 ? 'moderate' : 'high');
+    add('transit_distance', transit, n => n >= 0, n => n <= 400 ? 'near' : n <= 1600 ? 'intermediate' : 'far');
+    add('car_free_households', noCar, n => n >= 0 && n <= 1, n => n < .05 ? 'low' : n < .20 ? 'moderate' : 'high');
+    return json({ status: Object.values(statuses).some(value => value === 'classified') ? 'classified' : 'data_unavailable',
+      indicators, statuses, dataset: 'EPA Smart Location Database v3', version: '2021' });
+  } catch (_) { return json({ status: 'service_unavailable' }); }
+  finally { clearTimeout(timeout); }
 }
 
 async function lookupWalkability(latitude, longitude) {

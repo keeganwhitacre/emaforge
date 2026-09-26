@@ -281,6 +281,45 @@ test("one location request returns both configured indicators with explicit part
   } finally { global.fetch = originalFetch; }
 });
 
+test("EPA area indicators use one query, preserve missing values, and return only bands", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const indicators = ['population_density', 'transit_distance', 'car_free_households'];
+  const config = { study: { name: 'Community context' }, ema: { questions: [
+    { id: 'place', type: 'place_context', location_mode: 'online_indicators', location_indicators: indicators }
+  ] } };
+  await bucket.put('study/current-config.json', JSON.stringify(config));
+  const lookup = selected => worker.fetch(new Request('https://study.example/place/lookup', {
+    method: 'POST', headers: { Origin: 'https://study.example', 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ latitude: 39.96, longitude: -83, accuracy: 20,
+      mode: 'online_indicators', indicators: selected })
+  }), env(bucket));
+  assert.equal((await lookup(['population_density'])).status, 403);
+  const originalFetch = global.fetch;
+  try {
+    let attributes = { D1B: 0.8, D4A: 1200, Pct_AO0: 0.28, GEOID20: 'secret' };
+    let calls = 0;
+    global.fetch = async (url, options) => {
+      calls++;
+      assert.match(url, /SmartLocationDatabase\/MapServer\/2\/query$/);
+      assert.equal(options.body.get('outFields'), 'D1B,D4A,Pct_AO0');
+      return Response.json({ features: [{ attributes }] });
+    };
+    const result = await (await lookup(indicators)).json();
+    assert.equal(calls, 1);
+    assert.deepEqual(result.indicators, { population_density: 'low', transit_distance: 'intermediate', car_free_households: 'high' });
+    assert.deepEqual(result.indicator_statuses, Object.fromEntries(indicators.map(key => [key, 'classified'])));
+    assert.doesNotMatch(JSON.stringify(result), /GEOID|secret|39\.96|-83|D1B|D4A|Pct_AO0/);
+    attributes = { D1B: 12, D4A: -99999, Pct_AO0: null };
+    const partial = await (await lookup(indicators)).json();
+    assert.equal(partial.status, 'partial');
+    assert.deepEqual(partial.indicators, { population_density: 'high' });
+    assert.equal(partial.indicator_statuses.transit_distance, 'data_unavailable');
+    assert.equal(partial.indicator_statuses.car_free_households, 'data_unavailable');
+    assert.equal([...bucket.objects.keys()].filter(key => key.startsWith('sessions/')).length, 0);
+  } finally { global.fetch = originalFetch; }
+});
+
 test("Cloudflare admin exposes a protected control center and validated roster", async () => {
   const worker = await workerPromise;
   const bucket = new MemoryBucket();

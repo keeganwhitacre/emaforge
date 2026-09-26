@@ -254,9 +254,9 @@
           issues.push(issue("error", "place_context_mode", `${path}.location_mode`, "Choose automatic public indicators or an on-device dataset."));
         } else if (locationMode === 'online_indicators' &&
           (!Array.isArray(question.location_indicators) || !question.location_indicators.length ||
-            question.location_indicators.length > 2 ||
+            question.location_indicators.length > 5 ||
             new Set(question.location_indicators).size !== question.location_indicators.length ||
-            question.location_indicators.some(key => !['walkability', 'urbanicity'].includes(key)))) {
+            question.location_indicators.some(key => !['walkability', 'urbanicity', 'population_density', 'transit_distance', 'car_free_households'].includes(key)))) {
           issues.push(issue("error", "place_context_indicators", `${path}.location_indicators`, "Select at least one supported public indicator."));
         } else if (locationMode === 'local_dataset') {
           const datasetError = placeContext.validate(question.location_dataset);
