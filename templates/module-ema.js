@@ -355,7 +355,7 @@ const EMA = (function() {
     status.className = 'place-context-status';
     const existing = valueOf(q.id);
     if (existing) status.textContent = existing.status === 'classified' ? 'Area context added.' :
-      existing.status === 'partial' ? 'Some area information was added; another lookup was unavailable.' :
+      existing.status === 'partial' ? 'Some area information was added; one or more selected measures were unavailable.' :
       `Location result: ${existing.status.replace(/_/g, ' ')}.`;
     const action = document.createElement('button');
     action.type = 'button'; action.className = 'btn btn-primary'; action.textContent = 'Use my location';
@@ -408,7 +408,7 @@ const EMA = (function() {
         if (requestId !== requestVersion || !wrapper.isConnected) return;
         recordResponse(q.id, result);
         status.textContent = result.status === 'classified' ? 'Area context added. Precise coordinates were not saved in the study response.' :
-          result.status === 'partial' ? 'Some area information was added; another lookup was unavailable. Precise coordinates were not saved in the study response.' :
+          result.status === 'partial' ? 'Some area information was added; one or more selected measures were unavailable. Precise coordinates were not saved in the study response.' :
           `Could not classify this location (${result.status.replace(/_/g, ' ')}). You can continue.`;
         action.disabled = false;
         if (result.status === 'classified' || result.status === 'partial') actions.hidden = true;

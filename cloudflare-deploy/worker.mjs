@@ -1008,11 +1008,13 @@ button:disabled{opacity:.55;cursor:wait}.return-link{background:#fff;color:#1f23
 .result strong,.detail{display:block}.detail{margin-top:4px;font-size:.88rem;color:inherit}
 </style></head><body><main class="card"><p style="margin:0 0 7px;color:#a63f35;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase">EMA Forge setup</p>
 <h1 id="check-heading">Check response storage</h1><p>This sends one synthetic setup record to private storage. It stays separate from participant responses.</p>
-<div class="actions"><button id="send" type="button">Run connection check</button><a class="return-link" href="/admin">Back to Study Admin</a></div>
+<div class="actions"><button id="send" type="button">Run connection check</button><button class="return-link" id="close-tab" type="button">Close tab</button><a class="return-link" href="/admin">Back to Study Admin</a></div>
+<p id="close-hint" class="detail" role="status" aria-live="polite"></p>
 <div id="result" class="result" role="status" aria-live="polite"></div>
 <p>After a successful check, complete one full participant session and confirm it appears in Study Admin.</p></main>
 <script>
 const button=document.getElementById('send');const result=document.getElementById('result');const heading=document.getElementById('check-heading');
+document.getElementById('close-tab').onclick=()=>{window.close();setTimeout(()=>{if(!window.closed)document.getElementById('close-hint').textContent='Your browser cannot close this tab automatically. Close it using your browser to return to the open Admin tab.';},150)};
 button.onclick=async()=>{button.disabled=true;button.textContent='Checking…';result.className='result';
 try{const id='setup_'+Date.now();const payload={test:true,submission_id:id,participant_id:'ema-forge-setup-test',day:null,window_id:'setup-test',session_data:{sessionId:id,participantId:'ema-forge-setup-test',day:null,data:[],test:true}};
 const response=await fetch('/submit',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});const receipt=await response.json();
