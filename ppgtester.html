@@ -11,6 +11,7 @@
   <title>EMA Forge — PPG Tester</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/studio.css">
+  <link rel="stylesheet" href="css/surfaces.css?v=20261120">
   <style>
     /* ── Forge design tokens already loaded via studio.css ──
        All sizing and color below uses those vars exclusively. */
@@ -434,6 +435,15 @@
       transition: all var(--transition);
     }
     #btn-close-knob:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
+    #topbar-inner {
+      margin: 0 8px;
+      background: var(--surface-bg);
+      border: 1px solid var(--surface-line);
+      border-radius: var(--surface-radius);
+      box-shadow: var(--surface-shadow);
+    }
+    .topbar-back, .btn, .btn-ghost, #btn-start, #btn-sync, #btn-stop { border-radius: var(--pill-radius); }
+    #cam-preview { border-radius: var(--group-radius); }
   </style>
 </head>
 <body>

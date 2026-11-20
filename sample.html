@@ -5,22 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sample check-in · EMA Forge</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="js/public-theme.js?v=20261120"></script>
+  <link rel="stylesheet" href="css/surfaces.css?v=20261120">
   <style>
-    body { margin: 0; background: #f3f4f6; color: #22262b; font: 16px system-ui, sans-serif; }
-    main { max-width: 480px; margin: 0 auto; padding: 18px; }
-    h1 { font-size: 1.65rem; margin: 12px 0 6px; }
-    p { line-height: 1.5; margin: 6px 0 14px; }
-    a { color: #8d382f; }
-    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
-    button { font: inherit; color: inherit; background: white; border: 1px solid #9a9da0; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
-    button[aria-pressed="true"] { color: #fff; background: #292c30; border-color: #292c30; }
-    iframe[hidden] { display: none; }
-    iframe { display: block; border: 0; width: 100%; height: min(690px, max(500px, 74dvh)); border-radius: 14px; background: #000; }
+    :root { color-scheme: dark; --ink: #f0efeb; --muted: #bcc0bd; --accent: #df8e84; }
+    [data-theme="light"] { color-scheme: light; --ink: #242930; --muted: #4a5562; --accent: #953b32; }
+    body { margin: 0; background: var(--workspace-bg); color: var(--ink); font: 16px system-ui, sans-serif; }
+    main { max-width: 500px; margin: 0 auto; padding: 18px; }
+    .sample-brand { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: var(--pill-radius); background: var(--surface-bg); box-shadow: var(--surface-shadow); text-decoration: none; font-weight: 650; }
+    h1 { font-size: clamp(1.65rem, 6vw, 2.1rem); letter-spacing: -.035em; margin: 18px 0 6px; }
+    p { color: var(--muted); line-height: 1.5; margin: 6px 0 14px; }
+    a { color: var(--accent); text-underline-offset: .2em; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    button { font: inherit; font-size: 14px; color: inherit; background: var(--surface-bg); border: 1px solid var(--surface-line); border-radius: var(--pill-radius); min-height: 40px; padding: 8px 13px; cursor: pointer; }
+    button[aria-pressed="true"] { background: var(--action-fill); border-color: var(--action-fill); color: var(--action-ink); }
+    :is(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    iframe[hidden], #sample-status:empty { display: none; }
+    iframe { display: block; border: 1px solid var(--surface-line); width: 100%; height: min(690px, max(500px, 74dvh)); border-radius: var(--surface-radius); background: #000; box-shadow: var(--surface-shadow-raised); }
   </style>
 </head>
 <body>
 <main>
-  <a href="index.html">EMA Forge</a>
+  <a class="sample-brand" href="index.html"><img src="favicon.svg" alt="" width="22" height="22"> EMA Forge</a>
   <h1>Try a sample check-in</h1>
   <p>See what a participant sees. The camera example is simulated and your answers stay in this demo.</p>
   <div class="actions" aria-label="Sample sessions">
@@ -32,7 +38,7 @@
   <iframe id="sample-frame" title="Sample participant check-in" sandbox="allow-scripts" hidden></iframe>
 </main>
 <script src="js/state.js?v=20260924b"></script>
-<script src="js/export.js?v=20261120"></script>
+<script src="js/export.js?v=20261120b"></script>
 <script src="js/sample.js?v=20261120"></script>
 </body>
 </html>
