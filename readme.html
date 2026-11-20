@@ -98,21 +98,6 @@
       scroll-behavior: smooth;
     }
 
-    .docs-hero {
-      display: none;
-    }
-
-    .docs-hero svg {
-      width: 100%;
-      height: auto;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      background: var(--bg-1);
-      display: block;
-      box-shadow: none;
-      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
     .docs-prose {
       max-width: 780px;
       margin: 0 auto;
@@ -342,18 +327,6 @@
       color: var(--yellow);
     }
 
-    .status-pill.wip {
-      background: transparent;
-      border-color: var(--border);
-      color: var(--fg-2);
-    }
-
-    .status-pill.planned {
-      background: var(--bg-2);
-      border-color: var(--border);
-      color: var(--fg-3);
-    }
-
     /* Collapsible details */
     .docs-prose details {
       background: transparent;
@@ -445,28 +418,6 @@
       font-size: 12px;
       color: var(--fg-3);
       line-height: 1.5;
-    }
-
-    /* File tree */
-    .file-tree {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px 22px;
-      color: var(--fg-2);
-      line-height: 1.7;
-      margin: 20px 0;
-    }
-
-    .file-tree .ft-dir {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .file-tree .ft-comment {
-      color: var(--fg-3);
     }
 
     /* Credit card at the bottom */
@@ -617,14 +568,6 @@
         padding: 20px 18px 80px;
       }
 
-      .docs-hero {
-        margin: 0 auto 28px auto;
-      }
-
-      .docs-hero svg {
-        border-radius: var(--radius);
-      }
-
       /* Tighter prose typography for small screens */
       .docs-prose {
         max-width: 100%;
@@ -725,14 +668,6 @@
         font-size: 13px;
       }
 
-      /* File tree: shrink + allow scroll */
-      .file-tree {
-        font-size: 11px;
-        padding: 12px 14px;
-        overflow-x: auto;
-        white-space: pre;
-      }
-
       /* Feature grid -> single column */
       .feature-grid {
         grid-template-columns: 1fr;
@@ -751,12 +686,6 @@
         gap: 12px;
         padding: 16px;
         margin-top: 32px;
-      }
-
-      /* Hero text inside SVG doesn't respond to CSS, but we can cap the SVG
-       height so it doesn't dominate the viewport on small phones */
-      .docs-hero svg {
-        max-height: 220px;
       }
 
       /* Status pills wrap better */
@@ -865,19 +794,22 @@
       <!-- ========== SIDEBAR ========== -->
       <aside class="docs-sidebar" id="docs-sidebar">
         <div class="docs-nav-group">
-          <div class="docs-nav-title">Introduction</div>
-          <a href="#overview" class="docs-nav-link active">Overview &amp; Architecture</a>
-          <a href="#why-serverless" class="docs-nav-link">Why Serverless?</a>
-          <a href="#feature-status" class="docs-nav-link">Feature Status Matrix</a>
-          <a href="#requirements" class="docs-nav-link">System Requirements</a>
-          <a href="#quickstart" class="docs-nav-link">Quick Start (5 min)</a>
+          <div class="docs-nav-title">Start here</div>
+          <a href="#overview" class="docs-nav-link active">Documentation home</a>
+          <a href="#quickstart" class="docs-nav-link">Your first study</a>
+          <a href="quickstart.html" class="docs-nav-link">Illustrated setup guide</a>
+          <a href="enrollment.html" class="docs-nav-link">Enrollment checklist</a>
+          <a href="#why-serverless" class="docs-nav-link">How it works</a>
+          <a href="#feature-status" class="docs-nav-link">Current features</a>
+          <a href="#requirements" class="docs-nav-link">What you need</a>
           <a href="#protocol-library" class="docs-nav-link">Protocol Library</a>
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">Building a Study</div>
-          <a href="#study-tab" class="docs-nav-link">Study Tab</a>
+          <a href="#study-tab" class="docs-nav-link">Study drafts and Overview</a>
           <a href="#onboarding" class="docs-nav-link">Onboarding &amp; Consent</a>
           <a href="#questions-tab" class="docs-nav-link">Measures</a>
+          <a href="#place-context" class="docs-nav-link">Place context</a>
           <a href="#schedule-tab" class="docs-nav-link">Sessions &amp; Scheduling</a>
           <a href="#tasks-tab" class="docs-nav-link">Task settings</a>
           <a href="#preview" class="docs-nav-link">Live Preview</a>
@@ -886,8 +818,8 @@
           <div class="docs-nav-title">Deployment</div>
           <a href="#export" class="docs-nav-link">Export Options</a>
           <a href="#hosting" class="docs-nav-link">Hosting</a>
-          <a href="#routing" class="docs-nav-link">Participant Routing</a>
-          <a href="#deployment-csv" class="docs-nav-link">Generating Links</a>
+          <a href="#routing" class="docs-nav-link">Participant links</a>
+          <a href="#deployment-csv" class="docs-nav-link">External scheduling template</a>
           <a href="#notifications" class="docs-nav-link">Sending Prompts</a>
         </div>
         <div class="docs-nav-group">
@@ -899,7 +831,7 @@
           <a href="#schema-versioning" class="docs-nav-link">Schema Versioning</a>
         </div>
         <div class="docs-nav-group">
-          <div class="docs-nav-title">Data</div>
+          <div class="docs-nav-title">Data &amp; analysis</div>
           <a href="#data-files" class="docs-nav-link">Session End &amp; Return</a>
           <a href="#csv-schema" class="docs-nav-link">CSV Schema</a>
           <a href="#json-schema" class="docs-nav-link">JSON Schema</a>
@@ -916,8 +848,8 @@
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">Privacy &amp; IRB</div>
-          <a href="#privacy-model" class="docs-nav-link">Privacy Model</a>
-          <a href="#irb-language" class="docs-nav-link">IRB Boilerplate</a>
+          <a href="#privacy-model" class="docs-nav-link">Privacy and data flow</a>
+          <a href="#irb-language" class="docs-nav-link">Sample language for study review</a>
           <a href="#limitations" class="docs-nav-link">Known Limitations</a>
         </div>
         <div class="docs-nav-group">
@@ -927,7 +859,7 @@
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">Roadmap</div>
-          <a href="#roadmap" class="docs-nav-link">What's Coming</a>
+          <a href="#roadmap" class="docs-nav-link">Potential improvements</a>
         </div>
         <div class="docs-nav-group">
           <div class="docs-nav-title">For Developers</div>
@@ -944,60 +876,7 @@
       <!-- ========== MAIN CONTENT ========== -->
       <main class="docs-main" id="docs-main">
 
-        <!-- DYNAMIC HERO BANNER -->
-        <div class="docs-hero">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border)" stroke-width="1.5" opacity="0.8" />
-              </pattern>
-              <radialGradient id="glow" cx="50%" cy="40%" r="50%" fx="50%" fy="40%">
-                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15" />
-                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
-              </radialGradient>
-            </defs>
 
-            <rect width="1200" height="630" fill="var(--bg-1)" />
-            <rect width="1200" height="630" fill="url(#grid)" />
-            <rect width="1200" height="630" fill="url(#glow)" />
-
-            <!-- Title -->
-            <text x="600" y="300" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="96"
-              fill="var(--fg)" text-anchor="middle" letter-spacing="-3">EMA FORGE</text>
-            <text x="600" y="360" font-family="ui-monospace, monospace" font-weight="500" font-size="18"
-              fill="var(--accent)" text-anchor="middle" letter-spacing="6">SERVERLESS · OPEN-SOURCE ·
-              PRIVACY-FIRST</text>
-            <text x="600" y="410" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="22"
-              fill="var(--fg-3)" text-anchor="middle" letter-spacing="0.2">
-              Build, preview, and deploy completely self-contained EMA studies.
-            </text>
-
-            <!-- Feature Pills Container -->
-            <g transform="translate(600, 500)">
-              <g transform="translate(-320, 0)">
-                <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)"
-                  stroke-width="1.5" />
-                <circle cx="-85" cy="0" r="4" fill="var(--green)" />
-                <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14"
-                  fill="var(--fg)" letter-spacing="0.3">Serverless Deployment</text>
-              </g>
-              <g transform="translate(0, 0)">
-                <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)"
-                  stroke-width="1.5" />
-                <circle cx="-85" cy="0" r="4" fill="var(--accent)" />
-                <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14"
-                  fill="var(--fg)" letter-spacing="0.3">Camera PPG &amp; ePAT</text>
-              </g>
-              <g transform="translate(320, 0)">
-                <rect x="-110" y="-22" width="220" height="44" rx="22" fill="var(--bg-2)" stroke="var(--border-hi)"
-                  stroke-width="1.5" />
-                <circle cx="-85" cy="0" r="4" fill="var(--blue)" />
-                <text x="-70" y="5" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="14"
-                  fill="var(--fg)" letter-spacing="0.3">Integrated Dashboard</text>
-              </g>
-            </g>
-          </svg>
-        </div>
 
         <div class="docs-prose">
 
@@ -1005,296 +884,87 @@
           <!-- INTRODUCTION                                                -->
           <!-- ========================================================= -->
 
-          <h1 id="overview">Overview &amp; Architecture</h1>
-          <p><strong>EMA Forge</strong> is an open-source browser-based toolkit for designing mobile ecological
-            momentary assessment (EMA) studies and handing them off to a deployment in the researcher's own Cloudflare
-            account. In one workflow, you can arrange surveys and branching, add optional phone-camera tasks, preview
-            the participant experience, deploy the study with private response storage, and monitor or export responses.
-            The Builder needs no account and does not upload your draft study to EMA Forge.</p>
-
-          <p><strong>The key workflow is from idea to a working study link:</strong> a participant opens the study in
-            their phone browser without installing an app, while the research team manages its own deployment and data.
-            The guided Cloudflare setup can take minutes for a draft; reviewing measures, consent, costs, device support,
-            and institutional approval takes additional work. Phone physiology tasks are experimental and require
-            study-specific validation.</p>
-
-          <p>The workflow has four parts:</p>
+          <h1 id="overview">EMA Forge documentation</h1>
+          <p>Design a mobile ecological momentary assessment (EMA) study in your browser. Combine surveys,
+            branching, and optional tasks, then host the study in your own Cloudflare account. Participants
+            open a link on their phone. Your team manages responses in the hosted Study Admin.</p>
 
           <div class="feature-grid">
             <div class="feature-item">
-              <div class="feature-item-title">Study Builder</div>
-              <div class="feature-item-desc">Arrange questions, sessions, branching, and optional physiology tasks. Hosted at <a
-                  href="https://emaforge.keeganwhitacre.com" target="_blank"
-                  rel="noopener">emaforge.keeganwhitacre.com</a>.</div>
+              <div class="feature-item-title"><a href="quickstart.html">Run your first study</a></div>
+              <div class="feature-item-desc">Follow the illustrated guide from a draft to a test response on your phone.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">Analyze Workspace</div>
-              <div class="feature-item-desc">Import response exports for browser-local summaries and long-format data,
-                or simulate a protocol. The deployed Study Admin also provides live monitoring.</div>
+              <div class="feature-item-title"><a href="enrollment.html">Enrollment checklist</a></div>
+              <div class="feature-item-desc">Review consent, devices, data handling, and delivery before sending real links.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">Researcher-owned Cloudflare host</div>
-              <div class="feature-item-desc">The recommended Worker serves the prepared study, stores responses in
-                private R2 storage, and provides Study Admin. SMS delivery is optional and requires Twilio.</div>
+              <div class="feature-item-title"><a href="#study-tab">Build or edit a study</a></div>
+              <div class="feature-item-desc">Set up drafts, consent, measures, and schedules in Builder.</div>
             </div>
             <div class="feature-item">
-              <div class="feature-item-title">Participant App</div>
-              <div class="feature-item-desc">What participants open in their phone browser from a study link. It can
-                contain surveys, optional camera tasks, and an opt-in area-context lookup; no app install is needed.</div>
+              <div class="feature-item-title"><a href="#dashboard">Analyze responses</a></div>
+              <div class="feature-item-desc">Export from Study Admin, inspect responses locally, or test your analysis with simulated data.</div>
             </div>
           </div>
 
-          <div class="docs-callout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <div class="docs-callout-content">
-              <p><strong>You do not host the Builder yourself.</strong> Go to <a
-                  href="https://emaforge.keeganwhitacre.com" target="_blank"
-                  rel="noopener">emaforge.keeganwhitacre.com</a>, design a study, download the prepared HTML, and
-                install it in the Cloudflare host provisioned in your account. The Builder runs locally in your browser;
-                the deployed Worker and R2 bucket receive responses. Hosting providers may process request metadata,
-                and optional place lookups or SMS involve additional providers.</p>
-              <p>Building requires no EMA Forge account. The recommended deployment uses your Cloudflare account and
-                R2 billing activation; optional Twilio messaging carries separate charges. Manual static hosting and
-                researcher-approved data-return routes are available as advanced options.</p>
-            </div>
-          </div>
-
-          <h2 id="why-serverless">Why Serverless?</h2>
-          <p>The guided deployment provisions a study-specific Worker and private R2 bucket in the researcher's
-            Cloudflare account. You do not maintain an application server, while still documenting these services and
-            the data flow in your protocol. The independent static-host route remains available for teams with an
-            approved receiver or manual data-return process:</p>
-          <ul>
-            <li><strong>Guided Cloudflare handoff.</strong> Install a prepared study in a Worker with its own private
-              response bucket and protected Study Admin. Use a separate deployment for each study.</li>
-            <li><strong>Researcher-controlled exports.</strong> Inspect live response summaries and download response
-              and dispatch logs from the protected deployment. The independent hosting route can instead use a
-              researcher-approved receiver or manual return.</li>
-            <li><strong>Phone-browser participation.</strong> Participants open links without an app installation.
-              Test connectivity, supported devices, submission acknowledgments, and recovery before recruitment.</li>
-            <li><strong>Inspectable runtime.</strong> The prepared study HTML includes the participant-side code and
-              configuration. Researchers can inspect what runs on the phone and document external providers separately.</li>
-          </ul>
-
-          <p>Tradeoffs to be honest about (see <a href="#limitations">Known Limitations</a>):</p>
-          <ul>
-            <li>The recommended Cloudflare deployment includes a private study dashboard; a standalone static export
-              does not, and data are only visible after files are returned to the researcher.</li>
-            <li>SMS still requires the researcher's own Twilio account and sender. The Cloudflare study host provides
-              scheduling, signed callbacks, opt-out updates, and an auditable dispatch log (see <a
-                href="#twilio-integration">Twilio Integration</a>).</li>
-            <li>The static host can see request metadata (IP, timestamp of page load). This is the same constraint as
-              any web page — it's not a data transmission, but it's not nothing.</li>
-          </ul>
-
-          <!-- ========================================================= -->
-          <!-- FEATURE STATUS                                              -->
-          <!-- ========================================================= -->
-
-          <h2 id="feature-status">Feature Status Matrix</h2>
-          <p>Keep this in front of you when planning a study. Anything marked <span class="status-pill beta">BETA</span>
-            has shipped but hasn't yet been through external pilot validation; anything marked <span
-              class="status-pill wip">WIP</span> or <span class="status-pill planned">PLANNED</span> is not yet usable.
-          </p>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Status</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Study Builder (questions, schedule, theme)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Schema v2.0.0.</td>
-              </tr>
-              <tr>
-                <td>Single-file &amp; static-bundle export</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Both include <code>config.json</code>.</td>
-              </tr>
-              <tr>
-                <td>Onboarding / consent flow</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Rich-text consent, progress bar.</td>
-              </tr>
-              <tr>
-                <td>EMA measures (slider, choice, multi, text, number, instructions, body map)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Instruction screens create automatic boundaries; body maps store stable region IDs.</td>
-              </tr>
-              <tr>
-                <td>Affect Grid (valence × arousal)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Stored as <code>{valence, arousal}</code> in [−1, 1].</td>
-              </tr>
-              <tr>
-                <td>Skip logic (compound AND/OR)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Rules on any prior non-multi question.</td>
-              </tr>
-              <tr>
-                <td>Phase sequencing (multi-task windows)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Arbitrary ordered EMA/Task/HR steps.</td>
-              </tr>
-              <tr>
-                <td>Conditional tasks (e.g. run ePAT only if HR &gt; 80)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>See <a href="#conditional-tasks">Conditional Tasks</a>.</td>
-              </tr>
-              <tr>
-                <td>Session locking + crash recovery</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>LocalStorage per-phase resume.</td>
-              </tr>
-              <tr>
-                <td>Analyze workspace (local import, simulation, CSV export)</td>
-                <td><span class="status-pill stable">STABLE</span></td>
-                <td>Runs locally in browser. Scheduled completion is shown only when a schedule manifest exists.</td>
-              </tr>
-              <tr>
-                <td>Heart-rate capture question type (PPG)</td>
-                <td><span class="status-pill beta">BETA</span></td>
-                <td>Requires rear camera + torch. iOS works; desktop no.</td>
-              </tr>
-              <tr>
-                <td>ePAT task (heartbeat perception)</td>
-                <td><span class="status-pill beta">BETA</span></td>
-                <td>Shares PPG core with HR capture.</td>
-              </tr>
-              <tr>
-                <td>Response latency in Analyze</td>
-                <td><span class="status-pill beta">BETA</span></td>
-                <td>Shown when a session includes a notification-to-open duration; imported files without delivery
-                  timestamps remain explicitly unavailable.</td>
-              </tr>
-              <tr>
-                <td>Cloudflare-native Twilio delivery</td>
-                <td><span class="status-pill beta">BETA</span></td>
-                <td>Configured through the deployed Study Admin; see <a href="#twilio-integration">Twilio Integration</a>.
-                  Automated tests pass; live multi-participant pilot remains required.</td>
-              </tr>
-              <tr>
-                <td>Webhook auto-upload on session complete</td>
-                <td><span class="status-pill beta">BETA</span></td>
-                <td>Use a receiver that returns a readable JSON acknowledgment; confirm data appears in storage.
-                </td>
-              </tr>
-              <tr>
-                <td>IAT (Implicit Association Task)</td>
-                <td><span class="status-pill beta">EXPERIMENTAL</span></td>
-                <td>Development module. Procedure, scoring and mobile timing need independent validation.</td>
-              </tr>
-              <tr>
-                <td>Stroop / additional task modules</td>
-                <td><span class="status-pill planned">PLANNED</span></td>
-                <td>The task system is built to be extended.</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- ========================================================= -->
-          <!-- REQUIREMENTS                                                -->
-          <!-- ========================================================= -->
-
-          <h2 id="requirements">System Requirements</h2>
-
-          <h3>For you (researcher)</h3>
-          <ul>
-            <li><strong>Any modern desktop browser.</strong> Chrome, Edge, Firefox, or Safari (from 2022 onward). The
-              Builder and Analyze run entirely in your browser at <a href="https://emaforge.keeganwhitacre.com"
-                target="_blank" rel="noopener">emaforge.keeganwhitacre.com</a>.</li>
-            <li><strong>A way to host your exported study.</strong> GitHub Pages is the path of least resistance and
-              free for researchers. Any institutional static-file server works too. (See <a href="#hosting">Hosting Your
-                Study</a> — it is genuinely ten clicks.)</li>
-            <li><strong>A way to send participants links</strong> at the right times — an SMS service, institutional
-              email scheduler, Twilio, or similar. For direct sharing, add participant IDs in Study Admin and create a ready-to-share link.</li>
-            <li><strong>R or Python (optional).</strong> Analyze handles local inspection, data-quality review, and
-              long-format export in the browser. Use R or Python for confirmatory and model-based analysis.</li>
-          </ul>
-
-          <h3>For participants</h3>
-          <ul>
-            <li><strong>iOS Safari 14.5+</strong> or <strong>Chrome for Android 90+</strong> (roughly anything from 2021
-              onward).</li>
-            <li>For the <strong>HR / ePAT modules only</strong>: a rear-facing camera with a controllable torch
-              (flashlight). All modern iPhones and most Android devices qualify; tablets without rear cameras do not.
-              Desktop browsers will refuse to launch these modules.</li>
-            <li>A working browser link. That's it — no app install, no account.</li>
-          </ul>
-
-          <div class="docs-callout warn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <div class="docs-callout-content">
-              <p><strong>iOS quirk worth flagging during onboarding:</strong> Camera/torch access on iOS requires the
-                page to be launched from Safari (not from inside the Messages app preview or from an SMS link-preview
-                bubble). Your participant instructions should explicitly say "tap the link to open it in Safari" for
-                studies using HR or ePAT.</p>
-            </div>
-          </div>
-
-          <!-- ========================================================= -->
-          <!-- QUICK START                                                 -->
-          <!-- ========================================================= -->
-
-          <h2 id="quickstart">Quick Start — 5 minutes to a working draft</h2>
-          <p>Go from an idea to a hosted web EMA study with surveys, branching, and optional camera-based physiology. Builder and Analyze need no installation or coding; Cloudflare deploys the participant study, private response storage, and study admin into your account. A draft can take minutes; review consent, measures, device support, and data handling before enrolling anyone.</p>
-
-          <p><a href="quickstart.html">Run your first study with the illustrated guide</a>.</p>
+          <h2 id="quickstart">Your first study</h2>
           <ol>
-            <li>Go to <a href="https://emaforge.keeganwhitacre.com" target="_blank"
-                rel="noopener"><strong>emaforge.keeganwhitacre.com</strong></a> and click <strong>Builder</strong>.</li>
-            <li>Click <strong>Open protocol library</strong> and choose <strong>Daily Rhythm &amp; Sleep</strong>, or start
-              from the default draft and build your own ordered survey/task flow.</li>
-            <li>Replace the consent placeholder with approved study language. Review the questions, sessions, task
-              burden, and device requirements rather than deploying a demonstration protocol unchanged.</li>
-            <li>Open <strong>Review &amp; Deploy</strong>, resolve blocking checks, and select <strong>Download prepared study</strong>.</li>
-            <li>Select <strong>Deploy to Cloudflare</strong>. Replace the masked example <code>ADMIN_TOKEN</code> with
-              your own 32+ character password. Twilio is optional and can be connected inside Study Admin later. Copy the resulting
-              <code>workers.dev</code> address; EMA Forge accepts it with or without <code>https://</code>.</li>
-            <li>Paste the address into EMA Forge and select <strong>Open admin</strong>. A new deployment opens directly
-              on <strong>Install study</strong>; upload the prepared file.</li>
-            <li>From Study Admin Overview, choose a session and create a pilot link. Open it on your phone, complete it with sample answers, then refresh Overview to confirm receipt.</li>
-            <li>Open <strong>Participants &amp; delivery</strong> to create participant links. Once research responses arrive, use <strong>Download analysis file</strong> to inspect them in detailed Analyze.</li>
+            <li><strong>Build.</strong> Choose a starting design in <a href="builder.html">Builder</a>, review
+              consent and scheduling, and preview each participant flow.</li>
+            <li><strong>Host and pilot.</strong> Follow the <a href="quickstart.html">illustrated guide</a>
+              to install your prepared study and verify a sample response through Study Admin.</li>
+            <li><strong>Enroll.</strong> Complete the <a href="enrollment.html">enrollment checklist</a>.
+              Create the real links in <strong>Participants &amp; delivery</strong>.</li>
+            <li><strong>Analyze.</strong> Download the versioned analysis file from Study Admin and open it
+              in <a href="dashboard.html">Analyze</a>.</li>
           </ol>
 
-          <p>That round trip tells you whether your device can open sessions and whether your data is landing where you
-            expect. Always do this before enrolling a participant.</p>
+          <h2 id="why-serverless">How hosting and storage work</h2>
+          <p>Builder drafts stay in your browser. The prepared HTML contains the participant interface and protocol.
+            Installing it on your Worker makes it available to participants. The Worker's protected Study Admin
+            reads responses from the private R2 bucket in your Cloudflare account.</p>
+          <p>Independent hosting pairs the exported study with your own approved receiver or manual data return.
+            The host receives ordinary web request metadata either way. See the <a href="#privacy-model">privacy
+            reference</a> and <a href="#limitations">known limitations</a>.</p>
 
-          <div class="docs-callout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M12 2l3 7h7l-5.5 4 2 7.5L12 16l-6.5 4.5 2-7.5L2 9h7z" />
-            </svg>
-            <div class="docs-callout-content">
-              <p><strong>Please use the hosted version at emaforge.keeganwhitacre.com rather than cloning and
-                  self-hosting the Builder.</strong> The hosted site is actively maintained and always on the current
-                schema version. Everything happens in your browser — nothing you type into the Builder is transmitted to
-                the server, so "hosted" here just means "the files are served from one canonical place." You'll still
-                self-host the <em>exported</em> study (see <a href="#hosting">Hosting Your Study</a>), because that's
-                the file participants actually open.</p>
-            </div>
-          </div>
+          <h2 id="feature-status">What you can do today</h2>
+          <table>
+            <thead><tr><th>Area</th><th>Available in EMA Forge</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#study-tab">Builder</a></td><td>Named drafts and portable backups,
+                onboarding and consent, branching and response piping, and ordered surveys and tasks.</td></tr>
+              <tr><td><a href="#protocol-library">Protocol Library</a></td><td>Complete example designs,
+                reusable question packs, and presets for built-in tasks.</td></tr>
+              <tr><td><a href="#questions-tab">Measures</a></td><td>Ratings, choices, text, affect grids,
+                body maps, and optional place context. Camera PPG, ePAT, and heartbeat counting require
+                study-specific piloting. IAT is experimental.</td></tr>
+              <tr><td><a href="#hosting">Hosting and Study Admin</a></td><td>A researcher-owned Cloudflare
+                Worker and private R2 storage, protocol installation and updates, pilot verification,
+                rosters, participant invites, and optional Twilio SMS (beta).</td></tr>
+              <tr><td><a href="#dashboard">Analyze</a></td><td>Browser-local descriptive summaries,
+                protocol-version filtering, long-format CSV export, and protocol-aware simulation.</td></tr>
+            </tbody>
+          </table>
+          <p>See the <a href="#roadmap">roadmap</a> for possible additions.</p>
+
+          <h2 id="requirements">What you need</h2>
+          <ul>
+            <li><strong>To design and analyze:</strong> a desktop or laptop with a modern browser. Builder,
+              preview, and Analyze run without an EMA Forge account.</li>
+            <li><strong>To run the recommended hosted setup:</strong> your own Cloudflare and GitHub accounts,
+              with Cloudflare R2 activated. Twilio is optional for scheduled SMS. See
+              <a href="quickstart.html">the illustrated setup guide</a>.</li>
+            <li><strong>For participants:</strong> a study link and a supported phone browser. For camera tasks,
+              test the rear camera, flashlight, and permissions on the phones and browsers participants will use.
+              Ask iPhone users to open camera-task links in Safari rather than a messaging app’s link preview.</li>
+          </ul>
 
           <h2 id="protocol-library">Protocol Library</h2>
           <p>The standalone <a href="library.html">Protocol Library</a> lets you browse descriptions, burden, device
             requirements, validation status, and linked evidence before opening an item in the Builder. It provides three kinds of reusable building blocks:</p>
           <ul>
-            <li><strong>Complete protocols</strong> replace the current draft and demonstrate end-to-end study flows.</li>
+            <li><strong>Complete protocols</strong> open as a new draft and demonstrate end-to-end study flows.</li>
             <li><strong>Question packs</strong> add a new survey step to the first session while safely remapping question,
               branching, and response-piping IDs.</li>
             <li><strong>Physiology task presets</strong> configure an existing built-in task such as ePAT or heartbeat
@@ -1317,34 +987,28 @@
           <!-- BUILDER TABS                                                -->
           <!-- ========================================================= -->
 
-          <h2 id="study-tab">Study Tab</h2>
-          <p>Global study configuration. Set here:</p>
-          <ul>
-            <li><strong>Study name &amp; institution</strong> — appears in participant app title and CSV metadata.</li>
-            <li><strong>Theme &amp; accent color</strong> — OLED (pure black, recommended for battery), dark, or light.
-              Accent color inherits into the participant app.</li>
-            <li><strong>Response format</strong> — CSV (one row per answered question) or JSON (full structured
-              payload). Both are downloaded; JSON is always included when a session contains high-density signal data
-              (PPG/ePAT).</li>
-            <li><strong>Webhook URL</strong> (optional) — if set, session data is auto-uploaded to this URL instead of
-              being manually downloaded by the participant. See <a href="#webhook-upload">Auto-upload with Webhooks</a>
-              for setup.</li>
-            <li><strong>Greetings</strong> — per-window header text ("Good Morning", "Check-In", etc.).</li>
-            <li><strong>Completion lock &amp; crash recovery</strong> — see <a href="#completion-lock">Runtime
-                Behavior</a>.</li>
-          </ul>
+          <h2 id="study-tab">Study drafts and Overview</h2>
+          <p><strong>Start a study</strong> opens on the first visit and whenever you select <strong>New study</strong>.
+            Start with a daily mood check-in, choose a complete protocol, or select <strong>Open Builder</strong>
+            to begin with an empty session. Expand <strong>Name and appearance (optional)</strong> to set a
+            study name and participant theme up front, or change them later in <strong>Overview</strong>.</p>
+          <p>The <strong>Study drafts</strong> picker switches between drafts saved in this browser. Use
+            <strong>Download Backup</strong> to keep a copy or move to another device. Select <strong>Open a backup</strong>
+            from the setup screen to restore it. An exported participant HTML file is used for hosting and a project
+            backup is used for editing.</p>
+          <p><strong>Overview</strong> also holds study and institution details, participant appearance, browser-local
+            recovery and locking settings, and data output preferences. The <a href="#data-files">session data
+            section</a> describes what participants can save. Configure an independent receiver in
+            <strong>Review &amp; Deploy</strong> if your study uses one.</p>
 
           <h2 id="onboarding">Onboarding &amp; Consent</h2>
-          <p>The Onboarding flow runs exactly once per participant, on their first link
-            (<code>?id=N&amp;session=onboarding</code>, Day 0). It covers:</p>
+          <p>Use an onboarding invite from Study Admin for Day 0. If you host independently, use
+            <code>?id=N&amp;session=onboarding</code>. The onboarding flow can include:</p>
           <ul>
-            <li>A progress-barred multi-screen intro.</li>
-            <li>A rich-text consent screen that <strong>requires scroll-to-bottom</strong> before the "I agree" checkbox
-              activates. Consent text accepts HTML so you can paste in your IRB-approved language with headings.</li>
-            <li>An optional schedule-sanity screen letting the participant confirm they'll be available during each
-              window.</li>
-            <li>For sessions that include ePAT: a two-phase practice (tone-to-tone, then tone-to-heartbeat). The
-              ePAT measurement itself runs at its scheduled session, never during setup.</li>
+            <li>Approved consent text, an agreement checkbox, and an initials field. Longer consent text must be
+              scrolled before agreement becomes available.</li>
+            <li>Optional schedule preferences. If using scheduled SMS, review and apply them in Study Admin, then save the roster.</li>
+            <li>Device checks for protocols using camera-based measures and practice for ePAT.</li>
           </ul>
 
           <p>If onboarding is disabled, Day 0 is skipped entirely and participants open their first scheduled session.</p>
@@ -1417,7 +1081,7 @@
               </tr>
             </tbody>
           </table>
-          <h3>Place context lookup (optional)</h3>
+          <h3 id="place-context">Place context lookup (optional)</h3>
           <p>Choose <strong>Automatic EPA walkability</strong> for the recommended Cloudflare deployment. Researchers do not need to provide a dataset. After a participant taps <strong>Use my location</strong> and grants browser permission, the phone sends coordinates in a POST request to the study Worker, which queries EPA’s National Walkability Index mapping service. The Worker returns one category and does not write coordinates or EPA’s block-group ID to R2. EPA and Cloudflare receive the lookup request and may retain service metadata under their own policies. This is a historical, area-level built-environment measure, not a live walkability or pollution reading. If EPA is unreachable or the device position is too imprecise, the response contains a missing status. The independent static-host export does not provide this online lookup endpoint.</p>
           <p>Choose <strong>Automatic Census urban/rural</strong> to query the U.S. Census Bureau’s 2020 Census block urban/rural flag through the same study Worker. You can also select three EPA Smart Location Database v3 measures: <strong>population density</strong> (2018 estimate, people per developable acre), <strong>distance to the nearest transit stop</strong> (from the block-group population-weighted centroid, not the participant), and <strong>share of households without a car</strong> (2018 estimate). These are historical context measures, not observations of the participant, transit service today, or an individual's means. Select any combination of five automatic measures in one question: the participant grants permission once, and the Worker sends coordinates to EPA and/or Census as needed. The three Smart Location measures share one EPA request. A response records selected categories and source versions; partial results include an <code>indicator_statuses</code> entry for each, and missing values remain missing. No dataset upload is needed. No response saves coordinates or a block ID. There is no automatic suburban classification. Unavailable services, positions outside coverage, and imprecise locations have distinct missing statuses. This lookup sends coordinates to Cloudflare and each selected provider, which may process request metadata. Use the on-device option if that transfer is inappropriate for your study.</p>
           <p>EMA Forge uses fixed descriptive bands for the new EPA measures; they are <strong>not validated clinical cutoffs</strong>. Population density is <code>low</code> under 1, <code>moderate</code> from 1 to under 10, and <code>high</code> at least 10 people per developable acre. Transit distance is <code>near</code> at 400 meters or less, <code>intermediate</code> above 400 through 1600 meters, and <code>far</code> beyond 1600 meters. Car-free household share is <code>low</code> under 5%, <code>moderate</code> from 5% to under 20%, and <code>high</code> at least 20%. Review coverage and source definitions before using bands as research variables. Even without stored coordinates, combining multiple categories, response times, and repeated observations may disclose a participant's home or routine; select only what your protocol needs. Area-level car ownership must never be treated as the participant's ownership or income.</p>
@@ -1430,9 +1094,8 @@
             <li><strong>Show in these survey steps:</strong> choose the exact session steps where this question appears.
               Select more than one step when you intentionally want to repeat a question.</li>
             <li><strong>Required:</strong> blocks advancement until answered.</li>
-            <li><strong>Skip Logic:</strong> compound AND/OR conditions on any prior question. Operators:
-              <code>eq, neq, gt, gte, lt, lte, includes</code>. When a condition evaluates false, the question is
-              silently skipped and not recorded.
+            <li><strong>Skip Logic:</strong> combine AND/OR rules using eligible earlier questions. The builder offers operators
+              based on the source. Skipped items are recorded separately from unanswered items.
             </li>
             <li><strong>Earlier-answer personalization:</strong> in a later question, use <strong>Insert earlier
               answer</strong>, choose the source item, and set fallback wording for participants who did not answer it.
@@ -1571,20 +1234,19 @@
                 <td><strong>Prepared Cloudflare study</strong> <span class="status-pill stable">RECOMMENDED</span></td>
                 <td>One installable HTML file with the same-host <code>/submit</code> receiver already embedded.</td>
                 <td>Normal studies. Deploy the EMA Forge Cloudflare template, then upload this file in Study Admin.
-                  Do not paste the Worker hostname into the manual webhook field.</td>
+                  The prepared file configures its own receiver.</td>
               </tr>
               <tr>
                 <td><strong>Single HTML file</strong></td>
                 <td>One self-contained <code>.html</code> with config, JS, and CSS inlined.</td>
-                <td>Pilots, QA, or emailing a direct file to one participant. <em>Config is baked in — any edit means
-                    re-exporting.</em></td>
+                <td>A portable copy for testing or a compatible HTTPS host. Re-export after editing the draft.</td>
               </tr>
               <tr>
                 <td><strong>Static-hosting bundle</strong></td>
                 <td>A <code>.zip</code> containing <code>index.html</code>, <code>config.json</code>,
                   <code>check.html</code>, <code>css/</code>, and <code>js/</code>.</td>
-                <td>Real deployment. <strong>Because <code>config.json</code> is separate, you can fix a typo in a
-                    question without re-exporting.</strong> Just edit the JSON on the host.</td>
+                <td>Independent HTTPS hosting with your chosen receiver or manual return. Keep an exact copy of
+                  <code>config.json</code> for analysis and re-export from Builder when the protocol changes.</td>
               </tr>
             </tbody>
           </table>
@@ -1599,61 +1261,48 @@
             </div>
           </div>
 
-          <h2 id="hosting">Hosting Your Study</h2>
-          <p>This section is about hosting the <em>exported study bundle</em> — the thing participants will open. You
-            are <strong>not</strong> hosting the Builder itself (that already lives at <a
-              href="https://emaforge.keeganwhitacre.com" target="_blank"
-              rel="noopener">emaforge.keeganwhitacre.com</a>).</p>
-
-          <p>The simplest complete option is the <strong>Cloudflare study host</strong> in Review &amp; Deploy: it serves
-            the participant app, stores responses privately, and provides the protected Admin workspace in one deployment.
-            The GitHub Pages path below is an advanced static-host alternative and still needs a separate approved receiver
-            for automatic response return.</p>
-
-          <ol>
-            <li>Create a free GitHub account if you don't have one.</li>
-            <li>Create a new repository (e.g. <code>my-ema-study</code>). Make it public or private — both work with
-              GitHub Pages on free accounts.</li>
-            <li>Click <strong>Add file → Upload files</strong>, and drop in the entire contents of your extracted Export
-              zip (the <code>index.html</code>, <code>config.json</code>, and the <code>css</code> / <code>js</code>
-              folders).</li>
-            <li>Go to <strong>Settings → Pages</strong>. Under "Source," choose <strong>main branch, root
-                folder</strong>.</li>
-            <li>Wait a minute. Your study is now live at
-              <code>https://&lt;your-username&gt;.github.io/my-ema-study/</code>.
-            </li>
-          </ol>
-
-          <p>Enter that URL in Review &amp; Deploy. If automatic return is enabled, open the hosted
-            <code>check.html</code>, send its synthetic test, and confirm the same ID exists in receiver storage. Then
-            complete one full participant session and inspect that record before generating enrollment links.</p>
+          <h2 id="hosting">Hosting and updating your study</h2>
+          <p>For most studies, follow the <a href="quickstart.html">illustrated Cloudflare guide</a>. The Worker
+            serves the participant pages and Study Admin. Private R2 storage holds the responses. The
+            <code>ADMIN_TOKEN</code> you set in Cloudflare is your password for Study Admin.</p>
+          <ul>
+            <li><strong>New study:</strong> In <strong>Review &amp; Deploy</strong>, choose
+              <strong>Download prepared study</strong> and <strong>Create new study host</strong>. Set up a separate Worker
+              and private R2 bucket for each study. Install the HTML file at the Worker’s <code>/admin</code> page.</li>
+            <li><strong>Protocol update:</strong> Export again from the same Builder draft and install the file in the
+              existing Study Admin. The host and previous responses stay in place. Pilot the new version before sending links.</li>
+            <li><strong>Worker software update:</strong> Use <strong>Update an existing Worker’s code</strong> under
+              <strong>Review &amp; Deploy</strong>. Keep the current URL, admin secret, and R2 binding. See the
+              <a href="#webhook-cloudflare">Cloudflare notes</a> for legacy hosts and sign-in troubleshooting.</li>
+          </ul>
 
           <details>
-            <summary>Prefer the command line, or deploying via another host?</summary>
+            <summary>Use another HTTPS host and an independent receiver</summary>
             <div class="details-body">
-              <p>Any static host works unchanged — Netlify, Vercel, Cloudflare Pages, S3 + CloudFront, or an
-                Apache/Nginx directory on institutional infrastructure. No build step, no server runtime.</p>
-              <p>The git-native GitHub Pages recipe:</p>
-              <pre><code># From your extracted bundle folder
-git init
-git add .
-git commit -m "study v1"
-git branch -M main
-git remote add origin https://github.com/your-lab/your-study.git
-git push -u origin main
-
-# Then in GitHub: Settings → Pages → Source = main branch, root
-# Your study is live at https://your-lab.github.io/your-study/</code></pre>
+              <ol>
+                <li>In <strong>Review &amp; Deploy</strong>, enter the intended <strong>Hosted study URL</strong>.
+                  Expand <strong>Use a different host or approved data endpoint</strong>.</li>
+                <li>For automatic response return, enter the approved HTTPS <strong>Receiver URL</strong>.
+                  See the <a href="#webhook-upload">receiver setup</a> for receipt and storage requirements.</li>
+                <li>Choose <strong>Open advanced export options</strong> and export the static-hosting bundle.
+                  Extract it and upload all files and folders to your HTTPS static host.</li>
+                <li>With an automatic receiver, open the hosted <code>check.html</code> and verify the synthetic
+                  test ID in storage. Then complete a full test session and confirm the returned file. For manual
+                  return, test the download and your approved file-transfer process.</li>
+              </ol>
+              <p>The standard static-host bundle uses <a href="#deployment-csv">external scheduling</a> and your
+                chosen data-return path. Cloudflare Study Admin is part of the integrated Worker deployment.</p>
             </div>
           </details>
 
-          <!-- ========================================================= -->
-          <!-- ROUTING                                                     -->
-          <!-- ========================================================= -->
-
-          <h2 id="routing">Participant Routing</h2>
-          <p>Because there is no backend, the participant's session is entirely determined by the URL they open. Four
-            query parameters drive this:</p>
+          <h2 id="routing">Participant links</h2>
+          <p>After the pilot and <a href="enrollment.html">enrollment checklist</a>, open
+            <strong>Participants &amp; delivery</strong> in Study Admin. Add and save opaque participant IDs,
+            select a participant and session, and create an invite. Phone numbers are needed only for SMS.
+            Create check-in links when you’re ready to send them because the response window starts at creation.
+            Onboarding links can be sent in advance and revoked from Study Admin.</p>
+          <p>Study Admin generates opaque <code>/j/…</code> links. For independently hosted studies using an external
+            delivery tool, supply these routing parameters directly:</p>
 
           <table>
             <thead>
@@ -1667,7 +1316,7 @@ git push -u origin main
               <tr>
                 <td><code>id</code></td>
                 <td>yes</td>
-                <td>Participant identifier (any string, usually numeric).</td>
+                <td>Opaque study-specific participant identifier.</td>
               </tr>
               <tr>
                 <td><code>day</code></td>
@@ -1697,9 +1346,9 @@ git push -u origin main
           <pre><code>https://your-lab.github.io/study/?id=104&amp;day=2&amp;session=morning&amp;t=1732812000000</code></pre>
 
           <h2 id="deployment-csv">Generating Links in Bulk</h2>
-          <p>The Builder's <strong>Review &amp; Deploy</strong> tab takes a base URL and a participant-ID range, and emits a CSV
-            with one row per (participant × day × session). Each row includes a <code>Phase_Sequence</code> column so
-            you can eyeball at a glance what each link will do.</p>
+          <p>For external scheduling, enter the host URL and participant ID range in <strong>Review &amp; Deploy</strong>.
+            Expand <strong>Advanced routing template and SMS settings</strong> and select <strong>Download routing template</strong>.
+            The CSV includes a row per participant, day, and session, with the order of phases in <code>Phase_Sequence</code>.</p>
 
           <pre><code>Participant_ID,Day,Active_Weekdays,Session,Phase_Sequence,Send_Window_Local,URL_Template
 104,0,Any,Setup,Onboarding,Researcher scheduled,https://.../?id=104&amp;session=onboarding
@@ -1712,18 +1361,17 @@ git push -u origin main
             <code>Send_Window_Local</code> make the scheduling rules explicit rather than silently implying every row
             should be sent.</p>
 
-          <h2 id="notifications">Sending Prompts</h2>
-          <p>You have two paths. Both use the same participant, day, window, and send-time routing model.</p>
+          <h2 id="notifications">Sending prompts</h2>
           <ul>
-            <li><strong>Bring your own mechanism.</strong> Drop the routing CSV into an institutional email merge, a
-              Qualtrics contacts list, a Power Automate flow, or any SMS tool that can schedule messages from a CSV. You
-              handle timing and <code>t=</code> injection.</li>
-            <li><strong>Use Cloudflare Study Admin.</strong> <span class="status-pill beta">BETA</span> Add the roster
-              and connect Twilio inside the deployed study. The Worker handles timezone math, dedupes sends, records
-              delivery callbacks, and enforces <code>t=</code> expiry. See <a href="#twilio-integration">Twilio Integration</a>.
-            </li>
+            <li><strong>Send manually.</strong> Copy a Study Admin invite and send it through your study’s approved channel.</li>
+            <li><strong>Schedule SMS.</strong> Connect <a href="#twilio-integration">Twilio</a> (beta) in Study Admin.
+              Test delivery, reply handling, and response storage before enabling the schedule.</li>
+            <li><strong>Use an external scheduler.</strong> Use the <a href="#deployment-csv">routing template</a>
+              with a tool that can handle local schedule windows and fill in the send timestamp.</li>
           </ul>
+
           <!-- ========================================================= -->
+
           <!-- RUNTIME BEHAVIOR                                            -->
           <!-- ========================================================= -->
 
@@ -1735,17 +1383,16 @@ git push -u origin main
             <li>Checks the completion lock — has this <code>(id, day, session)</code> tuple already been submitted on
               this device?</li>
             <li>Checks for an in-progress resume state for this session.</li>
-            <li>Renders the first step of the session (usually a pre-task EMA block).</li>
-            <li>On each phase completion, writes the phase's responses to local storage and advances.</li>
-            <li>When the last phase finishes, the full session payload is assembled and the "Save Local Copy" screen
-              appears. Tapping it triggers a file download.</li>
+            <li>Opens the first configured step, or resumes after the last completed step if recovery is enabled.</li>
+            <li>After the final step, assembles the full response and tries the configured upload. See
+              <a href="#data-files">Session end and data return</a> for the local download path.</li>
           </ol>
 
           <h2 id="expiry-grace">Expiry &amp; Grace Period</h2>
           <ul>
             <li><strong>Expiry window</strong> (default 60 min): after this many minutes past <code>t</code>, the link
-              renders a "Link Expired" screen and the Start button is disabled. Recorded as a missed ping by the
-              Dashboard.</li>
+              renders a "Link Expired" screen and the Start button is disabled. An expired link that produces
+              no response leaves no response file.</li>
             <li><strong>Grace period</strong>: a participant must begin before expiry. Once started, the exported runtime
               allows completion until <code>expiry + grace</code>. Crossing that hard deadline records and delivers the
               partial session with <code>status: expired_in_progress</code> and
@@ -1768,8 +1415,9 @@ git push -u origin main
               avoid ambiguity.</li>
           </ul>
 
-          <p>This is intentionally conservative. A half-finished phase with an unknown number of missing questions is
-            worse than a clean re-run.</p>
+          <p>If the session finished but delivery was interrupted, reopening the same link can retry the pending
+            record on that device. The bundled receivers acknowledge exact retries without overwriting the first
+            stored response. Clearing browser storage removes local recovery state.</p>
 
           <h2 id="schema-versioning">Schema Versioning &amp; Migrations</h2>
           <p>Every study carries a <strong>schema version</strong> (currently <code>2.0.0</code>). When the Builder
@@ -1784,36 +1432,23 @@ git push -u origin main
               or reset.</li>
           </ul>
 
-          <p>This is worth knowing when rolling out an EMA Forge update mid-study: finish in-progress waves on the old
-            version, then upgrade.</p>
+          <p><strong>Installed protocol versions</strong> are separate from the file schema. Installing changes from
+            the same draft preserves your study ID and records a new snapshot when the configuration changes.
+            Use the <a href="#dashboard-inputs">Study Admin analysis file</a> to keep those configurations with responses.</p>
 
           <!-- ========================================================= -->
           <!-- DATA                                                        -->
           <!-- ========================================================= -->
 
-          <h2 id="data-files">What Happens at Session End</h2>
-          <p>When the last phase completes, one of two things happens depending on whether you've configured a webhook
-            (Study tab → Webhook URL):</p>
-
-          <h3>Manual return (when no receiver is configured)</h3>
-          <p>The participant sees a "Save Local Copy" button. Tapping it downloads one or two files to their device:</p>
-          <ul>
-            <li><strong><code>ema_data_[ID]_[DAY]_[SESSION].csv</code></strong> — long-format, one row per question
-              answered. Default output when the session contains only standard EMA responses.</li>
-            <li><strong><code>ema_data_[ID]_[DAY]_[SESSION].json</code></strong> — full structured payload, included
-              automatically whenever the session contains high-density signal data (PPG samples, ePAT trial-level data).
-              Written alongside the CSV, not instead of it.</li>
-          </ul>
-          <p>The participant returns these files via whatever channel your IRB approved (secure email, REDCap file
-            upload, institutional SFTP). Analyze accepts Cloudflare NDJSON, a folder of JSON files, or compatible long-format CSV; a CSV-only workflow
-            is also viable for simpler studies.</p>
-
-          <h3>Automatic return</h3>
-          <p>The prepared Cloudflare study uses same-host <code>/submit</code> automatically. For an independent host,
-            set an approved HTTPS Webhook URL. The participant sees an upload confirmation only
-            after a readable success receipt. Otherwise "Save Local Copy" appears. Browser connectivity, receiver CORS,
-            and actual server storage must be checked with a dummy submission before collecting participant data. See
-            <a href="#webhook-upload">Auto-upload with Webhooks</a>.</p>
+          <h2 id="data-files">Session end and data return</h2>
+          <p>With the prepared Cloudflare study, the browser sends the completed response automatically to the same
+            host. With independent hosting, automatic return uses the approved <strong>Receiver URL</strong> set in
+            <strong>Review &amp; Deploy</strong>. The participant sees confirmation after a readable success receipt.
+            See <a href="#webhook-upload">receiver setup</a> for how to test the storage path.</p>
+          <p>If no receiver is configured or the upload cannot be confirmed, the participant can select
+            <strong>Save Local Copy</strong>. It saves the full session as JSON, with a companion EMA CSV when CSV
+            output is selected. Use your approved return channel for these files. Keep the JSON for the full
+            response, including any task data.</p>
 
           <h2 id="csv-schema">CSV Schema (Analyze export)</h2>
           <p>When you use <strong>Export CSV</strong> in Analyze, you get one row per
@@ -2000,12 +1635,12 @@ affect &lt;- df |&gt;
               <code>/admin</code> page, open <strong>Analyze</strong> and select <strong>Download analysis file</strong>.
               It includes the available protocol configurations and all exported responses in one JSON file. Use the Protocol version filter to analyze one version at a time. Earlier responses without a version remain available, but their instrument summaries are unavailable when the original configuration cannot be established.
               Import just that file into detailed Analyze. Keep it in an institutionally approved location: it contains participant responses.</li>
-            <li><strong>A Cloudflare response export.</strong> From the deployed study's <code>/admin</code> page, select
-              <strong>Download responses</strong> and import the resulting <code>.ndjson</code> file directly. Each line is
-              one complete, lossless session envelope. Import multiple export parts together when the admin page indicates
-              that more than one part is available.</li>
+            <li><strong>Raw Cloudflare responses.</strong> In Study Admin, open <strong>Analyze → Need the raw exports?
+              → Download raw NDJSON</strong>. Each line contains one complete session. For configuration-aware item views,
+              use the versioned analysis file above, or include the exact matching <code>config.json</code> for a
+              single-version import.</li>
             <li><strong>A folder of JSON files.</strong> One per-session <code>.json</code> as produced by the
-              participant app, plus a single <code>config.json</code> (the same one inside your exported study). This is
+              participant app, plus a single <code>config.json</code> (from your original static-hosting bundle). This is
               the right shape when participants return files manually, or when you've downloaded them out of
               REDCap/institutional storage.</li>
             <li><strong>A CSV from the Google Sheets webhook.</strong> <span class="status-pill beta">BETA</span> If
@@ -2021,10 +1656,9 @@ affect &lt;- df |&gt;
 
           <div class="docs-callout">
             <div class="docs-callout-content">
-              <p><strong>Study matching.</strong> If importing raw responses, select the matching
-                <code>config.json</code> in the same import. Analyze no longer silently reuses a configuration
-                cached from a different study. The single analysis file already contains its matching configuration.
-              </p>
+              <p><strong>Keep responses with their protocol.</strong> Select the original <code>config.json</code>
+                when importing a single-version set of raw responses. For multiple versions, use the Study Admin
+                analysis file. Pilot responses and storage checks are kept separately from research exports.</p>
             </div>
           </div>
 
@@ -2033,8 +1667,8 @@ affect &lt;- df |&gt;
           <ul>
             <li><strong>Protocol completion</strong> — shown only when an explicit schedule manifest supplies the
               expected prompts. It is unavailable for response-only imports because missing files cannot prove a missed prompt.</li>
-            <li><strong>Delivery records</strong> — shown only when delivery events exist. EMA Forge does not infer
-              delivery from a completed response.</li>
+            <li><strong>Delivery records</strong> are available in Study Admin and its dispatch export.
+              A completed response alone cannot determine whether a scheduled message was delivered.</li>
             <li><strong>Rapid-session flags</strong> — sessions with total duration under 30 seconds. This is a review
               flag, not an automatic exclusion or a signal-quality verdict.</li>
             <li><strong>Mean completion time</strong> — mean duration across observed completed sessions.</li>
@@ -2675,49 +2309,30 @@ iat_trials &lt;- sessions |&gt;
           
 
           <h2 id="conditional-tasks">Conditional Tasks</h2>
-          <p>A task step in a window's phase sequence can carry a condition that gates whether it runs at all:</p>
-          <pre><code>{ kind: "task", id: "epat",
-  condition: { question_id: "q_hr_1", operator: "gt", value: 80 } }</code></pre>
-          <p>At runtime, EMA Forge evaluates the condition against the participant's responses collected <em>earlier in
-              the same session</em>. If the condition is false, the step is silently skipped — as if it were never in
-            the sequence. Typical use cases:</p>
+          <p>In <strong>Schedule</strong>, enable <strong>Run conditionally</strong> on a task step.
+            Choose a source question from an earlier survey step in that session. Combine rules with AND or OR
+            if needed. For example, run ePAT only if an earlier stress rating exceeds a threshold. Use the
+            session’s measure list to decide which tasks belong in each window, and preview both paths.</p>
+
+          <h2 id="privacy-model">Privacy and data flow</h2>
           <ul>
-            <li>"Only run ePAT if resting HR is elevated" — gate on a prior HR capture's BPM.</li>
-            <li>"Only show the post-task stress items if the participant reported feeling stressed beforehand" — gate on
-              a slider threshold.</li>
-            <li>"Skip the cognitive task on the 3rd daily window" — gate on window ID.</li>
+            <li><strong>Responses.</strong> A prepared Cloudflare study automatically sends the response to its own
+              Worker for storage in private R2. Independent hosting uses your configured receiver or manual file return.</li>
+            <li><strong>Request and routing information.</strong> Hosting providers receive request metadata. Study
+              Admin issues opaque invite links. Use study-specific IDs and keep names and contact details out of URLs.</li>
+            <li><strong>Camera tasks.</strong> Camera processing happens on the phone. Research records contain
+              derived measurements and quality information. Raw video stays on the device during processing.</li>
+            <li><strong>Place context.</strong> The hosted lookup sends coordinates to the Worker and selected
+              services after participant permission. The configured GeoJSON option matches on the phone.
+              See <a href="#place-context">place context data and sources</a>.</li>
+            <li><strong>Consent and SMS.</strong> In-app consent records agreement, initials, and a timestamp.
+              Keep the installed protocol configuration to document the text participants saw. For SMS,
+              phone numbers are stored in the private roster and used to send messages through Twilio.</li>
           </ul>
 
-          <!-- ========================================================= -->
-          <!-- PRIVACY & IRB                                               -->
-          <!-- ========================================================= -->
-
-          <h2 id="privacy-model">Privacy Model</h2>
-          <p>Written plainly, because IRBs will ask you to restate this in your protocol:</p>
-          <ol>
-            <li><strong>Response data transmission is opt-in.</strong> By default, data is generated, stored, and
-              downloaded entirely on the participant's device, and you receive it via whatever channel the participant
-              uses to return files. If the researcher configures a webhook (Study tab → Webhook URL), the session JSON
-              is POSTed to that specific endpoint at session end instead. No transmission happens to any endpoint other
-              than the one you configure. The webhook field is off by default.</li>
-            <li><strong>The static host sees page-load requests.</strong> Your GitHub Pages / Netlify / institutional
-              host will receive HTTP requests when the participant opens a link. These requests include timestamp, IP,
-              User-Agent, and the full URL (<em>including</em> <code>?id=</code>). If participant ID alone is
-              identifiable, choose an unlinkable ID (short opaque strings, not names or MRNs).</li>
-            <li><strong>No third-party analytics, no CDN fetches, no font-provider calls.</strong> The exported study
-              has zero outbound network calls at runtime other than (a) the initial page load from your host, and (b)
-              the single webhook POST at session end if configured. You can verify this in Chrome DevTools → Network.
-            </li>
-            <li><strong>Camera / microphone access</strong> (HR, ePAT) is handled entirely through the browser's
-              <code>getUserMedia</code> permission prompt. The media stream never leaves the device; only the derived
-              signal (BPM, IBIs, phase offsets) is stored.
-            </li>
-            <li><strong>Consent is captured</strong> as a boolean plus a timestamp in the onboarding JSON payload. The
-              full consent text as the participant saw it is logged alongside.</li>
-          </ol>
-
-          <h2 id="irb-language">IRB Boilerplate</h2>
-          <p>Two variants depending on your data-return design — use the one that matches your protocol.</p>
+          <h2 id="irb-language">Sample language for study review</h2>
+          <p>Adapt the example to your approved return method and actual measures. Document consent fields,
+            identifiers, optional place-context lookups, and messaging when your study uses them.</p>
 
           <h3>Variant A: Manual participant return (no webhook)</h3>
           <blockquote>
@@ -2725,9 +2340,8 @@ iat_trials &lt;- sessions |&gt;
               static web tool). The application operates entirely in the participant's mobile browser: response data is
               generated and stored on the participant's device and is not transmitted to any central server in the
               course of normal operation. Participants return completed session files to the research team via
-              [INSTITUTIONAL SECURE CHANNEL — e.g., REDCap file upload, institutional SFTP]. No protected health
-              information or direct identifiers are included in the study data; participants are identified only by an
-              opaque study ID. Physiological measurements (heart rate via photoplethysmography) are derived from the
+              [APPROVED RETURN CHANNEL]. The study uses an opaque participant ID.
+              [LIST ANY ADDITIONAL IDENTIFIERS OR CONSENT FIELDS COLLECTED]. Physiological measurements (heart rate via photoplethysmography) are derived from the
               participant's smartphone camera locally; raw video is not stored or transmitted. The application source
               code is open and available for review at <a href="https://github.com/keeganwhitacre/emaforge"
                 target="_blank" rel="noopener">github.com/keeganwhitacre/emaforge</a>.</p>
@@ -2740,10 +2354,9 @@ iat_trials &lt;- sessions |&gt;
               session, transmits the session's response data via HTTPS POST to a single pre-configured endpoint
               controlled by the research team at [ENDPOINT DESCRIPTION — e.g., an institutionally-hosted endpoint
               writing to a secured REDCap project / an institutional Google Workspace sheet under the PI's account / an
-              AWS Lambda writing to an encrypted S3 bucket in the institution's AWS organization]. No data is
-              transmitted to any other endpoint. If network transmission fails, the application falls back to on-device
-              storage and manual return via [FALLBACK CHANNEL]. No protected health information or direct identifiers
-              are included in the study data; participants are identified only by an opaque study ID. Physiological
+              the lab’s Cloudflare Worker writing to a private R2 bucket]. If network transmission fails, the
+              participant can download a local copy for return via [APPROVED FALLBACK CHANNEL]. The study uses
+              an opaque participant ID. [LIST ANY ADDITIONAL IDENTIFIERS OR CONSENT FIELDS COLLECTED]. Physiological
               measurements (heart rate via photoplethysmography) are derived from the participant's smartphone camera
               locally; raw video is not stored or transmitted. The application source code is open and available for
               review at <a href="https://github.com/keeganwhitacre/emaforge" target="_blank"
@@ -2755,16 +2368,16 @@ iat_trials &lt;- sessions |&gt;
             <li><strong>Admin is operational, not a full clinical data platform.</strong> The Cloudflare Admin workspace
               provides live response counts, recent sessions, protected exports, roster/delivery controls, and descriptive
               analysis; confirmatory analysis and higher-risk access controls remain the researcher's responsibility.</li>
-            <li><strong>Missed-prompt detection requires event data.</strong> Response files alone cannot reveal prompts
-              that produced no file. Analyze therefore leaves completion unavailable unless a roster and scheduled
-              prompt-event log or a synthetic schedule manifest is present.</li>
+            <li><strong>Missed-prompt detection requires event data.</strong> Study Admin retains the Twilio dispatch
+              log separately. The standalone Analyze completion views use a synthetic schedule manifest for
+              simulated data. For an observed study, compare responses and dispatch events in your own analysis.</li>
             <li><strong>Device heterogeneity.</strong> HR/ePAT quality depends on camera sensor, torch brightness, and
               case thickness. Pilot across a range of devices before locking your protocol.</li>
             <li><strong>Browser storage can be cleared.</strong> A participant who "clears website data" mid-study loses
               their in-progress resume state (but not already-downloaded session files). The completion lock also
               resets.</li>
-            <li><strong>Single-file exports don't let you patch typos.</strong> Use the static-hosting bundle if you
-              anticipate edits after deployment.</li>
+            <li><strong>Mid-study edits can affect comparability.</strong> Record changes and preserve each protocol
+              configuration. Use the version filter when questions or schedules change.</li>
             <li><strong>Accessibility is a work in progress.</strong> Screen-reader support for sliders and the affect
               grid is incomplete. Audit against your accessibility requirements before broad enrollment.</li>
           </ul>
@@ -2773,45 +2386,18 @@ iat_trials &lt;- sessions |&gt;
           <!-- ROADMAP                                                     -->
           <!-- ========================================================= -->
 
-          <h2 id="roadmap">Roadmap</h2>
-
-          <div class="feature-grid">
-            <div class="feature-item">
-              <div class="feature-item-title">Twilio delivery receipts <span
-                  class="status-pill planned">PLANNED</span></div>
-              <div class="feature-item-desc">Ingest Twilio status-callback timestamps for true carrier-delivery and
-                ping-to-open latency. STOP auto-pause is already available in the beta dispatcher.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-item-title">Hosted community catalog <span class="status-pill planned">PLANNED</span></div>
-              <div class="feature-item-desc">Searchable submissions, review metadata, versioning, and one-click install
-                on top of the current inspectable JSON library and GitHub contribution path.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-item-title">Stroop / IAT modules <span class="status-pill planned">PLANNED</span>
-              </div>
-              <div class="feature-item-desc">Additional cognitive tasks slotting into the existing module registry.
-              </div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-item-title">Accessibility pass <span class="status-pill planned">PLANNED</span>
-              </div>
-              <div class="feature-item-desc">Full ARIA landmarking, screen-reader-friendly slider + affect grid,
-                text-scale respect.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-item-title">Optional AES-encrypted payloads <span
-                  class="status-pill planned">PLANNED</span></div>
-              <div class="feature-item-desc">Client-side encryption of returned files against a lab-held public key, so
-                return-channel compromise is not a data exposure.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-item-title">Importable prompt-event logs <span class="status-pill planned">PLANNED</span>
-              </div>
-              <div class="feature-item-desc">A documented event schema for rosters, scheduled prompts, delivery
-                callbacks, and opens so observed studies can use the same completion views as simulation.</div>
-            </div>
-          </div>
+          <h2 id="roadmap">Potential improvements</h2>
+          <p>These are open ideas. The <a href="#feature-status">current features</a> section lists workflows you can use today.</p>
+          <ul>
+            <li><strong>Accessibility.</strong> Improve screen-reader support for ratings and affect grids and
+              test the participant flow with assistive technology and larger text settings.</li>
+            <li><strong>Observed-study completion in Analyze.</strong> Import roster and dispatch events, with clear
+              distinctions between scheduled, sent, delivered, and completed prompts. Study Admin already captures
+              Twilio delivery callbacks.</li>
+            <li><strong>More reusable protocols and tasks.</strong> Expand the curated catalog and explore additional built-in cognitive tasks. The library and experimental IAT are already available.</li>
+            <li><strong>Client-side encryption for returned files.</strong> Explore encryption before transmission
+              using lab-managed keys.</li>
+          </ul>
 
           <h2 id="webhook-upload">Auto-upload with Webhooks <span class="status-pill beta">BETA</span></h2>
 
@@ -2833,12 +2419,9 @@ iat_trials &lt;- sessions |&gt;
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
             <div class="docs-callout-content">
-              <p><strong>Design tradeoff worth understanding:</strong> enabling a webhook means you are now transmitting
-                response data to an endpoint of your choosing. The core "serverless" guarantee (data stays on-device) is
-                <em>opt-in</em> to preserve. If your IRB protocol specifies manual return, leave the field blank. If
-                your IRB approves direct electronic return to a specific institutional endpoint, webhooks make the data
-                pipeline hands-off for participants.
-              </p>
+              <p><strong>Choose your approved return path.</strong> An automatic receiver gets the full session record.
+                For manual return, leave the independent receiver field blank and test the approved transfer channel
+                with a local download.</p>
             </div>
           </div>
 
@@ -2973,7 +2556,7 @@ iat_trials &lt;- sessions |&gt;
         credential — treat it as a secret.</li>
       <li>Click <strong>Deploy</strong>. Authorize when prompted. Copy the Web app URL
         (starts with <code>https://script.google.com/macros/s/...</code>).</li>
-      <li>Paste into EMA Forge's Builder → Study tab → Webhook URL field.</li>
+      <li>Paste into <strong>Review &amp; Deploy → Use a different host or approved data endpoint → Receiver URL</strong>.</li>
       <li>Re-export. Test end-to-end with a dummy participant ID.</li>
     </ol>
 
@@ -3026,12 +2609,12 @@ iat_trials &lt;- sessions |&gt;
   treats an exact retry as a duplicate, and refuses changed data that attempts to reuse an existing ID. The private bucket has
   no public read route. Study installation, roster management, monitoring, browser-local analysis, and exports require the deployment's admin token.</p>
 
-<p><strong>One deployment per study.</strong> A Worker binds one private R2 bucket and maintains one active study, roster, and response collection. For a new study in the same Cloudflare account, create another Worker with a unique name; the new template leaves the <code>STUDY_DATA</code> bucket name unset so Cloudflare provisions a separate bucket automatically. Confirm that the new Worker's binding points to its own bucket before installation. Older deployments made with a fixed default bucket name may still need a one-time binding correction. If Admin reports a storage conflict, connect a new empty bucket before installing; never clear the existing study's bucket. Reinstalling a protocol for the current study preserves historical responses; installing a differently named study is blocked so those records are not mixed.</p>
+<p><strong>One deployment per study.</strong> A Worker binds one private R2 bucket and maintains one active study, roster, and response collection. For a new study in the same Cloudflare account, create another Worker with a unique name; the new template leaves the <code>STUDY_DATA</code> bucket name unset so Cloudflare provisions a separate bucket automatically. Confirm that the new Worker's binding points to its own bucket before installation. Older deployments made with a fixed default bucket name may still need a one-time binding correction. If Admin reports a storage conflict, connect a new empty bucket before installing; never clear the existing study's bucket. Reinstalling from the same draft preserves historical responses, including after a rename. On a legacy host without a study ID, first install from the original draft using its original study name to associate the host with that ID.</p>
 <p><strong>Updating an existing study:</strong> Download the new prepared HTML and install it in the existing Study Admin. Keep the existing Worker, URL, and R2 bucket. If an EMA Forge feature also changes Worker code, choose <strong>Update an existing Worker’s code → Download Worker update</strong> in Review &amp; Deploy. Select the existing Worker in Cloudflare Workers &amp; Pages, choose <strong>Edit code</strong>, replace its code with that self-contained file, and deploy while preserving its <code>STUDY_DATA</code> binding and admin secret. The raw <code>worker.mjs</code> has a separate import and is not the single-file update. The <strong>Create new study host</strong> button is for a separate study, not a software update. If running several independent studies, each has its own Worker and bucket; Worker code changes must currently be applied to each. Do not delete a Worker to update it.</p>
 
 <div class="callout info">
   <div class="callout-title">Fast path: deploy, install, and manage</div>
-  <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Deploy to Cloudflare</strong>.
+  <p>In <strong>Review &amp; Deploy</strong>, download the prepared Cloudflare study and open <strong>Create new study host</strong>.
     Cloudflare clones the public template, provisions and binds private R2 storage, and shows a masked example
     <code>ADMIN_TOKEN</code>. Replace that example with your own 32+ character password; EMA Forge cannot recover it.
     Twilio is optional and can be connected from the protected Study Admin after deployment. The template enables its <code>workers.dev</code> route automatically.
@@ -3051,7 +2634,11 @@ iat_trials &lt;- sessions |&gt;
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
     value in <code>wrangler.jsonc</code> or commit it to Git.</p>
-  <p>Run a pilot from Study Admin Overview after installation. Select a session, create the link, and complete it on a supported phone using sample answers. Refresh Overview to verify receipt. Pilot records are excluded from participant counts, Analyze, and response exports. Use <code>/check.html</code> to test storage separately.</p>
+  <p>Use <strong>Create pilot link</strong> in Study Admin Overview after installation. Complete the session
+    on a supported phone using sample answers and select <strong>Refresh status</strong>. Look for
+    <strong>Pilot verified</strong>. Pilot links are for testing and pilot responses stay out of research exports.
+    Use <code>/check.html</code> to test storage separately and the <a href="enrollment.html">enrollment checklist</a>
+    before sending real links.</p>
 </div>
 
 <details>
@@ -3245,7 +2832,7 @@ func azure functionapp publish ema-receiver-&lt;you&gt;</code></pre>
       <li>Get the function URL (includes a <code>?code=</code> key acting as a shared secret):
         Azure Portal → your Function → Functions → SaveSession → Get Function Url.
       </li>
-      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+      <li>Paste into the <strong>Receiver URL</strong> field in <strong>Review &amp; Deploy</strong>. Re-export.</li>
     </ol>
 
     <h4>For Ohio State users specifically</h4>
@@ -3325,7 +2912,7 @@ func azure functionapp publish ema-receiver-&lt;you&gt;</code></pre>
       <li>Save the flow. Click back into the trigger card — the
         <strong>HTTP POST URL</strong> field now contains the endpoint URL.
         Copy it.</li>
-      <li>Paste into EMA Forge's Webhook URL field. Re-export.</li>
+      <li>Paste into the <strong>Receiver URL</strong> field in <strong>Review &amp; Deploy</strong>. Re-export.</li>
     </ol>
 
     <p><strong>Performance caveat:</strong> Power Automate must return the
@@ -3455,7 +3042,7 @@ if ($code &gt;= 200 &amp;&amp; $code &lt; 300) {
       <li>Set environment variables (Apache: <code>SetEnv</code> in the vhost config;
         nginx + PHP-FPM: <code>env[REDCAP_TOKEN] = ...</code> in pool config).</li>
       <li>Paste <code>https://yourlab.dept.osu.edu/ema-proxy.php?auth=&lt;shared-secret&gt;</code>
-        into EMA Forge's Webhook URL field.</li>
+        into the <strong>Receiver URL</strong> field in <strong>Review &amp; Deploy</strong>.</li>
       <li>Re-export. Test end-to-end.</li>
     </ol>
 
@@ -3539,7 +3126,7 @@ export const handler = async (event) =&gt; {
         cheaper and simpler). Configure a default route <code>POST /</code>.</li>
       <li>Enable CORS on the API: allow origin <code>*</code>, methods
         <code>POST, OPTIONS</code>, headers <code>Content-Type</code>.</li>
-      <li>Copy the invoke URL. Paste into EMA Forge's Webhook URL field.</li>
+      <li>Copy the invoke URL. Paste into the <strong>Receiver URL</strong> field in <strong>Review &amp; Deploy</strong>.</li>
     </ol>
 
     <p><strong>For analysis</strong>, sync via aws-cli or
@@ -3663,53 +3250,16 @@ export const handler = async (event) =&gt; {
           <details>
             <summary>Repository layout</summary>
             <div class="details-body">
-              <p>The repository is split into three concerns: (1) what the researcher uses (Builder + Dashboard), (2)
-                what gets compiled into the participant's study (<code>templates/</code>), and (3) shared styling.</p>
-              <pre class="file-tree" style="margin-top:12px;"><span class="ft-dir">ema-forge/</span>
-├── <span class="ft-dir">index.html</span>             <span class="ft-comment"># Landing page</span>
-├── <span class="ft-dir">builder.html</span>           <span class="ft-comment"># Study authoring environment</span>
-├── <span class="ft-dir">dashboard.html</span>         <span class="ft-comment"># Local analysis dashboard</span>
-├── <span class="ft-dir">readme.html</span>            <span class="ft-comment"># This file</span>
-├── <span class="ft-dir">ppgtester.html</span>     <span class="ft-comment"># Standalone PPG pipeline tester</span>
-│
-├── <span class="ft-dir">css/</span>
-│   ├── studio.css             <span class="ft-comment"># Shared design tokens + component styles</span>
-│   ├── builder.css            <span class="ft-comment"># Builder workspace layout</span>
-│   └── dashboard.css          <span class="ft-comment"># Analyze workspace layout</span>
-│
-├── <span class="ft-dir">library/</span>                <span class="ft-comment"># Versioned protocols, packs, and task presets</span>
-│
-├── <span class="ft-dir">js/</span>
-│   ├── state.js               <span class="ft-comment"># Central state + schema (SCHEMA_VERSION)</span>
-│   ├── storage.js             <span class="ft-comment"># LocalStorage + project import/export + migrations</span>
-│   ├── export.js              <span class="ft-comment"># Compiles study to HTML / zip bundle</span>
-│   ├── preview.js             <span class="ft-comment"># Live iframe preview</span>
-│   │
-│   ├── <span class="ft-dir">tabs/</span>                  <span class="ft-comment"># Builder tab controllers</span>
-│   │   ├── study.js
-│   │   ├── onboarding.js
-│   │   ├── questions.js
-│   │   ├── schedule.js        <span class="ft-comment"># Windows + phase_sequence editor</span>
-│   │   ├── tasks.js           <span class="ft-comment"># Pluggable module registry</span>
-│   │   └── deployment.js      <span class="ft-comment"># Routing CSV generator</span>
-│   │
-│   └── <span class="ft-dir">dashboard/</span>
-│       ├── parser.js          <span class="ft-comment"># Ingests participant JSON folder</span>
-│       ├── simulator.js       <span class="ft-comment"># Deterministic synthetic protocol runs</span>
-│       └── dashboard.js       <span class="ft-comment"># Charts, filters, CSV export</span>
-│
-└── <span class="ft-dir">templates/</span>                <span class="ft-comment"># Source files stitched into the exported study</span>
-    ├── epat-core.js           <span class="ft-comment"># PPG pipeline + BeatDetector</span>
-    ├── study-base.js          <span class="ft-comment"># Runtime skeleton</span>
-    ├── module-onboarding.js
-    ├── module-ema.js          <span class="ft-comment"># EMA block + inline HR capture</span>
-    └── module-epat.js         <span class="ft-comment"># ePAT task</span>
-</pre>
-              <p style="margin-top:12px;"><strong>Key boundary:</strong> <code>js/</code> powers the Builder/Dashboard
-                (what the researcher interacts with). <code>templates/</code> is the code that gets stitched into the
-                <em>participant's</em> study by <code>js/export.js</code>. Never edit templates hoping to change Builder
-                behavior, or vice versa.
-              </p>
+              <ul>
+                <li><code>builder.html</code>, <code>js/tabs/</code> and <code>js/storage.js</code> handle authoring and local drafts.</li>
+                <li><code>js/export.js</code> builds participant HTML and static bundles from <code>templates/</code>.</li>
+                <li><code>cloudflare-deploy/</code> contains the study Worker and Study Admin. <code>receiver/</code>
+                  contains the independent upload receiver.</li>
+                <li><code>dashboard.html</code> and <code>js/dashboard/</code> handle import, analysis, and simulation.</li>
+                <li><code>library/</code> contains the versioned catalog. <code>tests/</code> and <code>scripts/</code>
+                  provide checks run by <code>npm run check</code>.</li>
+              </ul>
+
             </div>
           </details>
 
@@ -3934,21 +3484,9 @@ https://github.com/keeganwhitacre/emaforge</code></pre>
       if (window.innerWidth > 900) closeSidebar();
     });
 
-    // Click handler for smooth scroll — also closes the mobile drawer
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetId = link.getAttribute('href').substring(1);
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-          mainScroll.scrollTo({
-            top: targetElement.offsetTop - 40,
-            behavior: 'smooth'
-          });
-        }
-        // If we're on mobile and the sidebar is the drawer, close it after nav
-        if (window.innerWidth <= 900) closeSidebar();
-      });
+    // Close the drawer while letting links update the URL normally.
+    sidebar.addEventListener('click', (event) => {
+      if (event.target.closest('.docs-nav-link')) closeSidebar();
     });
   </script>
 </body>
