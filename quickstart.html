@@ -8,7 +8,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script src="js/public-theme.js?v=20261120"></script>
   <link rel="stylesheet" href="css/surfaces.css?v=20261120">
-  <link rel="stylesheet" href="css/quickstart.css?v=20261120c">
+  <link rel="stylesheet" href="css/quickstart.css?v=20261120d">
 </head>
 <body>
   <header class="topbar">
@@ -58,7 +58,7 @@
       <ol start="3">
         <li>
           <h3>Download your study file</h3>
-          <p>Give your study a name in <strong>Overview</strong>. Add consent text in <strong>Onboarding</strong>. Then choose <strong>Review &amp; Deploy → Download prepared study</strong>. Keep the file ending in <code>-cloudflare-study.html</code>.</p>
+          <p>Give your study a name in <strong>Overview</strong>. Add consent text in <strong>Onboarding</strong>. Then choose <strong>Review &amp; Deploy → Download prepared study</strong>. Keep the file ending in <code>-cloudflare-study.html</code>. It contains your questions, consent text, and study settings. You’ll install this file on your online host in Step 5.</p>
           <details>
             <summary>Practice consent text for a staff-only test</summary>
             <p>Practice run only. I understand that this exercise is for the study team to test the phone workflow with sample answers. I will use made-up data and will not enter my name, contact details, or health information. No research participants are enrolled in this test.</p>
@@ -68,14 +68,20 @@
         </li>
         <li>
           <h3>Create your Cloudflare host</h3>
+          <dl class="hosting-terms">
+            <div><dt>Cloudflare</dt><dd>Hosts your study online.</dd></div>
+            <div><dt>Worker</dt><dd>The part of Cloudflare that opens your study for participants, runs Study Admin, and receives responses.</dd></div>
+            <div><dt>R2</dt><dd>Cloudflare storage where your study file and responses are saved.</dd></div>
+            <div><dt>GitHub</dt><dd>Holds a copy of the code Cloudflare uses to set up your Worker.</dd></div>
+          </dl>
           <p>Create a <a href="https://github.com/signup">GitHub account</a> and a <a href="https://dash.cloudflare.com/sign-up">Cloudflare account</a>. In Cloudflare, open <strong>Storage &amp; databases → R2 → Overview</strong> and complete R2 setup. R2 has a free allowance and requires billing setup.</p>
-          <p>Back in EMA Forge, click <strong>Create new study host</strong>. Follow the prompts to connect GitHub and name the Worker. For <code>ADMIN_TOKEN</code>, make up a unique password with at least 32 characters and save it in your password manager. Click <strong>Deploy</strong>.</p>
+          <p>Back in EMA Forge, click <strong>Create new study host</strong>. Follow the prompts to connect GitHub and name the Worker. Set <code>ADMIN_TOKEN</code> to a unique password of at least 32 characters and save it in your password manager. This is the password you’ll enter to open <strong>Study Admin</strong>. Click <strong>Deploy</strong>.</p>
           <p class="look-for"><strong>Look for</strong> an address ending in <code>.workers.dev</code>. Copy it.</p>
           <p class="reference"><a href="https://developers.cloudflare.com/r2/get-started/">Cloudflare’s R2 setup guide</a> · <a href="https://developers.cloudflare.com/workers/platform/deploy-buttons/">Cloudflare’s example setup screens</a></p>
         </li>
         <li>
           <h3>Install your study</h3>
-          <p>Paste the address into <strong>Hosted study URL</strong> in EMA Forge. Click <strong>Open admin</strong> and sign in with the password you just made. Choose the downloaded file and click <strong>Install and open overview</strong>.</p>
+          <p>Paste the address into <strong>Hosted study URL</strong> in EMA Forge. Click <strong>Open admin</strong> and sign in with the password you just made. Choose the downloaded file and click <strong>Install and open overview</strong>. Study Admin installs the file on your online host, which serves both the participant study and the admin interface.</p>
           <figure><img src="assets/quickstart/paste-host.webp" width="683" height="506" alt="Hosted study URL field filled with an example workers.dev address." loading="lazy"></figure>
           <figure><img src="assets/quickstart/install.webp" width="545" height="244" alt="Study Admin install card with an example study HTML file selected and the Install study button." loading="lazy"></figure>
           <p class="look-for"><strong>Look for</strong> the Overview page with <strong>Create pilot link</strong>.</p>
@@ -91,6 +97,7 @@
             <div>
               <h3>Answer the check-in on your phone</h3>
               <p>In Study Admin, choose <strong>Daily session → Create pilot link → Copy for phone</strong>. Open the link on your phone, answer the question with a made-up response, and finish the check-in.</p>
+              <p><strong>Pilot links are for testing only.</strong> Use participant links when you’re ready to enroll.</p>
               <p class="look-for"><strong>Look for</strong> “Data uploaded successfully.”</p>
             </div>
             <figure class="phone"><img src="assets/quickstart/phone-pilot.webp" width="390" height="780" alt="Phone-sized example of the mood question with a Pilot session banner." loading="lazy"></figure>
@@ -106,8 +113,8 @@
 
     <aside class="next">
       <h2>When you’re ready to enroll</h2>
-      <p>Install the protocol and consent approved for your study. In Study Admin, open <strong>Participants &amp; delivery</strong>, add your study IDs, save the roster, and create participant links. Phone numbers and Twilio are optional for manual sharing.</p>
-      <p><a href="readme.html#routing">More about participant links</a></p>
+      <p>Before sending participant links, use the checklist to confirm your approved study is installed, your data workflow works, and your team is ready to enroll.</p>
+      <p><a class="button" href="enrollment.html">Open the enrollment checklist</a></p>
     </aside>
   </main>
 </body>
