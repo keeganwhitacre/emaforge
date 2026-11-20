@@ -1,25 +1,20 @@
 /* Builder workspace */
 body { background: var(--workspace-bg); }
 #app {
-  --workspace-gap: clamp(10px, 1.25vw, 18px);
   grid-template-columns: 208px minmax(0, 1fr) minmax(320px, 28vw);
   grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
-  gap: var(--workspace-gap);
-  padding: var(--workspace-gap);
+  gap: var(--forge-inset);
+  padding: var(--forge-inset);
 }
-#topbar, #builder-sidebar, #config-panel, .preview-card {
+#builder-sidebar, #config-panel, .preview-card {
   background: var(--surface-bg);
   border: 1px solid var(--surface-line);
   border-radius: var(--surface-radius);
   box-shadow: var(--surface-shadow);
 }
-#topbar { height: 62px; padding: 0 14px; gap: 14px; }
-.topbar-brand { gap: 8px; padding-right: 12px; }
-.topbar-logo { width: 29px; height: 29px; border: 0; border-radius: 10px; background: var(--accent-dim); }
-.topbar-back { width: 34px; height: 34px; }
-.topbar-back svg { flex: none; }
-.topbar-project { padding-left: 14px; border-left: 1px solid var(--surface-line); }
+
+.topbar-project { margin-left: 12px; padding-left: 14px; border-left: 1px solid var(--surface-line); }
 .topbar-project { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .topbar-project strong { font-size: 15px; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .topbar-project .badge { border-radius: 16px; text-transform: none; letter-spacing: 0; font-size: 11px; padding: 3px 10px; }
@@ -424,7 +419,7 @@ body.preview-open { overflow: hidden; }
 #setup-cancel { margin-left: auto; }
 
 /* Shared controls and contained groups */
-.btn, .btn-ghost, .btn-export, .project-menu summary, .topbar-back,
+.btn, .btn-ghost, .btn-export, .project-menu summary,
 .seg-ctrl, .seg-btn, .dow-chip, .measure-add-button, .preview-session-tab,
 .preview-reset-btn, .session-step-actions button, .measure-flow-actions button,
 #preview-panel.preview-fullscreen #close-preview-btn {
@@ -472,9 +467,8 @@ body.preview-open { overflow: hidden; }
 }
 
 @media (max-width: 950px) {
-  #topbar { gap: 10px; }
-  .topbar-brand { padding-right: 0; }
-  .topbar-project { padding-left: 10px; }
+
+  .topbar-project { margin-left: 0; padding-left: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }

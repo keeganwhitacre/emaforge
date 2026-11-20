@@ -1,60 +1,46 @@
 # EMA Forge
 
-Free, open-source builder for web-based ecological momentary assessment (EMA) studies with physiological measurements. Build a survey-only study, a task-only study, or an ordered sequence of both without writing code.
+EMA Forge is a free, open-source toolkit for building web-based ecological momentary assessment (EMA) studies. Arrange surveys and optional tasks, preview them, and host the study in your own Cloudflare account. Participants open a link on their phone. Your team manages the study and responses in Study Admin.
 
-Move from a draft to a functioning study in one workflow: choose a protocol or start blank, arrange questions and optional phone-camera tasks, preview the participant flow, then deploy to your own Cloudflare account. The researcher controls the hosted study, participant links, and private response storage. EMA Forge itself requires no account or persistent project upload.
+[Try a sample check-in](https://emaforge.keeganwhitacre.com/sample.html) · [Open Builder](https://emaforge.keeganwhitacre.com/builder.html) · [Browse the Protocol Library](https://emaforge.keeganwhitacre.com/library.html) · [Open Analyze](https://emaforge.keeganwhitacre.com/dashboard.html)
 
-**[Try a sample check-in](https://emaforge.keeganwhitacre.com/sample.html)** · **[Run your first study](https://emaforge.keeganwhitacre.com/quickstart.html)** · **[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
+## Run a study
 
-## Create a study
+| What you want to do | Where to start |
+| --- | --- |
+| Build, host, and test your first study | [Illustrated setup guide](https://emaforge.keeganwhitacre.com/quickstart.html) |
+| Move from a successful pilot to real enrollment | [Enrollment checklist](https://emaforge.keeganwhitacre.com/enrollment.html) |
+| Update a running study, set up SMS, or use another host | [Hosting and deployment reference](https://emaforge.keeganwhitacre.com/readme.html#hosting) |
+| Import results or simulate a dataset | [Analyze guide](https://emaforge.keeganwhitacre.com/readme.html#dashboard) |
 
-1. Enter study details and replace the consent template with approved text.
-2. In **Schedule**, set your session times. A new draft begins with one simple mood rating; replace it, add more questions, or add PPG heart-rate capture and physiology tasks as needed. Reorder steps in each session.
-3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
-4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password. Twilio is optional and can be connected inside Study Admin after deployment. The template enables its `workers.dev` address and provisions private R2 storage.
-5. Copy the Worker address Cloudflare displays and paste it into **Review & Deploy**. A bare address such as `my-study.workers.dev` is accepted and normalized to HTTPS. Open `/admin`; a new deployment opens directly on **Install study**. Upload the prepared `-cloudflare-study.html` file.
-6. In Study Admin Overview, choose a session and create a pilot link. Complete it on a supported phone using sample answers, then refresh Overview to confirm receipt. Pilot responses stay out of research exports. Use `/check.html` separately if you need to troubleshoot storage.
-7. Use `/admin` to monitor responses, run browser-local descriptive analysis, create participant links, manage optional Twilio delivery, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
+1. **Build.** Choose a daily mood check-in, an example protocol, or an empty session. Edit consent, measures, and the schedule, then preview. Drafts are saved in the current browser. Use **Download Backup** to keep an editable copy.
+2. **Host and pilot.** In **Review & Deploy**, download the prepared HTML and create a Cloudflare study host. Install the HTML in Study Admin and run a pilot on a phone. The host serves the study and Study Admin, and stores responses in private R2 storage. Pilot responses are excluded from research exports.
+3. **Enroll and monitor.** After the enrollment checklist, use **Participants & delivery** to create participant links. Send them manually or connect Twilio for scheduled SMS (beta). Watch responses arrive in Study Admin.
 
-Each Cloudflare deployment hosts **one study**. Use a separate Worker and private R2 bucket for each new study. Named drafts and backups preserve a study ID, so you can update or rename the same study on its existing host. For a legacy host, install once with the original name to associate it with the draft’s ID.
+Each Cloudflare study uses its own Worker and R2 bucket. To update an existing study, export again from the same Builder draft and install the new file on the same host. You can update the Worker’s software separately and keep its URL and stored responses. See the [deployment template notes](cloudflare-deploy/README.md).
 
-## Cost and study approval
+## Measures and reusable protocols
 
-EMA Forge is free and open source. A small study may fit within [Cloudflare Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/) (currently 100,000 requests per day) and [R2 Standard free usage](https://developers.cloudflare.com/r2/pricing/) (currently 10 GB-month storage, 1 million Class A operations, and 10 million Class B operations monthly). An R2 subscription/checkout must still be activated in the Cloudflare account; usage beyond included allowances may cost money. Optional [Twilio SMS has separate usage and sender charges](https://www.twilio.com/en-us/pricing/messaging). Estimate expected traffic and retention before recruitment.
+Mix questions, instruction screens, affect grids, body maps, and tasks in one ordered session. Instructions and tasks create their own screens. Use page breaks to split adjacent questions. Survey questions can use branching and response piping.
 
-Cloudflare hosting does not itself make a study IRB approved or suitable for protected health information. Before enrolling participants, give your IRB and institutional security staff the data flow, provider and region, data types, access controls, consent method, retention/deletion plan, and incident procedures. Use an institutionally approved platform when required. See the [HHS IRB review guidance](https://www.hhs.gov/ohrp/education-and-outreach/online-education/human-research-protection-training/lesson-4-irb-review-of-research/index.html).
-
-## Protocol library
-
-Browse the standalone **Protocol Library** to review descriptions, burden, device requirements, validation status, and evidence links before opening an item in the Builder. Complete showcase protocols, reusable survey packs, and physiology presets demonstrate repeated measures, response piping, compound branching, ordered survey/task steps, camera PPG, ePAT, and heartbeat counting.
-
-The library is intentionally simple: every item is versioned, inspectable JSON in [`library/`](library/). Researchers can create a protocol, survey pack, or physiology preset from their currently saved study, add it to **My Library**, download validated JSON, or open a prefilled **Submit for review** request without writing code. Official shared-catalog publication remains human-reviewed through GitHub; submissions are never published automatically. Library JSON may configure surveys and existing built-in tasks, but it cannot execute uploaded JavaScript; new task engines require normal source-code and measurement review. Instrument entries include provenance, permissions, timeframe, scoring, and validation metadata. Included demonstration items are not substitutes for validated instruments or study-specific ethical review.
-
-## One ordered measure flow
-
-The Measures screen treats survey questions, instruction screens, body maps, PPG capture, ePAT, HCT, and every registered task module as peers in one draggable session list. Instructions and physiology tasks create their own participant-screen boundaries automatically. For example, dragging ePAT between two questions is compiled internally as `survey → ePAT → survey`; researchers do not have to build or name those phases. Page breaks are only needed when splitting adjacent response questions across screens.
-
-Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
-
-The Builder stores named drafts in the current browser. Use **Download Backup** to move a draft to another device or share it with a lab colleague. Opening a full library protocol creates a new draft. The Builder needs no account or backend. The recommended Cloudflare export embeds the same-host `/submit` receiver automatically, so researchers should not paste a Cloudflare address into the manual webhook field. The deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, credentials, or participant responses. Without an approved receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
+- **Protocol Library.** Browse complete study designs, question packs such as K6, and task presets. Each item documents its source, burden, requirements, and validation status. You can create and download your own library JSON or submit it for human review. See the [catalog and contribution notes](library/README.md).
+- **Phone-camera tasks.** Camera PPG, ePAT, and heartbeat counting require device testing and study-specific piloting. If the camera fails, participants can retry or continue without measurement. IAT is experimental. See the [measurement methods](https://emaforge.keeganwhitacre.com/readme.html#ppg-capture).
+- **Place context.** With participant permission, hosted lookups send coordinates to the study Worker and selected government services. Responses store area-level categories and lookup status. An uploaded GeoJSON can also be matched on the phone. See [sources, privacy details, and available indicators](https://emaforge.keeganwhitacre.com/readme.html#place-context).
 
 ## Analyze and simulate
 
-Analyze imports Cloudflare NDJSON exports, EMA Forge JSON, or long-format CSV locally in the browser. The deployed `/admin` workspace also provides live descriptive monitoring without returning data to EMA Forge. It provides study-day summaries, participant and item views, response-status-preserving CSV export, rapid-duration review flags, and dedicated ePAT summaries. Observed response files alone cannot establish how many prompts were missed, so completion and delivery metrics remain separate from Twilio's explicit dispatch and delivery-event log.
+In Study Admin **Analyze**, choose **Download analysis file**. Open it in [detailed Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) to inspect responses against their protocol versions and export long-format CSV. Files are processed in your browser. Raw NDJSON, per-session JSON, and compatible EMA Forge CSV can also be imported.
 
-Use **Simulate study** to generate a deterministic, clearly labeled synthetic dataset from a curated protocol. The simulator follows session order, branching, item missingness, and physiological task envelopes; because it also creates an explicit schedule manifest, Analyze can demonstrate expected-versus-completed metrics. Synthetic exports include a `data_source` column and use a distinct filename. Simulation is for workflow testing, not measurement validation or statistical inference.
+Twilio dispatch and delivery records are available as a separate export. Use them alongside observed responses to investigate missed prompts. **Simulate study** generates a clearly labeled synthetic dataset with expected prompts, so you can test the analysis workflow before collecting data.
 
-## Included measures
+## Cost and study approval
 
-- Survey ratings, choices, open text, affect grid, branching, camera-based PPG heart-rate capture, and a source-documented K6 pack.
-- Optional **Place context** measure: after a researcher accepts a setup notice, participants may request their current location. Select any combination of EPA walkability, EPA population density, EPA distance to transit, EPA share of car-free households, and 2020 Census urban/rural in one optional question. One location permission request **sends coordinates transiently to the study Worker and each selected government service**; no coordinate, block ID, or area ID is saved in response files. EPA Smart Location indicators share one lookup; partial results record each indicator's status. Density, transit distance, and car-free share are historical block-group estimates, not individual attributes or real-time observations. The broad bands are descriptive cutoffs (density: <1, 1–<10, ≥10 people/developable acre; transit: ≤400, >400–1600, >1600 meters from the block-group population centroid; car-free households: <5%, 5–<20%, ≥20%). Combining several categories with timestamps and participant IDs can still narrow an area. Census urban/rural does not identify suburban places. For studies that cannot transmit coordinates to a lookup provider, a researcher can upload a licensed GeoJSON of documented study-area indicator bands (walkability, pollution, deprivation, urbanicity) and match them in the participant browser. Researcher-supplied pollution bands must specify the pollutant and reference period; no mode collects live air quality by default. Preview never requests real location; researchers must review consent, privacy, and accuracy before enrollment.
-- ePAT and heartbeat counting (beta), using a phone camera and flashlight for PPG. Check device compatibility and your research protocol before collecting data.
-- Implicit Association Task (experimental; not validated for confirmatory research).
+EMA Forge is free. The recommended hosting setup requires GitHub and Cloudflare accounts and R2 billing activation. Check [Workers limits](https://developers.cloudflare.com/workers/platform/limits/), [R2 pricing](https://developers.cloudflare.com/r2/pricing/), and [optional Twilio charges](https://www.twilio.com/en-us/pricing/messaging) when estimating your costs.
 
-If a camera cannot start, physiology screens now offer a retry and an explicit **Continue without measurement** path. The runtime records structured unavailable-task metadata and preserves earlier survey answers; it never fabricates a physiological value. Researchers should still define device eligibility and missing-data procedures before enrollment.
+Review your consent process, hosting and storage, access controls, data retention, and participant device support with your institution before enrollment. See the [enrollment checklist](https://emaforge.keeganwhitacre.com/enrollment.html) and [privacy reference](https://emaforge.keeganwhitacre.com/readme.html#privacy-model).
 
-The participant runtime and exported study files are inspectable. Run `npm run check` for syntax checks and protocol tests. See the [methods and limitations](https://emaforge.keeganwhitacre.com/readme.html) for measurement details.
+## Development and citation
 
-## License and contact
+Run `npm run check` for syntax, HTML, and protocol checks. See [repository architecture](https://emaforge.keeganwhitacre.com/readme.html#under-the-hood) and [potential improvements](https://emaforge.keeganwhitacre.com/readme.html#roadmap).
 
-[MIT License](LICENSE). To cite EMA Forge, use GitHub's **Cite this repository** menu, populated by [`CITATION.cff`](CITATION.cff). Once a versioned release is archived on Zenodo, cite that release's DOI. A software citation does not imply that a measure or deployment has been validated. Questions: keeganwhitacre at gmail dot com.
+[MIT License](LICENSE). To cite EMA Forge, use GitHub’s **Cite this repository** menu or [CITATION.cff](CITATION.cff). Contact Keegan Whitacre at keeganwhitacre at gmail dot com.

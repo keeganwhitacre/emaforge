@@ -4,13 +4,15 @@ This template deploys a complete EMA Forge study workspace into **your Cloudflar
 
 ## Deploy
 
+Follow the [illustrated setup guide](https://emaforge.keeganwhitacre.com/quickstart.html) for the full walkthrough.
+
 1. In EMA Forge, open **Review & Deploy** and download the prepared Cloudflare study file.
 2. Use **Create new study host** and choose a unique Worker name. The `STUDY_DATA` R2 binding deliberately has no fixed bucket name: Cloudflare automatically provisions a separate bucket for each new Worker and keeps it linked on subsequent deployments. Cloudflare may show the example `ADMIN_TOKEN` as dots or stars; replace it with your own unique password of at least 32 characters. Twilio is connected later inside Study Admin.
    Confirm the new Worker's `STUDY_DATA` binding points to its own bucket before installing. If Study Admin reports a storage conflict on first sign-in, check the binding and select a new empty bucket; never clear or reuse another study's bucket. Older deployments made from a template with a fixed bucket name may still need a one-time binding correction.
 3. The template enables its `workers.dev` route. Copy the address Cloudflare shows after deployment. Return to EMA Forge and paste either `your-study.workers.dev` or the full `https://…` URL under **Hosted study URL**.
 4. Choose **Open admin**, enter the same token, and upload the prepared `.html` file. A new deployment opens directly on the install screen.
 5. In Study Admin Overview, choose a session and create a pilot link. Open the link on a participant device, complete the session with sample answers, and refresh Overview to verify receipt. Pilot responses stay out of participant counts, analysis, and exports. Use `/check.html` to troubleshoot the storage connection separately.
-6. In **Participants & delivery**, add participant IDs, save the roster, and generate ready-to-share onboarding or check-in links. Phone numbers are needed only for scheduled SMS. Create check-in links when ready to send because their response window starts immediately.
+6. Complete the [enrollment checklist](https://emaforge.keeganwhitacre.com/enrollment.html). In **Participants & delivery**, add participant IDs, save the roster, and generate ready-to-share onboarding or check-in links. Phone numbers are needed only for scheduled SMS. Create check-in links when ready to send because their response window starts immediately.
 
 ## Update a study or Worker
 
@@ -36,7 +38,7 @@ Phone numbers are retained in the private roster object and are not copied into 
 
 ## Participant invite links
 
-The **Participants & delivery** screen can create a study-scoped invite link for a selected participant, study day, and session. These links use an opaque `/j/<token>` path, redirect internally to the required EMA routing parameters, inherit the configured response-window expiry, and can be revoked from Study Admin. They are not a public or general-purpose URL-shortening service.
+The **Participants & delivery** screen can create a study-scoped invite link for a selected participant, study day, and session. These links use an opaque `/j/<token>` path and can be revoked from Study Admin. Check-in links start the response window at creation. Onboarding links have no automatic expiry.
 
 ## Stored records
 
@@ -49,6 +51,6 @@ The **Participants & delivery** screen can create a study-scoped invite link for
 - Auditable prompt events: `dispatch/`; Twilio SID routing metadata is under `twilio/`.
 - Opaque participant-link mappings: `links/`. Revoked and expired links no longer redirect into the study.
 
-The Admin Analyze tab calculates descriptive operational summaries inside the browser. It does not send participant data to emaforge.org or another central service, and it does not replace confirmatory analysis in R, Python, or other validated workflows.
+The Admin Analyze tab calculates descriptive operational summaries inside the browser. Use **Analyze → Download analysis file** to open responses and their protocol configurations in [detailed Analyze](https://emaforge.keeganwhitacre.com/dashboard.html). Both workspaces process summaries in your browser. Raw NDJSON and dispatch logs are also available for independent analysis.
 
 The admin token protects installation, roster access, browser analysis, settings, and exports. Keep it in a password manager. For higher-risk studies, also place `/admin*` behind Cloudflare Access, review retention and abuse controls, use opaque participant IDs, and obtain the required institutional/IRB approval. This template does not make a study compliant by itself.

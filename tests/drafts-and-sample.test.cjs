@@ -89,11 +89,13 @@ test("both public sample modes use the real participant renderer with preview-on
   assert.match(survey, /window\.__PREVIEW_MODE__ = true/);
   assert.match(survey, /How are you feeling right now\?/);
   assert.match(survey, /inert aria-hidden="true" class="screen" id="screen-ob-consent"/);
-  assert.doesNotMatch(survey, /sample_heart_rate/);
+  assert.doesNotMatch(survey, /sample_heart_rate|id="download-btn"/);
+  assert.match(survey, /"question_id":"sample_company","operator":"eq","value":"With other people"/);
+  assert.match(survey, /"question_ids":\["q_daily_mood","sample_company_page","sample_company","sample_connection_page","sample_connection","sample_reflection_page","sample_reflection"\]/);
 
   await vm.runInContext("showSample(true)", context);
   const physiology = elements.get("sample-frame").srcdoc;
-  assert.match(physiology, /"sample_heart_rate"/);
+  assert.match(physiology, /"sample_pulse_page","sample_heart_rate","sample_reflection_page"/);
   assert.match(physiology, /"hr_capture":\{"enabled":true\}/);
   for (const [, script] of physiology.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     assert.doesNotThrow(() => new vm.Script(script));

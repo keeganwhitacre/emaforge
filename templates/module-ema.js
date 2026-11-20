@@ -453,7 +453,7 @@ const EMA = (function() {
           </div>
       </div>
       <p style="font-size:0.88rem;color:var(--fg-muted);text-align:center;margin:0;">
-        Cover the rear <strong style="color:var(--fg);">camera + flashlight</strong> with your fingertip
+        ${isPreview ? 'Watch the simulated heart-rate reading.' : 'Cover the rear <strong style="color:var(--fg);">camera + flashlight</strong> with your fingertip'}
       </p>
       <div id="hr-status-${uid}" style="font-size:0.85rem;color:var(--accent-red);text-align:center;min-height:1.2em;font-weight:600;">Waiting for finger...</div>
     `;

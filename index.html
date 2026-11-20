@@ -11,8 +11,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/surfaces.css?v=20261120">
+<link rel="stylesheet" href="css/studio.css?v=20261120e">
+<link rel="stylesheet" href="css/surfaces.css?v=20261120e">
 <style>
  
   /* ── Homepage-specific overrides ───────────────────────── */
@@ -25,37 +25,6 @@
   /* Full-height shell — topbar + hero + cards */
   #home { display: flex; flex-direction: column; min-height: 100vh; }
 
-  /* ── Topbar (no tabs, no actions — just brand) ─────────── */
-  #home-topbar {
-    display: flex; align-items: center;
-    width: min(1100px, calc(100% - 32px));
-    margin: 16px auto 0;
-    padding: 0 19px;
-    height: 56px;
-    border: 1px solid var(--surface-line);
-    border-radius: var(--pill-radius);
-    background: var(--surface-bg);
-    box-shadow: var(--surface-shadow);
-    gap: 14px; flex-shrink: 0;
-  }
-  .home-brand {
-    display: flex; align-items: center; gap: 10px;
-    font-weight: 700; font-size: 14px;
-    letter-spacing: -0.01em;
-    color: var(--fg);
-  }
-  .home-logo {
-    width: 29px; height: 29px;
-    color: var(--accent); background: var(--accent-dim); border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .home-logo svg { width: 15px; height: 15px; }
-  .home-topbar-right {
-    margin-left: auto;
-    font-size: 11px; color: var(--fg-3);
-    letter-spacing: 0.04em;
-  }
-
   /* ── Hero ───────────────────────────────────────────────── */
   #hero {
     padding: 75px 28px 46px;
@@ -63,17 +32,7 @@
     margin: 0 auto;
     width: 100%;
   }
-  .hero-eyebrow {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 16px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .hero-eyebrow::before {
-    content: '';
-    display: block; width: 20px; height: 1px;
-    background: var(--accent);
-  }
+
   .hero-title {
     font-size: clamp(46px, 6vw, 78px); font-weight: 750;
     letter-spacing: -0.059em; line-height: 1.1;
@@ -84,7 +43,7 @@
     font-size: 16px; color: var(--fg-2);
     line-height: 1.65; max-width: 650px;
   }
-  .home-guide-link { display: inline-block; margin-top: 12px; color: var(--fg-2); text-underline-offset: 0.22em; }
+
   .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
   .hero-actions a {
     display: inline-flex;
@@ -102,6 +61,7 @@
   .hero-primary:hover { background: var(--action-hover); }
   .hero-actions .hero-secondary { border-color: var(--surface-line); background: var(--surface-bg); color: var(--fg-2); }
   .hero-actions .hero-secondary:hover { border-color: var(--border-hi); color: var(--fg); }
+  .workflow-guide { display: inline-block; margin-top: 8px; color: var(--accent); text-underline-offset: .2em; }
   #home a:focus-visible, #home button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
   /* ── Cards grid ─────────────────────────────────────────── */
@@ -242,7 +202,7 @@
     padding: 60px 24px 40px;
     text-align: center;
   }
-  .hero-eyebrow { justify-content: center; }
+
   .hero-title { font-size: clamp(42px, 8vw, 62px); }
   .hero-actions { justify-content: center; }
   .hero-sub { margin: 0 auto; font-size: 14px; }
@@ -260,8 +220,7 @@
   .workflow-track { grid-template-columns: repeat(3,1fr); row-gap: 22px; }
   .workflow-track::before { display: none; }
   
-  /* Hide minor topbar text to save space */
-  .home-topbar-right { display: none; }
+
 }
 
 </style>
@@ -270,34 +229,19 @@
 <div id="home">
 
   <!-- ── Topbar ─────────────────────────────────────────── -->
-  <header id="home-topbar">
-    <div class="home-brand">
-      <div class="home-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <polygon points="5,11 19,11 21,14 15,14 15,18 18,22 6,22 9,18 9,14 5,14" />
-  <polyline points="4,6 8,6 10,3 13,9 15,6 20,6" />
-</svg>
-      </div>
-      EMA Forge
-    </div>
-    <div class="home-topbar-right" style="display:flex; align-items:center; gap: 10px;">
-      <button class="btn-ghost" id="theme-toggle" style="background:transparent; border:none; color:var(--fg-3); cursor:pointer;" title="Toggle Light/Dark Mode">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-      </button>
-      <span style="font-size: 11px; letter-spacing: 0.04em;">v2.0.0</span>
-    </div>
+  <header class="forge-header forge-header-inset">
+    <span class="forge-brand"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</span>
+    <div class="forge-header-actions"><button type="button" class="forge-header-icon" id="theme-toggle" title="Toggle light or dark theme" aria-label="Toggle light or dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button></div>
   </header>
 
   <!-- ── Hero ──────────────────────────────────────────── -->
   <section id="hero">
-    <div class="hero-eyebrow">Open-source EMA, from idea to live study</div>
     <h1 class="hero-title">EMA Forge</h1>
     <p class="hero-sub">Build a survey, add branching or phone-camera physiology, preview the participant experience, and deploy a working study to your own Cloudflare account. EMA Forge needs no account; your deployment hosts the study, participant links, and private response data.</p>
     <div class="hero-actions">
       <a class="hero-primary" href="builder.html">Build a study</a>
       <a class="hero-secondary" href="sample.html">Try a sample check-in</a>
     </div>
-    <a class="home-guide-link" href="quickstart.html">Run your first study</a>
   </section>
 
   <section id="principles" aria-label="Platform principles">
@@ -400,7 +344,7 @@
   <section id="workflow" aria-labelledby="workflow-title">
     <div class="workflow-head">
       <div><div class="workflow-kicker">From idea to field study</div><h2 id="workflow-title">One continuous research workflow</h2></div>
-      <p>EMA Forge prepares the study; Cloudflare hosts the participant experience, private data, messaging, and monitoring without requiring a permanent EMA Forge account.</p>
+      <p>EMA Forge prepares the study; Cloudflare hosts the participant experience, private data, messaging, and monitoring without requiring a permanent EMA Forge account.<br><a class="workflow-guide" href="quickstart.html">First-study guide</a></p>
     </div>
     <div class="workflow-track" aria-label="Study workflow">
       <div class="workflow-step" style="--delay:0s"><div class="workflow-dot">01</div><strong>Choose</strong><span>Start blank or from the library</span></div>

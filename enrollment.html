@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enrollment checklist · EMA Forge</title>
+  <meta name="description" content="Checks to complete with your study team before sending participant links from EMA Forge.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="js/public-theme.js?v=20261120"></script>
+  <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
+  <link rel="stylesheet" href="css/quickstart.css?v=20261120e">
+</head>
+<body>
+  <header class="forge-header forge-header-inset">
+    <a href="index.html" class="forge-back" aria-label="Back to home" title="Back to home"><svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" aria-hidden="true"><path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/></svg></a>
+    <span class="forge-brand"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</span>
+    <div class="forge-header-actions"><a class="forge-header-link" href="quickstart.html">Setup guide</a></div>
+  </header>
+  <main class="enrollment-guide">
+    <div class="intro">
+      <h1>Enrollment checklist</h1>
+      <p>Use this with your study team before sending your first participant link.</p>
+      <div class="intro-actions">
+        <a href="quickstart.html#pilot">Back to the phone pilot</a>
+      </div>
+    </div>
+
+    <section aria-labelledby="protocol-heading">
+      <h2 id="protocol-heading">Confirm the study is ready</h2>
+      <ul class="enrollment-checklist">
+        <li><label><input type="checkbox"><span><strong>Review your approvals and data plan.</strong> Confirm with your institution that you have the required approvals for the protocol, consent process, and hosting and storage setup. Agree on who can access data, where exports go, and when records are deleted.</span></label></li>
+        <li><label><input type="checkbox"><span><strong>Install your final study file.</strong> Replace the practice consent with the approved language. Check the questions, schedule, and any branching or optional measures. Download the updated study file from Builder and install it in Study Admin.</span></label></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pilot-check-heading">
+      <h2 id="pilot-check-heading">Test the installed version</h2>
+      <ul class="enrollment-checklist">
+        <li><label><input type="checkbox"><span><strong>Run a fresh staff pilot.</strong> Use sample answers on a phone and browser your participants will use. Check consent, each key session and branch, and any camera or location prompts your study uses.</span></label></li>
+        <li><label><input type="checkbox"><span><strong>Verify receipt and review your export process.</strong> Refresh Study Admin and look for <strong>Pilot verified</strong>. Confirm your team knows how to find responses and download exports. Pilot responses stay out of research exports.</span></label></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="links-heading">
+      <h2 id="links-heading">Get participant links ready</h2>
+      <ul class="enrollment-checklist">
+        <li><label><input type="checkbox"><span><strong>Save the roster and check the delivery plan.</strong> In <strong>Participants &amp; delivery</strong>, use study IDs without names or contact details in the IDs. If using SMS, send a test message and verify the schedule and time zones.</span></label></li>
+        <li><label><input type="checkbox"><span><strong>Create participant links.</strong> Check each link against the intended study ID and session before sharing. Use your approved contact method.</span></label></li>
+      </ul>
+      <p class="reference"><a href="readme.html#routing">Participant link instructions</a> · <a href="readme.html#twilio-integration">Optional SMS setup</a></p>
+    </section>
+  </main>
+</body>
+</html>
