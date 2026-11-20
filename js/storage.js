@@ -11,6 +11,7 @@ const StorageManager = {
     DRAFT_PREFIX: 'ema_forge_draft_v2:',
     ACTIVE_KEY: 'ema_forge_active_draft_v2',
     _draftId: null,
+    hasDraft: false,
     _saveTimer: null,
     _blockedOlderDraft: false,
 
@@ -22,6 +23,8 @@ const StorageManager = {
                 || localStorage.getItem(this.STORAGE_KEY);
         } catch (_) { /* The editor can still export a backup. */ }
         if (!this._draftId) this._draftId = this.newId();
+        this.hasDraft = !!saved || (typeof location !== 'undefined' &&
+            (location.hash === '#library' || new URLSearchParams(location.search).has('library')));
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -35,7 +38,6 @@ const StorageManager = {
         this.assignStudyId();
         this.renderDrafts();
         document.getElementById('draft-select')?.addEventListener('change', event => this.openDraft(event.target.value));
-        document.getElementById('new-draft-btn')?.addEventListener('click', () => this.createDraft());
 
         const saveBtn   = document.getElementById('btn-save-project');
         const resetBtn  = document.getElementById('btn-reset');
@@ -120,6 +122,7 @@ const StorageManager = {
             throw error;
         }
         this._draftId = id;
+        this.hasDraft = true;
         previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
         this.assignStudyId();
         this.saveLocalState();
@@ -127,9 +130,19 @@ const StorageManager = {
         this.triggerUIRefresh();
     },
 
-    createDraft() {
-        if (!this.saveLocalState() && !this._blockedOlderDraft) return;
-        this.replaceDraft(JSON.parse(blankStudyDraft), this.newId());
+    createDraft({ name = '', theme = '', blank = false } = {}) {
+        if (!this.saveLocalState() && !this._blockedOlderDraft) return false;
+        const draft = JSON.parse(blankStudyDraft);
+        draft.study.name = name;
+        if (theme) draft.study.theme = theme;
+        if (blank) {
+            draft.ema.questions = [];
+            draft.ema.scheduling.windows[0].phase_sequence = [];
+        } else {
+            draft.ema.scheduling.days_of_week = [1, 2, 3, 4, 5, 6, 7];
+        }
+        this.replaceDraft(draft, this.newId());
+        return true;
     },
 
     _compareVersions(a, b) {
@@ -202,6 +215,7 @@ const StorageManager = {
 
     saveLocalState() {
         if (this._blockedOlderDraft) return false;
+        if (!this.hasDraft) return true;
         try {
             const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
             const toSave = Object.assign({}, state, { schema_version: currentVersion });
@@ -244,6 +258,7 @@ const StorageManager = {
                 this.replaceDraft(imported, this.newId());
                 const status = document.getElementById('save-status');
                 if (status) status.textContent = 'Project imported';
+                document.getElementById('study-setup')?.close();
             } catch (err) {
                 alert("Error parsing JSON file. Please ensure it is a valid EMA Forge backup.");
             }
@@ -259,15 +274,18 @@ const StorageManager = {
         this.replaceDraft(JSON.parse(blankStudyDraft), current);
     },
 
-    loadTemplate(templateObj) {
-        if (!this.saveLocalState() && !this._blockedOlderDraft) return;
+    loadTemplate(templateObj, { name = '', theme = '' } = {}) {
+        if (!this.saveLocalState() && !this._blockedOlderDraft) return false;
         const draft = JSON.parse(JSON.stringify(templateObj));
+        if (name) draft.study.name = name;
+        if (theme) draft.study.theme = theme;
         delete draft.study.id;
         draft.deployment = { hosted_url: '' };
         this.replaceDraft(draft, this.newId());
         const status = document.getElementById('save-status');
         if (status) status.textContent = 'Protocol loaded as a new draft';
         document.getElementById('import-modal')?.classList.remove('open');
+        return true;
     },
 
     triggerUIRefresh() {

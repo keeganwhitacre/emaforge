@@ -28,6 +28,21 @@ test("a legacy browser draft survives opening a library protocol and switching b
     vm.runInContext("sanitizeConsentHtml = value => value", context);
     return context;
   };
+  const fresh = browser();
+  run(fresh, "js/storage.js");
+  assert.equal(vm.runInContext("StorageManager.hasDraft", fresh), false);
+  vm.runInContext("StorageManager.saveLocalState()", fresh);
+  assert.equal(values.size, 0, "visiting the setup screen must not create a saved draft");
+  vm.runInContext("StorageManager.createDraft({ name: 'First study', theme: 'light', blank: true })", fresh);
+  const created = JSON.parse(values.get("ema_forge_draft_v2:" + values.get("ema_forge_active_draft_v2")));
+  assert.equal(created.study.name, "First study");
+  assert.equal(created.study.theme, "light");
+  assert.deepEqual(created.ema.questions, []);
+  assert.deepEqual(created.ema.scheduling.windows[0].phase_sequence, []);
+  vm.runInContext("StorageManager.createDraft()", fresh);
+  assert.equal(vm.runInContext("state.ema.scheduling.days_of_week.length", fresh), 7);
+  values.clear();
+
   const original = browser();
   const legacy = JSON.parse(vm.runInContext("JSON.stringify({ ...state, schema_version: SCHEMA_VERSION })", original));
   legacy.study.name = "Existing lab study";

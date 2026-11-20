@@ -338,3 +338,47 @@ body.preview-open { overflow: hidden; }
 .deploy-readiness { margin-bottom: 22px; padding: 0; }
 
 .deploy-current { border-top: 2px solid var(--accent); }
+
+#study-setup {
+  width: min(530px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: clamp(20px, 4vw, 34px);
+  margin: auto;
+  color: var(--fg);
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 24px 68px #0004;
+}
+#study-setup [hidden] { display: none; }
+#study-setup::backdrop { background: #202831b8; backdrop-filter: blur(4px); }
+#study-setup h1 { font-size: 28px; margin: 0 0 4px; }
+#study-setup h1:focus { outline: none; }
+.setup-intro { color: var(--fg-2); margin: 0 0 22px; }
+.setup-options { display: grid; gap: 8px; }
+.setup-choice {
+  display: grid;
+  gap: 4px;
+  padding: 12px 15px;
+  background: var(--bg-1);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.setup-choice span { color: var(--fg-2); font-size: 13px; }
+.setup-choice-primary { border-color: var(--accent); }
+.setup-choice:hover { background: var(--bg-2); }
+.setup-choice:focus-visible, .setup-footer a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#setup-library-fields { padding: 4px 0 10px; }
+.setup-library-controls, .setup-details-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.setup-details { margin-top: 18px; }
+.setup-details summary { color: var(--fg-2); cursor: pointer; }
+.setup-details-fields { margin-top: 10px; }
+.setup-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; margin-top: 20px; }
+.setup-footer a { color: var(--accent); text-underline-offset: 0.2em; }
+#setup-status { margin-top: 10px; color: var(--fg-2); }
+.setup-restore { border: 0; padding: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+#setup-cancel { margin-left: auto; }

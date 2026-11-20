@@ -4,7 +4,7 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 
 Move from a draft to a functioning study in one workflow: choose a protocol or start blank, arrange questions and optional phone-camera tasks, preview the participant flow, then deploy to your own Cloudflare account. The researcher controls the hosted study, participant links, and private response storage. EMA Forge itself requires no account or persistent project upload.
 
-**[Try a sample check-in](https://emaforge.keeganwhitacre.com/sample.html)** · **[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
+**[Try a sample check-in](https://emaforge.keeganwhitacre.com/sample.html)** · **[Run your first study](https://emaforge.keeganwhitacre.com/quickstart.html)** · **[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
 
 ## Create a study
 
