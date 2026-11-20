@@ -376,6 +376,9 @@ function updateDeploymentControls() {
   if (copyAdminBtn) copyAdminBtn.disabled = !adminUrl;
   if (messagingBtn) messagingBtn.disabled = !adminUrl;
   if (destinationGrid) destinationGrid.hidden = !participantUrl;
+  if (adminBtn) adminBtn.closest('.deploy-block')?.classList.toggle('deploy-current', !!adminUrl);
+  const create = document.getElementById('deploy-cloudflare-btn');
+  if (create) create.textContent = adminUrl ? 'Create another host ↗' : 'Create new study host ↗';
   if (hint) hint.textContent = participantUrl
     ? 'Address recognized. Open Study Admin next; it will take you directly to installation.'
     : 'Paste the workers.dev address Cloudflare gives you. EMA Forge adds https:// automatically.';

@@ -12,7 +12,7 @@
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
-<link rel="stylesheet" href="css/builder.css?v=20260926b">
+<link rel="stylesheet" href="css/builder.css?v=20261120b">
 </head>
 <body>
   <div id="mobile-blocker">
@@ -24,9 +24,50 @@
     </svg>
     <h2>Desktop Recommended</h2>
     <p>EMA Forge's Builder and Data Dashboard are designed for larger screens. Please visit this page on a desktop or laptop computer to design your study.</p>
-    <a href="readme.html" class="btn" style="margin-top: 20px; text-decoration: none;">Read the Documentation</a>
+    <a href="sample.html" class="btn" style="margin-top: 20px; text-decoration: none;">Try a sample check-in</a>
   </div>
 </div>
+
+<dialog id="study-setup" aria-labelledby="study-setup-title">
+  <h1 id="study-setup-title" tabindex="-1" autofocus>Start a study</h1>
+  <p class="setup-intro">Choose a starting point. You can edit every detail in the Builder.</p>
+  <div class="setup-options">
+    <button type="button" class="setup-choice setup-choice-primary" id="setup-daily">
+      <strong>Start with a daily check-in</strong>
+      <span>One mood question in an editable daily session.</span>
+    </button>
+    <button type="button" class="setup-choice" id="setup-library" aria-expanded="false" aria-controls="setup-library-fields">
+      <strong>Use a protocol from the library</strong>
+      <span>Start with a complete example study design.</span>
+    </button>
+    <div id="setup-library-fields" hidden>
+      <label class="field-label" for="setup-protocol">Protocol</label>
+      <div class="setup-library-controls">
+        <select id="setup-protocol"></select>
+        <button type="button" class="btn btn-primary" id="setup-use-protocol" disabled>Use protocol</button>
+      </div>
+      <p class="field-hint" id="setup-protocol-description"></p>
+    </div>
+    <button type="button" class="setup-choice" id="setup-blank">
+      <strong>Open Builder</strong>
+      <span>Start with an empty session and add your own measures.</span>
+    </button>
+  </div>
+  <details class="setup-details">
+    <summary>Name and appearance (optional)</summary>
+    <div class="setup-details-fields">
+      <div><label class="field-label" for="setup-name">Study name</label><input id="setup-name" type="text" placeholder="e.g. Daily mood study"></div>
+      <div><label class="field-label" for="setup-theme">Participant theme</label><select id="setup-theme"><option value="">Use starting design</option><option value="light">Light</option><option value="dark">Dark</option><option value="oled">True black</option></select></div>
+    </div>
+  </details>
+  <p id="setup-status" role="status" hidden></p>
+  <div class="setup-footer">
+    <a href="quickstart.html">Run your first study</a>
+    <button type="button" class="setup-restore" id="setup-restore">Open a backup</button>
+    <button type="button" class="btn btn-secondary" id="setup-cancel">Cancel</button>
+  </div>
+</dialog>
+
 <div id="app">
 
   <!-- ========== TOP BAR ========== -->
@@ -87,6 +128,7 @@
       <button class="tab-btn" data-tab="tasks">Task settings</button>
       <button class="tab-btn" data-tab="deployment">Review &amp; Deploy</button>
     </nav>
+    <div class="draft-picker"><label class="sidebar-group-label" for="draft-select">Study drafts</label><select id="draft-select"></select><button type="button" class="btn btn-secondary" id="new-draft-btn">New study</button></div>
     <div class="sidebar-footer"><a href="library.html">Protocol library</a><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
   </aside>
 
@@ -180,6 +222,7 @@
         <div class="field-hint" id="format-hint">Each submission downloads a .csv with one row per question. Easy to concatenate across participants. Task signal data (e.g. ePAT) downloads alongside as a separate .json.</div>
       </div>
       
+      <details class="deploy-help"><summary>Independent receiver settings</summary>
       <div class="field-group" style="margin-top: 16px; padding: 12px; background: var(--bg-2); border: 1px dashed var(--border-hi); border-radius: var(--radius);">
   <label class="field-label" style="display: flex; align-items: center; gap: 6px;">
     Webhook URL <span class="badge badge-neutral">Optional</span>
@@ -191,6 +234,7 @@
     <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
   </a>
 </div>
+</details>
     </div>
 
     <!-- ONBOARDING TAB -->
@@ -355,11 +399,13 @@
 
     <!-- DEPLOYMENT TAB -->
     <div class="config-section" id="tab-deployment">
-      <div class="section-title">Review &amp; Deploy</div>
-      <p class="field-hint">Take the study from this browser to a working participant link with confirmed data storage.</p>
+      <div class="readiness-card deploy-readiness"><div class="readiness-heading"><h2>Study readiness</h2><span id="readiness-count"></span></div><div id="readiness-list" aria-live="polite"></div></div>
+      <div class="section-title">Run a pilot</div>
+      <p class="field-hint">Install this draft on your study host, complete a check-in on a phone, and confirm it in Study Admin. <a href="quickstart.html#host">See the illustrated guide</a>.</p>
 
       <div class="deploy-block deploy-cloudflare">
-        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Create a Cloudflare host for a new study</strong><span>Each new study gets its own Worker and private R2 bucket. Skip this step if you already have a host for this study.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Download the study and connect a host</strong><span>Each new study gets its own Worker and private R2 bucket. Skip this step if you already have a host for this study.</span></div></div>
+        <p class="field-hint">New hosts need a Cloudflare account with R2 activated and a GitHub or GitLab account. The deploy button creates a connected repository. Save the admin token you choose in a password manager.</p>
         <ol class="cloudflare-steps">
           <li><strong>Download</strong> your prepared study. Deploy the Worker only when creating a new host.</li>
           <li>Give this study a unique Worker name. Cloudflare creates its own R2 bucket. Replace the sample <code>ADMIN_TOKEN</code> with your own 32+ character token.</li>
@@ -381,7 +427,7 @@
       </div>
 
       <div class="deploy-block">
-        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Install and confirm the live study</strong><span>Paste the deployed Worker URL, install the study, then verify storage.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">2</span><div><strong>Install and verify a pilot response</strong><span>Paste the Worker URL, install the file in Study Admin, then create and verify a pilot link there.</span></div></div>
       <div class="field-group" style="margin-bottom: 16px;">
         <label class="field-label" for="deploy-base-url">Hosted study URL</label>
         <input type="text" inputmode="url" id="deploy-base-url" placeholder="your-study.workers.dev" value="">
@@ -391,17 +437,17 @@
         <article class="deployment-destination primary">
           <span class="destination-label">Next: install your study</span>
           <strong>Study administration</strong>
-          <small>Sign in with your admin token and upload the prepared HTML. Manage messaging, responses, and exports here.</small>
+          <small>Sign in with your admin token and upload the prepared HTML. Open Overview to create a pilot link, then confirm receipt after testing on a phone.</small>
           <div class="deploy-actions"><button type="button" class="btn btn-primary" id="open-cloudflare-admin-btn">Open admin</button><button type="button" class="btn btn-secondary" id="copy-cloudflare-admin-btn">Copy link</button></div>
         </article>
         <article class="deployment-destination">
-          <span class="destination-label">After installation</span>
+          <span class="destination-label">Generic URL</span>
           <strong>Participant study</strong>
-          <small>Share the live study link after you install and check it. Add participant routing through Admin or the CSV below.</small>
+          <small>Use Study Admin to generate ready-to-share invites for specific participants.</small>
           <div class="deploy-actions"><button type="button" class="btn btn-secondary" id="open-participant-study-btn">Open study</button><button type="button" class="btn btn-secondary" id="copy-participant-study-btn">Copy link</button></div>
         </article>
         <article class="deployment-destination">
-          <span class="destination-label">Verify once</span>
+          <span class="destination-label">Troubleshoot storage</span>
           <strong>Connection check</strong>
           <small>Shows a clear pass/fail result and stores the synthetic check separately from participant responses.</small>
           <div class="deploy-actions"><button type="button" class="btn btn-secondary" id="open-connection-check-btn">Run check</button></div>
@@ -430,8 +476,10 @@
         </div>
       </details>
 
+      <details class="manual-deploy">
+      <summary>Advanced routing template and SMS settings</summary>
       <div class="deploy-block">
-      <div class="deploy-block-heading"><span class="deploy-number">3</span><div><strong>Create participant links</strong><span>Use opaque study IDs—not names, emails, or medical-record numbers.</span></div></div>
+      <p class="field-hint">To create ready-to-share links without SMS, use Participants &amp; delivery in Study Admin. This CSV is a template for external scheduling tools. Replace its send-time placeholder before sending.</p>
       <div class="field-row">
         <div class="field-group">
           <label class="field-label">Start Participant ID</label>
@@ -446,7 +494,7 @@
       <div style="margin-top: 24px;">
         <button id="generate-csv-btn" class="btn btn-primary" style="width: 100%; padding: 10px;">
           <svg viewBox="0 0 16 16" fill="currentColor" style="width: 16px; height: 16px; margin-right: 6px;"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
-          Generate Routing CSV
+          Download routing template
         </button>
         <button class="btn btn-secondary" id="open-cloudflare-messaging-btn" style="margin-top: 12px; width: 100%;">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: text-bottom;">
@@ -460,6 +508,7 @@
         </a>
       </div>
       </div>
+      </details>
     </div>
   </section>
 
@@ -482,7 +531,7 @@
     </div>
     <p id="preview-error" class="preview-error" role="alert" hidden></p>
     </div>
-    <div class="readiness-card"><div class="readiness-heading"><h2>Study Readiness</h2><span id="readiness-count"></span></div><div id="readiness-list" aria-live="polite"></div></div>
+
   </section>
 </div>
 
@@ -555,7 +604,7 @@
 <!-- Scripts loaded in exact dependency order -->
 <script src="js/state.js?v=20260924b"></script>
 <script src="js/place-context.js?v=20260925g"></script>
-<script src="js/storage.js?v=20260924b"></script>
+<script src="js/storage.js?v=20261120b"></script>
 <script src="js/library-utils.js?v=20260924d"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20260924e"></script>
@@ -565,10 +614,10 @@
 <script src="js/tabs/schedule.js?v=20260925a"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
-<script src="js/tabs/deployment.js?v=20260925d"></script>
+<script src="js/tabs/deployment.js?v=20261120"></script>
 <script src="js/preview.js?v=20260925a"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20260926c"></script>
+<script src="js/export.js?v=20261120"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -606,6 +655,7 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20260925a"></script>
+<script src="js/builder-shell.js?v=20261120"></script>
+<script src="js/setup.js?v=20261120"></script>
 </body>
 </html>

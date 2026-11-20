@@ -5,21 +5,39 @@
 // v1.4.0
 // ---------------------------------------------------------------------------
 
+const blankStudyDraft = JSON.stringify({ ...state, schema_version: SCHEMA_VERSION });
 const StorageManager = {
     STORAGE_KEY: 'ema_studio_project_v1',
+    DRAFT_PREFIX: 'ema_forge_draft_v2:',
+    ACTIVE_KEY: 'ema_forge_active_draft_v2',
+    _draftId: null,
+    hasDraft: false,
     _saveTimer: null,
     _blockedOlderDraft: false,
 
     init() {
-        const saved = localStorage.getItem(this.STORAGE_KEY);
+        let saved;
+        try {
+            this._draftId = localStorage.getItem(this.ACTIVE_KEY);
+            saved = (this._draftId && localStorage.getItem(this.DRAFT_PREFIX + this._draftId))
+                || localStorage.getItem(this.STORAGE_KEY);
+        } catch (_) { /* The editor can still export a backup. */ }
+        if (!this._draftId) this._draftId = this.newId();
+        this.hasDraft = !!saved || (typeof location !== 'undefined' &&
+            (location.hash === '#library' || new URLSearchParams(location.search).has('library')));
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
                 this.mergeState(parsed);
+                this.assignStudyId();
             } catch (e) {
                 console.warn('EMA Forge: could not parse saved state, using defaults.', e);
             }
         }
+
+        this.assignStudyId();
+        this.renderDrafts();
+        document.getElementById('draft-select')?.addEventListener('change', event => this.openDraft(event.target.value));
 
         const saveBtn   = document.getElementById('btn-save-project');
         const resetBtn  = document.getElementById('btn-reset');
@@ -43,6 +61,88 @@ const StorageManager = {
             if (importModal) importModal.classList.remove('open');
             this.importProject(e);
         });
+    },
+
+    newId() {
+        return globalThis.crypto?.randomUUID?.() || `study-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    },
+
+    assignStudyId() {
+        if (!state.study.id) state.study.id = this.newId();
+    },
+
+    renderDrafts() {
+        const select = document.getElementById('draft-select');
+        if (!select) return;
+        const drafts = new Map([[this._draftId, state.study.name || 'Untitled study']]);
+        try {
+            for (let index = 0; index < localStorage.length; index++) {
+                const key = localStorage.key(index);
+                if (!key?.startsWith(this.DRAFT_PREFIX)) continue;
+                const id = key.slice(this.DRAFT_PREFIX.length);
+                if (drafts.has(id)) continue;
+                const draft = JSON.parse(localStorage.getItem(key));
+                drafts.set(id, draft.study?.name || 'Untitled study');
+            }
+        } catch (_) { /* Draft picker still shows the current study. */ }
+        select.replaceChildren();
+        for (const [id, name] of drafts) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = name;
+            select.append(option);
+        }
+        select.value = this._draftId;
+    },
+
+    openDraft(id) {
+        if (id === this._draftId) return;
+        if (!this.saveLocalState() && !this._blockedOlderDraft) { this.renderDrafts(); return; }
+        try {
+            const draft = JSON.parse(localStorage.getItem(this.DRAFT_PREFIX + id));
+            if (!draft) throw new Error('Draft unavailable');
+            this.replaceDraft(draft, id);
+        } catch (_) {
+            this.renderDrafts();
+            alert('This draft could not be opened.');
+        }
+    },
+
+    replaceDraft(draft, id) {
+        clearTimeout(this._saveTimer);
+        this._saveTimer = null;
+        const previous = state;
+        const wasBlocked = this._blockedOlderDraft;
+        state = JSON.parse(blankStudyDraft);
+        try {
+            if (!this.mergeState(draft)) throw new Error('Incompatible schema version');
+        } catch (error) {
+            state = previous;
+            this._blockedOlderDraft = wasBlocked;
+            throw error;
+        }
+        this._draftId = id;
+        this.hasDraft = true;
+        previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
+        this.assignStudyId();
+        this.saveLocalState();
+        this.renderDrafts();
+        this.triggerUIRefresh();
+    },
+
+    createDraft({ name = '', theme = '', blank = false } = {}) {
+        if (!this.saveLocalState() && !this._blockedOlderDraft) return false;
+        const draft = JSON.parse(blankStudyDraft);
+        draft.study.name = name;
+        if (theme) draft.study.theme = theme;
+        if (blank) {
+            draft.ema.questions = [];
+            draft.ema.scheduling.windows[0].phase_sequence = [];
+        } else {
+            draft.ema.scheduling.days_of_week = [1, 2, 3, 4, 5, 6, 7];
+        }
+        this.replaceDraft(draft, this.newId());
+        return true;
     },
 
     _compareVersions(a, b) {
@@ -75,6 +175,11 @@ const StorageManager = {
             return false;
         }
 
+        if (!saved.study || typeof saved.study !== 'object' ||
+            !saved.onboarding || typeof saved.onboarding !== 'object' ||
+            !Array.isArray(saved.ema?.questions) || !Array.isArray(saved.ema?.scheduling?.windows)) {
+            return false;
+        }
         ['deployment', 'study', 'onboarding', 'ema'].forEach(key => {
             if (saved[key] !== undefined) state[key] = saved[key];
         });
@@ -102,19 +207,30 @@ const StorageManager = {
 
     debouncedSave() {
         clearTimeout(this._saveTimer);
-        this._saveTimer = setTimeout(() => this.saveLocalState(), 800);
+        this._saveTimer = setTimeout(() => {
+            this._saveTimer = null;
+            this.saveLocalState();
+        }, 800);
     },
 
     saveLocalState() {
-        if (this._blockedOlderDraft) return;
+        if (this._blockedOlderDraft) return false;
+        if (!this.hasDraft) return true;
         try {
             const currentVersion = typeof SCHEMA_VERSION !== 'undefined' ? SCHEMA_VERSION : '1.4.0';
             const toSave = Object.assign({}, state, { schema_version: currentVersion });
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
+            localStorage.setItem(this.DRAFT_PREFIX + this._draftId, JSON.stringify(toSave));
+            localStorage.setItem(this.ACTIVE_KEY, this._draftId);
+            const currentOption = document.getElementById('draft-select')?.selectedOptions[0];
+            if (currentOption?.value === this._draftId) currentOption.textContent = state.study.name || 'Untitled study';
             const status = document.getElementById('save-status');
             if (status) { status.textContent = 'Saved in this browser'; status.style.color = ''; }
+            return true;
         } catch (e) {
             console.warn('EMA Forge: localStorage save failed.', e);
+            const status = document.getElementById('save-status');
+            if (status) status.textContent = 'Could not save locally · Download Backup';
+            return false;
         }
     },
 
@@ -138,11 +254,11 @@ const StorageManager = {
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (!this.mergeState(imported)) throw new Error('Incompatible schema version');
-                this.saveLocalState();
-                this.triggerUIRefresh();
+                if (!this.saveLocalState() && !this._blockedOlderDraft) return;
+                this.replaceDraft(imported, this.newId());
                 const status = document.getElementById('save-status');
                 if (status) status.textContent = 'Project imported';
+                document.getElementById('study-setup')?.close();
             } catch (err) {
                 alert("Error parsing JSON file. Please ensure it is a valid EMA Forge backup.");
             }
@@ -152,41 +268,24 @@ const StorageManager = {
     },
 
     resetProject() {
-        if (confirm("Are you sure you want to completely restart? All unsaved progress will be lost.")) {
-            localStorage.removeItem(this.STORAGE_KEY);
-            location.reload();
-        }
+        if (!confirm('Reset this draft? Download a backup first if you need a copy.')) return;
+        if (this._blockedOlderDraft) localStorage.removeItem(this.STORAGE_KEY);
+        const current = this._draftId;
+        this.replaceDraft(JSON.parse(blankStudyDraft), current);
     },
 
-    loadTemplate(templateObj) {
-        if (!confirm("Loading a template will overwrite your current project. Continue?")) return;
-        this._blockedOlderDraft = false;
-        
-        // 1. Clean slate: Turn off all known modules so we don't carry over user settings
-        if (Array.isArray(state.modules)) {
-            state.modules.forEach(m => m.enabled = false);
-        }
-        // A template is a new deployment target. Never carry the prior
-        // study's live URL into it.
-        state.deployment = { hosted_url: '' };
-
-        // 2. Deep copy the template so we don't mutate the original dictionary
-        const templateCopy = JSON.parse(JSON.stringify(templateObj));
-        
-        // 3. Overlay the template state safely
-        this.mergeState(templateCopy);
-        
-        this.saveLocalState();
-        this.triggerUIRefresh();
-        
+    loadTemplate(templateObj, { name = '', theme = '' } = {}) {
+        if (!this.saveLocalState() && !this._blockedOlderDraft) return false;
+        const draft = JSON.parse(JSON.stringify(templateObj));
+        if (name) draft.study.name = name;
+        if (theme) draft.study.theme = theme;
+        delete draft.study.id;
+        draft.deployment = { hosted_url: '' };
+        this.replaceDraft(draft, this.newId());
         const status = document.getElementById('save-status');
-        if (status) { 
-            status.textContent = 'Template loaded'; 
-            status.style.color = 'var(--accent)'; 
-        }
-        
-        const modal = document.getElementById('import-modal');
-        if (modal) modal.classList.remove('open');
+        if (status) status.textContent = 'Protocol loaded as a new draft';
+        document.getElementById('import-modal')?.classList.remove('open');
+        return true;
     },
 
     triggerUIRefresh() {
@@ -232,6 +331,8 @@ const StorageManager = {
         });
 
         // 4. Re-render panels
+        if (typeof updateDeploymentControls === 'function') updateDeploymentControls();
+        if (typeof updateSuggestedWorkerName === 'function') updateSuggestedWorkerName();
         if (typeof renderWindows      === 'function') renderWindows();
         if (typeof renderQuestions    === 'function') renderQuestions();
         if (typeof renderGreetings    === 'function') renderGreetings();
@@ -243,3 +344,6 @@ const StorageManager = {
 
 // Initialize immediately so state is loaded BEFORE the inline script in builder.html triggers renders
 StorageManager.init();
+window.addEventListener('pagehide', () => {
+    if (StorageManager._saveTimer !== null) StorageManager.saveLocalState();
+});

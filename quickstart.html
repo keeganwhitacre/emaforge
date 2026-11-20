@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Run your first study · EMA Forge</title>
+  <meta name="description" content="An illustrated guide to building a daily check-in and verifying a pilot response in EMA Forge.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/quickstart.css?v=20261120">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><img src="favicon.svg" width="27" height="27" alt=""> EMA Forge</a>
+    <a href="readme.html">Full documentation</a>
+  </header>
+  <main>
+    <div class="intro">
+      <h1>Run your first study</h1>
+      <p>Make a one-question mood check-in, open it on a phone, and confirm your first pilot response arrived.</p>
+      <div class="intro-actions">
+        <a class="button" href="builder.html">Open Builder</a>
+        <a href="sample.html">Try the sample on my phone</a>
+      </div>
+      <p class="intro-note">Use a laptop for setup and a phone for the pilot. You can build and preview without accounts. To put the study online, you’ll need a Cloudflare account with R2 storage activated and a GitHub or GitLab account.</p>
+    </div>
+
+    <nav aria-label="Guide sections">
+      <a href="#build">Build and preview</a>
+      <a href="#host">Put it online</a>
+      <a href="#pilot">Run the phone pilot</a>
+    </nav>
+
+    <section id="build" aria-labelledby="build-heading">
+      <h2 id="build-heading">Build and preview</h2>
+      <ol>
+        <li>
+          <h3>Start with a daily check-in</h3>
+          <p>Open Builder and choose <strong>Start with a daily check-in</strong>. If you already have a draft, click <strong>New study</strong> to see this screen.</p>
+          <figure><img src="assets/quickstart/start-study.webp" width="530" height="468" alt="Start a study screen, with Start with a daily check-in as the first option." loading="lazy"></figure>
+        </li>
+        <li>
+          <div class="with-phone">
+            <div>
+              <h3>Try the question yourself</h3>
+              <p>Click <strong>Preview</strong> at the top of Builder, then <strong>Begin Session</strong>. You should see “How are you feeling right now?” Answer the question and finish the preview. Preview responses stay in the preview.</p>
+              <p>Just exploring? You can stop here and come back to the draft on this browser.</p>
+            </div>
+            <figure class="phone"><img src="assets/quickstart/preview.webp" width="361" height="680" alt="Builder phone preview showing the practice mood question." loading="lazy"></figure>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="host" aria-labelledby="host-heading">
+      <h2 id="host-heading">Put it online</h2>
+      <ol start="3">
+        <li>
+          <h3>Download your study file</h3>
+          <p>Give your study a name in <strong>Overview</strong>. Add consent text in <strong>Onboarding</strong>. Then choose <strong>Review &amp; Deploy → Download prepared study</strong>. Keep the file ending in <code>-cloudflare-study.html</code>.</p>
+          <details>
+            <summary>Practice consent text for a staff-only test</summary>
+            <p>Practice run only. I understand that this exercise is for the study team to test the phone workflow with sample answers. I will use made-up data and will not enter my name, contact details, or health information. No research participants are enrolled in this test.</p>
+            <p>Replace this text with your study’s approved consent before enrolling anyone.</p>
+          </details>
+          <figure><img src="assets/quickstart/download-and-host.webp" width="738" height="507" alt="Review and Deploy showing Download prepared study and Create new study host." loading="lazy"></figure>
+        </li>
+        <li>
+          <h3>Create your Cloudflare host</h3>
+          <p>Create a <a href="https://github.com/signup">GitHub account</a> and a <a href="https://dash.cloudflare.com/sign-up">Cloudflare account</a>. In Cloudflare, open <strong>Storage &amp; databases → R2 → Overview</strong> and complete R2 setup. R2 has a free allowance and requires billing setup.</p>
+          <p>Back in EMA Forge, click <strong>Create new study host</strong>. Follow the prompts to connect GitHub and name the Worker. For <code>ADMIN_TOKEN</code>, make up a unique password with at least 32 characters and save it in your password manager. Click <strong>Deploy</strong>.</p>
+          <p class="look-for"><strong>Look for</strong> an address ending in <code>.workers.dev</code>. Copy it.</p>
+          <p class="reference"><a href="https://developers.cloudflare.com/r2/get-started/">Cloudflare’s R2 setup guide</a> · <a href="https://developers.cloudflare.com/workers/platform/deploy-buttons/">Cloudflare’s example setup screens</a></p>
+        </li>
+        <li>
+          <h3>Install your study</h3>
+          <p>Paste the address into <strong>Hosted study URL</strong> in EMA Forge. Click <strong>Open admin</strong> and sign in with the password you just made. Choose the downloaded file and click <strong>Install and open overview</strong>.</p>
+          <figure><img src="assets/quickstart/paste-host.webp" width="738" height="505" alt="Hosted study URL field filled with an example workers.dev address." loading="lazy"></figure>
+          <figure><img src="assets/quickstart/install.webp" width="507" height="244" alt="Study Admin install card with an example study HTML file selected and the Install study button." loading="lazy"></figure>
+          <p class="look-for"><strong>Look for</strong> the Overview page with <strong>Create pilot link</strong>.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="pilot" aria-labelledby="pilot-heading">
+      <h2 id="pilot-heading">Run the phone pilot</h2>
+      <ol start="6">
+        <li>
+          <div class="with-phone">
+            <div>
+              <h3>Answer the check-in on your phone</h3>
+              <p>In Study Admin, choose <strong>Daily session → Create pilot link → Copy for phone</strong>. Open the link on your phone, answer the question with a made-up response, and finish the check-in.</p>
+              <p class="look-for"><strong>Look for</strong> “Data uploaded successfully.”</p>
+            </div>
+            <figure class="phone"><img src="assets/quickstart/phone-pilot.webp" width="390" height="780" alt="Phone-sized example of the mood question with a Pilot session banner." loading="lazy"></figure>
+          </div>
+        </li>
+        <li>
+          <h3>Confirm the response arrived</h3>
+          <p>Back in Study Admin, click <strong>Refresh status</strong> on the pilot card. When you see <strong>Pilot verified</strong>, your phone check-in made it into storage. It stays out of research counts and exports.</p>
+          <figure><img src="assets/quickstart/pilot-verified.webp" width="335" height="410" alt="Study Admin pilot card showing Pilot verified for the current protocol." loading="lazy"></figure>
+        </li>
+      </ol>
+    </section>
+
+    <aside class="next">
+      <h2>When you’re ready to enroll</h2>
+      <p>Install the protocol and consent approved for your study. In Study Admin, open <strong>Participants &amp; delivery</strong>, add your study IDs, save the roster, and create participant links. Phone numbers and Twilio are optional for manual sharing.</p>
+      <p><a href="readme.html#routing">More about participant links</a></p>
+    </aside>
+  </main>
+</body>
+</html>

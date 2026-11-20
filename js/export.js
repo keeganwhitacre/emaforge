@@ -27,7 +27,7 @@ async function fetchTemplate(path) {
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetchTemplate('templates/epat-core.js');
   if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20260924f');
-  if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20260925g');
+  if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20261120');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
   if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20260926f');
   if (!templates.placeContext) templates.placeContext = await fetchTemplate('js/place-context.js?v=20260925g');
@@ -59,7 +59,7 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
     );
     // Keep the page loadable through grace so an already-started session can
     // resume. A fresh start is still rejected immediately after expiresAtMs.
-    if (EMAForgeRuntimeUtils.isResponseWindowHardExpired(responseWindowPolicy, Date.now())) {
+    if (!pendingSubmission && EMAForgeRuntimeUtils.isResponseWindowHardExpired(responseWindowPolicy, Date.now())) {
       document.getElementById('task-subtitle').textContent = 'Link Expired';
       document.getElementById('start-btn').disabled = true;
       document.getElementById('start-btn').textContent = 'Session no longer active';
@@ -139,12 +139,12 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="start-btn" disabled>Begin Session</button>
   </div>
 
-  <div class="screen" id="screen-onboarding">
+  <div inert aria-hidden="true" class="screen" id="screen-onboarding">
     <div class="ema-item-container" id="onboarding-container"></div>
     <div style="margin-top:32px;"><button class="btn btn-primary btn-block" id="onboarding-next-btn">Continue</button></div>
   </div>
 
-  <div class="screen" id="screen-ob-consent">
+  <div inert aria-hidden="true" class="screen" id="screen-ob-consent">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:20%"></div></div>
     <h1>Informed Consent</h1>
     <p class="consent-scroll-hint" id="ob-consent-hint">↓ Scroll to read</p>
@@ -157,7 +157,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="ob-consent-next" disabled>I Consent — Continue</button>
   </div>
 
-  <div class="screen" id="screen-ob-schedule">
+  <div inert aria-hidden="true" class="screen" id="screen-ob-schedule">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:40%"></div></div>
     <h1>Scheduling</h1>
     <p>Choose your available days and preferred check-in windows. Your study team will use these preferences when scheduling prompts.</p>
@@ -175,7 +175,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="ob-schedule-next">Continue</button>
   </div>
 
-  <div class="screen" id="screen-ob-device">
+  <div inert aria-hidden="true" class="screen" id="screen-ob-device">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:60%"></div></div>
     <h1>Device Check</h1>
     <p style="margin-bottom:24px;">We'll confirm your device supports the task. For multi-lens phones, cover the lens <em>closest</em> to the flashlight.</p>
@@ -195,7 +195,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-secondary btn-block" id="ob-device-retry" style="display:none;margin-top:8px;">Retry</button>
   </div>
 
-  <div class="screen" id="screen-ob-training">
+  <div inert aria-hidden="true" class="screen" id="screen-ob-training">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:80%"></div></div>
     <h1>Learn the Task</h1>
     <p style="margin-bottom:16px;">A simulated heartbeat plays below. Rotate the dial to move the tone earlier or later until it lands on each beat.</p>
@@ -210,7 +210,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="ob-training-next" disabled>Continue</button>
   </div>
 
-  <div class="screen" id="screen-ob-complete">
+  <div inert aria-hidden="true" class="screen" id="screen-ob-complete">
     <div class="ob-progress"><div class="ob-progress-fill" style="width:100%"></div></div>
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -220,7 +220,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="ob-complete-pat">Complete Setup →</button>
   </div>
 
-  <div class="screen" id="screen-ema">
+  <div inert aria-hidden="true" class="screen" id="screen-ema">
     <h2 id="ema-greeting" style="margin-bottom:12px;font-weight:600;color:var(--fg);">Check-In</h2>
     <div class="ema-progress"><div class="ema-progress-fill" id="ema-progress-fill" style="width:0%"></div></div>
     <div class="ema-item-container" id="ema-single-container"></div>
@@ -231,7 +231,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     </div>
   </div>
 
-  <div class="screen" id="screen-baseline">
+  <div inert aria-hidden="true" class="screen" id="screen-baseline">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
       <div style="margin-bottom:40px;"><h1>Calibration</h1><p class="label">Keep your finger completely still</p></div>
       <div class="progress-ring">
@@ -241,7 +241,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     </div>
   </div>
 
-  <div class="screen" id="screen-hct-sensor-check">
+  <div inert aria-hidden="true" class="screen" id="screen-hct-sensor-check">
     <div style="position:absolute;top:calc(env(safe-area-inset-top,24px) + 24px);width:100%;text-align:center;">
       <p class="label" style="color:var(--fg-muted);">Sensor check</p>
     </div>
@@ -258,7 +258,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="hct-sensor-start-btn" disabled>Checking signal…</button>
   </div>
 
-  <div class="screen" id="screen-trial">
+  <div inert aria-hidden="true" class="screen" id="screen-trial">
     <div class="movement-warning" id="trial-movement-warning">Keep still</div>
     <div class="trial-header" style="text-align:center;position:absolute;top:calc(env(safe-area-inset-top,24px) + 24px);width:100%;">
       <p class="label" id="trial-label" style="color:var(--fg-muted);">Trial 1</p>
@@ -274,7 +274,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="confirm-trial-btn" disabled style="margin-top:40px;">Confirm Timing</button>
   </div>
 
-  <div class="screen" id="screen-hct-counting">
+  <div inert aria-hidden="true" class="screen" id="screen-hct-counting">
     <div style="position:absolute;top:calc(env(safe-area-inset-top,24px) + 24px);width:100%;text-align:center;">
       <p class="label" id="hct-interval-label" style="color:var(--fg-muted);">Interval</p>
     </div>
@@ -295,7 +295,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     </div>
   </div>
 
-  <div class="screen" id="screen-hct-count">
+  <div inert aria-hidden="true" class="screen" id="screen-hct-count">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center; gap:24px;">
       <p class="label" id="hct-count-label" style="color:var(--fg-muted); margin:0;">Interval complete</p>
       <h1 style="margin:0;">How many heartbeats?</h1>
@@ -318,7 +318,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="hct-count-submit" disabled style="margin-top:12px;">Continue</button>
   </div>
 
-  <div class="screen" id="screen-bodymap">
+  <div inert aria-hidden="true" class="screen" id="screen-bodymap">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
       <h1>Sensation</h1>
       <p>Where did you primarily feel your heartbeat?</p>
@@ -336,7 +336,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-primary btn-block" id="confirm-bodymap-btn" disabled style="margin-top:32px;">Confirm Location</button>
   </div>
 
-  <div class="screen" id="screen-end">
+  <div inert aria-hidden="true" class="screen" id="screen-end">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       <h1>Session Complete</h1>
@@ -346,7 +346,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     <button class="btn btn-secondary btn-block" id="download-btn">Save Local Copy</button>
   </div>
 
-  <div class="screen" id="screen-iat-instructions">
+  <div inert aria-hidden="true" class="screen" id="screen-iat-instructions">
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 24px;gap:20px;text-align:center;">
       <p class="label" id="iat-block-label" style="color:var(--fg-muted);margin:0;"></p>
       <h1 id="iat-block-title" style="margin:0;font-size:1.5rem;font-weight:700;line-height:1.2;"></h1>
@@ -367,7 +367,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
     </div>
   </div>
  
-   <div class="screen" id="screen-iat-trial">
+   <div inert aria-hidden="true" class="screen" id="screen-iat-trial">
     <!-- Category labels pinned to top -->
     <div style="position:absolute;top:0;left:0;right:0;display:flex;z-index:2;pointer-events:none;">
       <div id="iat-left-label"
@@ -403,7 +403,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
       aria-label="Right response"></button>
   </div>
  
-  <div class="screen" id="screen-iat-iti" style="background:var(--bg);"></div>
+  <div inert aria-hidden="true" class="screen" id="screen-iat-iti" style="background:var(--bg);"></div>
 
   ${studyTag}
 </body>
@@ -493,6 +493,7 @@ function getRuntimeCss() {
     .preview-simulation-note p { margin: 0; padding: 0 10px 9px; color: var(--fg-muted); font-size: .68rem; text-align: left; }
     .preview-mode .screen { padding-top: calc(env(safe-area-inset-top, 24px) + 46px); }
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
+    .pilot-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; text-align: center; background: var(--bg-elevated); color: var(--fg); font-size: 11px; pointer-events: none; }
     .screen.active { opacity: 1; pointer-events: all; }
     h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--fg); text-align: center; }
     h2 { font-size: 1.1rem; font-weight: 400; color: var(--fg-muted); margin-bottom: 32px; letter-spacing: -0.01em; text-align: center; }
@@ -717,13 +718,13 @@ function openAdvancedExportModal() {
   renderExportReview();
   document.getElementById('export-modal').classList.add('open');
 }
-document.getElementById('export-btn').addEventListener('click', () => {
+document.getElementById('export-btn')?.addEventListener('click', () => {
   document.querySelector('.tab-btn[data-tab="deployment"]')?.click();
   document.getElementById('tab-deployment')?.scrollTo({ top: 0, behavior: 'smooth' });
 });
 document.getElementById('advanced-export-btn')?.addEventListener('click', openAdvancedExportModal);
-document.getElementById('modal-close-btn').addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
-document.getElementById('export-single-file').addEventListener('click', async () => {
+document.getElementById('modal-close-btn')?.addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
+document.getElementById('export-single-file')?.addEventListener('click', async () => {
   if (document.getElementById('export-single-file').disabled) return;
   document.getElementById('export-modal').classList.remove('open');
   const html = await buildStudyHtml({ configInline: true, previewMode: false });

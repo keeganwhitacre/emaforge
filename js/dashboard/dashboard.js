@@ -34,6 +34,14 @@ const AppUI = {
     const filterMissed = document.getElementById('toggle-exclude-missed');
     const filterDate = document.getElementById('filter-date');
     const filterCohort = document.getElementById('filter-cohort');
+    const protocolSelect = document.getElementById('filter-protocol');
+    protocolSelect.addEventListener('change', () => {
+      const version = protocolSelect.value;
+      const sessions = DataParser.state.allSessions.filter(session => session.protocolGroup === version);
+      this.populateDateDropdown(sessions, DataParser.state.protocolConfigs.get(version) || null);
+      if (typeof ContentView !== 'undefined') ContentView.compositePicks = [];
+      this.refreshData();
+    });
     
     // Navigation
     const navTabs = document.querySelectorAll('.topbar-tabs .tab-btn');
@@ -47,6 +55,7 @@ const AppUI = {
       this.setStatus("Processing...", "badge-warn");
       try {
         const data = await DataParser.ingestFiles(e.target.files);
+        this.populateProtocolDropdown();
         this.populateDateDropdown(data.allSessions);
         this.populateCohortDropdown();
         this.refreshData(); 
@@ -163,6 +172,7 @@ const AppUI = {
         seed: document.getElementById('simulation-seed').value
       });
       const data = DataParser.loadSynthetic(result);
+      this.populateProtocolDropdown();
       this.populateDateDropdown(data.allSessions);
       this.populateCohortDropdown();
       this.refreshData();
@@ -190,6 +200,7 @@ const AppUI = {
     if (DataParser.state.allSessions.length === 0 && !DataParser.state.simulationManifest) return;
     
     const filters = {
+        protocol: document.getElementById('filter-protocol').value,
         excludeRapid: document.getElementById('toggle-filter-rapid').checked,
         day: document.getElementById('filter-date').value,
         participant: document.getElementById('filter-cohort').value || 'all'
@@ -200,9 +211,24 @@ const AppUI = {
     if (typeof ContentView !== 'undefined') ContentView.render();
   },
 
-  populateDateDropdown(sessions) {
+  populateProtocolDropdown() {
+    const groups = DataParser.state.protocolGroups;
+    const select = document.getElementById('filter-protocol');
+    select.replaceChildren();
+    select.closest('.field-group').hidden = !groups.length;
+    groups.forEach(({version, count}) => {
+      const config = DataParser.state.protocolConfigs.get(version);
+      const option = document.createElement('option');
+      option.value = version;
+      const label = version === 'legacy' ? 'Unversioned responses' : `Protocol ${version.slice(0, 8)}`;
+      option.textContent = `${label} · ${count} responses${config ? '' : ' · configuration unavailable'}`;
+      select.appendChild(option);
+    });
+  },
+
+  populateDateDropdown(sessions, config = DataParser.state.studyConfig) {
     const select = document.getElementById('filter-date');
-    const maxDay = DataParser.state.studyConfig?.ema?.scheduling?.study_days || Math.max(...sessions.map(s => s.day), 1);
+    const maxDay = config?.ema?.scheduling?.study_days || sessions.reduce((day, session) => Math.max(day, session.day), 1);
     
     select.innerHTML = '<option value="all">All available data</option>';
     for(let i = 1; i <= maxDay; i++) {

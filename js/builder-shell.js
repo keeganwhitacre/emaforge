@@ -81,7 +81,9 @@ function renderBuilderShell() {
   const taskCount = state.ema.scheduling.windows.reduce((total, w) =>
     total + (w.phase_sequence || []).filter(step => step.kind === "task").length, 0) +
     questions.filter(question => question.type === "heart_rate").length;
-  const report = EMAForgeProtocolValidator.validate(buildConfig());
+  const launchConfig = buildConfig();
+  launchConfig.study.webhook_url = "/submit";
+  const report = EMAForgeProtocolValidator.validate(launchConfig);
   const { errors, warnings, issues } = report;
   renderSectionIssues(issues);
   document.getElementById("summary-question-count").textContent = count;
@@ -96,7 +98,7 @@ function renderBuilderShell() {
     Array.isArray(w.phase_sequence) && w.phase_sequence.length > 0);
   const checks = [
     ["Study details completed", !!name && !!(state.study.institution || "").trim(), "study"],
-    ["Consent flow configured", !!state.onboarding.enabled && hasConsent, "onboarding"],
+    [state.onboarding.enabled ? "Consent flow configured" : "Consent handled outside EMA Forge", !state.onboarding.enabled || hasConsent, "onboarding"],
     ["Each session has a measure", hasMeasures, "schedule"],
     ["Schedule configured", hasSchedule, "schedule"],
     ["No blocking export issues", errors.length === 0, "deployment"]
