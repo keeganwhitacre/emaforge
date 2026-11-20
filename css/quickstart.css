@@ -2,12 +2,23 @@
 
 :root {
   color-scheme: light;
-  color: #242930;
+  color: var(--guide-ink);
   background: var(--workspace-bg);
   font: 16px/1.6 system-ui, sans-serif;
   --muted: #4c5965;
   --line: #d4d9df;
   --accent: #953b32;
+  --guide-ink: #242930;
+  --guide-code: #e8ebee;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --guide-ink: #f0efeb;
+  --muted: #bcc0bd;
+  --line: var(--surface-line);
+  --accent: #df8e84;
+  --guide-code: var(--surface-muted);
 }
 
 body { margin: 0; }
@@ -71,7 +82,7 @@ summary { cursor: pointer; }
 details p { margin-top: 10px; }
 .next { border-top: 1px solid var(--line); padding-top: 24px; }
 .next h2 + p { margin-top: 10px; }
-code { font-size: 0.92em; background: #e8ebee; padding: 1px 4px; overflow-wrap: anywhere; }
+code { font-size: 0.92em; background: var(--guide-code); padding: 1px 4px; overflow-wrap: anywhere; }
 
 @media (min-width: 660px) {
   .with-phone { display: grid; grid-template-columns: minmax(0, 1fr) 225px; gap: 20px; }

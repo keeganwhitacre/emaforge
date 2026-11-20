@@ -14,6 +14,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <link rel="stylesheet" href="css/studio.css?v=20260923c">
+<link rel="stylesheet" href="css/surfaces.css?v=20261120">
 <link rel="stylesheet" href="css/content-view.css">
 <style>
 /* =============================================
@@ -202,7 +203,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 :root[data-theme="dark"]  { --accent-rgb: 232, 113, 106; }
 :root[data-theme="light"] { --accent-rgb: 210, 75, 68; }
 </style>
-<link rel="stylesheet" href="css/dashboard.css?v=20260926a">
+<link rel="stylesheet" href="css/dashboard.css?v=20261120">
 </head>
 <body>
 <div id="mobile-blocker">
@@ -536,7 +537,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 <script src="js/dashboard/simulator.js?v=20260923b"></script>
 <script src="js/dashboard/content-stats.js?v=20260925f"></script>
 <script src="js/dashboard/content-view.js?v=20260925f"></script>
-<script src="js/dashboard/dashboard.js?v=20261120"></script>
+<script src="js/dashboard/dashboard.js?v=20261120b"></script>
 <script>
   // Handle the toggle button click
   const themeBtn = document.getElementById('theme-toggle');
@@ -546,7 +547,10 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
       const newTheme = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('ema-forge-theme', newTheme);
-      if (typeof AppUI !== 'undefined' && DataParser.state.allSessions.length) AppUI.refreshData();
+      if (typeof AppUI !== 'undefined') {
+        AppUI.applyChartTheme();
+        if (DataParser.state.allSessions.length) AppUI.refreshData();
+      }
     });
   }
 </script>

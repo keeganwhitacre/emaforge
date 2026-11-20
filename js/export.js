@@ -34,7 +34,7 @@ async function loadTemplates() {
   if (!templates.modEpat) templates.modEpat = await fetchTemplate('templates/module-epat.js?v=20260925d');
   if (!templates.modHct) templates.modHct = await fetchTemplate('templates/module-hct.js?v=20260925d');
   if (!templates.modIat) templates.modIat = await fetchTemplate('templates/module-iat.js');
-  if (!templates.connectionCheck) templates.connectionCheck = await fetchTemplate('templates/connection-check.html?v=20260925d');
+  if (!templates.connectionCheck) templates.connectionCheck = await fetchTemplate('templates/connection-check.html?v=20261120');
 }
 
 function getThemeCSS(theme, accent) {
@@ -500,8 +500,13 @@ function getRuntimeCss() {
     p { font-size: 1.05rem; line-height: 1.5; color: var(--fg-muted); margin-bottom: 24px; font-weight: 400; text-align: center; }
     .label { font-size: 0.8rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: block; text-align: center; }
     .institution-label { font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; text-align: center; opacity: 0.8; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 18px 28px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 16px 26px; border-radius: 999px; border: none; cursor: pointer; font-family: var(--font); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .btn:focus-visible, .choice-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
     .btn:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) {
+      .screen, .btn, .ema-progress-fill { transition: none; }
+      .btn:active { transform: none; }
+    }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
     .btn-primary:active { background: var(--accent-hover); }

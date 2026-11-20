@@ -1139,14 +1139,15 @@ const checkHtml = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EMA Forge connection check</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2328;background:#f6f8fa}
-*{box-sizing:border-box}body{margin:0;padding:24px}.card{max-width:560px;margin:min(12vh,90px) auto;background:#fff;border:1px solid #d0d7de;border-top:3px solid #a63f35;padding:28px;border-radius:4px}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2328;background:#eef1f5}
+*{box-sizing:border-box}body{margin:0;padding:24px}.card{max-width:560px;margin:min(12vh,90px) auto;background:#fff;border:1px solid #d0d7de;padding:clamp(18px,5vw,28px);border-radius:22px;box-shadow:0 8px 30px #26334914}
 h1{font-size:1.65rem;letter-spacing:-.025em;margin:0 0 9px}p{color:#4a5562;line-height:1.55}
-button,.return-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border:1px solid #a63f35;border-radius:4px;background:#a63f35;color:#fff;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+button,.return-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border:1px solid #a63f35;border-radius:999px;background:#a63f35;color:#fff;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
 button:disabled{opacity:.55;cursor:wait}.return-link{background:#fff;color:#1f2328;border-color:#d0d7de}.return-link:hover{border-color:#8c959f}
-.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.result{display:none;margin-top:18px;padding:14px;border:1px solid #d0d7de;line-height:1.5}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.result{display:none;margin-top:18px;padding:14px;border:1px solid #d0d7de;border-radius:14px;line-height:1.5}
 .result.show{display:block}.result.good{border-color:#82ad98;background:#f0f8f4;color:#195c3f}.result.bad{border-color:#d3a09a;background:#fff4f2;color:#8d2f27}
 .result strong,.detail{display:block}.detail{margin-top:4px;font-size:.88rem;color:inherit}
+@media (prefers-color-scheme:dark){:root{color:#f0efeb;background:#141619}.card,.return-link{background:#1e2125;border-color:#34383e;color:#f0efeb}p{color:#bcc0bd}.result.good{background:#1d2e26;border-color:#486757;color:#a9d6bd}.result.bad{background:#352422;border-color:#78514b;color:#efb1a9}}
 </style></head><body><main class="card"><p style="margin:0 0 7px;color:#a63f35;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase">EMA Forge setup</p>
 <h1 id="check-heading">Check response storage</h1><p>This sends one synthetic setup record to private storage. It stays separate from participant responses.</p>
 <div class="actions"><button id="send" type="button">Run connection check</button><button class="return-link" id="close-tab" type="button">Close tab</button><a class="return-link" href="/admin">Back to Study Admin</a></div>

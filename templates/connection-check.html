@@ -5,14 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EMA Forge — Data connection check</title>
 <style>
-  :root { color-scheme: light; font: 16px/1.55 system-ui, -apple-system, sans-serif; color: #273345; background: #f8f9fb; }
-  main { max-width: 540px; margin: min(12vh, 80px) auto; padding: 32px; background: white; border: 1px solid #e1e5eb; border-radius: 12px; }
+  :root { color-scheme: light; font: 16px/1.55 system-ui, -apple-system, sans-serif; color: #273345; background: #eef1f5; }
+  main { max-width: 540px; margin: min(12vh, 80px) auto; padding: clamp(18px, 5vw, 32px); background: white; border: 1px solid #e1e5eb; border-radius: 22px; box-shadow: 0 8px 30px #26334914; }
   h1 { line-height: 1.2; font-size: 1.7rem; margin: 0 0 12px; }
   p { margin: 0 0 18px; }
-  button { border: 0; border-radius: 7px; padding: 12px 18px; background: #ad5145; color: white; font: inherit; cursor: pointer; }
+  button { border: 0; border-radius: 999px; padding: 12px 18px; background: #ad5145; color: white; font: inherit; cursor: pointer; }
   button:disabled { opacity: .6; cursor: wait; }
   #result { margin-top: 18px; overflow-wrap: anywhere; }
   .success { color: #217653; } .error { color: #ac3d39; }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; color: #f0efeb; background: #141619; }
+    main { background: #1e2125; border-color: #34383e; }
+    .success { color: #8ac5a3; } .error { color: #ee9a91; }
+  }
 </style>
 </head>
 <body>

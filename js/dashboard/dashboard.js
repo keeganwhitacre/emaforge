@@ -3,11 +3,9 @@
  * Handles UI interactions, file binding, and rendering Chart.js graphs.
  */
 
-Chart.defaults.color = '#68716f';
 Chart.defaults.font.family = '"TX-02", "Instrument Sans", system-ui, sans-serif';
 Chart.defaults.font.size = 11;
-Chart.defaults.borderColor = '#d9d5cc';
-const gridConfig = { color: '#ded9d0', drawBorder: false };
+const gridConfig = { color: () => Chart.defaults.borderColor, drawBorder: false };
 
 const AppUI = {
   charts: {
@@ -18,8 +16,16 @@ const AppUI = {
   },
 
   init() {
+    this.applyChartTheme();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation = false;
     this.bindEvents();
     this.initEmptyCharts();
+  },
+
+  applyChartTheme() {
+    const theme = getComputedStyle(document.documentElement);
+    Chart.defaults.color = theme.getPropertyValue('--fg-2').trim();
+    Chart.defaults.borderColor = theme.getPropertyValue('--surface-line').trim();
   },
 
   bindEvents() {
