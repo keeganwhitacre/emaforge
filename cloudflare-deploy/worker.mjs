@@ -4,6 +4,7 @@ import { adminHtml, faviconSvg } from './admin-page.mjs';
 // researcher administration, and optional Twilio prompt delivery.
 const MAX_STUDY_BYTES = 10 * 1024 * 1024;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const EXPORT_PAGE_SIZE = 100;
 const MAX_ROSTER_SIZE = 5000;
 const MAX_ADMIN_LIST_OBJECTS = 50000;
 const MAX_INVITE_LINKS_RETURNED = 250;
@@ -96,6 +97,12 @@ function extractStudyConfig(html) {
   catch (_) { return null; }
 }
 
+function stableSubmission(record) {
+  const { server_receipt, ...original } = record;
+  const { submission, ...data } = original.session_data;
+  return JSON.stringify({ ...original, session_data: data });
+}
+
 async function storeSubmission(request, env, origin) {
   if (origin !== new URL(request.url).origin) return json({ error: 'Study origin is not allowed' }, 403);
   const length = Number(request.headers.get('Content-Length'));
@@ -112,7 +119,15 @@ async function storeSubmission(request, env, origin) {
   }
   if (!validRecord(record)) return json({ error: 'Invalid submission' }, 400);
 
-  const key = `${record.test === true ? 'setup-tests' : 'sessions'}/${record.submission_id}.json`;
+  const pilot = record.participant_id.startsWith('forge-pilot-');
+  if (pilot) {
+    const invite = await readJson(env, `links/${record.participant_id.slice('forge-pilot-'.length)}.json`);
+    if (invite?.source !== 'pilot' || invite.session_id !== record.window_id || invite.day !== record.day) {
+      return json({ error: 'Invalid pilot session' }, 400);
+    }
+  }
+  const prefix = record.test === true ? 'setup-tests' : pilot ? 'pilot-sessions' : 'sessions';
+  const key = `${prefix}/${record.submission_id}.json`;
   const receivedAt = new Date().toISOString();
   const storedRecord = JSON.stringify({
     ...record,
@@ -127,6 +142,7 @@ async function storeSubmission(request, env, origin) {
     day: String(record.day),
     window: record.window_id,
     digest: await sha256(raw),
+    protocol: String(record.session_data.protocolVersion || '').slice(0, 64),
     receivedAt
   };
 
@@ -136,17 +152,42 @@ async function storeSubmission(request, env, origin) {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: metadata
     });
-    if (saved) return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false, received_at: receivedAt });
+    if (saved) {
+      await indexSchedulePreferences(env, record, prefix, receivedAt).catch(() => {});
+      return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: false, received_at: receivedAt });
+    }
     const existing = await env.STUDY_DATA.head(key);
     if (!existing) return json({ error: 'Unable to confirm storage' }, 503);
     const previous = existing.customMetadata || {};
     if (previous.participant !== metadata.participant || previous.day !== metadata.day || previous.window !== metadata.window) {
       return json({ error: 'Submission ID already used for another session' }, 409);
     }
-    if (previous.digest !== metadata.digest) return json({ error: 'Submission ID already used with different data' }, 409);
+    if (previous.digest !== metadata.digest) {
+      const priorRecord = await readJson(env, key);
+      if (!priorRecord || stableSubmission(priorRecord) !== stableSubmission(record)) {
+        return json({ error: 'Submission ID already used with different data' }, 409);
+      }
+    }
+    await indexSchedulePreferences(env, record, prefix, previous.receivedAt || receivedAt).catch(() => {});
     return json({ status: 'success', submission_id: record.submission_id, stored: true, duplicate: true, received_at: previous.receivedAt || null });
   } catch (_) {
     return json({ error: 'Storage unavailable; keep a local copy' }, 503);
+  }
+}
+
+async function indexSchedulePreferences(env, record, prefix, receivedAt) {
+  if (prefix !== 'sessions' || record.window_id !== 'onboarding' || !/^[a-zA-Z0-9_-]{1,64}$/.test(record.participant_id)) return;
+  const preferences = record.session_data.schedulePreferences;
+  if (!Array.isArray(preferences?.days) || !preferences.windows || typeof preferences.windows !== 'object') return;
+  const key = `admin/preferences/${record.participant_id}.json`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const previous = await env.STUDY_DATA.head(key);
+    if (previous && (previous.customMetadata?.receivedAt || '') >= receivedAt) return;
+    const stored = await putJson(env, key, { preferences }, {
+      onlyIf: new Headers(previous?.etag ? { 'If-Match': previous.etag } : { 'If-None-Match': '*' }),
+      customMetadata: { receivedAt }
+    });
+    if (stored) return;
   }
 }
 
@@ -321,21 +362,37 @@ async function installStudy(request, env) {
   const config = extractStudyConfig(html);
   if (!config || typeof config !== 'object') return json({ error: 'The embedded EMA Forge configuration could not be read' }, 400);
   const previous = await readJson(env, 'study/current-config.json', null);
+  const previousId = previous?.study?.id;
+  const nextId = config?.study?.id;
   const previousName = String(previous?.study?.name || '').trim();
   const nextName = String(config?.study?.name || '').trim();
-  if (previousName && nextName && previousName.toLowerCase() !== nextName.toLowerCase()) {
+  if (previousId && nextId ? previousId !== nextId : previousName && nextName && previousName.toLowerCase() !== nextName.toLowerCase()) {
     return json({ error: `This deployment already hosts “${previousName}”. Create a separate Cloudflare Worker and R2 bucket for “${nextName}” so their responses stay separate.` }, 409);
   }
   const now = new Date().toISOString();
   const digest = await sha256(html);
+  // The client records the version it actually loaded, even if an update is
+  // installed between opening the study and submitting a response.
+  if (previousId && !nextId) config.study = { ...config.study, id: previousId };
+  delete config.protocol_version;
+  const protocolVersion = await sha256(JSON.stringify(config));
+  config.protocol_version = protocolVersion;
+  const marker = 'window.__CONFIG__ = ';
+  const startConfig = html.indexOf(marker) + marker.length;
+  const endConfig = html.indexOf(';</script>', startConfig);
+  const inline = JSON.stringify(config).replace(/</g, '\\u003c');
+  const participantHtml = html.slice(0, startConfig) + inline + html.slice(endConfig);
   const versionKey = `study/versions/${now.replace(/[:.]/g, '-')}-${digest.slice(0, 12)}.html`;
   const options = {
     httpMetadata: { contentType: 'text/html; charset=utf-8' },
     customMetadata: { installedAt: now, digest }
   };
   await Promise.all([
-    env.STUDY_DATA.put(versionKey, html, options),
-    env.STUDY_DATA.put('study/current.html', html, options),
+    env.STUDY_DATA.put(versionKey, participantHtml, options),
+    putJson(env, `study/configs/${protocolVersion}.json`, config)
+  ]);
+  await Promise.all([
+    env.STUDY_DATA.put('study/current.html', participantHtml, options),
     putJson(env, 'study/current-config.json', config),
     putJson(env, 'admin/host.json', { origin: new URL(request.url).origin, installed_at: now, digest })
   ]);
@@ -429,14 +486,16 @@ async function getMessagingSettings(env) {
 
 async function adminStudyConfig(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  const config = await readJson(env, 'study/current-config.json', null);
-  if (!config) return json({ error: 'Install a study before exporting analysis data' }, 404);
+  const version = new URL(request.url).searchParams.get('version');
+  if (version && !/^[a-f0-9]{64}$/.test(version)) return json({ error: 'Invalid protocol version' }, 400);
+  const config = await readJson(env, version ? `study/configs/${version}.json` : 'study/current-config.json');
+  if (!config) return json({ error: version ? 'Protocol version was not found' : 'Install a study before exporting analysis data' }, 404);
   return json(config);
 }
 
 async function adminStatus(request, env) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
-  const [study, config, host, sessionList, setupTestList, rosterDocument, dispatchList, messaging] = await Promise.all([
+  const [study, config, host, sessionList, setupTestList, rosterDocument, dispatchList, messaging, pilotList] = await Promise.all([
     env.STUDY_DATA.head('study/current.html'),
     readJson(env, 'study/current-config.json', null),
     readJson(env, 'admin/host.json', null),
@@ -444,7 +503,8 @@ async function adminStatus(request, env) {
     listAll(env, 'setup-tests/'),
     readJson(env, 'admin/roster.json', { participants: [] }),
     listAll(env, 'dispatch/'),
-    getMessagingSettings(env)
+    getMessagingSettings(env),
+    listAll(env, 'pilot-sessions/', 1000)
   ]);
   const participants = new Set();
   const windows = {};
@@ -467,6 +527,9 @@ async function adminStatus(request, env) {
     response_count: sessionList.objects.length,
     response_count_limited: sessionList.limited,
     connection_check_count: setupTestList.objects.length,
+    pilot_count: pilotList.objects.filter(item => (item.customMetadata?.protocol || '') === (config?.protocol_version || '')).length,
+    onboarding_enabled: config?.onboarding?.enabled === true,
+    days_of_week: config?.ema?.scheduling?.days_of_week || [],
     observed_participants: participants.size || (sessionList.objects.length ? null : 0),
     active_roster_count: roster.filter(person => person.status === 'active').length,
     roster_count: roster.length,
@@ -477,7 +540,7 @@ async function adminStatus(request, env) {
     messaging_enabled: messaging.enabled,
     twilio_configured: twilioConfigured(await resolveTwilioEnv(env)),
     study_days: Number(config?.ema?.scheduling?.study_days) || null,
-    schedule_windows: (config?.ema?.scheduling?.windows || []).map(window => ({ id: window.id, label: window.label || window.id }))
+    schedule_windows: (config?.ema?.scheduling?.windows || []).map(window => ({ id: window.id, label: window.label || window.id, start: window.start, end: window.end }))
   });
 }
 
@@ -496,17 +559,18 @@ async function createInviteLink(env, { origin, config, participantId, day, sessi
     session_id: sessionId,
     sent_at_ms: sentAtMs,
     created_at: new Date().toISOString(),
-    expires_at: inviteExpiry(config, sentAtMs),
+    expires_at: source === 'pilot' ? new Date(sentAtMs + 86400000).toISOString() : sessionId === 'onboarding' ? null : inviteExpiry(config, sentAtMs),
     source,
     state: 'active'
   };
   for (let attempt = 0; attempt < 4; attempt++) {
     const token = randomToken();
-    const saved = await putJson(env, `links/${token}.json`, { ...record, token }, {
+    const linkRecord = { ...record, participant_id: source === 'pilot' ? `forge-pilot-${token}` : participantId, token };
+    const saved = await putJson(env, `links/${token}.json`, linkRecord, {
       onlyIf: new Headers({ 'If-None-Match': '*' }),
       customMetadata: { participant: participantId, state: 'active', createdAt: record.created_at }
     });
-    if (saved) return { ...record, token, short_url: `${origin}/j/${token}` };
+    if (saved) return { ...linkRecord, short_url: `${origin}/j/${token}` };
   }
   throw new Error('Could not create a unique participant link');
 }
@@ -541,11 +605,12 @@ async function inviteLinksRoute(request, env) {
     const person = (rosterDocument.participants || []).find(candidate => candidate.participant_id === participantId);
     if (!person) throw new Error('Choose a participant from the saved roster');
     if (person.status !== 'active') throw new Error('Participant links can be created only for active roster entries');
-    const day = Number(payload.day);
-    const studyDays = Math.max(1, Number(config.ema.scheduling.study_days) || 1);
-    if (!Number.isInteger(day) || day < 1 || day > studyDays) throw new Error(`Day must be between 1 and ${studyDays}`);
     const sessionId = String(payload.session_id || '').trim();
-    if (!(config.ema.scheduling.windows || []).some(window => window.id === sessionId)) throw new Error('Choose a session from the installed study');
+    const onboarding = sessionId === 'onboarding' && config.onboarding?.enabled;
+    const day = onboarding ? null : Number(payload.day);
+    const studyDays = Math.max(1, Number(config.ema.scheduling.study_days) || 1);
+    if (!onboarding && (!Number.isInteger(day) || day < 1 || day > studyDays)) throw new Error(`Day must be between 1 and ${studyDays}`);
+    if (!onboarding && !(config.ema.scheduling.windows || []).some(window => window.id === sessionId)) throw new Error('Choose a session from the installed study');
     return json(await createInviteLink(env, {
       origin: url.origin, config, participantId, day, sessionId, source: 'admin'
     }), 201);
@@ -576,28 +641,79 @@ async function resolveInviteLink(request, env, token) {
   if (record.expires_at && Date.now() > Date.parse(record.expires_at)) return json({ error: 'This participant link has expired' }, 410);
   const destination = new URL('/', request.url);
   destination.searchParams.set('id', record.participant_id);
-  destination.searchParams.set('day', String(record.day));
+  if (record.day !== null) destination.searchParams.set('day', String(record.day));
   destination.searchParams.set('session', record.session_id);
-  destination.searchParams.set('t', String(record.sent_at_ms));
+  if (record.source === 'pilot') destination.searchParams.set('pilot', '1');
+  else if (record.session_id !== 'onboarding') destination.searchParams.set('t', String(record.sent_at_ms));
   return new Response(null, { status: 302, headers: { Location: destination.toString(), 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
+}
+
+async function pilotRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  const config = await readJson(env, 'study/current-config.json');
+  const sessions = (config?.ema?.scheduling?.windows || []).map(window => window.id);
+  if (config?.onboarding?.enabled) sessions.push('onboarding');
+  let requested;
+  try {
+    if (request.headers.get('Content-Type')?.includes('application/json')) {
+      requested = (await parseJsonRequest(request, 4096)).session_id;
+    }
+  } catch (_) { return json({ error: 'Invalid pilot request' }, 400); }
+  const sessionId = requested || sessions[0];
+  if (sessionId && !sessions.includes(sessionId)) return json({ error: 'Choose a session from the installed study' }, 400);
+  if (!sessionId) return json({ error: 'Install a study with a runnable session first' }, 400);
+  const invite = await createInviteLink(env, {
+    origin: new URL(request.url).origin, config, participantId: '', day: sessionId === 'onboarding' ? null : 1, sessionId, source: 'pilot'
+  });
+  return json(invite, 201);
+}
+
+async function preferencesRoute(request, env) {
+  if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
+  let participantId;
+  try { ({ participant_id: participantId } = await parseJsonRequest(request, 4096)); }
+  catch (_) { return json({ error: 'Invalid preference request' }, 400); }
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(String(participantId || ''))) return json({ error: 'Choose a participant first' }, 400);
+  const stored = await readJson(env, `admin/preferences/${participantId}.json`);
+  if (stored?.preferences) return json({ preferences: stored.preferences });
+  // Older deployments did not index these responses. Recover them from R2.
+  const listed = await listAll(env, 'sessions/');
+  const candidates = listed.objects.filter(item => item.customMetadata?.participant === participantId && item.customMetadata?.window === 'onboarding')
+    .sort((a, b) => String(b.customMetadata.receivedAt).localeCompare(String(a.customMetadata.receivedAt)));
+  for (const item of candidates) {
+    const record = await readJson(env, item.key);
+    const preferences = record?.session_data?.schedulePreferences;
+    if (Array.isArray(preferences?.days) && preferences.windows) {
+      await indexSchedulePreferences(env, record, 'sessions', item.customMetadata.receivedAt || '').catch(() => {});
+      return json({ preferences });
+    }
+  }
+  return json({ preferences: null });
 }
 
 async function exportPrefix(request, env, prefix, filename) {
   if (!hasAdminAccess(request, env)) return json({ error: 'Unauthorized' }, 401);
   const url = new URL(request.url);
   const cursor = url.searchParams.get('cursor') || undefined;
-  const listed = await env.STUDY_DATA.list({ prefix, limit: 1000, cursor });
-  const lines = [];
-  for (let offset = 0; offset < listed.objects.length; offset += 20) {
-    const batch = listed.objects.slice(offset, offset + 20);
-    const objects = await Promise.all(batch.map(item => env.STUDY_DATA.get(item.key)));
-    for (const object of objects) if (object) lines.push(await object.text());
-  }
+  const listed = await env.STUDY_DATA.list({ prefix, limit: EXPORT_PAGE_SIZE, cursor });
   const headers = secureHeaders('application/x-ndjson; charset=utf-8');
   headers['Content-Disposition'] = `attachment; filename="${filename}"`;
   headers['X-EMA-Truncated'] = String(!!listed.truncated);
   if (listed.cursor) headers['X-EMA-Next-Cursor'] = listed.cursor;
-  return new Response(lines.join('\n') + (lines.length ? '\n' : ''), { headers });
+  const records = listed.objects[Symbol.iterator]();
+  const body = new ReadableStream({
+    async pull(controller) {
+      for (const item of records) {
+        const object = await env.STUDY_DATA.get(item.key);
+        if (object) {
+          controller.enqueue(textEncoder.encode(await object.text() + '\n'));
+          return;
+        }
+      }
+      controller.close();
+    }
+  });
+  return new Response(body, { headers });
 }
 
 async function parseJsonRequest(request, maximumBytes = 2 * 1024 * 1024) {
@@ -633,14 +749,15 @@ function normalizeRoster(payload) {
     const startDate = String(raw.start_date || '').trim();
     const status = String(raw.status || 'active').trim().toLowerCase();
     if (!/^[a-zA-Z0-9_-]{1,64}$/.test(participantId)) throw new Error(`Row ${index + 1}: participant_id must use letters, numbers, dashes, or underscores`);
-    if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(`Row ${index + 1}: phone must use E.164 format`);
+    if (phone && !/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error(`Row ${index + 1}: phone must use E.164 format`);
     if (!validTimezone(timezone)) throw new Error(`Row ${index + 1}: timezone is not a valid IANA timezone`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || Number.isNaN(Date.parse(`${startDate}T00:00:00Z`))) throw new Error(`Row ${index + 1}: start_date must be YYYY-MM-DD`);
     if (!['active', 'inactive', 'opted_out'].includes(status)) throw new Error(`Row ${index + 1}: status must be active, inactive, or opted_out`);
+    if (participantId.startsWith('forge-pilot-')) throw new Error('That participant ID prefix is reserved for pilot runs');
     if (ids.has(participantId)) throw new Error(`Duplicate participant_id: ${participantId}`);
-    if (phones.has(phone)) throw new Error(`Duplicate phone number in roster: ${phone}`);
+    if (phone && phones.has(phone)) throw new Error(`Duplicate phone number in roster: ${phone}`);
     ids.add(participantId);
-    phones.add(phone);
+    if (phone) phones.add(phone);
     return {
       participant_id: participantId,
       phone,
@@ -677,6 +794,16 @@ async function messagingRoute(request, env) {
     if (!template || template.length > 500) throw new Error('Message template must contain 1–500 characters');
     if (!template.includes('{link}')) throw new Error('Message template must include {link}');
     if (incoming.enabled === true && !twilioConfigured(twilioEnv)) throw new Error('Connect Twilio in Study Admin before enabling messaging');
+    if (incoming.enabled === true) {
+      const config = await readJson(env, 'study/current-config.json');
+      const roster = await readJson(env, 'admin/roster.json', { participants: [] });
+      const candidates = roster.participants.filter(person => person.phone && person.status === 'active');
+      const schedules = [participantSchedule(config, {}), ...candidates.map(person => participantSchedule(config, person))];
+      for (const schedule of schedules) {
+        const invalid = schedule.windows.find(window => Math.ceil(hmMinutes(window.start) / 5) > Math.floor(hmMinutes(window.end) / 5));
+        if (invalid) throw new Error(`“${invalid.label}” has no five-minute dispatch time. Extend the window before enabling messaging.`);
+      }
+    }
     const settings = { enabled: incoming.enabled === true, message_template: template, updated_at: new Date().toISOString() };
     await putJson(env, 'admin/messaging.json', settings);
     return json({ settings, configured: twilioConfigured(twilioEnv) });
@@ -776,7 +903,10 @@ function deterministicMinute(participantId, day, windowId, start, end) {
     hash ^= seed.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
-  return start + ((hash >>> 0) % (end - start + 1));
+  const firstTick = Math.ceil(start / 5);
+  const lastTick = Math.floor(end / 5);
+  if (lastTick < firstTick) return null;
+  return (firstTick + ((hash >>> 0) % (lastTick - firstTick + 1))) * 5;
 }
 
 function participantSchedule(config, person) {
@@ -833,7 +963,7 @@ export async function dispatchDueMessages(env, now = new Date()) {
   let sent = 0;
   let failed = 0;
   for (const person of rosterDocument.participants || []) {
-    if (person.status !== 'active') continue;
+    if (person.status !== 'active' || !person.phone) continue;
     const local = localParts(now, person.timezone);
     const day = dayDiff(person.start_date, local.ymd) + 1;
     if (day < 1 || day > studyDays) continue;
@@ -843,10 +973,21 @@ export async function dispatchDueMessages(env, now = new Date()) {
       const start = hmMinutes(window.start);
       const end = hmMinutes(window.end);
       const target = deterministicMinute(person.participant_id, day, window.id, start, end);
-      if (local.minute < target || local.minute > end) continue;
+      if (local.minute < (target ?? start)) continue;
       const key = `dispatch/${person.participant_id}/${String(day).padStart(4, '0')}/${window.id}.json`;
       const existing = await readJson(env, key, null);
       if (existing && existing.state !== 'failed') continue;
+      if (target === null || local.minute > end) {
+        if (!existing) {
+          await saveDispatch(env, key, {
+            dispatch_id: `${person.participant_id}-${day}-${window.id}`,
+            participant_id: person.participant_id, day, window_id: window.id, window_label: window.label,
+            scheduled_local_minute: target, timezone: person.timezone, state: 'missed', attempts: 0,
+            reason: target === null ? 'no_dispatch_tick' : 'window_elapsed'
+          }, { onlyIf: new Headers({ 'If-None-Match': '*' }) });
+        }
+        continue;
+      }
       if (existing?.attempts >= 3) continue;
       if (existing?.last_attempt_at && now.getTime() - Date.parse(existing.last_attempt_at) < 15 * 60000) continue;
       const attempt = {
@@ -1051,6 +1192,8 @@ export default {
     if (path === '/admin/messaging') return messagingRoute(request, env);
     if (path === '/admin/twilio-credentials') return twilioCredentialsRoute(request, env);
     if (path === '/admin/test-message' && request.method === 'POST') return testMessageRoute(request, env);
+    if (path === '/admin/pilot' && request.method === 'POST') return pilotRoute(request, env);
+    if (path === '/admin/preferences' && request.method === 'POST') return preferencesRoute(request, env);
     if (path === '/admin/invite-links') return inviteLinksRoute(request, env);
     if (path.startsWith('/admin/invite-links/')) return revokeInviteLink(request, env, path.slice('/admin/invite-links/'.length));
     if (path.startsWith('/admin/')) return json({ error: 'Not found' }, 404);
@@ -1073,7 +1216,7 @@ export default {
     return json({ error: 'Not found' }, 404);
   },
 
-  async scheduled(_event, env, context) {
-    context.waitUntil(dispatchDueMessages(env));
+  async scheduled(event, env, context) {
+    context.waitUntil(dispatchDueMessages(env, new Date(event.scheduledTime)));
   }
 };

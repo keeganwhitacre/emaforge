@@ -1199,7 +1199,7 @@
               free for researchers. Any institutional static-file server works too. (See <a href="#hosting">Hosting Your
                 Study</a> — it is genuinely ten clicks.)</li>
             <li><strong>A way to send participants links</strong> at the right times — an SMS service, institutional
-              email scheduler, Twilio, or similar. EMA Forge generates the links; something else delivers them.</li>
+              email scheduler, Twilio, or similar. For direct sharing, add participant IDs in Study Admin and create a ready-to-share link.</li>
             <li><strong>R or Python (optional).</strong> Analyze handles local inspection, data-quality review, and
               long-format export in the browser. Use R or Python for confirmatory and model-based analysis.</li>
           </ul>
@@ -1249,11 +1249,8 @@
               <code>workers.dev</code> address; EMA Forge accepts it with or without <code>https://</code>.</li>
             <li>Paste the address into EMA Forge and select <strong>Open admin</strong>. A new deployment opens directly
               on <strong>Install study</strong>; upload the prepared file.</li>
-            <li>Run the live <code>/check.html</code>. It shows a plain-language pass or failure and stores the synthetic
-              check separately from participant responses. Then complete a real test session on your phone.</li>
-            <li>Return to <code>/admin</code>, open <strong>Analyze</strong>, and select <strong>Download analysis file</strong>.
-              Open detailed Analyze and import that single <code>.json</code> file to inspect observed sessions and item responses.
-              Completion remains unavailable without scheduled prompt events.</li>
+            <li>From Study Admin Overview, choose a session and create a pilot link. Open it on your phone, complete it with sample answers, then refresh Overview to confirm receipt.</li>
+            <li>Open <strong>Participants &amp; delivery</strong> to create participant links. Once research responses arrive, use <strong>Download analysis file</strong> to inspect them in detailed Analyze.</li>
           </ol>
 
           <p>That round trip tells you whether your device can open sessions and whether your data is landing where you
@@ -1982,7 +1979,7 @@ affect &lt;- df |&gt;
           <ul>
             <li><strong>One analysis file from Study Admin (recommended).</strong> In the deployed study's
               <code>/admin</code> page, open <strong>Analyze</strong> and select <strong>Download analysis file</strong>.
-              It includes the installed study's question configuration and all exported responses in one JSON file.
+              It includes the available protocol configurations and all exported responses in one JSON file. Use the Protocol version filter to analyze one version at a time. Earlier responses without a version remain available, but their instrument summaries are unavailable when the original configuration cannot be established.
               Import just that file into detailed Analyze. Keep it in an institutionally approved location: it contains participant responses.</li>
             <li><strong>A Cloudflare response export.</strong> From the deployed study's <code>/admin</code> page, select
               <strong>Download responses</strong> and import the resulting <code>.ndjson</code> file directly. Each line is
@@ -3035,9 +3032,7 @@ iat_trials &lt;- sessions |&gt;
     <strong>Worker → Settings → Variables and Secrets</strong>, add or replace a runtime <strong>Secret</strong> named exactly
     <code>ADMIN_TOKEN</code>, use a value of at least 32 characters, and deploy the settings change. Do not place the token
     value in <code>wrangler.jsonc</code> or commit it to Git.</p>
-  <p>Run <code>/check.html</code> after installation. It presents a clear success or failure instead of raw JSON.
-    Synthetic checks are stored under <code>setup-tests/</code> and are excluded from response counts, Analyze, and
-    response exports. Real sessions are stored under <code>sessions/</code>.</p>
+  <p>Run a pilot from Study Admin Overview after installation. Select a session, create the link, and complete it on a supported phone using sample answers. Refresh Overview to verify receipt. Pilot records are excluded from participant counts, Analyze, and response exports. Use <code>/check.html</code> to test storage separately.</p>
 </div>
 
 <details>
@@ -3592,7 +3587,7 @@ export const handler = async (event) =&gt; {
             <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
             <tbody>
               <tr><td><code>participant_id</code></td><td>Unique opaque ID used in the participant link and response envelope.</td></tr>
-              <tr><td><code>phone</code></td><td>E.164 phone number, such as <code>+15551234567</code>.</td></tr>
+              <tr><td><code>phone</code></td><td>Required for SMS only. Use E.164 format, such as <code>+15551234567</code>.</td></tr>
               <tr><td><code>timezone</code></td><td>IANA timezone, such as <code>America/New_York</code>. This preserves daylight-saving behavior.</td></tr>
               <tr><td><code>start_date</code></td><td>Calendar start date in <code>YYYY-MM-DD</code> format.</td></tr>
               <tr><td><code>status</code></td><td><code>active</code>, <code>inactive</code>, or <code>opted_out</code>.</td></tr>
@@ -3604,7 +3599,7 @@ export const handler = async (event) =&gt; {
           <ol>
             <li>A Cloudflare Cron Trigger invokes the Worker's scheduled handler every five minutes.</li>
             <li>The Worker determines the participant's calendar study day and local time, intersects participant
-              preferences with protocol weekdays, and derives a stable randomized minute inside each window.</li>
+              preferences with protocol weekdays, and selects an eligible five-minute dispatch tick inside each window. Use <strong>Review preferences</strong> and save the roster to apply submitted onboarding preferences. A window without a five-minute tick cannot be enabled for SMS.</li>
             <li>A prompt is claimed with a participant/day/window key before the Twilio request. This prevents
               overlapping scheduler runs from sending the same prompt twice.</li>
             <li>The Worker creates an opaque <code>/j/…</code> link. Its private R2 mapping contains the participant,

@@ -4,7 +4,7 @@ Free, open-source builder for web-based ecological momentary assessment (EMA) st
 
 Move from a draft to a functioning study in one workflow: choose a protocol or start blank, arrange questions and optional phone-camera tasks, preview the participant flow, then deploy to your own Cloudflare account. The researcher controls the hosted study, participant links, and private response storage. EMA Forge itself requires no account or persistent project upload.
 
-**[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
+**[Try a sample check-in](https://emaforge.keeganwhitacre.com/sample.html)** · **[Open the builder](https://emaforge.keeganwhitacre.com/builder.html)** · [Browse the library](https://emaforge.keeganwhitacre.com/library.html) · [Explore Analyze](https://emaforge.keeganwhitacre.com/dashboard.html) · [Read the full guide](https://emaforge.keeganwhitacre.com/readme.html)
 
 ## Create a study
 
@@ -13,10 +13,10 @@ Move from a draft to a functioning study in one workflow: choose a protocol or s
 3. Preview the participant flow and resolve blocking issues in **Review & Deploy**.
 4. Download the prepared Cloudflare study, then deploy the included Worker template. Replace Cloudflare's masked example `ADMIN_TOKEN` with your own 32+ character password. Twilio is optional and can be connected inside Study Admin after deployment. The template enables its `workers.dev` address and provisions private R2 storage.
 5. Copy the Worker address Cloudflare displays and paste it into **Review & Deploy**. A bare address such as `my-study.workers.dev` is accepted and normalized to HTTPS. Open `/admin`; a new deployment opens directly on **Install study**. Upload the prepared `-cloudflare-study.html` file.
-6. Run `/check.html`. It reports a clear pass or failure and saves its synthetic record under `setup-tests/`, never in participant response counts or exports. Then complete one full session on a supported phone and confirm it appears in Admin.
+6. In Study Admin Overview, choose a session and create a pilot link. Complete it on a supported phone using sample answers, then refresh Overview to confirm receipt. Pilot responses stay out of research exports. Use `/check.html` separately if you need to troubleshoot storage.
 7. Use `/admin` to monitor responses, run browser-local descriptive analysis, create participant links, manage optional Twilio delivery, and download lossless response and dispatch exports. Independent static hosting and receiver setup remain available under the manual deployment option.
 
-Each Cloudflare deployment hosts **one study**. You can update that study through its protected admin page, but run a different study with a separate Worker and private R2 bucket in the same Cloudflare account. Reusing one Worker for multiple studies would mix response and roster records; the admin page rejects a differently named study.
+Each Cloudflare deployment hosts **one study**. Use a separate Worker and private R2 bucket for each new study. Named drafts and backups preserve a study ID, so you can update or rename the same study on its existing host. For a legacy host, install once with the original name to associate it with the draft’s ID.
 
 ## Cost and study approval
 
@@ -36,7 +36,7 @@ The Measures screen treats survey questions, instruction screens, body maps, PPG
 
 Adding a future built-in task to the module registry makes it appear in the same Add measure menu and ordered flow. A new task engine still needs its runtime, validation allowlist, settings renderer, simulator, and export tests before it is safe to ship.
 
-The builder itself needs no account or backend. The recommended Cloudflare export embeds the same-host `/submit` receiver automatically, so researchers should not paste a Cloudflare address into the manual webhook field. The deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, credentials, or participant responses. Without an approved receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
+The Builder stores named drafts in the current browser. Use **Download Backup** to move a draft to another device or share it with a lab colleague. Opening a full library protocol creates a new draft. The Builder needs no account or backend. The recommended Cloudflare export embeds the same-host `/submit` receiver automatically, so researchers should not paste a Cloudflare address into the manual webhook field. The deployment lives entirely in the researcher's account; EMA Forge does not receive the deployment token, study file, credentials, or participant responses. Without an approved receiver, participants must download or otherwise return their data; see the [data delivery guide](https://emaforge.keeganwhitacre.com/readme.html#webhook-upload) before running a study.
 
 ## Analyze and simulate
 

@@ -68,9 +68,9 @@ main{max-width:1100px;width:100%;margin:0 auto;padding:30px 36px 70px}.page-head
           <div class="card"><div class="kpi-label">Last response</div><div id="kpi-latest" class="kpi-value" style="font-size:1.1rem">—</div><div class="kpi-note">Server receipt time</div></div>
         </div>
         <div class="grid destinations">
-          <article class="card destination"><div class="tag">Share this</div><h2>Participant study</h2><p>The live link participants open. Add identifiers through the roster or routing CSV.</p><div class="actions"><a id="participant-open" class="btn primary" target="_blank" rel="noopener">Open study</a><button class="btn copy-link" data-link="participant">Copy link</button></div></article>
-          <article class="card destination"><div class="tag">Verify once</div><h2>Connection check</h2><p id="check-summary">Send a labeled synthetic submission. Setup checks never count as participant responses.</p><div class="actions"><a id="check-open" class="btn" target="_blank" rel="noopener">Run check</a></div></article>
-          <article class="card destination"><div class="tag">Private</div><h2>Study administration</h2><p>Bookmark this page. Never share the admin token or administration URL with participants.</p><div class="actions"><button class="btn copy-link" data-link="admin">Copy admin link</button></div></article>
+          <article class="card destination"><h2>1. Pilot the study</h2><p>Open this link on a participant device and complete a check-in using sample answers. Pilot responses stay out of research data.</p><div class="field"><label for="pilot-session">Session to test</label><select id="pilot-session"></select></div><div class="actions"><button id="pilot-create" class="btn primary">Create pilot link</button><button data-refresh class="btn">Refresh status</button></div><div id="pilot-result" class="actions hidden"><a id="pilot-open" class="btn" target="_blank" rel="noopener">Open pilot</a><button id="pilot-copy" class="btn">Copy for phone</button></div><p id="pilot-status" role="status"></p><p id="pilot-message" role="status"></p></article>
+          <article class="card destination"><h2>Storage troubleshooting</h2><p id="check-summary">Send a labeled synthetic submission. Setup checks never count as participant responses.</p><div class="actions"><a id="check-open" class="btn" target="_blank" rel="noopener">Run check</a></div></article>
+          <article class="card destination"><h2>2. Invite participants</h2><p>Create participant-specific links when the pilot is complete.</p><div class="actions"><button class="btn primary" data-goto="participants">Manage invites</button><a id="participant-open" class="btn" target="_blank" rel="noopener">Open generic study URL</a><button class="btn copy-link" data-link="admin">Copy admin link</button></div></article>
         </div>
         <div class="split">
           <section class="card"><h2>Collection status</h2><p id="collection-summary">Unlocking study data…</p><div id="window-bars" class="bars"></div></section>
@@ -102,18 +102,19 @@ main{max-width:1100px;width:100%;margin:0 auto;padding:30px 36px 70px}.page-head
             <div class="field"><label for="invite-session">Session</label><select id="invite-session"></select></div>
             <button id="create-invite" class="btn primary" style="margin-bottom:14px">Create link</button>
           </div>
-          <div id="invite-message" class="message" role="status"></div>
+          <p class="quiet">Check-in links start their response window when created. Create them when you are ready to send. Setup links can be sent in advance.</p><div id="invite-message" class="message" role="status"></div>
           <div id="invite-table" class="table-wrap"><div class="empty">No participant links have been created.</div></div>
         </section>
         <section class="card" style="margin-top:18px">
-          <h2>Study roster</h2><p>Use opaque participant IDs. Phone numbers must use E.164 format; timezones must be IANA names such as <span class="code">America/New_York</span>.</p>
+          <h2>Study roster</h2><p>Use opaque participant IDs. Phone is optional for manual invites. For SMS, enter an E.164 phone number and an IANA timezone such as <span class="code">America/New_York</span>.</p>
           <div class="inline-fields">
             <div class="field"><label for="new-pid">Participant ID</label><input id="new-pid" placeholder="P001"></div>
-            <div class="field"><label for="new-phone">Phone</label><input id="new-phone" type="tel" placeholder="+15551234567"></div>
+            <div class="field"><label for="new-phone">Phone (SMS only)</label><input id="new-phone" type="tel" placeholder="+15551234567"></div>
             <div class="field"><label for="new-timezone">Timezone</label><input id="new-timezone" placeholder="America/New_York"></div>
             <div class="field"><label for="new-start">Start date</label><input id="new-start" type="date"></div>
             <button id="add-participant" class="btn" style="margin-bottom:14px">Add</button>
           </div>
+          <div class="field"><label for="manual-ids">Add manual participants</label><textarea id="manual-ids" rows="2" placeholder="One participant ID per line"></textarea><small>Use the timezone and start date above, or keep the defaults for manual links.</small><button id="add-manual-ids" class="btn" type="button">Add IDs to roster</button></div>
           <div id="roster-table" class="table-wrap"><div class="empty">No participants have been added.</div></div>
           <div class="actions" style="margin-top:14px"><button id="save-roster" class="btn primary">Save roster</button></div><div id="roster-message" class="message" role="status"></div>
         </section>
@@ -121,7 +122,7 @@ main{max-width:1100px;width:100%;margin:0 auto;padding:30px 36px 70px}.page-head
 
       <section id="view-analyze" class="view">
         <div class="page-head"><div><h1>Analyze live data</h1><p>Operational summaries are calculated in this browser from protected response and dispatch records.</p></div><div class="actions"><button id="load-analysis" class="btn">Refresh analysis</button></div></div>
-        <section class="card" style="margin-bottom:18px;border-top:2px solid var(--accent)"><h2>Explore individual responses</h2><p>Download one analysis file with this study’s questions and responses, then open it in the detailed Analyze workspace. Select that one file when prompted; no separate configuration download is needed.</p><div class="actions"><button id="download-analysis-bundle" class="btn primary">Download analysis file</button><a class="btn" href="https://emaforge.keeganwhitacre.com/dashboard.html" target="_blank" rel="noopener noreferrer">Open detailed Analyze ↗</a></div><details class="admin-analysis-raw"><summary>Need the raw exports?</summary><div class="actions"><button id="download-responses" class="btn">Download raw NDJSON</button><button id="download-dispatch" class="btn">Download dispatch log</button></div></details></section>
+        <section class="card" style="margin-bottom:18px;border-top:2px solid var(--accent)"><h2>Explore individual responses</h2><p>Download an analysis file with the study’s protocol versions and responses. Open it in the detailed Analyze workspace and choose the version to summarize.</p><div class="actions"><button id="download-analysis-bundle" class="btn primary">Download analysis file</button><a class="btn" href="https://emaforge.keeganwhitacre.com/dashboard.html" target="_blank" rel="noopener noreferrer">Open detailed Analyze ↗</a></div><details class="admin-analysis-raw"><summary>Need the raw exports?</summary><div class="actions"><button id="download-responses" class="btn">Download raw NDJSON</button><button id="download-dispatch" class="btn">Download dispatch log</button></div></details></section>
         <div class="warning">These views are descriptive monitoring tools, not confirmatory statistical analyses. Missing response files alone are not treated as missed prompts.</div>
         <div class="grid kpis">
           <div class="card"><div class="kpi-label">Sessions</div><div id="analysis-sessions" class="kpi-value">—</div></div>
@@ -167,7 +168,7 @@ function setMessage(id,text,kind){var el=byId(id);el.textContent=text||'';el.cla
 function text(id,value){byId(id).textContent=value==null?'—':String(value);}
 function formatDate(value){if(!value)return 'None yet';var d=new Date(value);return isNaN(d)?String(value):d.toLocaleString();}
 function formatCompactDate(value){if(!value)return 'None yet';var d=new Date(value);return isNaN(d)?String(value):d.toLocaleDateString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
-async function api(path,options){options=options||{};options.headers=Object.assign({},options.headers||{},auth());var response=await fetch(path,options);if(response.status===401){lock();throw new Error('Admin token was not accepted.');}var contentType=response.headers.get('Content-Type')||'';var result=contentType.indexOf('application/json')>=0?await response.json():await response.text();if(!response.ok)throw new Error(result.error||result||'Request failed');return {response:response,result:result};}
+async function api(path,options){options=options||{};options.headers=Object.assign({},options.headers||{},auth());var response=await fetch(path,options);if(response.status===401){lock();throw new Error('Admin token was not accepted.');}var contentType=response.headers.get('Content-Type')||'';var result=contentType.indexOf('application/json')>=0?await response.json():await response.text();if(!response.ok){var error=new Error(result.error||result||'Request failed');error.status=response.status;throw error;}return {response:response,result:result};}
 function lock(){sessionStorage.removeItem('ema_forge_admin_token');token='';byId('app').classList.add('hidden');byId('lock').classList.remove('hidden');tokenEl.value='';}
 async function unlock(){token=tokenEl.value.trim();if(token.length<32){setMessage('lock-message','Enter the complete token created during deployment.','bad');return;}setMessage('lock-message','Checking access…','');try{var data=(await api('/admin/status')).result;sessionStorage.setItem('ema_forge_admin_token',token);byId('lock').classList.add('hidden');byId('app').classList.remove('hidden');overview=data;renderOverview();applyStorageConflict(data);showView(data.installed?'overview':'settings');if(!data.storage_conflict)await Promise.all([loadRoster(),loadMessaging(),loadInviteLinks(),loadTwilioStatus()]);}catch(error){setMessage('lock-message',error.message,'bad');}}
 
@@ -176,20 +177,84 @@ function linkFor(kind){if(kind==='admin')return location.origin+'/admin';return 
 async function copy(value,button){try{await navigator.clipboard.writeText(value);var previous=button.textContent;button.textContent='Copied';setTimeout(function(){button.textContent=previous;},1200);}catch(error){prompt('Copy this link:',value);}}
 function barRows(containerId,counts){var container=byId(containerId);container.textContent='';var entries=Object.entries(counts||{}).sort(function(a,b){return b[1]-a[1];});if(!entries.length){container.innerHTML='<div class="empty">No records available yet.</div>';return;}var max=Math.max.apply(null,entries.map(function(row){return row[1];}));entries.forEach(function(row){var wrap=document.createElement('div');wrap.className='bar-row';var label=document.createElement('span');label.textContent=row[0];var track=document.createElement('div');track.className='bar-track';var fill=document.createElement('div');fill.className='bar-fill';fill.style.width=Math.max(3,row[1]/max*100)+'%';track.appendChild(fill);var count=document.createElement('strong');count.textContent=row[1];wrap.append(label,track,count);container.appendChild(wrap);});}
 
-function renderOverview(){if(!overview)return;var installed=overview.installed;byId('live-dot').classList.toggle('on',installed);text('live-label',installed?'Study live':'Setup required');text('study-name',overview.study_name||'EMA Forge study');text('kpi-sessions',overview.response_count);text('kpi-participants',overview.observed_participants==null?'—':overview.observed_participants);text('kpi-roster',overview.active_roster_count);text('kpi-latest',formatCompactDate(overview.latest_response_at));byId('participant-open').href=overview.participant_url||location.origin+'/';byId('check-open').href=overview.connection_check_url||location.origin+'/check.html';text('check-summary',(overview.connection_check_count||0)+' setup check'+(overview.connection_check_count===1?'':'s')+' stored separately; none count as participant responses.');byId('incoming-url').textContent=location.origin+'/twilio/incoming';byId('connection-settings').onclick=function(){window.open(location.origin+'/check.html','_blank','noopener');};var warning=byId('overview-warning');warning.className=installed?'okbox':'warning';warning.textContent=installed?'Study installed. Run the connection check once, then complete one full participant session before enrollment.':'No participant study is installed yet. Use the first navigation item to upload the prepared Cloudflare study file.';text('collection-summary',overview.response_count?overview.response_count+' stored sessions across '+(overview.observed_participants||'unknown')+' observed participants.':'No participant sessions have been received yet.');barRows('window-bars',overview.sessions_by_window||{});renderMessagingSummary();}
+function renderPilotOptions() {
+  var select = byId('pilot-session');
+  var previous = select.value;
+  select.replaceChildren();
+  var windows = (overview.schedule_windows || []).slice();
+  if (overview.onboarding_enabled) windows.push({id:'onboarding', label:'Onboarding and consent'});
+  windows.forEach(function(window) {
+    var option = document.createElement('option');
+    option.value = window.id;
+    option.textContent = window.label;
+    select.append(option);
+  });
+  if (windows.some(function(window) { return window.id === previous; })) select.value = previous;
+  byId('pilot-create').disabled = !overview.installed || !select.value;
+}
+
+function renderOverview(){if(!overview)return;var installed=overview.installed;byId('live-dot').classList.toggle('on',installed);text('live-label',installed?'Study live':'Setup required');text('study-name',overview.study_name||'EMA Forge study');text('kpi-sessions',overview.response_count);text('kpi-participants',overview.observed_participants==null?'—':overview.observed_participants);text('kpi-roster',overview.active_roster_count);text('kpi-latest',formatCompactDate(overview.latest_response_at));byId('participant-open').href=overview.participant_url||location.origin+'/';byId('check-open').href=overview.connection_check_url||location.origin+'/check.html';renderPilotOptions();text('pilot-status',overview.pilot_count?'Pilot verified for the current protocol ('+overview.pilot_count+' stored).':'No pilot confirmed for this protocol.');text('check-summary',(overview.connection_check_count||0)+' setup check'+(overview.connection_check_count===1?'':'s')+' stored separately; none count as participant responses.');byId('incoming-url').textContent=location.origin+'/twilio/incoming';byId('connection-settings').onclick=function(){window.open(location.origin+'/check.html','_blank','noopener');};var warning=byId('overview-warning');warning.className=installed?'okbox':'warning';warning.textContent=installed?'Study installed. Complete a pilot check-in, then create participant links.':'No participant study is installed yet. Use the first navigation item to upload the prepared Cloudflare study file.';text('collection-summary',overview.response_count?overview.response_count+' stored sessions across '+(overview.observed_participants||'unknown')+' observed participants.':'No participant sessions have been received yet.');barRows('window-bars',overview.sessions_by_window||{});renderMessagingSummary();renderInviteOptions();}
 function applyStorageConflict(data){var conflict=!!data.storage_conflict;var warning=byId('setup-storage-warning');warning.classList.toggle('hidden',!conflict);warning.textContent=conflict?data.storage_message||'Study storage belongs to another deployment. Connect a separate R2 bucket before installing.':'';byId('study-file').disabled=conflict;byId('install-study').disabled=conflict;if(conflict){byId('overview-warning').className='warning';byId('overview-warning').textContent=warning.textContent;text('live-label','Storage conflict');}else if(data.installed&&data.installed_at){byId('overview-warning').textContent='Study “'+(data.study_name||'Untitled study')+'” was installed '+formatDate(data.installed_at)+'. Run the connection check and a full participant session before enrollment.';}}
 async function refreshOverview(){try{overview=(await api('/admin/status')).result;renderOverview();applyStorageConflict(overview);}catch(error){setMessage('analysis-message',error.message,'bad');}}
 
 async function loadRoster(){try{roster=(await api('/admin/roster')).result.participants||[];renderRoster();}catch(error){setMessage('roster-message',error.message,'bad');}}
-function renderRoster(){var host=byId('roster-table');host.textContent='';renderInviteOptions();if(!roster.length){host.innerHTML='<div class="empty">No participants have been added.</div>';return;}var table=document.createElement('table');var head=document.createElement('thead');head.innerHTML='<tr><th>Participant</th><th>Phone</th><th>Timezone</th><th>Start date</th><th>Status</th><th></th></tr>';table.appendChild(head);var body=document.createElement('tbody');roster.forEach(function(person,index){var tr=document.createElement('tr');[person.participant_id,person.phone,person.timezone,person.start_date].forEach(function(value){var td=document.createElement('td');td.textContent=value;tr.appendChild(td);});var statusTd=document.createElement('td');var select=document.createElement('select');['active','inactive','opted_out'].forEach(function(value){var option=document.createElement('option');option.value=value;option.textContent=value.replace('_',' ');option.selected=person.status===value;select.appendChild(option);});select.onchange=function(){roster[index].status=select.value;renderInviteOptions();};statusTd.appendChild(select);tr.appendChild(statusTd);var action=document.createElement('td');var remove=document.createElement('button');remove.className='btn small danger';remove.textContent='Remove';remove.onclick=function(){roster.splice(index,1);renderRoster();};action.appendChild(remove);tr.appendChild(action);body.appendChild(tr);});table.appendChild(body);host.appendChild(table);}
-function addParticipant(){var person={participant_id:byId('new-pid').value.trim(),phone:byId('new-phone').value.trim(),timezone:byId('new-timezone').value.trim(),start_date:byId('new-start').value,status:'active'};if(!person.participant_id||!person.phone||!person.timezone||!person.start_date){setMessage('roster-message','Complete all participant fields.','bad');return;}if(roster.some(function(row){return row.participant_id===person.participant_id;})){setMessage('roster-message','Participant IDs must be unique.','bad');return;}roster.push(person);['new-pid','new-phone'].forEach(function(id){byId(id).value='';});renderRoster();setMessage('roster-message','Participant added locally. Save the roster to apply changes.','good');}
+async function reviewPreferences(person) {
+  try {
+    var result = (await api('/admin/preferences', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({participant_id: person.participant_id})
+    })).result;
+    if (!result.preferences) {
+      setMessage('roster-message', 'No submitted onboarding preferences for '+person.participant_id+'.', '');
+      return;
+    }
+    var preferences = result.preferences;
+    var names = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    var selected = preferences.days.map(function(day) { return names[Number(day)-1] || day; });
+    var days = names.filter(function(day, index) {
+      return selected.includes(day) && (!overview.days_of_week.length || overview.days_of_week.includes(index+1));
+    }).join(', ') || 'No shared study days';
+    var windows = (overview.schedule_windows || []).map(function(window) {
+      var preferred = preferences.windows[window.id] || {};
+      return window.label+': '+(preferred.start || window.start)+'–'+(preferred.end || window.end);
+    });
+    if (!confirm('Apply preferences for '+person.participant_id+'?\\n'+[days].concat(windows).join('\\n'))) return;
+    person.schedule_preferences = preferences;
+    setMessage('roster-message', 'Preferences applied to the draft roster. Save roster to use them for SMS.', 'good');
+  } catch (error) { setMessage('roster-message', error.message, 'bad'); }
+}
+
+function renderRoster(){var host=byId('roster-table');host.textContent='';renderInviteOptions();if(!roster.length){host.innerHTML='<div class="empty">No participants have been added.</div>';return;}var table=document.createElement('table');var head=document.createElement('thead');head.innerHTML='<tr><th>Participant</th><th>Phone</th><th>Timezone</th><th>Start date</th><th>Status</th><th></th></tr>';table.appendChild(head);var body=document.createElement('tbody');roster.forEach(function(person,index){var tr=document.createElement('tr');[person.participant_id,person.phone,person.timezone,person.start_date].forEach(function(value){var td=document.createElement('td');td.textContent=value;tr.appendChild(td);});var statusTd=document.createElement('td');var select=document.createElement('select');['active','inactive','opted_out'].forEach(function(value){var option=document.createElement('option');option.value=value;option.textContent=value.replace('_',' ');option.selected=person.status===value;select.appendChild(option);});select.onchange=function(){roster[index].status=select.value;renderInviteOptions();};statusTd.appendChild(select);tr.appendChild(statusTd);var action=document.createElement('td');var remove=document.createElement('button');remove.className='btn small danger';remove.textContent='Remove';remove.onclick=function(){roster.splice(index,1);renderRoster();};var preferences=document.createElement('button');preferences.className='btn small';preferences.textContent='Review preferences';preferences.onclick=function(){reviewPreferences(person);};action.append(preferences,remove);tr.appendChild(action);body.appendChild(tr);});table.appendChild(body);host.appendChild(table);}
+function addManualIds() {
+  var field = byId('manual-ids');
+  var ids = [...new Set(field.value.trim().split(/\s+/).filter(Boolean))];
+  if (!ids.length || ids.some(function(id) { return !/^[a-zA-Z0-9_-]{1,64}$/.test(id) || id.startsWith('forge-pilot-'); })) {
+    setMessage('roster-message', 'Enter participant IDs using letters, numbers, dashes, or underscores.', 'bad');
+    return;
+  }
+  var timezone = byId('new-timezone').value.trim();
+  var start = byId('new-start').value;
+  if (!timezone || !start) {
+    setMessage('roster-message', 'Choose a timezone and start date first.', 'bad');
+    return;
+  }
+  var existing = new Set(roster.map(function(person) { return person.participant_id; }));
+  var added = ids.filter(function(id) { return !existing.has(id); });
+  added.forEach(function(id) { roster.push({participant_id: id, phone: '', timezone: timezone, start_date: start, status: 'active'}); });
+  field.value = '';
+  renderRoster();
+  setMessage('roster-message', added.length+' IDs added. Save roster to create invite links.', 'good');
+}
+
+function addParticipant(){var person={participant_id:byId('new-pid').value.trim(),phone:byId('new-phone').value.trim(),timezone:byId('new-timezone').value.trim(),start_date:byId('new-start').value,status:'active'};if(!person.participant_id||!person.timezone||!person.start_date){setMessage('roster-message','Enter a participant ID, timezone, and start date.','bad');return;}if(roster.some(function(row){return row.participant_id===person.participant_id;})){setMessage('roster-message','Participant IDs must be unique.','bad');return;}roster.push(person);['new-pid','new-phone'].forEach(function(id){byId(id).value='';});renderRoster();setMessage('roster-message','Participant added locally. Save the roster to apply changes.','good');}
 async function saveRoster(){setMessage('roster-message','Saving roster…','');try{var result=(await api('/admin/roster',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({participants:roster})})).result;roster=result.participants;renderRoster();setMessage('roster-message','Roster saved.','good');await refreshOverview();}catch(error){setMessage('roster-message',error.message,'bad');}}
 function parseCsv(raw){var rows=[];var row=[];var cell='';var quoted=false;for(var i=0;i<raw.length;i++){var c=raw[i];if(c==='"'){if(quoted&&raw[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell='';}else if((c==='\\n'||c==='\\r')&&!quoted){if(c==='\\r'&&raw[i+1]==='\\n')i++;row.push(cell);if(row.some(function(v){return v.trim();}))rows.push(row);row=[];cell='';}else cell+=c;}row.push(cell);if(row.some(function(v){return v.trim();}))rows.push(row);if(rows.length<2)return[];var headers=rows.shift().map(function(v){return v.trim().toLowerCase();});return rows.map(function(values){var item={};headers.forEach(function(header,index){item[header]=(values[index]||'').trim();});return item;});}
 async function importRoster(file){try{var rows=parseCsv(await file.text());var imported=rows.map(function(row){var prefs=row.schedule_preferences_json||'';return {participant_id:row.participant_id,phone:row.phone,timezone:row.timezone,start_date:row.start_date,status:row.status||'active',schedule_preferences:prefs?JSON.parse(prefs):null};});if(!imported.length)throw new Error('The CSV did not contain participant rows.');roster=imported;renderRoster();setMessage('roster-message',imported.length+' participants imported locally. Review and save the roster.','good');}catch(error){setMessage('roster-message','Could not import CSV: '+error.message,'bad');}}
 function downloadRosterTemplate(){downloadText('participant_id,phone,timezone,start_date,status,schedule_preferences_json\\nP001,+15551234567,America/New_York,'+new Date().toISOString().slice(0,10)+',active,\\n','ema-forge-roster-template.csv','text/csv');}
 
-function renderInviteOptions(){var pid=byId('invite-pid'),session=byId('invite-session');var selectedPid=pid.value,selectedSession=session.value;pid.textContent='';roster.filter(function(person){return person.status==='active';}).forEach(function(person){var option=document.createElement('option');option.value=person.participant_id;option.textContent=person.participant_id;pid.appendChild(option);});session.textContent='';(overview&&overview.schedule_windows||[]).forEach(function(window){var option=document.createElement('option');option.value=window.id;option.textContent=window.label;session.appendChild(option);});if(selectedPid)pid.value=selectedPid;if(selectedSession)session.value=selectedSession;byId('invite-day').max=overview&&overview.study_days||1;byId('create-invite').disabled=!pid.value||!session.value;}
-async function loadInviteLinks(){try{inviteLinks=(await api('/admin/invite-links')).result.links||[];renderInviteLinks();}catch(error){setMessage('invite-message',error.message,'bad');}}
+function renderInviteOptions(){var pid=byId('invite-pid'),session=byId('invite-session');var selectedPid=pid.value,selectedSession=session.value;pid.textContent='';roster.filter(function(person){return person.status==='active';}).forEach(function(person){var option=document.createElement('option');option.value=person.participant_id;option.textContent=person.participant_id;pid.appendChild(option);});session.textContent='';(overview&&overview.schedule_windows||[]).forEach(function(window){var option=document.createElement('option');option.value=window.id;option.textContent=window.label;session.appendChild(option);});if(overview&&overview.onboarding_enabled){var setup=document.createElement('option');setup.value='onboarding';setup.textContent='Onboarding and consent';session.prepend(setup);}if(Array.from(pid.options).some(function(option){return option.value===selectedPid;}))pid.value=selectedPid;if(Array.from(session.options).some(function(option){return option.value===selectedSession;}))session.value=selectedSession;byId('invite-day').max=overview&&overview.study_days||1;updateInviteControls();}
+function updateInviteControls(){byId('invite-day').disabled=byId('invite-session').value==='onboarding';byId('create-invite').disabled=!byId('invite-pid').value||!byId('invite-session').value;}
+async function loadInviteLinks(){try{inviteLinks=((await api('/admin/invite-links')).result.links||[]).filter(function(link){return link.source!=='pilot';});renderInviteLinks();}catch(error){setMessage('invite-message',error.message,'bad');}}
 function renderInviteLinks(){var host=byId('invite-table');host.textContent='';if(!inviteLinks.length){host.innerHTML='<div class="empty">No participant links have been created.</div>';return;}var table=document.createElement('table');table.innerHTML='<thead><tr><th>Participant</th><th>Day</th><th>Session</th><th>Link</th><th>Status</th><th></th></tr></thead>';var body=document.createElement('tbody');inviteLinks.slice(0,50).forEach(function(link){var row=document.createElement('tr');[link.participant_id,link.day,link.session_id].forEach(function(value){var td=document.createElement('td');td.textContent=value;row.appendChild(td);});var linkCell=document.createElement('td');var path=document.createElement('span');path.className='code';path.textContent='/j/'+link.token.slice(0,8)+'…';var copyButton=document.createElement('button');copyButton.className='btn small';copyButton.style.marginLeft='7px';copyButton.textContent='Copy';copyButton.onclick=function(){copy(link.short_url,copyButton);};linkCell.append(path,copyButton);row.appendChild(linkCell);var state=document.createElement('td');var badge=document.createElement('span');badge.className='status-badge '+(link.state==='active'?'good':'bad');badge.textContent=link.state;state.appendChild(badge);row.appendChild(state);var action=document.createElement('td');if(link.state==='active'){var revoke=document.createElement('button');revoke.className='btn small danger';revoke.textContent='Revoke';revoke.onclick=function(){revokeInvite(link.token);};action.appendChild(revoke);}row.appendChild(action);body.appendChild(row);});table.appendChild(body);host.appendChild(table);}
 async function createInvite(){setMessage('invite-message','Creating protected participant link…','');try{var body={participant_id:byId('invite-pid').value,day:Number(byId('invite-day').value),session_id:byId('invite-session').value};var link=(await api('/admin/invite-links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).result;inviteLinks.unshift(link);renderInviteLinks();setMessage('invite-message','Created '+link.short_url+'. Copy it from the table below.','good');}catch(error){setMessage('invite-message',error.message,'bad');}}
 async function revokeInvite(inviteToken){try{await api('/admin/invite-links/'+encodeURIComponent(inviteToken),{method:'DELETE'});await loadInviteLinks();setMessage('invite-message','Participant link revoked.','good');}catch(error){setMessage('invite-message',error.message,'bad');}}
@@ -202,14 +267,81 @@ function renderMessagingSummary(){if(!overview)return;if(!messaging.configured){
 async function saveMessaging(){setMessage('messaging-message','Saving settings…','');try{var body={enabled:byId('messaging-enabled').checked,message_template:byId('message-template').value};var result=(await api('/admin/messaging',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).result;messaging=Object.assign({},result.settings,{configured:result.configured});setMessage('messaging-message',messaging.enabled?'Scheduled messaging enabled.':'Messaging settings saved; automatic delivery is paused.','good');await refreshOverview();}catch(error){setMessage('messaging-message',error.message,'bad');}}
 async function sendTest(){setMessage('test-message','Sending…','');try{var result=(await api('/admin/test-message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:byId('test-phone').value.trim()})})).result;setMessage('test-message','Twilio accepted test message '+result.message_sid+'. Check the handset and Twilio delivery status.','good');}catch(error){setMessage('test-message',error.message,'bad');}}
 
-async function loadAllNdjson(path){var cursor='';var records=[];var pages=0;do{var response=await fetch(path+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:auth()});if(response.status===401){lock();throw new Error('Admin token was not accepted.');}if(!response.ok){var problem=await response.json();throw new Error(problem.error||'Could not load records.');}var raw=await response.text();raw.split(/\\r?\\n/).forEach(function(line){if(line.trim())records.push(JSON.parse(line));});cursor=response.headers.get('X-EMA-Next-Cursor')||'';pages++;if(pages>100)throw new Error('Export exceeded the browser analysis limit. Download the raw data instead.');}while(cursor);return records;}
+async function loadAllNdjson(path, readPage) {
+  var cursor = '';
+  var records = [];
+  do {
+    var response = await fetch(path+(cursor?'?cursor='+encodeURIComponent(cursor):''), {headers: auth()});
+    if (response.status === 401) { lock(); throw new Error('Admin token was not accepted.'); }
+    if (!response.ok) throw new Error('Could not load records (HTTP '+response.status+'). Try again from Study Admin.');
+    var raw = await response.text();
+    if (readPage) readPage(raw);
+    else raw.split(/\\r?\\n/).forEach(function(line) { if (line.trim()) records.push(JSON.parse(line)); });
+    var next = response.headers.get('X-EMA-Next-Cursor') || '';
+    if (next && next === cursor) throw new Error('Export pagination did not advance.');
+    cursor = next;
+  } while (cursor);
+  return records;
+}
 function sessionFromEnvelope(record){return record.session_data||record;}
 function hasPhysiology(session){return (session.data||[]).some(function(entry){if(['epat','hct','heart_rate','hr_capture','ppg'].indexOf(entry.type)>=0)return true;if(entry.type==='ema_response')return Object.values(entry.responses||{}).some(function(response){return response&&response.value&&typeof response.value==='object'&&('bpm' in response.value||'ibi' in response.value||'ibis' in response.value);});return false;});}
 async function loadAnalysis(){setMessage('analysis-message','Loading protected response and dispatch records…','');try{var results=await Promise.all([loadAllNdjson('/admin/export'),loadAllNdjson('/admin/dispatch-export')]);var responses=results[0],dispatches=results[1];var participants=new Set();var windows={};var physiology=0;var completedKeys=new Set();responses.forEach(function(record){var session=sessionFromEnvelope(record);var participant=String(session.participantId||record.participant_id||'Unknown');var day=record.day==null?session.day:record.day;participants.add(participant);var windowId=record.window_id||session.windowId||(session.phasePlan&&session.phasePlan[0]&&session.phasePlan[0].windowId)||'unknown';windows[windowId]=(windows[windowId]||0)+1;completedKeys.add(participant+'|'+day+'|'+windowId);if(hasPhysiology(session))physiology++;});var delivery={};dispatches.forEach(function(record){var state=record.state||'unknown';delivery[state]=(delivery[state]||0)+1;});var sentRecords=dispatches.filter(function(record){return !!record.message_sid||!!record.sent_at;});var matched=sentRecords.filter(function(record){return completedKeys.has(String(record.participant_id)+'|'+record.day+'|'+record.window_id);}).length;text('analysis-sessions',responses.length);text('analysis-participants',participants.size);text('analysis-dispatched',sentRecords.length);text('analysis-completed-after-prompt',matched+' matched completion'+(matched===1?'':'s'));text('analysis-physiology',physiology);barRows('analysis-windows',windows);barRows('analysis-delivery',delivery);renderRecent(responses);setMessage('analysis-message','Analysis refreshed at '+new Date().toLocaleTimeString()+'.','good');}catch(error){setMessage('analysis-message',error.message,'bad');}}
 function renderRecent(records){var host=byId('recent-table');host.textContent='';if(!records.length){host.innerHTML='<div class="empty">No participant sessions have been received.</div>';return;}var sorted=records.slice().sort(function(a,b){return String((b.server_receipt||{}).received_at||'').localeCompare(String((a.server_receipt||{}).received_at||''));}).slice(0,50);var table=document.createElement('table');table.innerHTML='<thead><tr><th>Received</th><th>Participant</th><th>Day</th><th>Window</th><th>Session</th></tr></thead>';var body=document.createElement('tbody');sorted.forEach(function(record){var row=document.createElement('tr');var values=[formatDate((record.server_receipt||{}).received_at),record.participant_id,record.day,record.window_id,record.submission_id];values.forEach(function(value){var td=document.createElement('td');td.textContent=value==null?'—':value;row.appendChild(td);});body.appendChild(row);});table.appendChild(body);host.appendChild(table);}
 function downloadText(content,name,type){var blob=new Blob([content],{type:type||'text/plain'});var link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=name;link.click();setTimeout(function(){URL.revokeObjectURL(link.href);},1000);}
-async function downloadAnalysisBundle(){var button=byId('download-analysis-bundle');button.disabled=true;setMessage('analysis-message','Preparing study questions and responses…','');try{var results=await Promise.all([api('/admin/study-config'),loadAllNdjson('/admin/export')]);var config=results[0].result;var sessions=results[1];if(!sessions.length)throw new Error('No participant responses yet. Complete a study session before downloading an analysis file.');var bundle={format:'ema_forge_analysis_bundle',version:1,config:config,sessions:sessions};downloadText(JSON.stringify(bundle),'ema-forge-analysis.json','application/json');setMessage('analysis-message','Analysis file downloaded ('+sessions.length+' sessions). Open detailed Analyze and select this file.','good');}catch(error){setMessage('analysis-message',error.message,'bad');}finally{button.disabled=false;}}
-async function downloadRecords(kind){var path=kind==='dispatch'?'/admin/dispatch-export':'/admin/export';var name=kind==='dispatch'?'ema-forge-dispatch.ndjson':'ema-forge-responses.ndjson';try{var records=await loadAllNdjson(path);downloadText(records.map(function(record){return JSON.stringify(record);}).join('\\n')+(records.length?'\\n':''),name,'application/x-ndjson');}catch(error){setMessage('analysis-message',error.message,'bad');}}
+async function downloadAnalysisBundle() {
+  var button = byId('download-analysis-bundle');
+  button.disabled = true;
+  setMessage('analysis-message', 'Preparing protocol versions and responses…', '');
+  try {
+    var results = await Promise.all([api('/admin/study-config'), loadAllNdjson('/admin/export')]);
+    var config = results[0].result;
+    var sessions = results[1];
+    if (!sessions.length) throw new Error('No participant responses yet.');
+    var versions = [...new Set(sessions.map(function(record) { return sessionFromEnvelope(record).protocolVersion; }).filter(function(version) { return /^[a-f0-9]{64}$/.test(version); }))];
+    var configs = {};
+    for (var version of versions) {
+      if (version === config.protocol_version) configs[version] = config;
+      else {
+        try { configs[version] = (await api('/admin/study-config?version='+encodeURIComponent(version))).result; }
+        catch (error) { if (error.status !== 404) throw error; }
+      }
+    }
+    var bundle = {format: 'ema_forge_analysis_bundle', version: 2, config: config, configs: configs, sessions: sessions};
+    downloadText(JSON.stringify(bundle), 'ema-forge-analysis.json', 'application/json');
+    setMessage('analysis-message', 'Analysis file downloaded ('+sessions.length+' sessions).', 'good');
+  } catch (error) { setMessage('analysis-message', error.message, 'bad'); }
+  finally { button.disabled = false; }
+}
+
+async function downloadRecords(kind) {
+  var path = kind === 'dispatch' ? '/admin/dispatch-export' : '/admin/export';
+  var name = kind === 'dispatch' ? 'ema-forge-dispatch.ndjson' : 'ema-forge-responses.ndjson';
+  try {
+    var chunks = [];
+    await loadAllNdjson(path, function(raw) { chunks.push(raw); });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob(chunks, {type: 'application/x-ndjson'}));
+    link.download = name;
+    link.click();
+    setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+  } catch (error) { setMessage('analysis-message', error.message, 'bad'); }
+}
+
+async function createPilot() {
+  var button = byId('pilot-create');
+  button.disabled = true;
+  try {
+    var invite = (await api('/admin/pilot', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: byId('pilot-session').value})
+    })).result;
+    byId('pilot-open').href = invite.short_url;
+    byId('pilot-copy').onclick = function() { copy(invite.short_url, byId('pilot-copy')); };
+    byId('pilot-result').classList.remove('hidden');
+    setMessage('pilot-message', 'Complete a check-in, then refresh status to confirm receipt.', 'good');
+  } catch (error) { setMessage('pilot-message', error.message, 'bad'); }
+  finally { button.disabled = false; }
+}
 async function installStudy(){var file=byId('study-file').files[0];if(!file){setMessage('install-message','Choose the prepared study HTML file.','bad');return;}setMessage('install-message','Installing study…','');try{var result=(await api('/admin/install',{method:'POST',headers:{'Content-Type':'text/html'},body:await file.text()})).result;setMessage('install-message','Installed. Participant link: '+result.participant_url,'good');await refreshOverview();showView('overview');}catch(error){setMessage('install-message',error.message,'bad');}}
 
 document.querySelectorAll('.nav-btn').forEach(function(button){button.onclick=function(){showView(button.dataset.view);};});
@@ -219,7 +351,8 @@ document.querySelectorAll('.copy-link').forEach(function(button){button.onclick=
 document.querySelectorAll('[data-download]').forEach(function(button){button.onclick=function(){downloadRecords(button.dataset.download);};});
 byId('unlock').onclick=unlock;tokenEl.onkeydown=function(event){if(event.key==='Enter')unlock();};byId('lock-admin').onclick=lock;
 byId('add-participant').onclick=addParticipant;byId('save-roster').onclick=saveRoster;byId('roster-file').onchange=function(){if(this.files[0])importRoster(this.files[0]);};byId('download-roster-template').onclick=downloadRosterTemplate;
-byId('create-invite').onclick=createInvite;
+byId('create-invite').onclick=createInvite;byId('invite-session').onchange=updateInviteControls;byId('invite-pid').onchange=updateInviteControls;
+byId('add-manual-ids').onclick=addManualIds;byId('pilot-create').onclick=createPilot;
 byId('save-messaging').onclick=saveMessaging;byId('send-test').onclick=sendTest;byId('load-analysis').onclick=loadAnalysis;byId('download-analysis-bundle').onclick=downloadAnalysisBundle;byId('download-responses').onclick=function(){downloadRecords('responses');};byId('download-dispatch').onclick=function(){downloadRecords('dispatch');};byId('install-study').onclick=installStudy;
 byId('save-twilio').onclick=saveTwilioCredentials;byId('remove-twilio').onclick=removeTwilioCredentials;
 byId('new-timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'America/New_York';byId('new-start').value=new Date().toISOString().slice(0,10);

@@ -283,6 +283,10 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div class="divider"></div>
     <div>
       <span class="section-title">Data Filters</span>
+      <div class="field-group" style="margin-bottom:12px;" hidden>
+        <label for="filter-protocol" class="field-label">Protocol version</label>
+        <select id="filter-protocol"></select>
+      </div>
       <div class="field-group" style="margin-bottom:12px;">
         <label class="field-label">Date Range</label>
         <select id="filter-date">
@@ -527,12 +531,12 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 </div>
 
 <!-- Scripts -->
-<script src="js/dashboard/parser.js?v=20260926a"></script>
+<script src="js/dashboard/parser.js?v=20261120"></script>
 <script src="templates/runtime-utils.js"></script>
 <script src="js/dashboard/simulator.js?v=20260923b"></script>
 <script src="js/dashboard/content-stats.js?v=20260925f"></script>
 <script src="js/dashboard/content-view.js?v=20260925f"></script>
-<script src="js/dashboard/dashboard.js?v=20260926a"></script>
+<script src="js/dashboard/dashboard.js?v=20261120"></script>
 <script>
   // Handle the toggle button click
   const themeBtn = document.getElementById('theme-toggle');

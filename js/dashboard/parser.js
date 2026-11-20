@@ -10,6 +10,8 @@
 const DataParser = {
   state: {
     studyConfig: null,
+    protocolConfigs: new Map(),
+    protocolGroups: [],
     allSessions: [],
     filteredSessions: [],
     participants: new Set(),
@@ -21,6 +23,8 @@ const DataParser = {
 
   resetState() {
     this.state.studyConfig = null;
+    this.state.protocolConfigs = new Map();
+    this.state.protocolGroups = [];
     this.state.allSessions = [];
     this.state.filteredSessions = [];
     this.state.participants = new Set();
@@ -57,6 +61,7 @@ const DataParser = {
     await Promise.all(files.map(file => this._ingestFile(file)));
     if (!this.state.allSessions.length) throw new Error("No participant sessions were found in these files.");
     this._deduplicateSessions();
+    this.groupProtocols();
     this.state.allSessions.forEach(session => this.state.participants.add(session.participantId));
     this.calculateMetrics({ excludeRapid: false, day: "all", participant: "all" });
     if (!this.state.studyConfig && this.state.allSessions.length) {
@@ -109,13 +114,20 @@ const DataParser = {
 
   _routeJson(json, raw, filename) {
     if (json.format === 'ema_forge_analysis_bundle') {
-      if (json.version !== 1 || !json.config?.schema_version || !json.config?.ema?.scheduling || !Array.isArray(json.sessions)) {
+      if (![1, 2].includes(json.version) || !json.config?.schema_version || !json.config?.ema?.scheduling || !Array.isArray(json.sessions)) {
         throw new Error('Invalid EMA Forge analysis bundle.');
       }
       this.state.studyConfig = json.config;
+      this.registerProtocol(json.config);
+      if (json.version === 2) {
+        Object.entries(json.configs || {}).forEach(([version, config]) => {
+          if (version === config?.protocol_version) this.registerProtocol(config);
+        });
+      }
       json.sessions.forEach((session, index) => this._routeJson(session, '', `${filename} session ${index + 1}`));
     } else if (json.schema_version && json.ema?.scheduling) {
       this.state.studyConfig = json;
+      this.registerProtocol(json);
     } else if (json.session_data && json.submission_id) {
       const session = {
         ...json.session_data,
@@ -133,6 +145,28 @@ const DataParser = {
     } else {
       this.state.warnings.push(`${filename} is not a recognized EMA Forge config or session.`);
     }
+  },
+
+  registerProtocol(config) {
+    const version = config?.protocol_version;
+    if (/^[a-f0-9]{64}$/.test(version) && config.ema?.scheduling) {
+      this.state.protocolConfigs.set(version, config);
+    }
+  },
+
+  groupProtocols() {
+    const counts = new Map();
+    this.state.allSessions.forEach(session => {
+      const version = /^[a-f0-9]{64}$/.test(session.protocolVersion) ? session.protocolVersion : "legacy";
+      session.protocolGroup = version;
+      counts.set(version, (counts.get(version) || 0) + 1);
+    });
+    if (counts.size === 1 && counts.has("legacy") && !this.state.protocolConfigs.size) return;
+    const preferred = this.state.studyConfig?.protocol_version;
+    this.state.protocolGroups = Array.from(counts, ([version, count]) => ({ version, count }));
+    this.state.protocolGroups.sort((a, b) => Number(b.version === preferred) - Number(a.version === preferred));
+    const unknownCount = this.state.protocolGroups.filter(group => !this.state.protocolConfigs.has(group.version)).length;
+    if (unknownCount) this.state.warnings.push("Some responses have no matching protocol configuration. Their item summaries are unavailable.");
   },
 
   _ingestNdjson(raw, filename) {
@@ -291,6 +325,11 @@ const DataParser = {
 
   calculateMetrics(filters = {}) {
     let sessions = this.state.allSessions;
+    if (this.state.protocolGroups.length) {
+      const version = filters.protocol || this.state.protocolGroups[0].version;
+      this.state.studyConfig = this.state.protocolConfigs.get(version) || null;
+      sessions = sessions.filter(session => session.protocolGroup === version);
+    }
     if (filters.day && filters.day !== "all") sessions = sessions.filter(session => session.day === Number(filters.day));
     if (filters.participant && filters.participant !== "all") sessions = sessions.filter(session => session.participantId === filters.participant);
 

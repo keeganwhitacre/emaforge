@@ -144,3 +144,32 @@ test("Cloudflare NDJSON exports unwrap complete session records", () => {
   assert.equal(session.receiverReceipt.storage_state, "stored");
   assert.match(DataParser.state.warnings[0], /line 2/);
 });
+
+test("versioned analysis keeps amended, original, and unknown-provenance responses separate", () => {
+  DataParser.resetState();
+  const version = "1".repeat(64);
+  const amended = "2".repeat(64);
+  const config = (protocol_version, text) => ({
+    protocol_version, schema_version: "2.0.0", study: { name: "Study" },
+    ema: { scheduling: { windows: [] }, questions: [{ id: "q1", text }] }
+  });
+  const original = config(version, "Original item");
+  const current = config(amended, "Reworded item");
+  const record = (sessionId, protocolVersion) => ({
+    participantId: "P001", sessionId, day: 1, status: "complete", data: [], protocolVersion
+  });
+  DataParser._routeJson({
+    format: "ema_forge_analysis_bundle", version: 2, config: current,
+    configs: { [version]: original, [amended]: current },
+    sessions: [record("old", version), record("new", amended), record("legacy")]
+  }, "", "analysis.json");
+  DataParser.groupProtocols();
+  DataParser.calculateMetrics({});
+  assert.deepEqual(DataParser.state.filteredSessions.map(session => session.sessionId), ["new"]);
+  DataParser.calculateMetrics({ protocol: version });
+  assert.deepEqual(DataParser.state.filteredSessions.map(session => session.sessionId), ["old"]);
+  assert.equal(DataParser.state.studyConfig.ema.questions[0].text, "Original item");
+  DataParser.calculateMetrics({ protocol: "legacy" });
+  assert.equal(DataParser.state.studyConfig, null);
+  assert.deepEqual(DataParser.state.filteredSessions.map(session => session.sessionId), ["legacy"]);
+});

@@ -630,3 +630,139 @@ test("connection checks report clearly and never count as participant responses"
   const exported = await worker.fetch(adminRequest("https://study.example/admin/export"), environment);
   assert.equal((await exported.text()).trim(), "");
 });
+
+test("legacy upload retry metadata can change after a lost receipt without changing stored data", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const record = participantPayload();
+  const submit = session_data => worker.fetch(new Request("https://study.example/submit", {
+    method: "POST", headers: { Origin: "https://study.example" },
+    body: JSON.stringify({ ...record, session_data })
+  }), environment);
+
+  const first = await (await submit({ ...record.session_data, submission: { attempts: 1 } })).json();
+  const retry = await (await submit({ ...record.session_data, submission: { attempts: 2 } })).json();
+  assert.equal(retry.duplicate, true);
+  assert.equal(retry.received_at, first.received_at);
+  assert.equal((await (await submit(record.session_data)).json()).duplicate, true);
+  assert.equal((await submit({ ...record.session_data, data: [{ value: 8 }] })).status, 409);
+});
+
+test("manual onboarding links, scheduling preferences, and pilots stay on their intended data paths", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  const environment = env(bucket);
+  const origin = "https://study.example";
+  const admin = (path, method = "GET", payload) => worker.fetch(adminRequest(origin + path, {
+    method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+  }), environment);
+  const install = config => worker.fetch(adminRequest(origin + "/admin/install", {
+    method: "POST",
+    body: '<meta name="generator" content="EMA Forge"><script>window.__CONFIG__ = '+JSON.stringify(config)+';</script>'
+  }), environment);
+  const submit = record => worker.fetch(new Request(origin + "/submit", {
+    method: "POST", headers: { Origin: origin }, body: JSON.stringify(record)
+  }), environment);
+
+  const config = {
+    study: { id: "study-stable-id", name: "Original name" },
+    onboarding: { enabled: true },
+    ema: { scheduling: { study_days: 7, windows: [{ id: "w1", start: "09:00", end: "11:00" }] } }
+  };
+  assert.equal((await install(config)).status, 200);
+  const original = await (await admin("/admin/study-config")).json();
+  assert.equal(original.protocol_version.length, 64);
+  assert.match(await (await worker.fetch(new Request(origin), environment)).text(), new RegExp(original.protocol_version));
+  assert.equal((await install({ ...config, study: { ...config.study, name: "Renamed" } })).status, 200);
+  const current = await (await admin("/admin/study-config")).json();
+  assert.notEqual(current.protocol_version, original.protocol_version);
+  assert.equal((await (await admin("/admin/study-config?version=" + original.protocol_version)).json()).study.name, "Original name");
+  assert.equal((await install({ ...config, study: { id: "different-id", name: "Renamed" } })).status, 409);
+
+  const roster = { participants: [{ participant_id: "P001", timezone: "Etc/UTC", start_date: "2026-01-05" }] };
+  assert.equal((await admin("/admin/roster", "PUT", roster)).status, 200);
+  const invite = await (await admin("/admin/invite-links", "POST", { participant_id: "P001", session_id: "onboarding" })).json();
+  const setupDestination = new URL((await worker.fetch(new Request(invite.short_url), environment)).headers.get("Location"));
+  assert.equal(setupDestination.searchParams.get("session"), "onboarding");
+  assert.equal(setupDestination.searchParams.get("day"), null);
+  assert.equal(setupDestination.searchParams.get("t"), null);
+
+  const preferences = { days: ["Mon"], windows: { w1: { start: "09:15", end: "10:00" } } };
+  const record = participantPayload();
+  const onboarding = {
+    ...record, day: null, window_id: "onboarding",
+    session_data: { ...record.session_data, day: null, protocolVersion: original.protocol_version, schedulePreferences: preferences }
+  };
+  assert.equal((await submit(onboarding)).status, 200);
+  assert.deepEqual((await (await admin("/admin/preferences", "POST", { participant_id: "P001" })).json()).preferences, preferences);
+
+  const pilot = await (await admin("/admin/pilot", "POST", { session_id: "w1" })).json();
+  const pilotDestination = new URL((await worker.fetch(new Request(pilot.short_url), environment)).headers.get("Location"));
+  assert.equal(pilotDestination.searchParams.get("pilot"), "1");
+  const pilotRecord = {
+    ...record, submission_id: "ses_pilot1234", participant_id: pilot.participant_id, window_id: "w1",
+    session_data: { ...record.session_data, sessionId: "ses_pilot1234", participantId: pilot.participant_id, protocolVersion: current.protocol_version }
+  };
+  assert.equal((await submit(pilotRecord)).status, 200);
+  const status = await (await admin("/admin/status")).json();
+  assert.equal(status.pilot_count, 1);
+  assert.equal(status.response_count, 1);
+  const exported = (await (await admin("/admin/export")).text()).trim().split("\n").map(JSON.parse);
+  assert.deepEqual(exported.map(entry => entry.participant_id), ["P001"]);
+  assert.equal(exported[0].session_data.protocolVersion, original.protocol_version);
+});
+
+test("free-tier exports stream across multiple cursor pages without losing records", async () => {
+  const worker = await workerPromise;
+  const bucket = new MemoryBucket();
+  for (let id = 0; id < 1101; id++) {
+    await bucket.put("sessions/" + String(id).padStart(4, "0") + ".json", JSON.stringify({ id }));
+  }
+  const records = [];
+  let cursor = "";
+  do {
+    const page = await worker.fetch(adminRequest("https://study.example/admin/export" + (cursor ? "?cursor=" + cursor : "")), env(bucket));
+    const lines = (await page.text()).trim().split("\n").map(JSON.parse);
+    assert.ok(lines.length <= 100);
+    records.push(...lines);
+    cursor = page.headers.get("X-EMA-Next-Cursor");
+  } while (cursor);
+  assert.deepEqual(records.map(record => record.id), Array.from({ length: 1101 }, (_, index) => index));
+});
+
+test("scheduler dispatches at eligible ticks and audits unsendable or missed windows", async () => {
+  const module = await modulePromise;
+  const bucket = new MemoryBucket();
+  let sends = 0;
+  const environment = {
+    ...env(bucket), TWILIO_ACCOUNT_SID: "AC"+"1".repeat(32), TWILIO_AUTH_TOKEN: "a".repeat(32),
+    TWILIO_FROM_NUMBER: "+15557654321",
+    __TWILIO_FETCH: async () => {
+      sends++;
+      return Response.json({ sid: "SM1234", status: "queued" }, { status: 201 });
+    }
+  };
+  const window = (id, start, end) => ({ id, start, end });
+  const config = { study: { name: "Tick study" }, ema: { scheduling: {
+    study_days: 1, windows: [window("untimed", "08:02", "08:02"), window("valid", "08:03", "08:07"), window("missed", "07:30", "07:45")]
+  } } };
+  await bucket.put("study/current-config.json", JSON.stringify(config));
+  await bucket.put("admin/host.json", JSON.stringify({ origin: "https://study.example" }));
+  await bucket.put("admin/roster.json", JSON.stringify({ participants: [
+    { participant_id: "P001", phone: "+15551234567", timezone: "Etc/UTC", start_date: "2026-01-05", status: "active" }
+  ] }));
+  const enabling = await module.default.fetch(adminRequest("https://study.example/admin/messaging", {
+    method: "PUT", body: JSON.stringify({ enabled: true, message_template: "{link}" })
+  }), environment);
+  assert.equal(enabling.status, 400);
+  assert.match((await enabling.json()).error, /no five-minute dispatch time/);
+  await bucket.put("admin/messaging.json", JSON.stringify({ enabled: true }));
+  await module.dispatchDueMessages(environment, new Date("2026-01-05T08:05:00Z"));
+  await module.dispatchDueMessages(environment, new Date("2026-01-05T08:10:00Z"));
+  assert.equal(sends, 1);
+  const dispatch = async id => JSON.parse(await (await bucket.get("dispatch/P001/0001/" + id + ".json")).text());
+  assert.equal((await dispatch("valid")).scheduled_local_minute, 485);
+  assert.equal((await dispatch("untimed")).reason, "no_dispatch_tick");
+  assert.equal((await dispatch("missed")).reason, "window_elapsed");
+});

@@ -51,9 +51,22 @@
 const isPreview = window.__PREVIEW_MODE__ === true;
 
 function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  const previous = document.activeElement?.closest('.screen');
+  document.querySelectorAll('.screen').forEach(screen => {
+    const active = screen.id === id;
+    screen.classList.toggle('active', active);
+    screen.inert = !active;
+    if (active) screen.removeAttribute('aria-hidden');
+    else screen.setAttribute('aria-hidden', 'true');
+  });
+  if (previous && previous.id !== id) {
+    const screen = document.getElementById(id);
+    const heading = screen?.querySelector('h1, h2, h3') || screen;
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+  }
 }
 
 function evalCond(cond, responses) {
@@ -426,7 +439,6 @@ function collectDeviceMetadata() {
   document.getElementById('study-title').textContent = config.study.name || 'Study';
   document.getElementById('task-subtitle').textContent = config.study.institution || '';
 
-  // {{EXPIRY_CHECK}}
   // {{PREVIEW_SESSION_FORCE}}
 
   const pidInput = document.getElementById('pid-input');
@@ -437,7 +449,15 @@ function collectDeviceMetadata() {
   const urlPid = (params.get('id') || '').trim();
   const urlDay = params.get('day') || '';
   const urlSession = sessionId;
+  if (params.get('pilot') === '1' && urlPid.startsWith('forge-pilot-')) {
+    const banner = document.createElement('p');
+    banner.className = 'pilot-banner';
+    banner.textContent = 'Pilot session · Use sample answers only';
+    document.body.prepend(banner);
+  }
   const forceOverride = params.get('force') === '1';
+  const pendingSubmission = SubmissionManager.load(urlPid, urlDay, urlSession);
+  // {{EXPIRY_CHECK}}
 
   if (urlPid) {
     pidInput.value = urlPid;
@@ -481,6 +501,7 @@ function collectDeviceMetadata() {
   // ---------------------------------------------------------------
   let sessionData = {
     schemaVersion: config.schema_version || '',
+    protocolVersion: config.protocol_version || null,
     studyName: config.study?.name || '',
     sessionId: "ses_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
     participantId: urlPid,
@@ -499,7 +520,6 @@ function collectDeviceMetadata() {
   const activeResponseWindowPolicy = typeof responseWindowPolicy !== 'undefined'
     ? responseWindowPolicy
     : { enforced: false, sentAtMs: null, expiresAtMs: null, graceUntilMs: null };
-  const pendingSubmission = SubmissionManager.load(urlPid, urlDay, urlSession);
 
   const cbParam = params.get('cb');
   const dynamicWindows = config.ema?.scheduling?.windows || [];
@@ -510,7 +530,9 @@ function collectDeviceMetadata() {
   // ---------------------------------------------------------------
   let runtimePhasePlan = [];
 
-  if (sessionId === 'onboarding') {
+  if (pendingSubmission?.sessionId) {
+    runtimePhasePlan = pendingSubmission.phasePlan || [];
+  } else if (sessionId === 'onboarding') {
     sessionData.type = "onboarding";
     document.getElementById('task-subtitle').textContent = "Study Setup";
   } else {
@@ -572,7 +594,8 @@ function collectDeviceMetadata() {
       // Validate that the saved phase list is still consistent with the current
       // config. If phases array differs (config was re-exported with different
       // structure), we refuse to resume — start over is safer.
-      const sameShape = JSON.stringify(saved.phases) === JSON.stringify(sessionData.phases);
+      const sameShape = JSON.stringify(saved.phases) === JSON.stringify(sessionData.phases) &&
+        (saved.protocolVersion || null) === sessionData.protocolVersion;
       if (sameShape && typeof saved.currentPhase === 'number' && saved.currentPhase < saved.phases.length) {
         resumeOffer = saved;
       } else {
@@ -858,13 +881,14 @@ function collectDeviceMetadata() {
       statusText.style.display = "block";
       statusText.style.color = "var(--fg-muted)";
 
-      // Prepare payload
+      // Attempt counters are local transport metadata. Every retry sends the same record.
+      const { submission, ...responseData } = sessionData;
       const payload = {
         submission_id: sessionData.sessionId,
         participant_id: sessionData.participantId,
         day: sessionData.day,
         window_id: urlSession,
-        session_data: sessionData
+        session_data: responseData
       };
 
       sessionData.submission = {
