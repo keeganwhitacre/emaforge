@@ -21,3 +21,90 @@
   --surface-shadow: 0 2px 4px #26334908, 0 10px 26px #2633490c;
   --surface-shadow-raised: 0 6px 12px #26334910, 0 22px 42px #26334919;
 }
+
+:root {
+  --forge-header-height: 62px;
+  --forge-inset: clamp(10px, 1.25vw, 18px);
+  --forge-ink: #f0efeb;
+  --forge-mark-ink: #d16f64;
+  --forge-mark-bg: rgba(209, 111, 100, .13);
+}
+
+[data-theme="light"] {
+  --forge-ink: #1f2328;
+  --forge-mark-ink: #a63f35;
+  --forge-mark-bg: rgba(166, 63, 53, .11);
+}
+
+.forge-header {
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--forge-header-height);
+  padding: 0 14px;
+  gap: 14px;
+  color: var(--forge-ink);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+  font: 14px/1.5 "TX-02", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  z-index: 10;
+}
+
+.forge-header-inset { margin: var(--forge-inset) var(--forge-inset) 0; }
+.forge-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.forge-logo {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 10px;
+  background: var(--forge-mark-bg);
+}
+.forge-logo::before {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: var(--forge-mark-ink);
+  mask: url("../assets/forge-mark.svg") center / contain no-repeat;
+}
+.forge-back, .forge-header-icon, .forge-header-link {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--surface-line);
+  border-radius: var(--pill-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.forge-header-link { padding-inline: 11px; font-size: 12px; font-weight: 600; }
+.forge-header-icon svg { width: 14px; height: 14px; }
+.forge-header :is(.forge-back, .forge-header-icon, .forge-header-link):hover { background: var(--surface-muted); }
+.forge-header :is(a, button):focus-visible { outline: 2px solid var(--forge-mark-ink); outline-offset: 2px; }
+.forge-header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+
+@media (max-width: 950px) {
+  .forge-header { gap: 10px; }
+}

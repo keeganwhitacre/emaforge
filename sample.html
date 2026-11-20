@@ -6,13 +6,13 @@
   <title>Sample check-in · EMA Forge</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script src="js/public-theme.js?v=20261120"></script>
-  <link rel="stylesheet" href="css/surfaces.css?v=20261120">
+  <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
   <style>
     :root { color-scheme: dark; --ink: #f0efeb; --muted: #bcc0bd; --accent: #df8e84; }
     [data-theme="light"] { color-scheme: light; --ink: #242930; --muted: #4a5562; --accent: #953b32; }
     body { margin: 0; background: var(--workspace-bg); color: var(--ink); font: 16px system-ui, sans-serif; }
     main { max-width: 500px; margin: 0 auto; padding: 18px; }
-    .sample-brand { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: var(--pill-radius); background: var(--surface-bg); box-shadow: var(--surface-shadow); text-decoration: none; font-weight: 650; }
+
     h1 { font-size: clamp(1.65rem, 6vw, 2.1rem); letter-spacing: -.035em; margin: 18px 0 6px; }
     p { color: var(--muted); line-height: 1.5; margin: 6px 0 14px; }
     a { color: var(--accent); text-underline-offset: .2em; }
@@ -25,11 +25,14 @@
   </style>
 </head>
 <body>
+<header class="forge-header forge-header-inset">
+    <a href="index.html" class="forge-back" aria-label="Back to home" title="Back to home"><svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" aria-hidden="true"><path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/></svg></a>
+    <span class="forge-brand"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</span>
+  </header>
 <main>
-  <a class="sample-brand" href="index.html"><img src="favicon.svg" alt="" width="22" height="22"> EMA Forge</a>
   <h1>Try a sample check-in</h1>
-  <p>See what a participant sees. The camera example is simulated and your answers stay in this demo.</p>
-  <div class="actions" aria-label="Sample sessions">
+  <p>See what a participant sees. Try a mood rating, a follow-up that depends on your answer, and an optional reflection. The heart-rate demo uses simulated data. Your answers stay in this demo.</p>
+  <div class="actions" role="group" aria-label="Sample sessions">
     <button type="button" id="sample-survey" aria-pressed="true">Survey</button>
     <button type="button" id="sample-physiology" aria-pressed="false">Survey + heart rate</button>
     <a href="builder.html">Build a study</a>
@@ -38,7 +41,7 @@
   <iframe id="sample-frame" title="Sample participant check-in" sandbox="allow-scripts" hidden></iframe>
 </main>
 <script src="js/state.js?v=20260924b"></script>
-<script src="js/export.js?v=20261120b"></script>
-<script src="js/sample.js?v=20261120"></script>
+<script src="js/export.js?v=20261120e"></script>
+<script src="js/sample.js?v=20261120e"></script>
 </body>
 </html>

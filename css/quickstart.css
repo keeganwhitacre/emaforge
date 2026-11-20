@@ -27,23 +27,6 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 h1, h2, h3, p { margin: 0; }
 p + p { margin-top: 12px; }
 
-.topbar {
-  width: min(1100px, calc(100% - 32px));
-  min-height: 56px;
-  margin: 16px auto 0;
-  padding: 9px 19px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  border: 1px solid var(--surface-line);
-  border-radius: var(--pill-radius);
-  background: var(--surface-bg);
-  box-shadow: var(--surface-shadow);
-  font-size: 14px;
-}
-
-.brand { display: flex; align-items: center; gap: 9px; font-weight: 720; text-decoration: none; color: inherit; }
 main { max-width: 830px; margin: 0 auto; padding: clamp(32px, 7vw, 76px) clamp(18px, 5vw, 40px) 70px; }
 h1 { font-size: clamp(2.15rem, 5vw, 3.2rem); line-height: 1.13; letter-spacing: -0.045em; }
 .intro > p { max-width: 58ch; margin-top: 14px; color: var(--muted); }

@@ -38,8 +38,8 @@ export const adminHtml = `<!doctype html>
 body, .lock-screen { background: var(--canvas); font-size: 13px; line-height: 1.5; }
 .shell { --inset: clamp(10px, 1.25vw, 18px); }
 .topbar, nav, .lock-box { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
-.topbar { top: var(--inset); height: auto; min-height: 58px; margin: var(--inset); padding: 8px 14px; gap: 14px; }
-.brand { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+.topbar { top: var(--inset); height: 62px; margin: var(--inset); padding: 0 14px; gap: 14px; }
+.brand { gap: 8px; font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
 .mark { width: 29px; height: 29px; border: 0; border-radius: 10px; background: var(--accent-soft); }
 .mark svg { width: 15px; height: 15px; }
 .study-name { font-family: inherit; font-size: 15px; font-weight: 700; padding-left: 14px; }
@@ -95,11 +95,15 @@ th, .status-badge, .destination .tag, .kpi-label { font-size: 11px; }
 .admin-analysis-raw summary { padding: 10px 0; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
 .admin-analysis-raw .actions { margin-top: 4px; }
 @media (max-width: 980px) {
+  .topbar { gap: 10px; }
   .layout { grid-template-columns: minmax(0, 1fr); min-height: auto; }
   nav { padding: 8px; }
   .nav-btn { flex: 0 0 auto; }
 }
 @media (max-width: 620px) {
+  .topbar .live-pill { min-width: 0; white-space: nowrap; }
+  .topbar .live-dot { flex-shrink: 0; }
+  #live-label { overflow: hidden; text-overflow: ellipsis; }
   .inline-fields { grid-template-columns: minmax(0, 1fr); }
   main { padding: 16px 12px; }
 }

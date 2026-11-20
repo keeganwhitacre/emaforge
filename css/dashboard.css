@@ -1,24 +1,20 @@
 /* Analyze workspace */
 html, body { background: var(--workspace-bg); }
 #app {
-  --workspace-gap: clamp(10px, 1.25vw, 18px);
-  grid-template-rows: 62px minmax(0, 1fr);
+  grid-template-rows: var(--forge-header-height) minmax(0, 1fr);
   grid-template-columns: 208px minmax(0, 1fr);
   height: 100dvh;
-  gap: var(--workspace-gap);
-  padding: var(--workspace-gap);
+  gap: var(--forge-inset);
+  padding: var(--forge-inset);
 }
-#topbar, #sidebar-panel, #dashboard-panel {
+#sidebar-panel, #dashboard-panel {
   border: 1px solid var(--surface-line);
   border-radius: var(--surface-radius);
   background: var(--surface-bg);
   box-shadow: var(--surface-shadow);
 }
-#topbar { height: auto; padding: 0 14px; gap: 14px; }
-.topbar-logo { width: 29px; height: 29px; border: 0; background: var(--accent-dim); border-radius: 10px; }
-.topbar-back { width: 34px; height: 34px; border-radius: var(--pill-radius); }
-#topbar .topbar-brand { padding-right: 12px; }
-.analyze-project { border-left: 1px solid var(--surface-line); padding-left: 14px; }
+
+.analyze-project { margin-left: 12px; border-left: 1px solid var(--surface-line); padding-left: 14px; }
 .analyze-project { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 .analyze-project strong { font-size: 15px; }
 .analyze-project span { color: var(--fg-3); font-size: 11px; }

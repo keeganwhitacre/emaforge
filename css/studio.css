@@ -68,16 +68,6 @@ html, body { height: 100%; width: 100%; font-family: var(--font); background: va
 /* Shell — 60/40 config/preview split */
 #app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 45fr 55fr; height: 100vh; overflow: hidden; }
  
-/* Topbar */
-#topbar { grid-column: 1 / -1; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--bg-1); gap: 16px; z-index: 10; height: 52px; }
-.topbar-brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px; letter-spacing: -0.01em; color: var(--fg); flex-shrink: 0; }
-.topbar-logo { width: 24px; height: 24px; color: var(--accent); border: 1px solid var(--border); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
-.topbar-logo svg { width: 15px; height: 15px; }
-/* Back arrow for index navigation — hidden on builder by default, shown when .has-back is on #topbar */
-.topbar-back { display: none; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius); background: transparent; border: 1px solid var(--border); color: var(--fg-3); cursor: pointer; transition: all var(--transition); flex-shrink: 0; text-decoration: none; }
-.topbar-back:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
-#topbar.has-back .topbar-back { display: flex; }
-.topbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 .topbar-tabs { display: flex; gap: 2px; flex: 1; }
 .tab-btn { padding: 5px 13px; border: none; border-bottom: 1px solid transparent; background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 12px; font-weight: 500; border-radius: 0; cursor: pointer; transition: color var(--transition), border-color var(--transition); letter-spacing: 0.02em; }
 .tab-btn:hover { color: var(--fg-2); }
@@ -266,11 +256,15 @@ textarea { resize: vertical; min-height: 60px; }
 /* Trigger the blocker on screens smaller than a typical tablet landscape */
 @media (max-width: 850px) {
   #mobile-blocker {
+    inset: calc(var(--forge-header-height) + 2 * var(--forge-inset)) 0 0;
+    width: auto;
+    height: auto;
     display: flex;
+    background: var(--workspace-bg);
   }
-  /* Optionally hide the main app content so it doesn't try to render behind the blocker */
-  .app-container {
-    display: none !important; 
+  #app > :not(.forge-header),
+  #app > .forge-header :is(.topbar-project, .analyze-project, .topbar-actions) {
+    display: none;
   }
 }
 
