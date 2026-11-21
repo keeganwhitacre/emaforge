@@ -158,7 +158,7 @@ function renderMeasureComposer() {
   }
   const window = selectedMeasureWindow();
   const entries = EMAForgeMeasureFlow.flatten(window);
-  flow.innerHTML = `<div class="measure-flow-heading"><div><strong>${escH(window.label || 'Untitled session')}</strong><span class="measure-flow-session">Participant flow</span></div><span>Expand to edit · drag to reorder</span></div>`;
+  flow.innerHTML = `<div class="measure-flow-heading"><div><strong>${escH(window.label || 'Untitled session')}</strong><span class="measure-flow-session">Participant flow</span></div><span>Expand to edit · use arrows to reorder</span></div>`;
   const list = document.createElement('div');
   list.className = 'measure-flow-list';
   if (!entries.length) list.innerHTML = '<p class="questions-empty">Nothing here yet. Add a question, instruction, or physiology task to begin.</p>';
@@ -1029,6 +1029,7 @@ function addMeasureAt(type, insertionIndex = null) {
   closeMeasurePicker();
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
+    card.classList.add('expanded');
     card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
   }

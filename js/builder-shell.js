@@ -129,10 +129,21 @@ function renderBuilderShell() {
   }
 }
 
+const sectionSelect = document.getElementById("builder-section-select");
+for (const [section, [title]] of Object.entries(builderSections)) {
+  sectionSelect.add(new Option(title, section));
+}
+sectionSelect.addEventListener("change", () => {
+  document.querySelector(`.tab-btn[data-tab="${sectionSelect.value}"]`).click();
+});
+document.getElementById("phone-backup-btn").addEventListener("click", () => {
+  document.getElementById("btn-save-project").click();
+});
 document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener("click", () => {
   const [title, description] = builderSections[button.dataset.tab];
   document.querySelectorAll(".tab-btn").forEach(tab => tab.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
+  sectionSelect.value = button.dataset.tab;
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").scrollTop = 0;
@@ -153,11 +164,15 @@ document.getElementById("builder-preview-btn").addEventListener("click", () => {
   panel.classList.remove("open-mobile");
   panel.classList.add("preview-fullscreen");
   document.body.classList.add("preview-open");
+  for (const sibling of panel.parentElement.children) {
+    if (sibling !== panel) sibling.inert = true;
+  }
   document.getElementById("close-preview-btn").focus();
 });
 document.getElementById("close-preview-btn").addEventListener("click", () => {
   document.getElementById("preview-panel").classList.remove("open-mobile", "preview-fullscreen");
   document.body.classList.remove("preview-open");
+  for (const sibling of document.getElementById("preview-panel").parentElement.children) sibling.inert = false;
   document.getElementById("builder-preview-btn").focus();
 });
 document.addEventListener("keydown", event => {

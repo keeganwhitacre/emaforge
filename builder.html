@@ -11,24 +11,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/studio.css?v=20261120e">
+<link rel="stylesheet" href="css/studio.css?v=20261121">
 <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/builder.css?v=20261120e">
+<link rel="stylesheet" href="css/builder.css?v=20261121">
 </head>
 <body>
-  <div id="mobile-blocker">
-  <div class="blocker-content">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent); margin-bottom: 16px;">
-      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-      <line x1="8" y1="21" x2="16" y2="21"></line>
-      <line x1="12" y1="17" x2="12" y2="21"></line>
-    </svg>
-    <h2>Desktop Recommended</h2>
-    <p>EMA Forge's Builder and Data Dashboard are designed for larger screens. Please visit this page on a desktop or laptop computer to design your study.</p>
-    <a href="sample.html" class="btn" style="margin-top: 20px; text-decoration: none;">Try a sample check-in</a>
-  </div>
-</div>
-
 <dialog id="study-setup" aria-labelledby="study-setup-title">
   <h1 id="study-setup-title" tabindex="-1" autofocus>Start a study</h1>
   <p class="setup-intro">Choose a starting point. You can edit every detail in the Builder.</p>
@@ -88,6 +75,7 @@
         Review &amp; Deploy
       </button>
       <details class="project-menu"><summary aria-label="More project actions" title="More project actions">•••</summary><div class="project-menu-list">
+      <button type="button" class="btn-ghost builder-phone-only" id="phone-backup-btn">Download Backup</button>
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
         Toggle theme
@@ -111,6 +99,10 @@
 
   <aside id="builder-sidebar">
     <div class="sidebar-group-label">Study Builder</div>
+    <label class="builder-section-picker builder-phone-only">
+      <span>Section</span>
+      <select id="builder-section-select"></select>
+    </label>
     <nav class="topbar-tabs" aria-label="Study builder sections">
       <button class="tab-btn active" data-tab="study" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M4 9h16m-9 0v11"/></svg>Overview</button>
       <button class="tab-btn" data-tab="onboarding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m8.5 12 2 2 4.5-4.5"/></svg>Onboarding</button>
@@ -253,7 +245,7 @@
           <label class="field-label">Informed Consent Document</label>
           <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
             
-            <div style="display: flex; gap: 4px; padding: 6px; background: var(--bg-2); border-bottom: 1px solid var(--border);">
+            <div class="consent-formatting" style="display: flex; gap: 4px; padding: 6px; background: var(--bg-2); border-bottom: 1px solid var(--border);">
               <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'H3')">Heading</button>
               <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'P')">Paragraph</button>
               <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
@@ -413,7 +405,8 @@
           <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Create new study host ↗</a>
         </div>
         <details class="deploy-help"><summary>Update an existing Worker’s code</summary><p>Download the single-file Worker update. In Cloudflare, open your existing Worker → <strong>Edit code</strong>, replace its code with the downloaded file, and select <strong>Deploy</strong>. Keep the same <code>STUDY_DATA</code> binding, admin secret, and URL. Then install the prepared study file in its existing Study Admin. Repeat the code update for each Worker using the new feature.</p><button type="button" class="btn btn-secondary" id="download-worker-update-btn">Download Worker update</button><p class="field-hint" id="worker-update-status" role="status"></p></details>
-        <div class="field-hint" id="cloudflare-study-status" style="margin-top: 8px;"></div>
+        <div class="field-hint" id="cloudflare-study-status" role="status" style="margin-top: 8px;"></div>
+        <p class="field-hint builder-phone-only">On a phone, keep the Builder tab open while Cloudflare deploys. Save the prepared HTML in Files or Downloads. When Study Admin asks for the file, choose it from that folder.</p>
         <div class="deploy-note"><strong>Updating this study?</strong> Download the prepared HTML and install it in the same Study Admin. If the update adds Worker features, use <strong>Update an existing Worker’s code</strong> above first. The create-host button starts a separate deployment. EMA Forge never sees your Cloudflare login, admin token, study file, or participant responses.</div>
       </div>
 
@@ -601,7 +594,7 @@
 <script src="js/templates.js?v=20260924e"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20260925g"></script>
+<script src="js/tabs/questions.js?v=20261121"></script>
 <script src="js/tabs/schedule.js?v=20260925a"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
@@ -646,7 +639,7 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20261120"></script>
-<script src="js/setup.js?v=20261120"></script>
+<script src="js/builder-shell.js?v=20261121"></script>
+<script src="js/setup.js?v=20261121"></script>
 </body>
 </html>
