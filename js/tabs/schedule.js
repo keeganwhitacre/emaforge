@@ -85,7 +85,7 @@ function buildWindowCard(w, i) {
     <div class="session-heading">
       <label class="field-group"><span class="field-label">Session name</span>
         <input type="text" class="win-label" value="${escH(w.label)}"></label>
-      <button type="button" class="del-btn" aria-label="Remove ${escH(w.label)}" title="Remove session">✕</button>
+      <button type="button" class="del-btn builder-icon-button" aria-label="Remove ${escH(w.label)}" title="Remove session">✕</button>
     </div>
     <div class="session-time">
       <label class="field-group"><span class="field-label">From</span><input type="time" class="win-start" value="${w.start}"></label>
@@ -114,21 +114,27 @@ function buildWindowCard(w, i) {
   el.addEventListener('focusin', () => {
     if (previewSession !== w.id) {
       previewSession = w.id;
+      rememberBuilderWorkspace();
       renderPreviewTabs();
       renderPreview();
     }
   });
 
   // Delete window
-  el.querySelector('.del-btn').addEventListener('click', () => {
-    const idx = state.ema.scheduling.windows.indexOf(w);
-    if (idx !== -1) state.ema.scheduling.windows.splice(idx, 1);
-    if (previewSession === w.id) previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
-    renderWindows();
-    if (typeof renderGreetings === 'function') renderGreetings();
-    if (typeof renderPreviewTabs === 'function') renderPreviewTabs();
-    if (typeof renderQuestions === 'function') renderQuestions();
-    schedulePreview();
+  el.querySelector('.del-btn').addEventListener('click', event => {
+    const windows = state.ema.scheduling.windows;
+    const index = windows.indexOf(w);
+    const restoreWindow = rememberBuilderPosition(windows, index);
+    const greeting = state.study.greetings?.[w.id];
+    windows.splice(index, 1);
+    renderGreetings();
+    refreshAfterRemoval();
+    offerBuilderUndo('Session removed.', () => {
+      restoreWindow(windows, w);
+      if (greeting !== undefined) state.study.greetings[w.id] = greeting;
+      renderGreetings();
+      refreshAfterRemoval();
+    }, event);
   });
 
   el.querySelector('.edit-session-measures').addEventListener('click', () => {
@@ -324,11 +330,11 @@ function buildConditionRow(step, w) {
   let rulesHtml = rules.map((r, ri) => `
     <div class="task-cond-rule" data-ri="${ri}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
       <label style="font-size:0.75rem;color:var(--fg-muted);flex-shrink:0;">If</label>
-      <select class="cond-qid" style="flex:1;min-width:0;padding:4px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.78rem;outline:none;">
+      <select class="cond-qid" aria-label="Previous measure">
         <option value="">— question —</option>
         ${getQuestionOptions(r.question_id)}
       </select>
-      <select class="cond-op" style="width:50px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font);font-size:0.78rem;outline:none;">
+      <select class="cond-op" aria-label="Comparison">
         <option value="gt"  ${r.operator==='gt'?'selected':''}>&gt;</option>
         <option value="gte" ${r.operator==='gte'?'selected':''}>≥</option>
         <option value="lt"  ${r.operator==='lt'?'selected':''}>&lt;</option>
@@ -336,19 +342,18 @@ function buildConditionRow(step, w) {
         <option value="eq"  ${r.operator==='eq'?'selected':''}>=</option>
         <option value="neq" ${r.operator==='neq'?'selected':''}>≠</option>
       </select>
-      <input type="number" class="cond-val" value="${r.value??''}" placeholder="val"
-        style="width:50px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--fg);font-family:var(--font-mono);font-size:0.78rem;outline:none;">
-      <button class="cond-del-rule" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;">✕</button>
+      <input type="number" class="cond-val" value="${escH(String(r.value ?? ''))}" aria-label="Comparison value" placeholder="Value">
+      <button type="button" class="cond-del-rule builder-icon-button" aria-label="Remove rule ${ri + 1}">✕</button>
     </div>
   `).join('');
 
   condFields.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <select class="cond-logical-op" style="padding:2px 6px;font-size:11px;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:4px;">
+    <div class="task-rule-actions">
+      <select class="cond-logical-op" aria-label="How rules are combined">
         <option value="AND" ${logOp==='AND'?'selected':''}>Match ALL (AND)</option>
         <option value="OR"  ${logOp==='OR'?'selected':''}>Match ANY (OR)</option>
       </select>
-      <button class="cond-add-rule" style="font-size:11px;background:none;border:1px solid var(--border);color:var(--accent);border-radius:4px;cursor:pointer;padding:2px 6px;">+ Rule</button>
+      <button type="button" class="cond-add-rule btn btn-secondary">Add rule</button>
     </div>
     <div class="rules-container">${rulesHtml || '<div style="font-size:11px;color:var(--fg-3);">No rules defined.</div>'}</div>
     <div style="font-size:0.72rem;color:var(--fg-muted);margin-top:4px;">Evaluates against the responses collected earlier in this session.</div>

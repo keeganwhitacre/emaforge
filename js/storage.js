@@ -10,6 +10,7 @@ const StorageManager = {
     STORAGE_KEY: 'ema_studio_project_v1',
     DRAFT_PREFIX: 'ema_forge_draft_v2:',
     ACTIVE_KEY: 'ema_forge_active_draft_v2',
+    WORKSPACE_PREFIX: 'ema_forge_builder_view_v1:',
     _draftId: null,
     hasDraft: false,
     _saveTimer: null,
@@ -128,6 +129,18 @@ const StorageManager = {
         this.saveLocalState();
         this.renderDrafts();
         this.triggerUIRefresh();
+        if (typeof restoreBuilderWorkspace === 'function') restoreBuilderWorkspace();
+    },
+
+    readWorkspace() {
+        try { return JSON.parse(localStorage.getItem(this.WORKSPACE_PREFIX + this._draftId)) || {}; }
+        catch (_) { return {}; }
+    },
+
+    rememberWorkspace(section, session) {
+        if (!this.hasDraft || this._blockedOlderDraft) return;
+        try { localStorage.setItem(this.WORKSPACE_PREFIX + this._draftId, JSON.stringify({ section, session })); }
+        catch (_) { /* The draft can still be used if local preferences cannot be written. */ }
     },
 
     createDraft({ name = '', theme = '', blank = false } = {}) {
@@ -162,15 +175,13 @@ const StorageManager = {
 
         if (cmp > 0) {
             console.warn(`EMA Forge: saved project is schema v${savedVer}, runtime is v${currentVersion}. Refusing to load to avoid data corruption. Export a backup from the newer builder version, or reset this project.`);
-            const status = document.getElementById('save-status');
-            if (status) { status.textContent = 'Incompatible backup'; status.style.color = 'var(--accent-red)'; }
+            this.reportSaveStatus('Incompatible backup', 'error');
             return false;
         }
 
         if (cmp < 0) {
             console.warn(`EMA Forge: older project v${savedVer} uses global question sets. Download a backup before starting a new v${currentVersion} project.`);
-            const status = document.getElementById('save-status');
-            if (status) status.textContent = 'Older draft not loaded — reset to start new';
+            this.reportSaveStatus('Older draft could not be loaded', 'error');
             this._blockedOlderDraft = true;
             return false;
         }
@@ -205,7 +216,17 @@ const StorageManager = {
         return true;
     },
 
+    reportSaveStatus(message, statusType) {
+        const status = document.getElementById('save-status');
+        if (status) {
+            status.dataset.state = statusType;
+            status.textContent = message;
+        }
+    },
+
     debouncedSave() {
+        if (!this.hasDraft || this._blockedOlderDraft) return;
+        this.reportSaveStatus('Saving…', 'pending');
         clearTimeout(this._saveTimer);
         this._saveTimer = setTimeout(() => {
             this._saveTimer = null;
@@ -223,13 +244,11 @@ const StorageManager = {
             localStorage.setItem(this.ACTIVE_KEY, this._draftId);
             const currentOption = document.getElementById('draft-select')?.selectedOptions[0];
             if (currentOption?.value === this._draftId) currentOption.textContent = state.study.name || 'Untitled study';
-            const status = document.getElementById('save-status');
-            if (status) { status.textContent = 'Saved in this browser'; status.style.color = ''; }
+            this.reportSaveStatus('Saved in this browser', 'saved');
             return true;
         } catch (e) {
             console.warn('EMA Forge: localStorage save failed.', e);
-            const status = document.getElementById('save-status');
-            if (status) status.textContent = 'Could not save locally · Download Backup';
+            this.reportSaveStatus('Could not save locally. Download a backup.', 'error');
             return false;
         }
     },
@@ -256,8 +275,6 @@ const StorageManager = {
                 const imported = JSON.parse(e.target.result);
                 if (!this.saveLocalState() && !this._blockedOlderDraft) return;
                 this.replaceDraft(imported, this.newId());
-                const status = document.getElementById('save-status');
-                if (status) status.textContent = 'Project imported';
                 document.getElementById('study-setup')?.close();
             } catch (err) {
                 alert("Error parsing JSON file. Please ensure it is a valid EMA Forge backup.");
@@ -271,6 +288,7 @@ const StorageManager = {
         if (!confirm('Reset this draft? Download a backup first if you need a copy.')) return;
         if (this._blockedOlderDraft) localStorage.removeItem(this.STORAGE_KEY);
         const current = this._draftId;
+        this.rememberWorkspace('study', null);
         this.replaceDraft(JSON.parse(blankStudyDraft), current);
     },
 
@@ -282,8 +300,6 @@ const StorageManager = {
         delete draft.study.id;
         draft.deployment = { hosted_url: '' };
         this.replaceDraft(draft, this.newId());
-        const status = document.getElementById('save-status');
-        if (status) status.textContent = 'Protocol loaded as a new draft';
         document.getElementById('import-modal')?.classList.remove('open');
         return true;
     },
@@ -344,6 +360,14 @@ const StorageManager = {
 
 // Initialize immediately so state is loaded BEFORE the inline script in builder.html triggers renders
 StorageManager.init();
-window.addEventListener('pagehide', () => {
-    if (StorageManager._saveTimer !== null) StorageManager.saveLocalState();
+function flushPendingDraftSave() {
+    if (StorageManager._saveTimer === null) return;
+    clearTimeout(StorageManager._saveTimer);
+    StorageManager._saveTimer = null;
+    StorageManager.saveLocalState();
+}
+
+window.addEventListener('pagehide', flushPendingDraftSave);
+document.addEventListener?.('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingDraftSave();
 });

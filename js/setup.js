@@ -105,9 +105,4 @@ studySetup.addEventListener('cancel', event => {
   if (loadingProtocol || !StorageManager.hasDraft) event.preventDefault();
 });
 
-const narrowBuilder = window.matchMedia('(max-width: 850px)');
-function offerFirstStudy() {
-  if (!StorageManager.hasDraft && !narrowBuilder.matches && !studySetup.open) openStudySetup();
-}
-narrowBuilder.addEventListener('change', offerFirstStudy);
-offerFirstStudy();
+if (!StorageManager.hasDraft) openStudySetup();

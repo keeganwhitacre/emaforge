@@ -1,8 +1,6 @@
 function schedulePreview() {
     clearTimeout(previewDebounceTimer);
     previewDebounceTimer = setTimeout(renderPreview, 600);
-    const status = document.getElementById('save-status');
-    if (status) status.textContent = 'Saving in this browser…';
     // Tell storage to persist shortly after the preview updates.
     if (typeof StorageManager !== 'undefined' && StorageManager.debouncedSave) {
       StorageManager.debouncedSave();
@@ -44,6 +42,7 @@ function renderPreviewTabs() {
       document.querySelectorAll('.preview-session-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       previewSession = btn.dataset.session;
+      if (typeof rememberBuilderWorkspace === 'function') rememberBuilderWorkspace();
       if (document.getElementById('tab-questions')?.classList.contains('active') && previewSession !== 'onboarding') {
         renderMeasureComposer();
       }

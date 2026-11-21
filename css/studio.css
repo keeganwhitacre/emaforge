@@ -262,8 +262,8 @@ textarea { resize: vertical; min-height: 60px; }
     display: flex;
     background: var(--workspace-bg);
   }
-  #app > :not(.forge-header),
-  #app > .forge-header :is(.topbar-project, .analyze-project, .topbar-actions) {
+  #mobile-blocker ~ #app > :not(.forge-header),
+  #mobile-blocker ~ #app > .forge-header :is(.analyze-project, .topbar-actions) {
     display: none;
   }
 }

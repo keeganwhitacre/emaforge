@@ -20,7 +20,8 @@ function sectionForIssue(issue) {
 }
 
 function showBuilderIssue(issue) {
-  const section = sectionForIssue(issue);
+  const emptySession = issue.code === "phase_sequence_empty";
+  const section = emptySession ? "questions" : sectionForIssue(issue);
   if (!document.getElementById(`tab-${section}`).classList.contains("active")) {
     document.querySelector(`.tab-btn[data-tab="${section}"]`).click();
   }
@@ -38,25 +39,32 @@ function showBuilderIssue(issue) {
       target = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
     }
   }
+  if (emptySession && windowIndex) {
+    const window = state.ema.scheduling.windows[Number(windowIndex[1])];
+    if (window) selectMeasureSession(window.id);
+    target = document.querySelector(".measure-empty button");
+  }
   if (!target && windowIndex) target = document.querySelectorAll("#window-list .window-item")[Number(windowIndex[1])];
-  if (target) target.classList.add("expanded");
+  if (target?.classList.contains("q-card")) setQuestionExpanded(target, true);
   if (!target && issue.path === "study.name") target = document.getElementById("study-name");
   if (!target && issue.path === "study.institution") target = document.getElementById("institution");
   if (!target && issue.path === "study.webhook_url") target = document.getElementById("study-webhook");
   if (!target && issue.path === "onboarding.consent_text") target = document.getElementById("ob-consent-text");
-  if (target) target.scrollIntoView({ block: "center", behavior: "smooth" });
+  if (target?.matches("input, button, [contenteditable]")) target.focus({ preventScroll: true });
+  else document.getElementById("builder-section-title").focus({ preventScroll: true });
+  target?.scrollIntoView({ block: "center" });
 }
 
 function renderSectionIssues(issues) {
   const section = document.querySelector(".tab-btn.active")?.dataset.tab || "study";
   const relevant = issues.filter(issue => sectionForIssue(issue) === section);
   const panel = document.getElementById("builder-inline-issues");
-  panel.hidden = relevant.length === 0;
+  const details = document.getElementById("builder-issues-details");
+  details.hidden = relevant.length === 0;
+  document.getElementById("builder-issues-summary").textContent =
+    `${relevant.length} item${relevant.length === 1 ? "" : "s"} to review in this section`;
   panel.replaceChildren();
   if (!relevant.length) return;
-  const heading = document.createElement("strong");
-  heading.textContent = `${relevant.length} ${section === "questions" ? "question" : "section"} issue${relevant.length === 1 ? "" : "s"}`;
-  panel.append(heading);
   relevant.slice(0, 6).forEach(issue => {
     const button = document.createElement("button");
     button.type = "button";
@@ -70,6 +78,28 @@ function renderSectionIssues(issues) {
     extra.textContent = `Plus ${relevant.length - 6} more. Resolve these or review the export report.`;
     panel.append(extra);
   }
+}
+
+function renderBuilderNextStep(errors) {
+  const card = document.getElementById("builder-next");
+  const action = document.getElementById("builder-next-action");
+  const section = document.querySelector(".tab-btn.active")?.dataset.tab;
+  card.hidden = section === "deployment";
+  if (card.hidden) return;
+
+  const issue = errors[0];
+  document.getElementById("builder-next-detail").textContent = issue?.message ||
+    "Review your protocol and prepare the file for Study Admin.";
+  const sectionName = issue?.code === "phase_sequence_empty" ? "Measures" :
+    issue ? builderSections[sectionForIssue(issue)][0] : null;
+  action.textContent = sectionName ? `Open ${sectionName}` : "Review & Deploy";
+  action.onclick = () => {
+    if (issue) showBuilderIssue(issue);
+    else {
+      document.querySelector('.tab-btn[data-tab="deployment"]').click();
+      document.getElementById("builder-section-title").focus();
+    }
+  };
 }
 
 function renderBuilderShell() {
@@ -86,6 +116,7 @@ function renderBuilderShell() {
   const report = EMAForgeProtocolValidator.validate(launchConfig);
   const { errors, warnings, issues } = report;
   renderSectionIssues(issues);
+  renderBuilderNextStep(errors);
   document.getElementById("summary-question-count").textContent = count;
   document.getElementById("summary-block-count").textContent = taskCount;
   document.getElementById("summary-issue-count").textContent = issues.filter(issue => sectionForIssue(issue) === "questions").length;
@@ -129,10 +160,38 @@ function renderBuilderShell() {
   }
 }
 
+function rememberBuilderWorkspace() {
+  const section = document.querySelector(".tab-btn.active")?.dataset.tab || "study";
+  StorageManager.rememberWorkspace(section, previewSession);
+}
+
+function restoreBuilderWorkspace() {
+  clearBuilderUndo();
+  const { section, session } = StorageManager.readWorkspace();
+  if (state.ema.scheduling.windows.some(window => window.id === session) ||
+      (session === "onboarding" && state.onboarding.enabled)) {
+    previewSession = session;
+  }
+  const target = Object.hasOwn(builderSections, section) ? section : "study";
+  document.querySelector(`.tab-btn[data-tab="${target}"]`).click();
+}
+
+const sectionSelect = document.getElementById("builder-section-select");
+for (const [section, [title]] of Object.entries(builderSections)) {
+  sectionSelect.add(new Option(title, section));
+}
+sectionSelect.addEventListener("change", () => {
+  document.querySelector(`.tab-btn[data-tab="${sectionSelect.value}"]`).click();
+});
+document.getElementById("phone-backup-btn").addEventListener("click", () => {
+  document.getElementById("btn-save-project").click();
+});
 document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener("click", () => {
   const [title, description] = builderSections[button.dataset.tab];
   document.querySelectorAll(".tab-btn").forEach(tab => tab.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
+  sectionSelect.value = button.dataset.tab;
+  document.getElementById("builder-issues-details").open = false;
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").scrollTop = 0;
@@ -142,6 +201,8 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
     previewSession = state.ema.scheduling.windows[0].id;
   }
   renderPreviewTabs();
+  if (button.dataset.tab === "questions") renderMeasureComposer();
+  rememberBuilderWorkspace();
   renderPreview();
   renderBuilderShell();
 }));
@@ -153,11 +214,15 @@ document.getElementById("builder-preview-btn").addEventListener("click", () => {
   panel.classList.remove("open-mobile");
   panel.classList.add("preview-fullscreen");
   document.body.classList.add("preview-open");
+  for (const sibling of panel.parentElement.children) {
+    if (sibling !== panel) sibling.inert = true;
+  }
   document.getElementById("close-preview-btn").focus();
 });
 document.getElementById("close-preview-btn").addEventListener("click", () => {
   document.getElementById("preview-panel").classList.remove("open-mobile", "preview-fullscreen");
   document.body.classList.remove("preview-open");
+  for (const sibling of document.getElementById("preview-panel").parentElement.children) sibling.inert = false;
   document.getElementById("builder-preview-btn").focus();
 });
 document.addEventListener("keydown", event => {
@@ -169,7 +234,8 @@ document.addEventListener("click", event => {
   const menu = document.querySelector(".project-menu");
   if (menu.open && !menu.contains(event.target)) menu.open = false;
 });
-renderBuilderShell();
+if (StorageManager.hasDraft) restoreBuilderWorkspace();
+else renderBuilderShell();
 if (window.location.hash === "#library" || new URLSearchParams(window.location.search).has("library")) {
   document.getElementById("import-modal").classList.add("open");
 }
