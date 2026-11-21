@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261121">
 <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/builder.css?v=20261121b">
+<link rel="stylesheet" href="css/builder.css?v=20261121c">
 </head>
 <body>
 <dialog id="study-setup" aria-labelledby="study-setup-title">
@@ -262,9 +262,9 @@
               <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'H3')">Heading</button>
               <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'P')">Paragraph</button>
               <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-weight: bold;" onclick="document.execCommand('bold', false, null)">B</button>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-style: italic;" onclick="document.execCommand('italic', false, null)">I</button>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; text-decoration: underline;" onclick="document.execCommand('underline', false, null)">U</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-weight: bold;" aria-label="Bold" onclick="document.execCommand('bold', false, null)">B</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-style: italic;" aria-label="Italic" onclick="document.execCommand('italic', false, null)">I</button>
+              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; text-decoration: underline;" aria-label="Underline" onclick="document.execCommand('underline', false, null)">U</button>
               <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
               <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('insertUnorderedList', false, null)">• List</button>
             </div>
@@ -296,7 +296,7 @@
       <div class="measure-picker" id="measure-picker" hidden>
         <div class="measure-picker-head">
           <div><strong>Add a measure</strong><span id="measure-picker-context">Choose what participants do next.</span></div>
-          <button type="button" id="close-measure-picker" aria-label="Close measure picker">✕</button>
+          <button type="button" class="builder-icon-button" id="close-measure-picker" aria-label="Close measure picker">✕</button>
         </div>
         <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
         <div class="measure-picker-groups" id="measure-picker-groups"></div>
@@ -509,6 +509,13 @@
     </div>
   </section>
 
+  <div id="builder-undo" class="builder-undo" hidden>
+    <span id="builder-undo-message"></span>
+    <button type="button" class="btn btn-primary" id="builder-undo-action">Undo</button>
+    <button type="button" class="builder-icon-button" id="builder-undo-dismiss" aria-label="Dismiss undo">✕</button>
+  </div>
+  <p class="sr-only" id="builder-change-status" role="status"></p>
+
   <!-- ========== PREVIEW PANEL ========== -->
   <section id="preview-panel">
     <button id="close-preview-btn" type="button" aria-label="Close preview">✕ Close preview</button>
@@ -537,7 +544,7 @@
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div class="modal-title">Export Study</div>
-      <button class="modal-close" id="modal-close-btn">✕</button>
+      <button type="button" class="modal-close builder-icon-button" id="modal-close-btn" aria-label="Close export options">✕</button>
     </div>
     <div class="modal-subtitle">Download the participant app, host it on an HTTPS static host, then make participant links in Review &amp; Deploy. Data uploads require a separate webhook.</div>
     <div id="export-review" class="export-review" aria-live="polite"></div>
@@ -558,7 +565,7 @@
   <div class="modal-box" style="width:560px;max-height:80vh;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div class="modal-title">config.json</div>
-      <button class="modal-close" id="json-modal-close">✕</button>
+      <button type="button" class="modal-close builder-icon-button" id="json-modal-close" aria-label="Close configuration preview">✕</button>
     </div>
     <pre id="json-preview" style="flex:1;overflow:auto;font-family:var(--font-mono);font-size:11px;color:var(--fg-2);background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;line-height:1.6;white-space:pre;margin-top:4px"></pre>
   </div>
@@ -569,7 +576,7 @@
   <div class="modal-box library-modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div class="modal-title">Protocol Library</div>
-      <button class="modal-close" id="import-modal-close">✕</button>
+      <button type="button" class="modal-close builder-icon-button" id="import-modal-close" aria-label="Close protocol library">✕</button>
     </div>
     <div class="modal-subtitle">Start with a complete protocol, or add a reusable question pack or physiology preset to the study you already have.</div>
 
@@ -607,8 +614,9 @@
 <script src="js/templates.js?v=20261121b"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20261121b"></script>
-<script src="js/tabs/schedule.js?v=20261121b"></script>
+<script src="js/builder-undo.js?v=20261121c"></script>
+<script src="js/tabs/questions.js?v=20261121c"></script>
+<script src="js/tabs/schedule.js?v=20261121c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
@@ -652,7 +660,7 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20261121b"></script>
+<script src="js/builder-shell.js?v=20261121c"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

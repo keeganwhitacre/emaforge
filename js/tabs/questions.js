@@ -109,12 +109,12 @@ function renderMeasurePicker(query = '') {
 function confirmPlaceContext(onAccept) {
   const dialog = document.createElement('dialog');
   dialog.setAttribute('aria-label', 'Place context setup');
-  dialog.style.cssText = 'max-width:min(540px,calc(100vw - 32px));padding:24px;border:1px solid #c9ced3;border-radius:8px;color:#222;background:#fff;line-height:1.55;box-shadow:0 20px 60px #0004';
-  dialog.innerHTML = `<h2 style="margin:0 0 12px">Add place context?</h2>
+  dialog.className = 'builder-place-dialog';
+  dialog.innerHTML = `<h2>Add place context?</h2>
     <p>This optional measure asks for the participant’s current location only when they tap Use my location. Automatic EPA built-environment measures and Census urban/rural require a Cloudflare study host and send coordinates to the study Worker and each selected provider. Alternatively, upload a licensed area dataset so matching happens entirely in the participant browser.</p>
     <p>Coordinates are not written to EMA Forge responses in either mode. Services involved in an online lookup may process requests and metadata; derived area categories can still be sensitive with participant IDs and response times. Check consent, IRB and institutional requirements, source terms, coverage, and device accuracy before enrollment.</p>
     <label style="display:flex;gap:10px;align-items:start;margin:16px 0"><input type="checkbox" required style="margin-top:6px"><span>I understand the source, consent, and privacy limits.</span></label>
-    <div style="display:flex;gap:10px;justify-content:end"><button type="button" data-action="cancel">Cancel</button><button type="button" data-action="add" disabled>Add optional measure</button></div>`;
+    <div class="builder-dialog-actions"><button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button><button type="button" class="btn btn-primary" data-action="add" disabled>Add optional measure</button></div>`;
   document.body.append(dialog);
   const check = dialog.querySelector('input');
   const add = dialog.querySelector('[data-action="add"]');
@@ -235,14 +235,14 @@ function buildMeasureFlowCard(window, entries, entry, index) {
   card.draggable = true;
   card.dataset.index = String(index);
   const module = entry.kind === 'task' ? state.modules.find(candidate => candidate.id === entry.taskId) : null;
-  const type = 'Physiology task';
-  const title = module?.label || entry.taskId;
-  const description = module?.desc || 'Built-in participant task';
+  const type = entry.kind === 'task' ? 'Physiology task' : 'Survey item';
+  const title = module?.label || entry.taskId || entry.questionId;
+  const description = entry.kind === 'task' ? module?.desc || 'Built-in participant task' : 'Missing question';
   card.innerHTML = `<span class="measure-flow-handle" aria-hidden="true">⠿</span>
     <span class="measure-flow-order">${index + 1}</span>
     <span class="measure-flow-copy"><strong>${escH(title)}</strong><span>${escH(type)} · ${escH(description)}</span></span>
     <span class="measure-flow-actions">
-      <button type="button" class="measure-edit">Settings</button>
+      ${entry.kind === 'task' ? '<button type="button" class="measure-edit">Settings</button>' : ''}
       <button type="button" class="measure-up" aria-label="Move earlier" ${index === 0 ? 'disabled' : ''}>↑</button>
       <button type="button" class="measure-down" aria-label="Move later" ${index === entries.length - 1 ? 'disabled' : ''}>↓</button>
       <button type="button" class="measure-remove" aria-label="Remove from session">✕</button>
@@ -271,23 +271,10 @@ function buildMeasureFlowCard(window, entries, entry, index) {
     const list = card.closest('.measure-flow-list');
     if (list) clearFlowDropTargets(list);
   });
-  card.querySelector('.measure-up')?.addEventListener('click', () => {
-    if (index > 0) [entries[index - 1], entries[index]] = [entries[index], entries[index - 1]];
-    commitMeasureFlow(window, entries);
-  });
-  card.querySelector('.measure-down')?.addEventListener('click', () => {
-    if (index < entries.length - 1) [entries[index], entries[index + 1]] = [entries[index + 1], entries[index]];
-    commitMeasureFlow(window, entries);
-  });
-  card.querySelector('.measure-remove')?.addEventListener('click', () => {
-    entries.splice(index, 1);
-    commitMeasureFlow(window, entries);
-    if (entry.kind === 'task' && !state.ema.scheduling.windows.some(candidate =>
-      candidate.phase_sequence?.some(step => step.kind === 'task' && step.id === entry.taskId))) {
-      const taskModule = state.modules.find(candidate => candidate.id === entry.taskId);
-      if (taskModule) taskModule.enabled = false;
-      if (typeof renderModules === 'function') renderModules();
-    }
+  bindMeasureMoveButtons(card, window, entries, index);
+  card.querySelector('.measure-remove').addEventListener('click', event => {
+    if (entry.kind === 'task') removeTaskFromSession(window, entry.sourceStepIndex, event);
+    else removeQuestionFromSession({ id: entry.questionId }, window, entries, index, event);
   });
   card.querySelector('.measure-edit')?.addEventListener('click', () => {
     document.querySelector('.tab-btn[data-tab="tasks"]')?.click();
@@ -313,29 +300,39 @@ function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
   actions.innerHTML = `<button type="button" class="measure-up" aria-label="Move earlier" ${flowIndex === 0 ? 'disabled' : ''}>↑</button>
     <button type="button" class="measure-down" aria-label="Move later" ${flowIndex === entries.length - 1 ? 'disabled' : ''}>↓</button>
     <button type="button" class="measure-remove" aria-label="Remove from this session" title="Remove from this session">✕</button>`;
-  const chevron = header.querySelector('.q-chevron');
+  const chevron = header.querySelector('.q-expand');
   header.insertBefore(actions, chevron || null);
   wireQuestionFlowReordering(card, window, entries, entry, flowIndex);
-  actions.querySelector('.measure-up').addEventListener('click', event => {
-    event.stopPropagation();
-    if (flowIndex > 0) [entries[flowIndex - 1], entries[flowIndex]] = [entries[flowIndex], entries[flowIndex - 1]];
-    commitMeasureFlow(window, entries);
-  });
-  actions.querySelector('.measure-down').addEventListener('click', event => {
-    event.stopPropagation();
-    if (flowIndex < entries.length - 1) [entries[flowIndex], entries[flowIndex + 1]] = [entries[flowIndex + 1], entries[flowIndex]];
-    commitMeasureFlow(window, entries);
-  });
+  bindMeasureMoveButtons(card, window, entries, flowIndex);
   actions.querySelector('.measure-remove').addEventListener('click', event => {
     event.stopPropagation();
-    entries.splice(flowIndex, 1);
-    window.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
-    const stillUsed = state.ema.scheduling.windows.some(candidate => candidate.phase_sequence?.some(step =>
-      step.kind === 'ema' && (step.question_ids || []).includes(question.id)));
-    if (!stillUsed) state.ema.questions = state.ema.questions.filter(candidate => candidate.id !== question.id);
-    renderWindows(); renderQuestions(); renderPreviewTabs(); schedulePreview();
+    removeQuestionFromSession(question, window, entries, flowIndex, event);
   });
   return card;
+}
+
+function bindMeasureMoveButtons(card, window, entries, index) {
+  for (const [control, offset] of [['measure-up', -1], ['measure-down', 1]]) {
+    card.querySelector(`.${control}`).addEventListener('click', event => {
+      event.stopPropagation();
+      const destination = index + offset;
+      if (destination < 0 || destination >= entries.length) return;
+      const expanded = card.classList.contains('expanded');
+      [entries[index], entries[destination]] = [entries[destination], entries[index]];
+      commitMeasureFlow(window, entries);
+      const moved = document.querySelectorAll('#measure-flow .flow-item')[destination];
+      if (expanded) setQuestionExpanded(moved, true);
+      const nextControl = moved?.querySelector(`.${control}:enabled`) ||
+        moved?.querySelector('.measure-up:enabled, .measure-down:enabled');
+      nextControl?.focus({ preventScroll: true });
+      moved?.scrollIntoView({ block: 'nearest' });
+    });
+  }
+}
+
+function setQuestionExpanded(card, expanded) {
+  card?.classList.toggle('expanded', expanded);
+  card?.querySelector('.q-expand')?.setAttribute('aria-expanded', String(expanded));
 }
 
 function wireQuestionFlowReordering(card, window, entries, entry, flowIndex) {
@@ -488,12 +485,12 @@ function buildQCard(q, index, displayNum, options = {}) {
         <span class="q-drag-handle" style="cursor:grab;flex-shrink:0;">⠿</span>
         <span class="page-break-name" style="flex:1;">${escH(q.label)}</span>
         <span class="q-type-badge">New screen</span>
-        <svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg>
+        <button type="button" class="q-expand builder-icon-button" aria-label="Edit measure" aria-expanded="false"><svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></button>
       </div>
       <div class="q-body"><div class="field-group" style="padding-top:10px"><label class="field-label">Screen name</label><input type="text" class="page-break-label" value="${escH(q.label)}" placeholder="e.g. Evening reflection"></div></div>
     `;
     card.querySelector('.q-header').addEventListener('click', event => {
-      if (!event.target.closest('.q-drag-handle, .measure-flow-actions')) card.classList.toggle('expanded');
+      if (!event.target.closest('.q-drag-handle, .measure-flow-actions')) setQuestionExpanded(card, !card.classList.contains('expanded'));
     });
     card.querySelector('.page-break-label').addEventListener('input', event => {
       q.label = event.target.value;
@@ -518,7 +515,7 @@ function buildQCard(q, index, displayNum, options = {}) {
       <span class="q-num">${displayNum}</span>
       <span class="q-preview-text">${escH(questionDisplayText(q.text)) || '<em style="color:var(--fg-3)">(no text)</em>'}</span>
       <span class="q-type-badge ${q.type}" style="${q.type==='heart_rate'?'background:rgba(246,201,14,0.12);color:#f6c90e;':''}"> ${typeLabel}</span>
-      <svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg>
+      <button type="button" class="q-expand builder-icon-button" aria-label="Edit measure" aria-expanded="false"><svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></button>
     </div>
     <div class="q-body">
       <div class="field-group" style="padding-top:10px">
@@ -554,14 +551,14 @@ function buildQCard(q, index, displayNum, options = {}) {
         </label>
       </div>` : ''}
       <div class="q-footer">
-        <button class="q-del-btn-full">Delete Question</button>
+        <button type="button" class="q-del-btn-full">Delete from study</button>
       </div>
     </div>
   `;
 
   card.querySelector('.q-header').addEventListener('click', e => {
     if (e.target.closest('.q-drag-handle, .measure-flow-actions')) return;
-    card.classList.toggle('expanded');
+    setQuestionExpanded(card, !card.classList.contains('expanded'));
   });
   card.querySelector('.q-text').addEventListener('input', e => {
     q.text = e.target.value;
@@ -574,10 +571,16 @@ function buildQCard(q, index, displayNum, options = {}) {
   const reqChk = card.querySelector('.q-required');
   if (reqChk) reqChk.addEventListener('change', e => { q.required = e.target.checked; schedulePreview(); });
   const delBtn = card.querySelector('.q-del-btn-full');
-  if (delBtn) delBtn.addEventListener('click', () => {
-    detachQuestion(q.id);
-    state.ema.questions = state.ema.questions.filter(x => x.id !== q.id);
-    renderQuestions(); schedulePreview();
+  if (delBtn) delBtn.addEventListener('click', event => {
+    const assignments = [];
+    for (const window of state.ema.scheduling.windows) {
+      for (const step of window.phase_sequence) {
+        step.question_ids?.forEach((id, index) => {
+          if (id === q.id) assignments.push({ window, step, index });
+        });
+      }
+    }
+    removeBuilderQuestion(q, assignments, event);
   });
 
   if (q.type === 'slider')                              bindSliderFields(card, q);
@@ -788,7 +791,7 @@ function buildChoiceFields(q) {
   const opts = (q.options||[]).map((o,i) => `
     <div class="option-row" data-oi="${i}">
       <input type="text" class="opt-text" value="${escH(o)}" placeholder="Option ${i+1}">
-      <button class="option-del">×</button>
+      <button type="button" class="option-del builder-icon-button" aria-label="Remove option ${i + 1}">×</button>
     </div>`).join('');
   return `
     <div class="field-group" style="margin-top:10px;">
@@ -806,7 +809,7 @@ function bindChoiceFields(card, q) {
     list.innerHTML = (q.options||[]).map((o,i) => `
       <div class="option-row" data-oi="${i}">
         <input type="text" class="opt-text" value="${escH(o)}" placeholder="Option ${i+1}">
-        <button class="option-del">×</button>
+        <button type="button" class="option-del builder-icon-button" aria-label="Remove option ${i + 1}">×</button>
       </div>`).join('');
     list.querySelectorAll('.opt-text').forEach((inp,i) => inp.addEventListener('input', e => { q.options[i] = e.target.value; schedulePreview(); }));
     list.querySelectorAll('.option-del').forEach((btn,i) => btn.addEventListener('click', () => { q.options.splice(i,1); refresh(); schedulePreview(); }));
@@ -872,11 +875,11 @@ function buildConditionBlock(q, index) {
     const qOpts = priors.map(p => `<option value="${p.id}" ${p.id===r.question_id?'selected':''}>${escH(p.text?.slice(0,40)||p.id)}</option>`).join('');
     const ops = ['eq','neq','gt','gte','lt','lte','includes'].map(op => `<option value="${op}" ${r.operator===op?'selected':''}>${op}</option>`).join('');
     return `
-      <div class="condition-row" data-ri="${ri}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-        <select class="cond-q" style="flex:1;min-width:0;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">${qOpts}</select>
-        <select class="cond-op" style="padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">${ops}</select>
-        <input type="text" class="cond-val" value="${escH(String(r.value??''))}" placeholder="val" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);">
-        <button class="cond-del-rule" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:16px;">✕</button>
+      <div class="condition-row" data-ri="${ri}">
+        <select class="cond-q" aria-label="Previous measure">${qOpts}</select>
+        <select class="cond-op" aria-label="Comparison">${ops}</select>
+        <input type="text" class="cond-val" value="${escH(String(r.value??''))}" aria-label="Comparison value" placeholder="Value">
+        <button type="button" class="cond-del-rule builder-icon-button" aria-label="Remove rule ${ri + 1}">✕</button>
       </div>
     `;
   }).join('');
@@ -889,11 +892,11 @@ function buildConditionBlock(q, index) {
       </div>
       <div class="cond-fields" style="display:${has?'flex':'none'};flex-direction:column;gap:6px;margin-top:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <select class="cond-logical-op" style="padding:2px 6px;font-size:11px;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:4px;">
+          <select class="cond-logical-op" aria-label="How rules are combined">
             <option value="AND" ${logOp==='AND'?'selected':''}>Match ALL rules (AND)</option>
             <option value="OR"  ${logOp==='OR'?'selected':''}>Match ANY rule (OR)</option>
           </select>
-          <button class="cond-add-rule" style="font-size:11px;background:none;border:1px solid var(--border);color:var(--accent);border-radius:4px;cursor:pointer;padding:2px 6px;">+ Add Rule</button>
+          <button type="button" class="cond-add-rule btn btn-secondary">Add rule</button>
         </div>
         <div class="rules-container" style="background:var(--bg-elevated);padding:8px;border-radius:6px;border:1px solid var(--border);">
           ${rulesHtml || '<div style="font-size:11px;color:var(--fg-3);">No rules defined. Click + Add Rule.</div>'}
@@ -958,14 +961,6 @@ function bindConditionBlock(card, q, index) {
       refreshConditionBlock(card, q, index);
     });
   });
-}
-
-function detachQuestion(qid) {
-  (state.ema.scheduling.windows || []).forEach(window =>
-    (window.phase_sequence || []).filter(step => step.kind === 'ema').forEach(step => {
-      step.question_ids = (step.question_ids || []).filter(id => id !== qid);
-    }));
-  renderWindows();
 }
 
 // ---------------------------------------------------------------------------
@@ -1039,7 +1034,7 @@ function addMeasureAt(type, insertionIndex = null) {
   closeMeasurePicker();
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
-    card.classList.add('expanded');
+    setQuestionExpanded(card, true);
     card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
   }

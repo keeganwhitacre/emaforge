@@ -45,7 +45,7 @@ function showBuilderIssue(issue) {
     target = document.querySelector(".measure-empty button");
   }
   if (!target && windowIndex) target = document.querySelectorAll("#window-list .window-item")[Number(windowIndex[1])];
-  if (target) target.classList.add("expanded");
+  if (target?.classList.contains("q-card")) setQuestionExpanded(target, true);
   if (!target && issue.path === "study.name") target = document.getElementById("study-name");
   if (!target && issue.path === "study.institution") target = document.getElementById("institution");
   if (!target && issue.path === "study.webhook_url") target = document.getElementById("study-webhook");
@@ -166,6 +166,7 @@ function rememberBuilderWorkspace() {
 }
 
 function restoreBuilderWorkspace() {
+  clearBuilderUndo();
   const { section, session } = StorageManager.readWorkspace();
   if (state.ema.scheduling.windows.some(window => window.id === session) ||
       (session === "onboarding" && state.onboarding.enabled)) {

@@ -10,14 +10,15 @@ Pilot the standard Cloudflare path on iOS Safari and Android Chrome. Start with 
 
 The Next step card uses the existing export checks to link to the first blocker or to Review & Deploy. Other issues remain available in a collapsible section. The save status is visible alongside the section heading, and each draft remembers its last section and selected session in the browser. Empty sessions now include a direct action to add a measure.
 
+Builder Undo restores the last measure or session removal while the draft is open. The restored item retains its settings and links to the rest of the study, and later edits remain in place. Measure controls now preserve focus after keyboard reordering.
+
 ## Next slices
 
 | Priority | Change | What to verify |
 | --- | --- | --- |
-| 1 | Undo removals. Start with measures, then handle whole sessions and their references. | Undo restores order, assignments, and rules without losing later edits or changing another draft. |
-| 2 | Simplify editing. Put common controls first and keep advanced settings in named sections. Offer an add action and question pack in empty sessions. | A novice can build a check-in. An experienced researcher can still find branching and timing controls. |
-| 3 | Polish the editing feedback. Connect the selected measure with preview where practical, preserve focus when items move, and respect reduced-motion settings. | Reordering works with touch and keyboard, and preview changes are easy to follow. |
-| 4 | Test participant usability on real phones. Check larger text, the keyboard, starting from a message, navigation, and restoring a session after interruption. | A participant can finish and submit a session without help on each supported browser. |
+| 1 | Simplify editing. Put common controls first and keep advanced settings in named sections. Offer an add action and question pack in empty sessions. | A novice can build a check-in. An experienced researcher can still find branching and timing controls. |
+| 2 | Polish the editing feedback. Connect the selected measure with preview where practical and respect reduced-motion settings. | Reordering works with touch and keyboard, and preview changes are easy to follow. |
+| 3 | Test participant usability on real phones. Check larger text, the keyboard, starting from a message, navigation, and restoring a session after interruption. | A participant can finish and submit a session without help on each supported browser. |
 
 Watch a few researchers who have never used EMA Forge run the full workflow. Note where they stop or need help, especially when switching between Builder, Cloudflare, and Study Admin. Prioritize changes that let them recover without outside help.
 
