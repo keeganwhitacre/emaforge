@@ -140,7 +140,7 @@ function openMeasurePicker(index = null) {
   if (search) search.value = '';
   renderMeasurePicker();
   search?.focus();
-  picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  picker.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
 }
 
 function closeMeasurePicker() {
@@ -281,7 +281,7 @@ function buildMeasureFlowCard(window, entries, entry, index) {
     const taskCard = document.querySelector(`.task-card[data-mod-id="${CSS.escape(entry.taskId)}"]`);
     const settings = taskCard?.querySelector('details.task-settings');
     if (settings) settings.open = true;
-    taskCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    taskCard?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
   });
   return card;
 }
@@ -318,9 +318,22 @@ function bindMeasureMoveButtons(card, window, entries, index) {
       const destination = index + offset;
       if (destination < 0 || destination >= entries.length) return;
       const expanded = card.classList.contains('expanded');
+      const allowMotion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const cards = card.parentElement.querySelectorAll('.flow-item');
+      const oldTops = allowMotion && !expanded && !cards[destination]?.classList.contains('expanded')
+        ? [card.getBoundingClientRect().top, cards[destination].getBoundingClientRect().top] : null;
       [entries[index], entries[destination]] = [entries[destination], entries[index]];
       commitMeasureFlow(window, entries);
-      const moved = document.querySelectorAll('#measure-flow .flow-item')[destination];
+      const updatedCards = document.querySelectorAll('#measure-flow .flow-item');
+      const moved = updatedCards[destination];
+      if (oldTops) {
+        const swapped = [moved, updatedCards[index]];
+        const shifts = swapped.map((item, i) => oldTops[i] - item.getBoundingClientRect().top);
+        swapped.forEach((item, i) => item.animate(
+          [{ transform: `translateY(${shifts[i]}px)` }, { transform: 'translateY(0)' }],
+          { duration: 155, easing: 'cubic-bezier(.2,.75,.25,1)' }
+        ));
+      }
       if (expanded) setQuestionExpanded(moved, true);
       const nextControl = moved?.querySelector(`.${control}:enabled`) ||
         moved?.querySelector('.measure-up:enabled, .measure-down:enabled');
@@ -1035,7 +1048,7 @@ function addMeasureAt(type, insertionIndex = null) {
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
     setQuestionExpanded(card, true);
-    card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    card.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
   }
 }

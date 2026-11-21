@@ -176,6 +176,45 @@ function restoreBuilderWorkspace() {
   document.querySelector(`.tab-btn[data-tab="${target}"]`).click();
 }
 
+const phoneBuilder = matchMedia("(max-width: 850px)");
+const projectMenu = document.querySelector(".project-menu");
+const draftPicker = document.querySelector(".draft-picker");
+const nextStepCard = document.getElementById("builder-next");
+const sectionHeader = document.getElementById("builder-section-header");
+const issuesDetails = document.getElementById("builder-issues-details");
+const measuresTab = document.getElementById("tab-questions");
+
+function layoutBuilderControls() {
+  const draftSlot = document.getElementById(phoneBuilder.matches ? "phone-draft-slot" : "desktop-draft-slot");
+  if (draftPicker.parentElement !== draftSlot) draftSlot.append(draftPicker);
+
+  const editingMeasures = measuresTab.classList.contains("active");
+  if (phoneBuilder.matches && editingMeasures) {
+    if (nextStepCard.parentElement !== measuresTab) measuresTab.append(nextStepCard);
+  } else if (nextStepCard.parentElement !== sectionHeader) {
+    sectionHeader.insertBefore(nextStepCard, issuesDetails);
+  }
+}
+
+phoneBuilder.addEventListener("change", layoutBuilderControls);
+const phoneDraftsButton = document.getElementById("phone-drafts-btn");
+projectMenu.addEventListener("toggle", () => {
+  phoneDraftsButton.setAttribute("aria-expanded", String(projectMenu.open));
+});
+phoneDraftsButton.addEventListener("click", () => {
+  projectMenu.open = !projectMenu.open;
+  if (projectMenu.open) document.getElementById("draft-select").focus();
+});
+document.getElementById("draft-select").addEventListener("change", () => {
+  if (!phoneBuilder.matches) return;
+  projectMenu.open = false;
+  phoneDraftsButton.focus();
+});
+document.getElementById("new-draft-btn").addEventListener("click", () => {
+  if (phoneBuilder.matches) projectMenu.open = false;
+});
+layoutBuilderControls();
+
 const sectionSelect = document.getElementById("builder-section-select");
 for (const [section, [title]] of Object.entries(builderSections)) {
   sectionSelect.add(new Option(title, section));
@@ -194,6 +233,8 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   document.getElementById("builder-issues-details").open = false;
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
+  document.getElementById("config-panel").dataset.section = button.dataset.tab;
+  layoutBuilderControls();
   document.getElementById("config-panel").scrollTop = 0;
   if (button.dataset.tab === "onboarding" && state.onboarding.enabled) previewSession = "onboarding";
   if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length &&
@@ -231,8 +272,7 @@ document.addEventListener("keydown", event => {
   }
 });
 document.addEventListener("click", event => {
-  const menu = document.querySelector(".project-menu");
-  if (menu.open && !menu.contains(event.target)) menu.open = false;
+  if (projectMenu.open && !event.target.closest(".project-menu, #phone-drafts-btn")) projectMenu.open = false;
 });
 if (StorageManager.hasDraft) restoreBuilderWorkspace();
 else renderBuilderShell();
