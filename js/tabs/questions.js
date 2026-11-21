@@ -140,7 +140,7 @@ function openMeasurePicker(index = null) {
   if (search) search.value = '';
   renderMeasurePicker();
   search?.focus();
-  picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  picker.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
 }
 
 function closeMeasurePicker() {
@@ -281,7 +281,7 @@ function buildMeasureFlowCard(window, entries, entry, index) {
     const taskCard = document.querySelector(`.task-card[data-mod-id="${CSS.escape(entry.taskId)}"]`);
     const settings = taskCard?.querySelector('details.task-settings');
     if (settings) settings.open = true;
-    taskCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    taskCard?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
   });
   return card;
 }
@@ -300,8 +300,7 @@ function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
   actions.innerHTML = `<button type="button" class="measure-up" aria-label="Move earlier" ${flowIndex === 0 ? 'disabled' : ''}>↑</button>
     <button type="button" class="measure-down" aria-label="Move later" ${flowIndex === entries.length - 1 ? 'disabled' : ''}>↓</button>
     <button type="button" class="measure-remove" aria-label="Remove from this session" title="Remove from this session">✕</button>`;
-  const chevron = header.querySelector('.q-expand');
-  header.insertBefore(actions, chevron || null);
+  header.append(actions);
   wireQuestionFlowReordering(card, window, entries, entry, flowIndex);
   bindMeasureMoveButtons(card, window, entries, flowIndex);
   actions.querySelector('.measure-remove').addEventListener('click', event => {
@@ -318,9 +317,22 @@ function bindMeasureMoveButtons(card, window, entries, index) {
       const destination = index + offset;
       if (destination < 0 || destination >= entries.length) return;
       const expanded = card.classList.contains('expanded');
+      const allowMotion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const cards = card.parentElement.querySelectorAll('.flow-item');
+      const oldTops = allowMotion && !expanded && !cards[destination]?.classList.contains('expanded')
+        ? [card.getBoundingClientRect().top, cards[destination].getBoundingClientRect().top] : null;
       [entries[index], entries[destination]] = [entries[destination], entries[index]];
       commitMeasureFlow(window, entries);
-      const moved = document.querySelectorAll('#measure-flow .flow-item')[destination];
+      const updatedCards = document.querySelectorAll('#measure-flow .flow-item');
+      const moved = updatedCards[destination];
+      if (oldTops) {
+        const swapped = [moved, updatedCards[index]];
+        const shifts = swapped.map((item, i) => oldTops[i] - item.getBoundingClientRect().top);
+        swapped.forEach((item, i) => item.animate(
+          [{ transform: `translateY(${shifts[i]}px)` }, { transform: 'translateY(0)' }],
+          { duration: 155, easing: 'cubic-bezier(.2,.75,.25,1)' }
+        ));
+      }
       if (expanded) setQuestionExpanded(moved, true);
       const nextControl = moved?.querySelector(`.${control}:enabled`) ||
         moved?.querySelector('.measure-up:enabled, .measure-down:enabled');
@@ -481,9 +493,9 @@ function buildQCard(q, index, displayNum, options = {}) {
     card.classList.add('page-break');
     if (!q.label) q.label = 'New screen';
     card.innerHTML = `
-      <div class="q-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;">
+      <div class="q-header">
         <span class="q-drag-handle" style="cursor:grab;flex-shrink:0;">⠿</span>
-        <span class="page-break-name" style="flex:1;">${escH(q.label)}</span>
+        <span class="page-break-name">${escH(q.label)}</span>
         <span class="q-type-badge">New screen</span>
         <button type="button" class="q-expand builder-icon-button" aria-label="Edit measure" aria-expanded="false"><svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></button>
       </div>
@@ -500,31 +512,22 @@ function buildQCard(q, index, displayNum, options = {}) {
     return card;
   }
 
-  let typeLabel = q.type.charAt(0).toUpperCase() + q.type.slice(1).replace('_', ' ');
-  if (q.type === 'choice')      typeLabel = 'Single Choice';
-  if (q.type === 'checkbox')    typeLabel = 'Multi Select';
-  if (q.type === 'affect_grid') typeLabel = 'Affect Grid';
-  if (q.type === 'body_map')    typeLabel = 'Body Map';
-  if (q.type === 'instruction') typeLabel = 'Instruction';
-  if (q.type === 'heart_rate')  typeLabel = 'Heart Rate';
-  if (q.type === 'place_context') typeLabel = 'Place context';
-
   card.innerHTML = `
     <div class="q-header">
       <span class="q-drag-handle">⠿</span>
       <span class="q-num">${displayNum}</span>
       <span class="q-preview-text">${escH(questionDisplayText(q.text)) || '<em style="color:var(--fg-3)">(no text)</em>'}</span>
-      <span class="q-type-badge ${q.type}" style="${q.type==='heart_rate'?'background:rgba(246,201,14,0.12);color:#f6c90e;':''}"> ${typeLabel}</span>
+      <span class="q-type-badge">${measureTypeLabel(q.type)}</span>
       <button type="button" class="q-expand builder-icon-button" aria-label="Edit measure" aria-expanded="false"><svg class="q-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></button>
     </div>
     <div class="q-body">
-      <div class="field-group" style="padding-top:10px">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <label class="field-label">${q.type === 'instruction' ? 'Instruction text' : 'Label / Caption'}</label>
-            <span style="font-size: 10px; color: var(--fg-muted); font-family: monospace;">ID: ${q.id}</span>
-        </div>
-        <input type="text" class="q-text" value="${escH(q.text)}" placeholder="${q.type === 'instruction' ? 'Tell participants what happens next…' : q.type === 'heart_rate' ? 'e.g. Measuring your heart rate…' : 'Enter question…'}">
-      </div>
+      <label class="field-group measure-text-field">
+        <span class="measure-text-heading">
+          <span class="field-label">${q.type === 'instruction' ? 'Instruction text' : q.type === 'heart_rate' ? 'Measure label' : 'Question text'}</span>
+          <small class="measure-id" aria-hidden="true">ID: ${escH(String(q.id ?? ''))}</small>
+        </span>
+        <textarea class="q-text" rows="2" placeholder="${q.type === 'instruction' ? 'Tell participants what happens next…' : q.type === 'heart_rate' ? 'Measuring your heart rate…' : 'Enter question…'}">${escH(q.text)}</textarea>
+      </label>
 
       ${q.type === 'slider'                              ? buildSliderFields(q)     : ''}
       ${(q.type === 'choice' || q.type === 'checkbox')   ? buildChoiceFields(q)     : ''}
@@ -1035,7 +1038,7 @@ function addMeasureAt(type, insertionIndex = null) {
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
     setQuestionExpanded(card, true);
-    card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    card.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
   }
 }

@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261121">
 <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/builder.css?v=20261121c">
+<link rel="stylesheet" href="css/builder.css?v=20261121e">
 </head>
 <body>
 <dialog id="study-setup" aria-labelledby="study-setup-title">
@@ -73,7 +73,8 @@
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689L5.03 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L8.75 7.689V2a.75.75 0 00-1.5 0v5.689z"/></svg>
         Review &amp; Deploy
       </button>
-      <details class="project-menu"><summary aria-label="More project actions" title="More project actions">•••</summary><div class="project-menu-list">
+      <details class="project-menu"><summary aria-label="More project actions" title="More project actions">•••</summary><div class="project-menu-list" id="builder-project-menu-list">
+      <div id="phone-draft-slot" class="builder-phone-only"></div>
       <button type="button" class="btn-ghost builder-phone-only" id="phone-backup-btn">Download Backup</button>
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -102,6 +103,7 @@
       <span>Section</span>
       <select id="builder-section-select"></select>
     </label>
+    <button type="button" class="btn btn-secondary builder-phone-only" id="phone-drafts-btn" aria-expanded="false" aria-controls="builder-project-menu-list">Drafts</button>
     <nav class="topbar-tabs" aria-label="Study builder sections">
       <button class="tab-btn active" data-tab="study" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M4 9h16m-9 0v11"/></svg>Overview</button>
       <button class="tab-btn" data-tab="onboarding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m8.5 12 2 2 4.5-4.5"/></svg>Onboarding</button>
@@ -110,13 +112,13 @@
       <button class="tab-btn" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h4l2.2-5 3.5 10 2.1-5H20"/><circle cx="12" cy="12" r="9"/></svg>Task settings</button>
       <button class="tab-btn" data-tab="deployment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>Review &amp; Deploy</button>
     </nav>
-    <div class="draft-picker"><label class="sidebar-group-label" for="draft-select">Study drafts</label><select id="draft-select"></select><button type="button" class="btn btn-secondary" id="new-draft-btn">New study</button></div>
+    <div id="desktop-draft-slot"><div class="draft-picker"><label class="sidebar-group-label" for="draft-select">Study drafts</label><select id="draft-select"></select><button type="button" class="btn btn-secondary" id="new-draft-btn">New study</button></div></div>
     <div class="sidebar-footer"><a href="library.html">Protocol library</a><a href="readme.html">Documentation</a><a href="dashboard.html">Data dashboard</a></div>
   </aside>
 
   <!-- ========== CONFIG PANEL ========== -->
   <section id="config-panel">
-    <div class="builder-section-header">
+    <div class="builder-section-header" id="builder-section-header">
       <div class="builder-section-title-row">
         <h1 id="builder-section-title" tabindex="-1">Overview</h1>
         <span class="save-status" id="save-status" role="status">Draft not saved yet</span>
@@ -279,12 +281,6 @@
 
     <!-- MEASURES TAB -->
     <div class="config-section" id="tab-questions">
-      <div class="question-summary" aria-live="polite">
-        <div><strong id="summary-question-count">0</strong><span>Survey items</span></div>
-        <div><strong id="summary-block-count">0</strong><span>Physiology tasks</span></div>
-        <div><strong id="summary-issue-count">0</strong><span>Measure issues</span></div>
-      </div>
-
       <div class="measure-session-bar">
         <div>
           <span class="field-label">Editing session</span>
@@ -301,6 +297,9 @@
         <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
         <div class="measure-picker-groups" id="measure-picker-groups"></div>
       </div>
+
+      <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
+      <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite"></div>
 
       <details class="measure-survey-settings">
         <summary>Survey behavior <span>Randomization and back navigation</span></summary>
@@ -325,9 +324,12 @@
         </div>
       </details>
 
-      <div class="measure-add-feedback" id="measure-add-feedback" aria-live="polite">Survey items and physiological tasks share the same participant flow.</div>
+      <div class="question-summary" aria-live="polite">
+        <div><strong id="summary-question-count">0</strong><span>Survey items</span></div>
+        <div><strong id="summary-block-count">0</strong><span>Physiology tasks</span></div>
+        <div><strong id="summary-issue-count">0</strong><span>Measure issues</span></div>
+      </div>
 
-      <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
     </div>
 
     <!-- SCHEDULE TAB -->
@@ -395,27 +397,29 @@
 
     <!-- DEPLOYMENT TAB -->
     <div class="config-section" id="tab-deployment">
-      <div class="readiness-card deploy-readiness"><div class="readiness-heading"><h2>Study readiness</h2><span id="readiness-count"></span></div><div id="readiness-list" aria-live="polite"></div></div>
+      <details class="readiness-card deploy-readiness" id="deploy-readiness"><summary class="readiness-heading"><strong>Study readiness</strong><span id="readiness-count"></span></summary><div id="readiness-list" aria-live="polite"></div></details>
       <div class="section-title">Run a pilot</div>
-      <p class="field-hint">Install this draft on your study host, complete a check-in on a phone, and confirm it in Study Admin. <a href="quickstart.html#host">See the illustrated guide</a>.</p>
+      <p class="field-hint">Install this draft on your study host, complete a check-in on a phone, and confirm it in Study Admin. <a class="deploy-link" href="quickstart.html#host">See the illustrated guide</a>.</p>
 
       <div class="deploy-block deploy-cloudflare">
-        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Download the study and connect a host</strong><span>Each new study gets its own Worker and private R2 bucket. Skip this step if you already have a host for this study.</span></div></div>
+        <div class="deploy-block-heading"><span class="deploy-number">1</span><div><strong>Download the study and connect a host</strong><span>Each new study gets its own Worker and private R2 bucket. Use your existing host when updating a study.</span></div></div>
+        <div class="deploy-actions">
+          <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
+          <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Create new study host ↗</a>
+        </div>
+        <details class="deploy-help"><summary>Cloudflare setup instructions</summary>
         <p class="field-hint">New hosts need a Cloudflare account with R2 activated and a GitHub or GitLab account. The deploy button creates a connected repository. Save the admin token you choose in a password manager.</p>
         <ol class="cloudflare-steps">
           <li><strong>Download</strong> your prepared study. Deploy the Worker only when creating a new host.</li>
           <li>Give this study a unique Worker name. Cloudflare creates its own R2 bucket. Replace the sample <code>ADMIN_TOKEN</code> with your own 32+ character token.</li>
           <li>Paste the <code>workers.dev</code> address below. Then open Study Admin and install the downloaded HTML.</li>
         </ol>
+        </details>
         <details class="deploy-help"><summary>About the admin token and optional SMS</summary><p>Cloudflare may show dots or stars for the sample <code>ADMIN_TOKEN</code>. That is an example value, not a token EMA Forge knows. Save the token you choose; you will use it to sign in to Study Admin. Twilio can be connected later and is not required to install a study.</p></details>
         <div class="deploy-name-suggestion">
           <span>Suggested Worker name</span>
           <code id="suggested-worker-name">ema-forge-study</code>
           <button type="button" class="btn-ghost" id="copy-worker-name-btn">Copy</button>
-        </div>
-        <div class="deploy-actions">
-          <button type="button" class="btn btn-primary" id="prepare-cloudflare-study-btn">Download prepared study</button>
-          <a class="btn btn-secondary" id="deploy-cloudflare-btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/keeganwhitacre/emaforge/tree/main/cloudflare-deploy" target="_blank" rel="noopener noreferrer">Create new study host ↗</a>
         </div>
         <details class="deploy-help"><summary>Update an existing Worker’s code</summary><p>Download the single-file Worker update. In Cloudflare, open your existing Worker → <strong>Edit code</strong>, replace its code with the downloaded file, and select <strong>Deploy</strong>. Keep the same <code>STUDY_DATA</code> binding, admin secret, and URL. Then install the prepared study file in its existing Study Admin. Repeat the code update for each Worker using the new feature.</p><button type="button" class="btn btn-secondary" id="download-worker-update-btn">Download Worker update</button><p class="field-hint" id="worker-update-status" role="status"></p></details>
         <div class="field-hint" id="cloudflare-study-status" role="status" style="margin-top: 8px;"></div>
@@ -615,14 +619,14 @@
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261121c"></script>
+<script src="js/tabs/questions.js?v=20261121e"></script>
 <script src="js/tabs/schedule.js?v=20261121c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
 <script src="js/preview.js?v=20261121b"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20261120e"></script>
+<script src="js/export.js?v=20261121d"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -660,7 +664,7 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20261121c"></script>
+<script src="js/builder-shell.js?v=20261121d"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

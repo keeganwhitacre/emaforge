@@ -491,7 +491,8 @@ function getRuntimeCss() {
     .preview-simulation-note summary { padding: 6px 9px; cursor: pointer; font-weight: 700; list-style: none; text-transform: uppercase; letter-spacing: .04em; }
     .preview-simulation-note summary::-webkit-details-marker { display: none; }
     .preview-simulation-note p { margin: 0; padding: 0 10px 9px; color: var(--fg-muted); font-size: .68rem; text-align: left; }
-    .preview-mode .screen { padding-top: calc(env(safe-area-inset-top, 24px) + 46px); }
+    .preview-mode .screen { top: calc(env(safe-area-inset-top, 0px) + 76px); padding-top: 12px; }
+    .preview-mode:has(.preview-simulation-note[open]) .screen { top: calc(env(safe-area-inset-top, 0px) + 128px); }
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
     .pilot-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; text-align: center; background: var(--bg-elevated); color: var(--fg); font-size: 11px; pointer-events: none; }
     .screen.active { opacity: 1; pointer-events: all; }
