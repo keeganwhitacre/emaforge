@@ -114,6 +114,7 @@ function buildWindowCard(w, i) {
   el.addEventListener('focusin', () => {
     if (previewSession !== w.id) {
       previewSession = w.id;
+      rememberBuilderWorkspace();
       renderPreviewTabs();
       renderPreview();
     }

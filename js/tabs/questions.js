@@ -40,6 +40,7 @@ function selectedMeasureWindow() {
 function selectMeasureSession(windowId) {
   if (!state.ema.scheduling.windows.some(window => window.id === windowId)) return;
   previewSession = windowId;
+  rememberBuilderWorkspace();
   measureInsertIndex = null;
   closeMeasurePicker();
   renderPreviewTabs();
@@ -161,7 +162,16 @@ function renderMeasureComposer() {
   flow.innerHTML = `<div class="measure-flow-heading"><div><strong>${escH(window.label || 'Untitled session')}</strong><span class="measure-flow-session">Participant flow</span></div><span>Expand to edit · use arrows to reorder</span></div>`;
   const list = document.createElement('div');
   list.className = 'measure-flow-list';
-  if (!entries.length) list.innerHTML = '<p class="questions-empty">Nothing here yet. Add a question, instruction, or physiology task to begin.</p>';
+  if (!entries.length) {
+    list.innerHTML = `<div class="measure-empty">
+      <strong>This session has no measures yet</strong>
+      <p>Start with a question, instruction, or task.</p>
+      <button type="button" class="btn btn-secondary">Choose a measure</button>
+    </div>`;
+    list.querySelector('button').addEventListener('click', () => openMeasurePicker());
+    flow.appendChild(list);
+    return;
+  }
   appendFlowDropSlot(list, 0);
   entries.forEach((entry, index) => {
     list.appendChild(buildMeasureFlowCard(window, entries, entry, index));

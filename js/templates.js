@@ -108,11 +108,6 @@ function applyLibraryItem(item) {
   StorageManager.triggerUIRefresh();
   const modal = document.getElementById('import-modal');
   if (modal) modal.classList.remove('open');
-  const saveStatus = document.getElementById('save-status');
-  if (saveStatus) {
-    saveStatus.textContent = item.kind === 'question_pack' ? 'Question pack added' : 'Task preset added';
-    saveStatus.style.color = 'var(--accent)';
-  }
 }
 
 function validateProtocolBeforeLoad(item) {

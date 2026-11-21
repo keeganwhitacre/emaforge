@@ -20,8 +20,6 @@ body { background: var(--workspace-bg); }
 .topbar-project .badge { border-radius: 16px; text-transform: none; letter-spacing: 0; font-size: 11px; padding: 3px 10px; }
 .topbar-actions { gap: 10px; }
 .topbar-actions .btn-ghost, .topbar-actions .btn-export { min-height: 38px; padding: 8px 12px; font-size: 12px; }
-.save-status { font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; border: 0; background: transparent; white-space: nowrap; }
-.save-status::before { content: "●"; color: var(--green); margin-right: 6px; }
 .project-menu { position: relative; }
 .project-menu summary { list-style: none; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius); height: 38px; min-width: 38px; display: grid; place-items: center; font-weight: 700; }
 .project-menu summary::-webkit-details-marker { display: none; }
@@ -56,8 +54,43 @@ body { background: var(--workspace-bg); }
 .builder-section-header h1 { font-family: var(--font); font-size: clamp(25px, 2.2vw, 34px); font-weight: 730; line-height: 1.16; letter-spacing: -.035em; }
 .builder-section-header p { color: var(--fg-2); font-size: 13px; margin-top: 10px; }
 .builder-inline-issues { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-top: 18px; background: var(--bg-1); }
-.builder-inline-issues[hidden], .preview-error[hidden] { display: none; }
+.builder-inline-issues[hidden], .builder-next[hidden], .preview-error[hidden] { display: none; }
 .builder-inline-issues strong { display: block; font-size: 12px; margin-bottom: 7px; }
+.builder-section-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.save-status {
+  color: var(--fg-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.save-status[data-state]::before { content: "●"; margin-right: 6px; }
+.save-status[data-state="saved"]::before { color: var(--green); }
+.save-status[data-state="error"] { color: var(--red); }
+.builder-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 18px;
+  padding: 13px 15px;
+  border-radius: var(--group-radius);
+  border: 1px solid var(--surface-line);
+  background: var(--surface-muted);
+}
+.builder-next strong { font-size: 12px; }
+.builder-next p { margin-top: 3px; }
+.builder-next .btn { min-height: 38px; }
+.builder-inline-issues > summary { cursor: pointer; color: var(--fg-2); }
+.builder-inline-issues[open] > summary { margin-bottom: 8px; }
+.measure-empty {
+  padding: 20px 16px;
+  background: var(--surface-muted);
+  border: 1px dashed var(--surface-line);
+  border-radius: var(--group-radius);
+}
+.measure-empty p { color: var(--fg-2); margin: 5px 0 12px; }
 .builder-issue { display: flex; width: 100%; align-items: baseline; gap: 7px; background: transparent; color: var(--fg-2); text-align: left; border: 0; border-radius: var(--radius); padding: 5px 2px; font: 12px/1.4 var(--font); cursor: pointer; }
 .builder-issue:hover { color: var(--accent); background: var(--accent-dim); }
 .builder-issue.error::before { content: "●"; color: var(--red); }
@@ -339,7 +372,6 @@ body.preview-open { overflow: hidden; }
 #preview-panel.preview-fullscreen #close-preview-btn { display: block; position: fixed; z-index: 122; top: 18px; right: 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-1); color: var(--fg); cursor: pointer; padding: 8px 11px; box-shadow: var(--shadow); }
 @media (max-width: 1250px) {
   #app { grid-template-columns: 186px minmax(0, 1fr) minmax(305px, 30vw); }
-  .save-status { display: none; }
   .config-section { padding-left: 24px; padding-right: 24px; }
   .builder-section-header { padding-left: 24px; }
 }
@@ -505,7 +537,7 @@ body.preview-open { overflow: hidden; }
   .flow-question-card .q-drag-handle, .measure-flow-card .measure-flow-handle { display: none; }
   .measure-flow-card { grid-template-columns: 22px minmax(0, 1fr); }
   .measure-flow-card :is(.measure-flow-actions, .measure-flow-condition) { grid-column: 2; }
-  .deploy-actions > .btn { min-height: 44px; }
+  :is(.deploy-actions, .builder-next, .measure-empty) > .btn { min-height: 44px; }
   #preview-panel.preview-fullscreen { padding: 62px 10px 10px; }
   #preview-panel.preview-fullscreen .readiness-card { display: none; }
   #preview-panel.preview-fullscreen #preview-header { padding: 12px; }

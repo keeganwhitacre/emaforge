@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261121">
 <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/builder.css?v=20261121">
+<link rel="stylesheet" href="css/builder.css?v=20261121b">
 </head>
 <body>
 <dialog id="study-setup" aria-labelledby="study-setup-title">
@@ -64,7 +64,6 @@
     <span class="forge-brand"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</span>
     <div class="topbar-project"><strong id="builder-project-name">Untitled study</strong><span class="badge badge-muted">Draft</span></div>
     <div class="topbar-actions">
-      <span class="save-status" id="save-status">Saved in this browser</span>
       <button class="btn-ghost" id="builder-preview-btn">Preview</button>
       <button class="btn-ghost" id="btn-save-project">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-10.5C1 .784 1.784 0 2.75 0h8a.75.75 0 01.53.22l3.5 3.5c.141.14.22.331.22.53v8a1.75 1.75 0 01-1.75 1.75H2.75zM11.5 13.5V8.75a.25.25 0 00-.25-.25h-6.5a.25.25 0 00-.25.25v4.75h7zm-5.75-10v2.25c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V3.5z"/></svg>
@@ -117,7 +116,21 @@
 
   <!-- ========== CONFIG PANEL ========== -->
   <section id="config-panel">
-    <div class="builder-section-header"><div><h1 id="builder-section-title">Overview</h1><p id="builder-section-description">Set up your study identity, participant experience, and data output.</p></div><div id="builder-inline-issues" class="builder-inline-issues" aria-live="polite" hidden></div></div>
+    <div class="builder-section-header">
+      <div class="builder-section-title-row">
+        <h1 id="builder-section-title" tabindex="-1">Overview</h1>
+        <span class="save-status" id="save-status" role="status">Draft not saved yet</span>
+      </div>
+      <p id="builder-section-description">Set up your study identity, participant experience, and data output.</p>
+      <div class="builder-next" id="builder-next" hidden>
+        <div><strong>Next step</strong><p id="builder-next-detail"></p></div>
+        <button type="button" class="btn btn-secondary" id="builder-next-action"></button>
+      </div>
+      <details class="builder-inline-issues" id="builder-issues-details" hidden>
+        <summary id="builder-issues-summary"></summary>
+        <div id="builder-inline-issues"></div>
+      </details>
+    </div>
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
       <div class="section-title">Study Identity</div>
@@ -562,7 +575,7 @@
 
     <div class="library-notice">
       <strong>Designed to be inspectable.</strong>
-      <span>Library items are plain JSON. Complete protocols replace the current draft; packs and presets add to it.</span>
+      <span>Library items are plain JSON. Complete protocols open as new drafts. Packs and presets add to the first session of this draft.</span>
     </div>
 
     <div id="library-status" class="library-status" aria-live="polite">Loading library…</div>
@@ -588,18 +601,18 @@
 <!-- Scripts loaded in exact dependency order -->
 <script src="js/state.js?v=20260924b"></script>
 <script src="js/place-context.js?v=20260925g"></script>
-<script src="js/storage.js?v=20261120b"></script>
+<script src="js/storage.js?v=20261121b"></script>
 <script src="js/library-utils.js?v=20260924d"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
-<script src="js/templates.js?v=20260924e"></script>
+<script src="js/templates.js?v=20261121b"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
-<script src="js/tabs/questions.js?v=20261121"></script>
-<script src="js/tabs/schedule.js?v=20260925a"></script>
+<script src="js/tabs/questions.js?v=20261121b"></script>
+<script src="js/tabs/schedule.js?v=20261121b"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
-<script src="js/preview.js?v=20260925a"></script>
+<script src="js/preview.js?v=20261121b"></script>
 <script src="js/modals.js"></script>
 <script src="js/export.js?v=20261120e"></script>
 
@@ -639,7 +652,7 @@
     });
   }
 </script>
-<script src="js/builder-shell.js?v=20261121"></script>
+<script src="js/builder-shell.js?v=20261121b"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>
