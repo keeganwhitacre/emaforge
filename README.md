@@ -46,12 +46,12 @@ EMA Forge is a free, open-source toolkit for ecological momentary assessment (EM
 
 | | |
 | --- | --- |
-| 🛠️ **Builder** | Named drafts saved in the browser, portable backups, onboarding and consent, multi-session schedules, skip logic, response piping, and a live phone preview that updates as you type. |
-| 📱 **Participant app** | A single HTML file that runs in mobile Safari or Chrome, with no app store install. Handles link expiry, grace periods, double-submission locks, and crash recovery. |
-| ❤️ **Physiology** | Camera photoplethysmography (PPG) heart rate, the ecological Phase Adjustment Task (ePAT), and the heartbeat counting task (HCT), all running in the browser. |
-| 📚 **Protocol Library** | 6 complete example protocols, validated question packs (K6, PHQ-4, WHO-5), and task presets. Every item is versioned, inspectable JSON. |
-| ☁️ **Hosting & Study Admin** | One Worker plus a private R2 bucket per study. Install and update protocols, verify pilots, manage rosters, create participant invite links, and send scheduled SMS through Twilio (beta). |
-| 📊 **Analyze** | Browser-local summaries, ePAT circular statistics, protocol-version filtering, long-format CSV export, and protocol-aware synthetic data. |
+| **Builder** | Named drafts saved in the browser, portable backups, onboarding and consent, multi-session schedules, skip logic, response piping, and a live phone preview that updates as you type. |
+| **Participant app** | A single HTML file that runs in mobile Safari or Chrome, with no app store install. Handles link expiry, grace periods, double-submission locks, and crash recovery. |
+| **Physiology** | Camera photoplethysmography (PPG) heart rate, the ecological Phase Adjustment Task (ePAT), and the heartbeat counting task (HCT), all running in the browser. |
+| **Protocol Library** | 6 complete example protocols, validated question packs (K6, PHQ-4, WHO-5), and task presets. Every item is versioned, inspectable JSON. |
+| **Hosting & Study Admin** | One Worker plus a private R2 bucket per study. Install and update protocols, verify pilots, manage rosters, create participant invite links, and send scheduled SMS through Twilio (beta). |
+| **Analyze** | Browser-local summaries, ePAT circular statistics, protocol-version filtering, long-format CSV export, and protocol-aware synthetic data. |
 
 ## Screenshots
 
