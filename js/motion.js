@@ -35,6 +35,44 @@
     });
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initThemeButton);
-  else initThemeButton();
+  function initMobileNavigation() {
+    const nav = document.querySelector(".forge-header .forge-nav");
+    if (!nav) return;
+
+    nav.id = "forge-site-navigation";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "forge-header-link forge-nav-toggle";
+    toggle.textContent = "Menu";
+    toggle.setAttribute("aria-controls", nav.id);
+    toggle.setAttribute("aria-expanded", "false");
+    nav.before(toggle);
+
+    function setOpen(open) {
+      nav.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+    }
+    toggle.addEventListener("click", () => setOpen(!nav.classList.contains("is-open")));
+    document.addEventListener("click", event => {
+      if (!nav.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && nav.classList.contains("is-open")) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    nav.parentElement.addEventListener("focusout", event => {
+      if (event.relatedTarget !== toggle && !nav.contains(event.relatedTarget)) setOpen(false);
+    });
+    matchMedia("(max-width: 760px)").addEventListener("change", () => setOpen(false));
+  }
+
+  function init() {
+    initThemeButton();
+    initMobileNavigation();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();

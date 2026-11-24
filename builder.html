@@ -11,10 +11,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/studio.css?v=20261124b">
-<link rel="stylesheet" href="css/surfaces.css?v=20261124b">
-<link rel="stylesheet" href="css/builder.css?v=20261124b">
-<script src="js/motion.js?v=20261124" defer></script>
+<link rel="stylesheet" href="css/studio.css?v=20261124c">
+<link rel="stylesheet" href="css/surfaces.css?v=20261124c">
+<link rel="stylesheet" href="css/builder.css?v=20261124c">
+<script src="js/motion.js?v=20261124c" defer></script>
 </head>
 <body>
 <dialog id="study-setup" aria-labelledby="study-setup-title">
@@ -57,7 +57,15 @@
   </div>
 </dialog>
 
-<div id="app">
+<div id="app" class="builder-app">
+  <dialog class="measure-picker" id="measure-picker" aria-labelledby="measure-picker-title">
+    <div class="measure-picker-head">
+      <div><strong id="measure-picker-title">Add a measure</strong><span id="measure-picker-context">Choose what participants do next.</span></div>
+      <button type="button" class="builder-icon-button" id="close-measure-picker" autofocus aria-label="Close measure picker">✕</button>
+    </div>
+    <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
+    <div class="measure-picker-groups" id="measure-picker-groups"></div>
+  </dialog>
 
   <!-- ========== TOP BAR ========== -->
    <header id="topbar" class="forge-header">
@@ -75,6 +83,10 @@
         Review &amp; Deploy
       </button>
       <details class="project-menu"><summary aria-label="More project actions" title="More project actions">•••</summary><div class="project-menu-list" id="builder-project-menu-list">
+      <label class="builder-section-picker builder-phone-only">
+        <span>Section</span>
+        <select id="builder-menu-section"></select>
+      </label>
       <div id="phone-draft-slot" class="builder-phone-only"></div>
       <button type="button" class="btn-ghost builder-phone-only" id="phone-backup-btn">Download Backup</button>
       <button class="btn-ghost" id="theme-toggle" title="Toggle Light/Dark Mode">
@@ -94,6 +106,11 @@
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4.72 3.22a.75.75 0 011.06 1.06L2.06 8l3.72 3.72a.75.75 0 11-1.06 1.06L.47 8.53a.75.75 0 010-1.06l4.25-4.25zm6.56 0a.75.75 0 10-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 101.06 1.06l4.25-4.25a.75.75 0 000-1.06l-4.25-4.25z"/></svg>
         JSON
       </button>
+      <nav class="project-menu-resources builder-phone-only" aria-label="EMA Forge resources">
+        <a class="btn-ghost" href="library.html">Library</a>
+        <a class="btn-ghost" href="readme.html">Docs</a>
+        <a class="btn-ghost" href="dashboard.html">Analyze</a>
+      </nav>
       </div></details>
     </div>
   </header>
@@ -295,15 +312,6 @@
           <span class="field-label">Editing session</span>
           <div class="measure-session-tabs forge-segments" id="measure-session-tabs" role="group" aria-label="Choose a session to edit"></div>
         </div>
-      </div>
-
-      <div class="measure-picker" id="measure-picker" hidden>
-        <div class="measure-picker-head">
-          <div><strong>Add a measure</strong><span id="measure-picker-context">Choose what participants do next.</span></div>
-          <button type="button" class="builder-icon-button" id="close-measure-picker" aria-label="Close measure picker">✕</button>
-        </div>
-        <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
-        <div class="measure-picker-groups" id="measure-picker-groups"></div>
       </div>
 
       <div class="measure-flow" id="measure-flow" aria-live="polite"></div>
@@ -632,7 +640,7 @@
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261124b"></script>
+<script src="js/tabs/questions.js?v=20261124c"></script>
 <script src="js/tabs/schedule.js?v=20261121c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
@@ -672,7 +680,7 @@
     themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261124b"></script>
+<script src="js/builder-shell.js?v=20261124c"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

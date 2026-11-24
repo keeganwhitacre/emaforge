@@ -137,21 +137,21 @@ function openMeasurePicker(trigger, index = null) {
   if (context) context.textContent = measureInsertIndex === entries.length
     ? `Add to the end of ${window.label}.`
     : `Insert as step ${measureInsertIndex + 1} in ${window.label}.`;
-  picker.hidden = false;
   const search = document.getElementById('measure-picker-search');
   if (search) search.value = '';
   renderMeasurePicker();
-  search?.focus({ preventScroll: true });
-  picker.scrollIntoView({ block: 'start' });
+  picker.showModal();
+  picker.scrollTop = 0;
+  if (!matchMedia('(max-width: 850px)').matches) search?.focus({ preventScroll: true });
 }
 
 function closeMeasurePicker(restoreFocus = false) {
   const picker = document.getElementById('measure-picker');
-  if (!picker || picker.hidden) return;
-  picker.hidden = true;
+  if (!picker?.open) return;
+  picker.close();
   if (restoreFocus) {
     const trigger = measurePickerTrigger?.isConnected ? measurePickerTrigger : document.getElementById('open-measure-picker');
-    trigger?.focus();
+    trigger?.focus({ preventScroll: true });
   }
   measurePickerTrigger = null;
 }
@@ -190,12 +190,14 @@ function renderMeasureComposer() {
     appendFlowDropSlot(list, index + 1);
   });
   wireFlowListReordering(list, window, entries);
-  const addRow = document.createElement('button');
-  addRow.type = 'button';
-  addRow.className = 'measure-add-row';
-  addRow.innerHTML = '<span class="measure-add-row-icon" aria-hidden="true">+</span>Add measure';
-  addRow.addEventListener('click', event => openMeasurePicker(event.currentTarget));
-  list.appendChild(addRow);
+  if (entries.length >= 6) {
+    const addRow = document.createElement('button');
+    addRow.type = 'button';
+    addRow.className = 'measure-add-row';
+    addRow.innerHTML = '<span class="measure-add-row-icon" aria-hidden="true">+</span>Add measure';
+    addRow.addEventListener('click', event => openMeasurePicker(event.currentTarget));
+    list.appendChild(addRow);
+  }
   flow.appendChild(list);
 }
 
@@ -1064,10 +1066,8 @@ function addMeasureAt(type, insertionIndex = null) {
 }
 
 document.getElementById('close-measure-picker')?.addEventListener('click', () => closeMeasurePicker(true));
-document.getElementById('measure-picker')?.addEventListener('keydown', event => {
-  if (event.key !== 'Escape') return;
+document.getElementById('measure-picker')?.addEventListener('cancel', event => {
   event.preventDefault();
-  event.stopPropagation();
   closeMeasurePicker(true);
 });
 document.getElementById('measure-picker-search')?.addEventListener('input', event => renderMeasurePicker(event.target.value));
