@@ -179,18 +179,29 @@ function renderBuilderShell() {
     const icon = document.createElement("span");
     icon.className = "readiness-icon";
     icon.textContent = complete ? "✓" : "○";
+    icon.setAttribute("aria-hidden", "true");
+    button.setAttribute("aria-label", `${label}. ${complete ? "Complete" : "Needs review"}.`);
     button.append(icon, document.createTextNode(label));
-    const arrow = document.createElement("span");
-    arrow.className = "readiness-arrow";
-    arrow.textContent = "›";
-    button.append(arrow);
-    button.addEventListener("click", () => document.querySelector(`.tab-btn[data-tab="${section}"]`).click());
+    button.disabled = section === "deployment" && complete;
+    if (!button.disabled) {
+      const arrow = document.createElement("span");
+      arrow.className = "ui-chevron readiness-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      button.append(arrow);
+      button.addEventListener("click", () => {
+        if (section === "deployment") showBuilderIssue(errors[0]);
+        else {
+          document.querySelector(`.tab-btn[data-tab="${section}"]`).click();
+          document.getElementById("builder-section-title").focus();
+        }
+      });
+    }
     list.append(button);
   });
   if (issues.length) {
     const detail = document.createElement("p");
     detail.className = "readiness-detail";
-    detail.textContent = `${errors.length} blocking issue${errors.length === 1 ? "" : "s"} · ${warnings.length} warning${warnings.length === 1 ? "" : "s"}. ${issues[0].message}`;
+    detail.textContent = `${errors.length} blocking issue${errors.length === 1 ? "" : "s"} · ${warnings.length} warning${warnings.length === 1 ? "" : "s"}. ${(errors[0] || warnings[0]).message}`;
     list.append(detail);
   }
 }

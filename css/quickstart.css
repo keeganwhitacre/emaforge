@@ -52,10 +52,10 @@ li p, .next p { max-width: 66ch; }
 figure { margin: 17px 0 0; width: fit-content; max-width: 100%; }
 figure img { display: block; width: auto; height: auto; max-width: 100%; border: 0; border-radius: var(--group-radius); box-shadow: var(--surface-shadow); }
 .phone { max-width: 225px; }
-.look-for { margin-top: 14px; padding: 10px 14px; border-radius: var(--radius); background: var(--bg-1); box-shadow: var(--group-shadow); }
+.look-for { margin-top: 14px; padding: 10px 14px; border-radius: var(--group-radius); background: var(--bg-1); box-shadow: var(--group-shadow); }
 
 details { max-width: 66ch; margin-top: 14px; padding: 12px 16px; border: 0; background: var(--bg-1); border-radius: var(--group-radius); box-shadow: var(--group-shadow); }
-details[open] > :not(summary) { animation: forge-expand var(--dur) var(--ease-out); }
+details[open] > :not(summary) { animation: forge-expand var(--dur-fast) var(--ease-out); }
 @keyframes forge-expand { from { opacity: 0; transform: translateY(-4px); } }
 summary { cursor: pointer; font-weight: 500; }
 details p { margin-top: 10px; }

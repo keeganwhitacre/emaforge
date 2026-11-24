@@ -16,10 +16,7 @@ body { background: var(--bg); font-size: 15px; }
 .library-toolbar label { flex: 1; }
 .library-toolbar input { width: min(100%, 440px); min-height: 40px; padding: 0 14px 0 38px; border: 0; border-radius: var(--radius); background: var(--bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23889' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='m11 11 3.5 3.5'/%3E%3C/svg%3E") no-repeat 13px 50%; color: var(--fg); font: 15px var(--font); outline: none; }
 .library-toolbar input:focus { box-shadow: var(--focus-ring); background-color: var(--bg-1); }
-.library-filters { display: flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: var(--radius); background: var(--bg-2); }
-.library-filters button { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--fg); font: 500 14px var(--font); cursor: pointer; transition: background var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out); }
-.library-filters button.active { background: var(--bg-1); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
-[data-theme="dark"] .library-filters button.active { background: var(--bg-3); }
+.library-filters { flex-wrap: wrap; }
 .library-page-status { margin: 18px 4px 14px; color: var(--fg-3); font-size: 13px; }
 
 /* Cards */

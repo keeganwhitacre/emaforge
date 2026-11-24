@@ -60,6 +60,7 @@
   --surface-muted: var(--bg-2);
   --surface-line: var(--hairline);
   --bar-bg: rgba(27, 29, 32, .72);
+  --header-edge: rgba(255, 255, 255, .12);
   --scrim: rgba(0, 0, 0, .55);
 
   /* Shape */
@@ -91,7 +92,8 @@
   --focus-ring: 0 0 0 3px var(--accent-dim);
 
   /* Layout */
-  --forge-header-height: 60px;
+  --forge-header-height: clamp(56px, 6vw, 60px);
+  --forge-header-padding: calc((var(--forge-header-height) - 46px) / 2);
   --forge-inset: clamp(10px, 1.25vw, 16px);
   --forge-ink: var(--fg);
   --forge-mark-ink: #fff;
@@ -124,6 +126,7 @@
   --red: #b4232a; --red-dim: rgba(180, 35, 42, .09);
 
   --bar-bg: rgba(255, 255, 255, .7);
+  --header-edge: rgba(255, 255, 255, .75);
   --scrim: rgba(32, 40, 49, .38);
   --shadow: 0 12px 32px rgba(38, 51, 73, .14);
   --surface-shadow: 0 0 0 1px var(--hairline), 0 8px 24px rgba(38, 51, 73, .06);
@@ -158,29 +161,28 @@ body {
   align-items: center;
   flex-shrink: 0;
   height: var(--forge-header-height);
-  padding: 8px;
+  padding: var(--forge-header-padding);
   gap: 6px;
   color: var(--forge-ink);
   background: var(--bar-bg);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
-  border: 0;
+  border: 1px solid var(--header-edge);
   border-radius: var(--surface-radius);
   box-shadow: var(--surface-shadow);
   font: 15px/1.4 var(--font);
   z-index: 20;
   view-transition-name: forge-header;
 }
-/* Content pages: the bar floats over the page and stays while it scrolls. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .forge-header { background: var(--bg-1); }
+}
+
+/* Content pages share the same outer insets as the workspaces. */
 .forge-header-inset {
   position: sticky;
   top: var(--forge-inset);
   margin: var(--forge-inset) var(--forge-inset) 0;
-}
-.forge-header-inset.forge-header-narrow {
-  max-width: 1120px;
-  margin-inline: auto;
-  width: calc(100% - 2 * var(--forge-inset));
 }
 
 .forge-brand {
@@ -242,6 +244,42 @@ body {
 
 @media (max-width: 760px) {
   .forge-nav { display: none; }
+}
+
+/* Segmented selections share a track and a matching inset radius. */
+.forge-segments {
+  --segment-inset: 3px;
+  --segment-radius: 12px;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--segment-inset);
+  border-radius: var(--segment-radius);
+  background: var(--bg-2);
+}
+.forge-segments > button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: calc(var(--segment-radius) - var(--segment-inset));
+  background: transparent;
+  color: var(--fg-2);
+  font: 550 14px/1.3 var(--font);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+.forge-segments > button:hover { color: var(--fg); }
+.forge-segments > button:is(.active, [aria-pressed="true"]) {
+  background: var(--bg-1);
+  color: var(--fg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .14), inset 0 0 0 1px var(--hairline);
+}
+[data-theme="dark"] .forge-segments > button:is(.active, [aria-pressed="true"]) { background: var(--bg-3); }
+.forge-segments > button:focus-visible { outline-offset: -2px; }
+@media (pointer: coarse) {
+  .forge-segments > button { min-height: 44px; }
 }
 
 /* ---------- Buttons (shared by content pages) ---------- */

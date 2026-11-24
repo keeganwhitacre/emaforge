@@ -59,8 +59,7 @@ function renderMeasureSessionTabs() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `measure-session-tab${selected?.id === window.id ? ' active' : ''}`;
-    button.setAttribute('role', 'tab');
-    button.setAttribute('aria-selected', String(selected?.id === window.id));
+    button.setAttribute('aria-pressed', String(selected?.id === window.id));
     button.textContent = window.label || 'Untitled session';
     button.addEventListener('click', () => {
       selectMeasureSession(window.id);
