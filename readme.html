@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentation — EMA Forge</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/studio.css?v=20261124">
+  <link rel="stylesheet" href="css/studio.css?v=20261124b">
   <script>
     // Apply theme immediately to prevent flashing
     const savedTheme = localStorage.getItem('ema-forge-theme') ||
       (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
-  <link rel="stylesheet" href="css/surfaces.css?v=20261124">
+  <link rel="stylesheet" href="css/surfaces.css?v=20261124b">
   <style>
     /* ── Documentation Layout ───────────────────────────────── */
     #docs-app {
@@ -529,15 +529,17 @@
         width: 78vw;
         max-width: 320px;
         z-index: 50;
-        visibility: hidden;
-        transform: translateX(calc(-100% - var(--forge-inset)));
-        transition: transform .2s ease, visibility .2s;
+        display: none;
         padding: 16px 10px;
       }
 
       .docs-sidebar.open {
-        visibility: visible;
-        transform: translateX(0);
+        display: block;
+        animation: docs-drawer-in var(--dur-fast) var(--ease-out) both;
+      }
+
+      @keyframes docs-drawer-in {
+        from { opacity: 0; transform: translateX(-12px); }
       }
 
       .docs-nav-link {
@@ -721,7 +723,14 @@
     .docs-nav-title { color: var(--fg-3); font-size: 13px; font-weight: 600; letter-spacing: 0; padding: 0 12px; }
     .docs-nav-link { padding: 9px 12px; border-radius: 10px; color: var(--fg); font-size: 14px; }
     .docs-nav-link.active { background: var(--bg-1); color: var(--fg); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 .5px var(--hairline); }
-    .docs-prose { font-size: 16px; line-height: 1.65; }
+    .docs-prose { font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; }
+    .docs-prose :is(h1, h2, h3) { font-family: var(--font-display); }
+    .docs-prose h1 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -.035em; line-height: 1.12; }
+    .docs-prose h2 { font-size: clamp(21px, 2.2vw, 26px); letter-spacing: -.02em; line-height: 1.25; }
+    .docs-prose h3 { font-size: 17px; line-height: 1.35; }
+    .docs-prose details { background: var(--bg-2); border: 1px solid var(--hairline); }
+    .docs-prose details[open] { border-color: var(--hairline); }
+    .docs-prose details summary:focus-visible { outline-offset: -3px; border-radius: var(--group-radius); }
     .docs-prose code { border: 0; border-radius: 6px; font-size: 13px; }
     .docs-prose pre { border: 0; background: var(--bg-2); border-radius: var(--radius-lg); }
     #topbar .topbar-actions-sep { display: none; }
@@ -734,6 +743,19 @@
     .feature-item { border: 0; background: var(--bg-2); }
     .docs-hamburger { border: 0; border-radius: 14px; width: 44px; height: 44px; }
     .docs-hamburger:hover { background: var(--bg-2); }
+    @media (max-width: 900px) {
+      .docs-sidebar {
+        width: min(78vw, 320px);
+        padding: 16px 10px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--surface-radius);
+        background: var(--bg-1);
+        box-shadow: var(--surface-shadow-raised);
+      }
+      .docs-nav-link { min-height: 44px; }
+      .docs-nav-link.active { background: var(--accent-dim); color: var(--accent); box-shadow: none; }
+      .docs-prose table { overflow-x: auto; }
+    }
 </style>
 <script src="js/motion.js?v=20261124" defer></script>
 </head>
@@ -748,7 +770,7 @@
       <nav class="forge-nav" aria-label="Site"><a href="builder.html">Builder</a><a href="library.html">Library</a><a href="dashboard.html">Analyze</a><a href="readme.html" aria-current="page">Docs</a></nav>
 
       <div class="topbar-actions">
-        <button class="docs-hamburger" id="docs-hamburger" aria-label="Toggle navigation" aria-expanded="false">
+        <button class="docs-hamburger" id="docs-hamburger" aria-label="Documentation contents" aria-expanded="false" aria-controls="docs-sidebar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -3431,13 +3453,19 @@ https://github.com/keeganwhitacre/emaforge</code></pre>
       if (!sidebar || !overlay) return;
       sidebar.classList.add('open');
       overlay.classList.add('open');
-      if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+      hamburger.setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(() => {
+        if (!sidebar.classList.contains('open')) return;
+        const firstLink = sidebar.querySelector('.docs-nav-link.active') || sidebar.querySelector('.docs-nav-link');
+        firstLink?.focus();
+      });
     }
-    function closeSidebar() {
+    function closeSidebar(returnFocus = false) {
       if (!sidebar || !overlay) return;
       sidebar.classList.remove('open');
       overlay.classList.remove('open');
-      if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+      hamburger.setAttribute('aria-expanded', 'false');
+      if (returnFocus) hamburger.focus();
     }
     if (hamburger) {
       hamburger.addEventListener('click', () => {
@@ -3445,7 +3473,10 @@ https://github.com/keeganwhitacre/emaforge</code></pre>
         else openSidebar();
       });
     }
-    if (overlay) overlay.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', () => closeSidebar(true));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(true);
+    });
     // Close sidebar when user rotates to wide viewport
     window.addEventListener('resize', () => {
       if (window.innerWidth > 900) closeSidebar();

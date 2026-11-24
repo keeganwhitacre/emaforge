@@ -17,37 +17,26 @@ function renderPreviewTabs() {
     previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
   }
 
-  // Add Onboarding Tab if enabled
-  if (state.onboarding.enabled) {
-    const obBtn = document.createElement('button');
-    obBtn.className = `preview-session-tab ${previewSession === 'onboarding' ? 'active' : ''}`;
-    obBtn.dataset.session = 'onboarding';
-    obBtn.textContent = 'Setup';
-    container.appendChild(obBtn);
-  }
-
-  // Add Tabs for every defined window in the schedule
-  state.ema.scheduling.windows.forEach(w => {
-    const btn = document.createElement('button');
-    btn.className = `preview-session-tab ${previewSession === w.id ? 'active' : ''}`;
-    btn.dataset.session = w.id;
-    // Map window label to a short tab name
-    btn.textContent = w.label.split(' ')[0];
-    container.appendChild(btn);
-  });
-
-  // Re-bind click events
-  document.querySelectorAll('.preview-session-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.preview-session-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      previewSession = btn.dataset.session;
+  const sessions = state.ema.scheduling.windows.map(({ id, label }) => [id, label || 'Untitled session']);
+  if (state.onboarding.enabled) sessions.unshift(['onboarding', 'Setup']);
+  sessions.forEach(([id, label]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'preview-session-tab';
+    button.dataset.session = id;
+    button.textContent = label;
+    button.setAttribute('aria-pressed', String(previewSession === id));
+    button.addEventListener('click', () => {
+      container.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-pressed', 'true');
+      previewSession = id;
       if (typeof rememberBuilderWorkspace === 'function') rememberBuilderWorkspace();
-      if (document.getElementById('tab-questions')?.classList.contains('active') && previewSession !== 'onboarding') {
+      if (document.getElementById('tab-questions')?.classList.contains('active') && id !== 'onboarding') {
         renderMeasureComposer();
       }
       renderPreview();
     });
+    container.append(button);
   });
 }
 

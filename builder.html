@@ -11,9 +11,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/studio.css?v=20261124">
-<link rel="stylesheet" href="css/surfaces.css?v=20261124">
-<link rel="stylesheet" href="css/builder.css?v=20261124">
+<link rel="stylesheet" href="css/studio.css?v=20261124b">
+<link rel="stylesheet" href="css/surfaces.css?v=20261124b">
+<link rel="stylesheet" href="css/builder.css?v=20261124b">
 <script src="js/motion.js?v=20261124" defer></script>
 </head>
 <body>
@@ -136,148 +136,156 @@
     </div>
     <!-- STUDY TAB -->
     <div class="config-section active" id="tab-study">
-      <div class="section-title">Study Identity</div>
-      <button type="button" class="btn template-start" id="start-template-btn">Open protocol library</button>
-      <div class="field-group">
-        <label class="field-label">Study Name</label>
-        <input type="text" id="study-name" placeholder="e.g. Affective Rhythms Study">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Institution Label</label>
-        <input type="text" id="institution" placeholder="e.g. The Ohio State University">
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-title">Visual Theme</div>
-      <div class="field-row">
+      <section class="settings-group">
+        <h2 class="settings-title">Study Identity</h2>
+        <button type="button" class="btn template-start" id="start-template-btn">Open protocol library</button>
         <div class="field-group">
-          <label class="field-label">Color Scheme</label>
-          <select id="study-theme">
-            <option value="oled">OLED (True Black)</option>
-            <option value="dark">Standard Dark</option>
-            <option value="light">Light Mode</option>
-          </select>
+          <label class="field-label" for="study-name">Study Name</label>
+          <input type="text" id="study-name" placeholder="e.g. Affective Rhythms Study">
         </div>
         <div class="field-group">
-          <label class="field-label">Accent Color</label>
-          <div class="color-row">
-            <div class="color-preview" id="color-preview-swatch"></div>
-            <input type="color" id="accent-color" value="#e8716a" style="flex:1">
+          <label class="field-label" for="institution">Institution Label</label>
+          <input type="text" id="institution" placeholder="e.g. The Ohio State University">
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2 class="settings-title">Visual Theme</h2>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="study-theme">Color Scheme</label>
+            <select id="study-theme">
+              <option value="oled">OLED (True Black)</option>
+              <option value="dark">Standard Dark</option>
+              <option value="light">Light Mode</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="accent-color">Accent Color</label>
+            <div class="color-row">
+              <div class="color-preview" id="color-preview-swatch"></div>
+              <input type="color" id="accent-color" value="#e8716a" style="flex:1">
+            </div>
           </div>
         </div>
-      </div>
-      <div class="field-hint" style="margin-bottom:8px">Applied to buttons, sliders, and interactive elements in the generated study.</div>
+        <div class="field-hint">Applied to buttons, sliders, and interactive elements in the generated study.</div>
+      </section>
 
-      <div class="divider"></div>
-      <div class="section-title">Session Greetings</div>
-      <div class="field-hint" style="margin-bottom:12px">Customize the large header text displayed when a participant opens a session. Add more sessions in the Schedule tab.</div>
-      <div id="dynamic-greetings-list">
-        <!-- Injected dynamically by study.js based on schedule windows -->
-      </div>
-
-      <div class="divider"></div>
-    <div class="section-title">Session Safety</div>
-    <div class="field-hint" style="margin-bottom:12px;">
-      Controls protecting data integrity during field use. Both are on by default —
-      turn off only if your study design requires it.
-    </div>
-    <div class="toggle-row">
-      <span class="toggle-label">
-        Lock completed sessions
-        <span class="field-hint" style="display:block;margin-top:2px;">
-          A participant can only complete each (ID, day, session) combination once.
-          Prevents accidental re-submissions. Researchers can override with
-          <code>?force=1</code>.
-        </span>
-      </span>
-      <label class="toggle">
-        <input type="checkbox" id="study-completion-lock" checked>
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-    <div class="toggle-row" style="margin-top:10px;">
-      <span class="toggle-label">
-        Enable crash recovery
-        <span class="field-hint" style="display:block;margin-top:2px;">
-          If a participant's session is interrupted (crash, closed tab), they can
-          resume by re-opening the same link. Already-completed phases' data survives;
-          the current phase restarts.
-        </span>
-      </span>
-      <label class="toggle">
-        <input type="checkbox" id="study-resume-enabled" checked>
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-
-      <div class="divider"></div>
-      <div class="section-title">Data Output</div>
-      <div class="field-group">
-        <label class="field-label">Response Format</label>
-        <div class="seg-ctrl" id="format-ctrl">
-          <button class="seg-btn" data-fmt="json">JSON</button>
-          <button class="seg-btn active" data-fmt="csv">CSV</button>
+      <section class="settings-group">
+        <h2 class="settings-title">Session Greetings</h2>
+        <div class="field-hint">Customize the large header text displayed when a participant opens a session. Add more sessions in the Schedule tab.</div>
+        <div id="dynamic-greetings-list">
+          <!-- Injected dynamically by study.js based on schedule windows -->
         </div>
-        <div class="field-hint" id="format-hint">Each submission downloads a .csv with one row per question. Easy to concatenate across participants. Task signal data (e.g. ePAT) downloads alongside as a separate .json.</div>
-      </div>
-      
-      <details class="deploy-help"><summary>Independent receiver settings</summary>
-      <div class="field-group" style="margin-top: 16px; padding: 12px; background: var(--bg-2); border: 1px dashed var(--border-hi); border-radius: var(--radius);">
-  <label class="field-label" style="display: flex; align-items: center; gap: 6px;">
-    Webhook URL <span class="badge badge-neutral">Optional</span>
-  </label>
-  <input type="text" id="study-webhook" placeholder="https://your-study-receiver.example/upload">
-  <div class="field-hint" style="margin-top: 4px;">Optional. Receiver must return readable JSON with {"status":"success"} after saving data. Its URL is visible in the exported study. If absent or unconfirmed, participants can save a local copy.</div>
-  <a href="readme.html#webhook-upload" target="_blank" rel="noopener" class="field-hint" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--accent); text-decoration: none;">
-    Setup guide
-    <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
-  </a>
-</div>
-</details>
+      </section>
+
+      <section class="settings-group">
+        <h2 class="settings-title">Session Safety</h2>
+        <div class="field-hint">
+          Controls protecting data integrity during field use. Both are on by default —
+          turn off only if your study design requires it.
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">
+            Lock completed sessions
+            <span class="field-hint" style="display:block;margin-top:2px;">
+              A participant can only complete each (ID, day, session) combination once.
+              Prevents accidental re-submissions. Researchers can override with
+              <code>?force=1</code>.
+            </span>
+          </span>
+          <label class="toggle">
+            <input type="checkbox" id="study-completion-lock" aria-label="Lock completed sessions" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">
+            Enable crash recovery
+            <span class="field-hint" style="display:block;margin-top:2px;">
+              If a participant's session is interrupted (crash, closed tab), they can
+              resume by re-opening the same link. Already-completed phases' data survives;
+              the current phase restarts.
+            </span>
+          </span>
+          <label class="toggle">
+            <input type="checkbox" id="study-resume-enabled" aria-label="Enable crash recovery" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2 class="settings-title">Data Output</h2>
+        <div class="field-group">
+          <label class="field-label">Response Format</label>
+          <div class="seg-ctrl forge-segments" id="format-ctrl" role="group" aria-label="Response format">
+            <button class="seg-btn" data-fmt="json">JSON</button>
+            <button class="seg-btn active" data-fmt="csv">CSV</button>
+          </div>
+          <div class="field-hint" id="format-hint">Each submission downloads a .csv with one row per question. Easy to concatenate across participants. Task signal data (e.g. ePAT) downloads alongside as a separate .json.</div>
+        </div>
+
+        <details class="deploy-help"><summary>Independent receiver settings</summary>
+          <div class="field-group receiver-settings">
+            <label class="field-label" for="study-webhook" style="display: flex; align-items: center; gap: 6px;">
+              Webhook URL <span class="badge badge-neutral">Optional</span>
+            </label>
+            <input type="text" id="study-webhook" placeholder="https://your-study-receiver.example/upload">
+            <div class="field-hint" style="margin-top: 4px;">Optional. Receiver must return readable JSON with {"status":"success"} after saving data. Its URL is visible in the exported study. If absent or unconfirmed, participants can save a local copy.</div>
+            <a href="readme.html#webhook-upload" target="_blank" rel="noopener" class="field-hint" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--accent); text-decoration: none;">
+              Setup guide
+              <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10" aria-hidden="true"><path d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5C2 13.216 2.784 14 3.75 14h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"/></svg>
+            </a>
+          </div>
+        </details>
+      </section>
     </div>
 
     <!-- ONBOARDING TAB -->
     <div class="config-section" id="tab-onboarding">
-      <div class="section-title">Onboarding Flow</div>
-      <div class="field-hint">Set up the introduction and approved consent text participants see before their first session.</div>
-      
-      <div class="toggle-row" style="margin-top:12px;">
-        <span class="toggle-label">Enable Onboarding Module</span>
-        <label class="toggle">
-          <input type="checkbox" id="ob-toggle" checked>
-          <span class="toggle-track"></span>
-        </label>
-      </div>
+      <section class="settings-group">
+        <h2 class="settings-title">Onboarding Flow</h2>
+        <div class="field-hint">Set up the introduction and approved consent text participants see before their first session.</div>
 
-      <div id="ob-settings">
         <div class="toggle-row">
-          <span class="toggle-label">Ask participant to input their daily schedule availability</span>
+          <span class="toggle-label">Enable Onboarding Module</span>
           <label class="toggle">
-            <input type="checkbox" id="ob-schedule-toggle" checked>
+            <input type="checkbox" id="ob-toggle" aria-label="Enable onboarding" checked>
             <span class="toggle-track"></span>
           </label>
         </div>
-        <div class="field-group" style="margin-top: 16px;">
-          <label class="field-label">Informed Consent Document</label>
-          <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;">
-            
-            <div class="consent-formatting" style="display: flex; gap: 4px; padding: 6px; background: var(--bg-2); border-bottom: 1px solid var(--border);">
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'H3')">Heading</button>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('formatBlock', false, 'P')">Paragraph</button>
-              <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-weight: bold;" aria-label="Bold" onclick="document.execCommand('bold', false, null)">B</button>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; font-style: italic;" aria-label="Italic" onclick="document.execCommand('italic', false, null)">I</button>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 12px; text-decoration: underline;" aria-label="Underline" onclick="document.execCommand('underline', false, null)">U</button>
-              <div style="width: 1px; background: var(--border); margin: 0 4px;"></div>
-              <button class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="document.execCommand('insertUnorderedList', false, null)">• List</button>
-            </div>
-            
-            <div id="ob-consent-text" contenteditable="true" style="height: 250px; padding: 16px; background: var(--bg-surface); color: var(--fg); font-family: var(--font); font-size: 13px; outline: none; overflow-y: auto; line-height: 1.6;"></div>
-          
+
+        <div id="ob-settings" class="settings-fields">
+          <div class="toggle-row">
+            <span class="toggle-label">Ask participant to input their daily schedule availability</span>
+            <label class="toggle">
+              <input type="checkbox" id="ob-schedule-toggle" aria-label="Ask for daily availability" checked>
+              <span class="toggle-track"></span>
+            </label>
           </div>
-          <div class="field-hint" style="margin-top: 6px;">Highlight text and use the formatting bar to style your document. No HTML required.</div>
+          <div class="field-group">
+            <div class="field-label" id="consent-label">Informed Consent Document</div>
+            <div class="consent-editor">
+
+              <div class="consent-formatting" role="group" aria-label="Consent formatting">
+                <button class="btn-ghost" onclick="document.execCommand('formatBlock', false, 'H3')">Heading</button>
+                <button class="btn-ghost" onclick="document.execCommand('formatBlock', false, 'P')">Paragraph</button>
+                <span class="consent-toolbar-divider" aria-hidden="true"></span>
+                <button class="btn-ghost" aria-label="Bold" onclick="document.execCommand('bold', false, null)">B</button>
+                <button class="btn-ghost" aria-label="Italic" onclick="document.execCommand('italic', false, null)">I</button>
+                <button class="btn-ghost" aria-label="Underline" onclick="document.execCommand('underline', false, null)">U</button>
+                <span class="consent-toolbar-divider" aria-hidden="true"></span>
+                <button class="btn-ghost" onclick="document.execCommand('insertUnorderedList', false, null)">List</button>
+              </div>
+
+              <div id="ob-consent-text" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="consent-label"></div>
+
+            </div>
+            <div class="field-hint" style="margin-top: 6px;">Highlight text and use the formatting bar to style your document. No HTML required.</div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
 
     <!-- MEASURES TAB -->
@@ -285,7 +293,7 @@
       <div class="measure-session-bar">
         <div>
           <span class="field-label">Editing session</span>
-          <div class="measure-session-tabs" id="measure-session-tabs" role="tablist" aria-label="Choose a session to edit"></div>
+          <div class="measure-session-tabs forge-segments" id="measure-session-tabs" role="group" aria-label="Choose a session to edit"></div>
         </div>
       </div>
 
@@ -334,54 +342,59 @@
 
     <!-- SCHEDULE TAB -->
     <div class="config-section" id="tab-schedule">
-      <div class="section-title">Study Duration</div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Length (days)</label>
-          <input type="number" id="study-days" value="14" min="1" max="365">
+      <section class="settings-group">
+        <h2 class="settings-title">Study Duration</h2>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="study-days">Length (days)</label>
+            <input type="number" id="study-days" value="14" min="1" max="365">
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="daily-prompts">Prompts per Active Day</label>
+            <output id="daily-prompts" for="window-list">3</output>
+            <div class="field-hint">One prompt per scheduled session.</div>
+          </div>
         </div>
-        <div class="field-group">
-          <label class="field-label">Prompts per Active Day</label>
-          <input type="number" id="daily-prompts" value="3" readonly aria-readonly="true">
-          <div class="field-hint">Derived from the number of time windows.</div>
-        </div>
-      </div>
+      </section>
 
-      <div class="divider"></div>
-      <div class="section-title">Response Window</div>
-      <div class="field-hint">Controls how long a prompt link stays valid.</div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Expires After (min)</label>
-          <input type="number" id="window-expiry" value="60" min="5" max="480">
-          <div class="field-hint">Link goes dead this many minutes after the prompt fires.</div>
+      <section class="settings-group">
+        <h2 class="settings-title">Response Window</h2>
+        <div class="field-hint">Controls how long a prompt link stays valid.</div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="window-expiry">Expires After (min)</label>
+            <input type="number" id="window-expiry" value="60" min="5" max="480">
+            <div class="field-hint">Time after a prompt is sent before its link expires.</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="grace-period">Grace Period (min)</label>
+            <input type="number" id="grace-period" value="10" min="0" max="60">
+            <div class="field-hint">Extra time to finish if a participant opens the link before it expires.</div>
+          </div>
         </div>
-        <div class="field-group">
-          <label class="field-label">Grace Period (min)</label>
-          <input type="number" id="grace-period" value="10" min="0" max="60">
-          <div class="field-hint">Extra time to finish after link expiry when the session was started on time.</div>
+      </section>
+
+      <section class="settings-group">
+        <h2 class="settings-title">Days of Week</h2>
+        <div class="dow-grid" id="dow-grid" aria-label="Active days of week">
+          <button type="button" class="dow-chip on" data-dow="1" aria-pressed="true" aria-label="Monday">Mo</button>
+          <button type="button" class="dow-chip on" data-dow="2" aria-pressed="true" aria-label="Tuesday">Tu</button>
+          <button type="button" class="dow-chip on" data-dow="3" aria-pressed="true" aria-label="Wednesday">We</button>
+          <button type="button" class="dow-chip on" data-dow="4" aria-pressed="true" aria-label="Thursday">Th</button>
+          <button type="button" class="dow-chip on" data-dow="5" aria-pressed="true" aria-label="Friday">Fr</button>
+          <button type="button" class="dow-chip" data-dow="6" aria-pressed="false" aria-label="Saturday">Sa</button>
+          <button type="button" class="dow-chip" data-dow="7" aria-pressed="false" aria-label="Sunday">Su</button>
         </div>
-      </div>
+      </section>
 
-      <div class="divider"></div>
-      <div class="section-title">Days of Week</div>
-      <div class="dow-grid" id="dow-grid" aria-label="Active days of week">
-        <button type="button" class="dow-chip on" data-dow="1" aria-pressed="true" aria-label="Monday">Mo</button>
-        <button type="button" class="dow-chip on" data-dow="2" aria-pressed="true" aria-label="Tuesday">Tu</button>
-        <button type="button" class="dow-chip on" data-dow="3" aria-pressed="true" aria-label="Wednesday">We</button>
-        <button type="button" class="dow-chip on" data-dow="4" aria-pressed="true" aria-label="Thursday">Th</button>
-        <button type="button" class="dow-chip on" data-dow="5" aria-pressed="true" aria-label="Friday">Fr</button>
-        <button type="button" class="dow-chip" data-dow="6" aria-pressed="false" aria-label="Saturday">Sa</button>
-        <button type="button" class="dow-chip" data-dow="7" aria-pressed="false" aria-label="Sunday">Su</button>
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-title">Daily Sessions</div>
-      <div class="field-hint">Each session gets one prompt at a random time in its window. Add questions or a physiological task, then drag or use the arrows to set the order.</div>
-      <div class="window-list" id="window-list"></div>
-      <div class="add-row">
-        <button class="btn" id="add-window-btn">+ Add Session</button>
-      </div>
+      <section class="settings-section">
+        <h2 class="settings-title">Daily Sessions</h2>
+        <div class="field-hint">Each session gets one prompt at a random time in its window. Add questions or a physiological task, then drag or use the arrows to set the order.</div>
+        <div class="window-list" id="window-list"></div>
+        <div class="add-row">
+          <button class="btn" id="add-window-btn">+ Add Session</button>
+        </div>
+      </section>
     </div>
 
     <!-- TASKS TAB -->
@@ -527,7 +540,7 @@
       <span class="preview-label">Participant Preview</span>
       <div style="display:flex;gap:8px;align-items:center">
         <!-- Injected dynamically by js/preview.js -->
-        <div class="preview-session-tabs" id="preview-session-tabs"></div>
+        <div class="preview-session-tabs forge-segments" id="preview-session-tabs" role="group" aria-label="Preview session"></div>
         <button class="preview-reset-btn" id="preview-reset-btn" title="Restart preview">↺ Reset</button>
       </div>
     </div>
@@ -619,12 +632,12 @@
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261124"></script>
+<script src="js/tabs/questions.js?v=20261124b"></script>
 <script src="js/tabs/schedule.js?v=20261121c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
-<script src="js/preview.js?v=20261121b"></script>
+<script src="js/preview.js?v=20261124b"></script>
 <script src="js/modals.js"></script>
 <script src="js/export.js?v=20261121d"></script>
 
@@ -659,7 +672,7 @@
     themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261124"></script>
+<script src="js/builder-shell.js?v=20261124b"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>
