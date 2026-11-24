@@ -11,11 +11,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Analyze</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<link rel="stylesheet" href="css/studio.css?v=20261121">
-<link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/content-view.css">
+<script src="js/vendor/chart-4.6.2.umd.min.js"></script>
+<script src="js/vendor/papaparse-5.4.1.min.js"></script>
+<link rel="stylesheet" href="css/studio.css?v=20261124">
+<link rel="stylesheet" href="css/surfaces.css?v=20261124">
+<link rel="stylesheet" href="css/content-view.css?v=20261124">
 <style>
 /* =============================================
    DESIGN TOKENS & LAYOUT
@@ -28,51 +28,25 @@ html, body { height: 100%; width: 100%; font-family: var(--font); background: va
 #app { display: grid; grid-template-rows: 52px 1fr; grid-template-columns: 280px 1fr; height: 100vh; overflow: hidden; }
 
 /* Workspace navigation */
-.topbar-tabs { display: flex; gap: 2px; flex: 1; }
-.tab-btn { padding: 5px 13px; border: none; background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 12px; font-weight: 500; border-radius: var(--radius); cursor: pointer; transition: color var(--transition), background var(--transition); letter-spacing: 0.02em; }
-.tab-btn:hover { color: var(--fg-2); background: var(--bg-2); }
-.tab-btn.active { color: var(--fg); background: var(--bg-3); }
 
 /* Buttons */
-.topbar-actions { display: flex; gap: 6px; margin-left: auto; align-items: center; }
-.btn-ghost { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 11px; font-weight: 500; cursor: pointer; transition: all var(--transition); white-space: nowrap; letter-spacing: 0.02em; }
-.btn-ghost:hover { color: var(--fg); border-color: var(--border-hi); background: var(--bg-2); }
-.btn-ghost svg { width: 12px; height: 12px; flex-shrink: 0; }
-.btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; border-radius: var(--radius); background: var(--accent); color: #fff; font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: background var(--transition); letter-spacing: 0.03em; white-space: nowrap; }
-.btn-export:hover { background: var(--accent-hover); }
 
 /* Sidebar (Left Panel) */
 #sidebar-panel { border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; background: var(--bg-1); padding: 20px; display: flex; flex-direction: column; gap: 24px; }
-.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-3); margin-bottom: 12px; display: block; }
-.field-group { display: flex; flex-direction: column; gap: 6px; }
-.field-label { font-size: 12px; font-weight: 500; color: var(--fg-2); }
-.field-hint { font-size: 11px; color: var(--fg-3); line-height: 1.5; }
 input[type="text"], input[type="date"], select { width: 100%; padding: 7px 10px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--fg); font-family: var(--font); font-size: 13px; outline: none; transition: border-color var(--transition); }
 input:focus, select:focus { border-color: var(--accent); }
-.divider { height: 1px; background: var(--border); }
 
 /* Progress Bar */
 .progress-container { width: 100%; height: 8px; background: var(--bg-3); border-radius: 4px; overflow: hidden; margin-top: 6px; }
 .progress-fill { height: 100%; background: var(--accent); width: 0%; border-radius: 4px; transition: width 0.5s ease; }
 
 /* Toggles */
-.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.toggle-label { font-size: 12px; color: var(--fg-2); }
-.toggle { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
-.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-.toggle-track { position: absolute; inset: 0; background: var(--bg-3); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; transition: background var(--transition), border-color var(--transition); }
-.toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
-.toggle-track::after { content: ''; position: absolute; top: 1px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--fg-3); transition: transform var(--transition), background var(--transition); }
-.toggle input:checked + .toggle-track::after { transform: translateX(14px); background: #fff; }
 
 /* Dashboard Content Area */
 #dashboard-panel { background: var(--bg); overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; }
 .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0; }
 .dashboard-title { font-size: 20px; font-weight: 600; color: var(--fg); letter-spacing: -0.02em; }
 .dashboard-subtitle { font-size: 12px; color: var(--fg-3); margin-top: 4px; }
-.seg-ctrl { display: flex; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px; gap: 3px; }
-.seg-btn { flex: 1; padding: 5px 12px; border: none; border-radius: 4px; background: transparent; color: var(--fg-3); font-family: var(--font); font-size: 11px; font-weight: 600; cursor: pointer; transition: all var(--transition); letter-spacing: 0.02em; }
-.seg-btn.active { background: var(--bg-3); color: var(--fg); }
 
 /* Dashboard Tab Views */
 .dashboard-view { display: none; flex-direction: column; gap: 24px; animation: fadeIn 0.3s ease; flex: 1; }
@@ -86,9 +60,9 @@ input:focus, select:focus { border-color: var(--accent); }
 .kpi-card.good::before { background: var(--green); }
 .kpi-card.warn::before { background: var(--yellow); }
 .kpi-card.danger::before { background: var(--accent); }
-.kpi-title { font-size: 12px; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-title { font-size: 12px; font-weight: 600; color: var(--fg-3); text-transform: none; letter-spacing: 0.05em; }
 .kpi-value { font-size: 28px; font-weight: 700; color: var(--fg); margin: 8px 0 4px; font-family: var(--font-mono); }
-.kpi-trend { font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+.kpi-trend { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
 
 /* Chart Layouts */
 .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
@@ -104,7 +78,7 @@ input:focus, select:focus { border-color: var(--accent); }
 .table-header-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); }
 .table-wrap { overflow-y: auto; flex: 1; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
-th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-3); background: var(--bg-2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2;}
+th { padding: 12px 16px; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0.05em; color: var(--fg-3); background: var(--bg-2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2;}
 td { padding: 12px 16px; font-size: 13px; color: var(--fg-2); border-bottom: 1px solid var(--border); font-family: var(--font-mono); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
@@ -116,7 +90,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 .empty-desc { font-size: 13px; color: var(--fg-3); line-height: 1.5; margin-bottom: 24px; }
 
 /* Badges */
-.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: none; }
 .badge-good { background: var(--green-dim); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
 .badge-warn { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
 .badge-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
@@ -154,9 +128,9 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
   gap: 12px;
 }
 .pat-stat-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--fg-3);
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.04em;
   font-weight: 600;
 }
@@ -196,7 +170,8 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
 :root[data-theme="dark"]  { --accent-rgb: 232, 113, 106; }
 :root[data-theme="light"] { --accent-rgb: 210, 75, 68; }
 </style>
-<link rel="stylesheet" href="css/dashboard.css?v=20261120e">
+<link rel="stylesheet" href="css/dashboard.css?v=20261124">
+<script src="js/motion.js?v=20261124" defer></script>
 </head>
 <body>
 <div id="mobile-blocker">
@@ -221,7 +196,7 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
     <div class="analyze-project"><strong>Analyze</strong><span>Local workspace</span></div>
     <div class="topbar-actions">
       <button type="button" class="forge-header-icon" id="theme-toggle" title="Toggle light or dark theme" aria-label="Toggle light or dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-      <span class="badge badge-neutral" id="status-badge" style="margin-right:8px;font-family:var(--font);font-size:10px;">Waiting for data</span>
+      <span class="badge badge-neutral" id="status-badge" style="margin-right:8px;font-family:var(--font);font-size:13px;">Waiting for data</span>
       <input type="file" id="file-import-input" multiple accept=".json,.ndjson,.csv,application/json,application/x-ndjson,text/csv" style="display:none;">
         <button class="btn-ghost" id="btn-import-data">
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75zM7.25 7.689V2a.75.75 0 00-1.5 0v5.689L3.53 5.469a.75.75 0 00-1.06 1.06l3.25 3.25a.75.75 0 001.06 0l3.25-3.25a.75.75 0 00-1.06-1.06L7.25 7.689z"/></svg>
@@ -522,16 +497,12 @@ tr:hover td { background: var(--bg-2); color: var(--fg); cursor: default; }
   // Handle the toggle button click
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const newTheme = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('ema-forge-theme', newTheme);
-      if (typeof AppUI !== 'undefined') {
-        AppUI.applyChartTheme();
-        if (DataParser.state.allSessions.length) AppUI.refreshData();
-      }
-    });
+    themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme(() => {
+        if (typeof AppUI !== 'undefined') {
+          AppUI.applyChartTheme();
+          if (DataParser.state.allSessions.length) AppUI.refreshData();
+        }
+      }));
   }
 </script>
 

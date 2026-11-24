@@ -11,9 +11,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EMA Forge — Builder</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/studio.css?v=20261121">
-<link rel="stylesheet" href="css/surfaces.css?v=20261120e">
-<link rel="stylesheet" href="css/builder.css?v=20261121e">
+<link rel="stylesheet" href="css/studio.css?v=20261124">
+<link rel="stylesheet" href="css/surfaces.css?v=20261124">
+<link rel="stylesheet" href="css/builder.css?v=20261124">
+<script src="js/motion.js?v=20261124" defer></script>
 </head>
 <body>
 <dialog id="study-setup" aria-labelledby="study-setup-title">
@@ -125,7 +126,7 @@
       </div>
       <p id="builder-section-description">Set up your study identity, participant experience, and data output.</p>
       <div class="builder-next" id="builder-next" hidden>
-        <div><strong>Next step</strong><p id="builder-next-detail"></p></div>
+        <div><strong id="builder-next-label">Next step</strong><p id="builder-next-detail"></p></div>
         <button type="button" class="btn btn-secondary" id="builder-next-action"></button>
       </div>
       <details class="builder-inline-issues" id="builder-issues-details" hidden>
@@ -286,7 +287,6 @@
           <span class="field-label">Editing session</span>
           <div class="measure-session-tabs" id="measure-session-tabs" role="tablist" aria-label="Choose a session to edit"></div>
         </div>
-        <button type="button" class="measure-add-button" id="open-measure-picker">+ Add measure</button>
       </div>
 
       <div class="measure-picker" id="measure-picker" hidden>
@@ -619,7 +619,7 @@
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261121e"></script>
+<script src="js/tabs/questions.js?v=20261124"></script>
 <script src="js/tabs/schedule.js?v=20261121c"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
@@ -656,15 +656,10 @@
   // Handle the toggle button click
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const newTheme = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('ema-forge-theme', newTheme);
-    });
+    themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261121d"></script>
+<script src="js/builder-shell.js?v=20261124"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

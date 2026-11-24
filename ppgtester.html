@@ -10,8 +10,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>EMA Forge — PPG Tester</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/studio.css?v=20261120e">
-  <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
+  <link rel="stylesheet" href="css/studio.css?v=20261124">
+  <link rel="stylesheet" href="css/surfaces.css?v=20261124">
   <style>
     /* ── Forge design tokens already loaded via studio.css ──
        All sizing and color below uses those vars exclusively. */
@@ -396,6 +396,7 @@
     .btn, .btn-ghost, #btn-start, #btn-sync, #btn-stop { border-radius: var(--pill-radius); }
     #cam-preview { border-radius: var(--group-radius); }
   </style>
+<script src="js/motion.js?v=20261124" defer></script>
 </head>
 <body>
 
@@ -537,14 +538,9 @@
 "use strict";
 
 const themeBtn = document.getElementById('theme-toggle');
-if (themeBtn) {
-  themeBtn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('ema-forge-theme', next);
-  });
-}
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
+  }
 
 (function() {
   const c = document.getElementById('dial-ticks');

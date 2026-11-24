@@ -1,41 +1,156 @@
+/* =====================================================================
+   EMA Forge design language
+   ---------------------------------------------------------------------
+   Every page loads this file, so it owns the tokens, type, the floating
+   header, grouped lists, buttons and motion. Page stylesheets build on
+   these variables instead of declaring their own colors.
+
+   Principles (see the 2026 redesign notes in the PR):
+   - One level of grouping: gray workspace, white groups, hairlines
+     inside groups. No borders around every item.
+   - Nested radii: inner radius = outer radius - padding.
+     bar 22 / padding 8 -> controls 14; group 14 -> rows clip to it.
+   - Red is for things you can tap. Status and labels stay neutral.
+   - Nothing under 11px; working text 13-15px; large titles carry weight.
+   - Translucent bars over scrolling content; motion is short and springy
+     and disappears under prefers-reduced-motion.
+   ===================================================================== */
+
+@font-face {
+  font-family: "Inter Var";
+  src: url("../assets/fonts/inter-var-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Tokens: dark is the default, light overrides ---------- */
 :root {
-  --workspace-bg: #141619;
-  --surface-bg: #1e2125;
-  --surface-muted: #25292e;
-  --surface-line: #34383e;
-  --surface-shadow: 0 2px 5px #0003, 0 14px 32px #0003;
-  --surface-shadow-raised: 0 6px 14px #0003, 0 24px 46px #0005;
-  --surface-radius: 22px;
-  --group-radius: 14px;
-  --pill-radius: 999px;
-  --action-fill: #a94339;
-  --action-hover: #96392f;
+  color-scheme: dark;
+
+  /* Neutrals */
+  --bg: #0e0f11;          /* page / workspace */
+  --bg-1: #1b1d20;        /* grouped surface */
+  --bg-2: #25282c;        /* quiet fill: inputs, hover, chips */
+  --bg-3: #31353a;        /* pressed fill */
+  --border: #33373c;      /* solid lines where a hairline is too faint */
+  --border-hi: #5a6068;
+  --hairline: rgba(255, 255, 255, .09);
+  --fg: #f2f1ee;
+  --fg-2: #c0c4c8;
+  --fg-3: #979da4;
+
+  /* Accent: interactive only */
+  --accent: #e0796e;
+  --accent-hover: #ea8a80;
+  --accent-dim: rgba(224, 121, 110, .16);
+  --action-fill: #b4473c;
+  --action-hover: #c25348;
   --action-ink: #fff;
+
+  /* Status */
+  --green: #6fbf8e; --green-dim: rgba(111, 191, 142, .15);
+  --yellow: #d6a85c; --yellow-dim: rgba(214, 168, 92, .15);
+  --blue: #7fa6cc; --blue-dim: rgba(127, 166, 204, .15);
+  --red: #ef7469; --red-dim: rgba(239, 116, 105, .15);
+
+  /* Surfaces (aliases kept for older selectors) */
+  --workspace-bg: var(--bg);
+  --surface-bg: var(--bg-1);
+  --surface-muted: var(--bg-2);
+  --surface-line: var(--hairline);
+  --bar-bg: rgba(27, 29, 32, .72);
+  --scrim: rgba(0, 0, 0, .55);
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --group-radius: 14px;
+  --surface-radius: 22px;
+  --pill-radius: 999px;
+
+  /* Depth */
+  --shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  --surface-shadow: 0 0 0 1px var(--hairline), 0 8px 24px rgba(0, 0, 0, .25);
+  --surface-shadow-raised: 0 0 0 1px var(--hairline), 0 24px 60px rgba(0, 0, 0, .45);
+  --group-shadow: 0 0 0 1px var(--hairline);
+
+  /* Type */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter Var", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter Var", "Segoe UI Variable", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+
+  /* Motion */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.36, .64, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 280ms;
+  --transition: var(--dur-fast) var(--ease-out);
+  --focus-ring: 0 0 0 3px var(--accent-dim);
+
+  /* Layout */
+  --forge-header-height: 60px;
+  --forge-inset: clamp(10px, 1.25vw, 16px);
+  --forge-ink: var(--fg);
+  --forge-mark-ink: #fff;
+  --forge-mark-bg: var(--action-fill);
+  --card-gradient: none;
 }
 
 [data-theme="light"] {
-  --workspace-bg: #eef1f5;
-  --surface-bg: #fff;
-  --surface-muted: #f3f5f8;
-  --surface-line: #dfe4eb;
-  --surface-shadow: 0 2px 4px #26334908, 0 10px 26px #2633490c;
-  --surface-shadow-raised: 0 6px 12px #26334910, 0 22px 42px #26334919;
+  color-scheme: light;
+  --bg: #eef1f5;
+  --bg-1: #ffffff;
+  --bg-2: #f1f3f6;
+  --bg-3: #e3e7ec;
+  --border: #dde2e8;
+  --border-hi: #a3acb6;
+  --hairline: rgba(31, 35, 40, .11);
+  --fg: #1d2024;
+  --fg-2: #4a5562;
+  --fg-3: #5f6872;
+
+  --accent: #a63f35;
+  --accent-hover: #8d342c;
+  --accent-dim: rgba(166, 63, 53, .10);
+  --action-fill: #a63f35;
+  --action-hover: #8d342c;
+
+  --green: #2f7d4f; --green-dim: rgba(47, 125, 79, .11);
+  --yellow: #8a5d12; --yellow-dim: rgba(138, 93, 18, .11);
+  --blue: #2f5f8a; --blue-dim: rgba(47, 95, 138, .10);
+  --red: #b4232a; --red-dim: rgba(180, 35, 42, .09);
+
+  --bar-bg: rgba(255, 255, 255, .7);
+  --scrim: rgba(32, 40, 49, .38);
+  --shadow: 0 12px 32px rgba(38, 51, 73, .14);
+  --surface-shadow: 0 0 0 1px var(--hairline), 0 8px 24px rgba(38, 51, 73, .06);
+  --surface-shadow-raised: 0 0 0 1px var(--hairline), 0 24px 60px rgba(38, 51, 73, .18);
+  --group-shadow: 0 1px 2px rgba(38, 51, 73, .05);
 }
 
-:root {
-  --forge-header-height: 62px;
-  --forge-inset: clamp(10px, 1.25vw, 18px);
-  --forge-ink: #f0efeb;
-  --forge-mark-ink: #d16f64;
-  --forge-mark-bg: rgba(209, 111, 100, .13);
+/* ---------- Base ---------- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: var(--accent-dim); color: inherit; }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-[data-theme="light"] {
-  --forge-ink: #1f2328;
-  --forge-mark-ink: #a63f35;
-  --forge-mark-bg: rgba(166, 63, 53, .11);
-}
-
+/* ---------- Floating translucent header ---------- */
 .forge-header {
   box-sizing: border-box;
   grid-column: 1 / -1;
@@ -43,25 +158,40 @@
   align-items: center;
   flex-shrink: 0;
   height: var(--forge-header-height);
-  padding: 0 14px;
-  gap: 14px;
+  padding: 8px;
+  gap: 6px;
   color: var(--forge-ink);
-  background: var(--surface-bg);
-  border: 1px solid var(--surface-line);
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0;
   border-radius: var(--surface-radius);
   box-shadow: var(--surface-shadow);
-  font: 14px/1.5 "TX-02", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  z-index: 10;
+  font: 15px/1.4 var(--font);
+  z-index: 20;
+  view-transition-name: forge-header;
+}
+/* Content pages: the bar floats over the page and stays while it scrolls. */
+.forge-header-inset {
+  position: sticky;
+  top: var(--forge-inset);
+  margin: var(--forge-inset) var(--forge-inset) 0;
+}
+.forge-header-inset.forge-header-narrow {
+  max-width: 1120px;
+  margin-inline: auto;
+  width: calc(100% - 2 * var(--forge-inset));
 }
 
-.forge-header-inset { margin: var(--forge-inset) var(--forge-inset) 0; }
 .forge-brand {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 10px;
+  padding: 0 8px 0 4px;
   color: inherit;
   font-weight: 700;
+  font-size: 16px;
   letter-spacing: -.01em;
   text-decoration: none;
   white-space: nowrap;
@@ -69,42 +199,168 @@
 .forge-logo {
   display: grid;
   place-items: center;
-  width: 29px;
-  height: 29px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   background: var(--forge-mark-bg);
 }
 .forge-logo::before {
   content: "";
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   background: var(--forge-mark-ink);
   mask: url("../assets/forge-mark.svg") center / contain no-repeat;
+  -webkit-mask: url("../assets/forge-mark.svg") center / contain no-repeat;
 }
-.forge-back, .forge-header-icon, .forge-header-link {
+
+.forge-back, .forge-header-icon, .forge-header-link, .forge-nav a {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  min-width: 34px;
-  height: 34px;
+  min-width: 44px;
+  height: 44px;
   padding: 0;
-  border: 1px solid var(--surface-line);
-  border-radius: var(--pill-radius);
+  border: 0;
+  border-radius: 14px;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
+  transition: background var(--transition), color var(--transition), transform var(--dur-fast) var(--ease-out);
 }
-.forge-header-link { padding-inline: 11px; font-size: 12px; font-weight: 600; }
-.forge-header-icon svg { width: 14px; height: 14px; }
-.forge-header :is(.forge-back, .forge-header-icon, .forge-header-link):hover { background: var(--surface-muted); }
-.forge-header :is(a, button):focus-visible { outline: 2px solid var(--forge-mark-ink); outline-offset: 2px; }
-.forge-header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.forge-header-link, .forge-nav a { padding-inline: 14px; font-size: 15px; font-weight: 500; }
+.forge-header-icon svg, .forge-back svg { width: 18px; height: 18px; }
+.forge-header :is(.forge-back, .forge-header-icon, .forge-header-link, .forge-nav a):hover { background: var(--bg-2); }
+.forge-nav a[aria-current="page"] { font-weight: 650; background: var(--bg-2); }
+.forge-header-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.forge-nav { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.forge-nav + .forge-header-actions { margin-left: 0; }
 
-@media (max-width: 950px) {
-  .forge-header { gap: 10px; }
+@media (max-width: 760px) {
+  .forge-nav { display: none; }
+}
+
+/* ---------- Buttons (shared by content pages) ---------- */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--pill-radius);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: var(--fg);
+  font: 600 15px/1 var(--font);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--dur-fast) var(--ease-out), box-shadow var(--transition);
+}
+.ui-btn:hover { background: color-mix(in srgb, var(--fg) 13%, transparent); }
+.ui-btn-primary { background: var(--action-fill); color: var(--action-ink); }
+.ui-btn-primary:hover { background: var(--action-hover); }
+.ui-btn-large { min-height: 52px; padding: 0 28px; font-size: 17px; }
+.ui-btn-plain { background: transparent; color: var(--accent); padding-inline: 8px; }
+.ui-btn-plain:hover { background: transparent; color: var(--accent-hover); }
+
+/* ---------- Grouped lists ---------- */
+.ui-group {
+  background: var(--bg-1);
+  border-radius: var(--group-radius);
+  box-shadow: var(--group-shadow);
+  overflow: hidden;
+}
+.ui-group-header {
+  margin: 0 16px 8px;
+  color: var(--fg-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+.ui-group-footer {
+  margin: 8px 16px 0;
+  color: var(--fg-3);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ui-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+/* Hairline inset to the text, the way iOS separates rows. */
+.ui-row + .ui-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--row-inset, 16px);
+  border-top: 1px solid var(--hairline);
+}
+a.ui-row:hover, button.ui-row:hover { background: var(--bg-2); }
+.ui-row-body { flex: 1; min-width: 0; padding: 12px 0; }
+.ui-row-title { display: block; font-size: 15px; font-weight: 500; }
+.ui-row-sub { display: block; margin-top: 2px; color: var(--fg-3); font-size: 13px; }
+.ui-chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--border-hi);
+  border-right: 2px solid var(--border-hi);
+  transform: rotate(45deg);
+  margin-right: 4px;
+}
+.ui-icon-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--action-fill);
+  color: #fff;
+}
+.ui-icon-tile svg { width: 18px; height: 18px; }
+
+/* ---------- Motion ---------- */
+
+/* Pages cross-fade when moving between EMA Forge pages (Chrome 126+,
+   Safari 18.2+). The header keeps its own name, so it holds still while
+   the content underneath changes. Other browsers navigate normally. */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: forge-page-out 120ms var(--ease-out) both; }
+::view-transition-new(root) { animation: forge-page-in 150ms var(--ease-out) both; }
+@keyframes forge-page-out { to { opacity: 0; } }
+@keyframes forge-page-in { from { opacity: 0; } }
+/* A theme swap is a plain cross-fade of the whole page, header included. */
+.theme-swap::view-transition-old(root) { animation: forge-page-out 150ms ease both; }
+.theme-swap::view-transition-new(root) { animation: forge-fade-in 150ms ease both; }
+.theme-swap::view-transition-group(forge-header) { animation: none; }
+.theme-swap::view-transition-old(forge-header) { animation: forge-page-out 150ms ease both; }
+.theme-swap::view-transition-new(forge-header) { animation: forge-fade-in 150ms ease both; }
+@keyframes forge-fade-in { from { opacity: 0; } }
+
+/* Pressed state: a small, quick squeeze reads as a physical button. */
+:where(.ui-btn, .forge-back, .forge-header-icon, .forge-header-link, .forge-nav a, .btn, .btn-export, .btn-ghost, .tab-btn, .seg-btn, .measure-add-button):active:not(:disabled) {
+  transform: scale(.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }
