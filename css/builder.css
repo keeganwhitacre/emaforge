@@ -1,3 +1,4 @@
+html:has(body > .builder-app), body:has(> .builder-app) { height: 100%; overflow: hidden; }
 /* Builder workspace
    The gray workspace is the page. Sidebar, editor and preview sit directly
    on it; only content groups (lists, settings) get a white surface. */
@@ -151,8 +152,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .measure-session-tabs { flex-wrap: wrap; }
 .measure-add-button { flex: 0 0 auto; min-height: 36px; padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent); color: #fff; font: 700 12px var(--font); cursor: pointer; }
 .measure-add-button:disabled { opacity: .45; cursor: default; }
-.measure-picker { padding: 16px; border: 1px solid var(--border-hi); background: var(--bg-1); box-shadow: var(--shadow); }
-.measure-picker[hidden] { display: none; }
 .measure-picker-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 12px; }
 .measure-picker-head > div { display: flex; flex-direction: column; gap: 3px; }
 .measure-picker-head strong { font-size: 14px; }
@@ -986,8 +985,22 @@ body.preview-open { overflow: hidden; }
 .measure-randomize-control, .measure-back-control { padding: 12px 0; border-top: 1px solid var(--hairline); }
 
 /* Picker sheet */
-.measure-picker { padding: 20px; border: 0; border-radius: var(--surface-radius); background: var(--bg-1); box-shadow: var(--surface-shadow-raised); }
-.measure-picker:not([hidden]) { animation: forge-section-in var(--dur-fast) var(--ease-out) both; }
+dialog.measure-picker {
+  width: min(680px, calc(100% - 2 * var(--forge-inset)));
+  max-height: min(780px, calc(100dvh - 2 * var(--forge-inset)));
+  margin: auto;
+  padding: 20px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--hairline);
+  border-radius: var(--surface-radius);
+  background: var(--bg-1);
+  color: var(--fg);
+  box-shadow: var(--surface-shadow-raised);
+}
+.measure-picker[open] { animation: forge-section-in var(--dur-fast) var(--ease-out) both; }
+.measure-picker::backdrop { background: var(--scrim); }
+html:has(.measure-picker[open]) { overflow: hidden; }
 .measure-picker-head strong { font-size: 17px; }
 .measure-picker-head span { font-size: 13px; }
 .measure-picker-search input { min-height: 40px; border: 0; border-radius: var(--radius); background: var(--bg-2); font-size: 15px; }
@@ -1133,7 +1146,6 @@ body.preview-open { overflow: hidden; }
 /* Order inside Measures: list, then its footnote, then settings. */
 #tab-questions > * { order: 5; }
 #tab-questions > .measure-session-bar { order: 0; }
-#tab-questions > .measure-picker { order: 1; }
 #tab-questions > .measure-flow { order: 2; }
 #tab-questions > .question-summary { order: 3; }
 #tab-questions > .measure-add-feedback { order: 3; }
@@ -1156,6 +1168,11 @@ body.preview-open { overflow: hidden; }
   /* The phone is sized to the window, so this column needn't scroll; letting
      it overflow keeps the phone's shadow from being cut into a box. */
   #preview-panel { overflow: visible; }
+  #preview-panel:not(.preview-fullscreen) .phone-shell {
+    border-width: 5px;
+    border-color: var(--border-hi);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .14), 0 0 0 1px var(--hairline);
+  }
 }
 @media (max-width: 850px) {
   .measure-survey-settings > summary span { display: none; }
@@ -1163,4 +1180,37 @@ body.preview-open { overflow: hidden; }
   #config-panel [contenteditable="true"] { font-size: 16px; }
   .measure-survey-settings > summary::after { margin-left: auto; }
   .question-summary { row-gap: 2px; }
+}
+
+/* Phones scroll the page so the floating header can sit over the editor. */
+@media (max-width: 850px) {
+  html:has(body > .builder-app), body:has(> .builder-app) { height: auto; overflow: visible; }
+  html:has(.preview-open), html:has(.measure-picker[open]), body.preview-open { overflow: hidden; }
+  #app.builder-app {
+    display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+  .builder-app > .forge-header { position: sticky; top: var(--forge-inset); }
+  #builder-sidebar { margin-top: 8px; }
+  #config-panel { overflow: visible; }
+  .builder-app :where(input, textarea, select, .q-card, #builder-section-title) {
+    scroll-margin-top: calc(var(--forge-header-height) + 2 * var(--forge-inset));
+  }
+  .project-menu-list {
+    max-height: calc(100dvh - var(--forge-header-height) - 4 * var(--forge-inset));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .project-menu-list .builder-section-picker { padding: 4px; }
+  .project-menu-resources {
+    gap: 2px;
+    margin-top: 4px;
+    border-top: 1px solid var(--hairline);
+  }
+  .project-menu-resources .btn-ghost { justify-content: center; text-decoration: none; }
+  dialog.measure-picker { padding: 14px; }
+  .measure-picker-search input { font-size: 16px; }
 }

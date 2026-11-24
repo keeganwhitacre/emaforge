@@ -116,7 +116,7 @@ function renderSectionBadges(errors) {
     const key = sectionForIssue(issue);
     counts[key] = (counts[key] || 0) + 1;
   });
-  for (const option of sectionSelect.options) {
+  for (const option of sectionPickers.flatMap(select => [...select.options])) {
     const [title] = builderSections[option.value];
     const count = counts[option.value];
     const label = count ? `${title} (${count})` : title;
@@ -261,13 +261,22 @@ document.getElementById("new-draft-btn").addEventListener("click", () => {
 });
 layoutBuilderControls();
 
-const sectionSelect = document.getElementById("builder-section-select");
-for (const [section, [title]] of Object.entries(builderSections)) {
-  sectionSelect.add(new Option(title, section));
+const sectionPickers = [
+  document.getElementById("builder-section-select"),
+  document.getElementById("builder-menu-section")
+];
+for (const select of sectionPickers) {
+  for (const [section, [title]] of Object.entries(builderSections)) {
+    select.add(new Option(title, section));
+  }
+  select.addEventListener("change", () => {
+    document.querySelector(`.tab-btn[data-tab="${select.value}"]`).click();
+    if (projectMenu.open) {
+      projectMenu.open = false;
+      document.getElementById("builder-section-title").focus({ preventScroll: true });
+    }
+  });
 }
-sectionSelect.addEventListener("change", () => {
-  document.querySelector(`.tab-btn[data-tab="${sectionSelect.value}"]`).click();
-});
 document.getElementById("phone-backup-btn").addEventListener("click", () => {
   document.getElementById("btn-save-project").click();
 });
@@ -275,13 +284,14 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   const [title, description] = builderSections[button.dataset.tab];
   document.querySelectorAll(".tab-btn").forEach(tab => tab.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
-  sectionSelect.value = button.dataset.tab;
+  sectionPickers.forEach(select => { select.value = button.dataset.tab; });
   document.getElementById("builder-issues-details").open = false;
   document.getElementById("builder-section-title").textContent = title;
   document.getElementById("builder-section-description").textContent = description;
   document.getElementById("config-panel").dataset.section = button.dataset.tab;
   layoutBuilderControls();
-  document.getElementById("config-panel").scrollTop = 0;
+  if (phoneBuilder.matches) window.scrollTo(0, 0);
+  else document.getElementById("config-panel").scrollTop = 0;
   if (button.dataset.tab === "onboarding" && state.onboarding.enabled) previewSession = "onboarding";
   if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length &&
       !state.ema.scheduling.windows.some(window => window.id === previewSession)) {

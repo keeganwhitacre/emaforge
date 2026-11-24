@@ -242,8 +242,28 @@ body {
 .forge-nav { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 .forge-nav + .forge-header-actions { margin-left: 0; }
 
+@media (min-width: 761px) {
+  .forge-nav-toggle { display: none; }
+}
 @media (max-width: 760px) {
   .forge-nav { display: none; }
+  .forge-nav-toggle { margin-left: auto; padding-inline: 8px; }
+  .forge-nav.is-open {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 164px;
+    padding: 6px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--group-radius);
+    background: var(--bg-1);
+    box-shadow: var(--surface-shadow-raised);
+  }
+  .forge-nav a { justify-content: flex-start; }
 }
 
 /* Segmented selections share a track and a matching inset radius. */
@@ -396,6 +416,7 @@ a.ui-row:hover, button.ui-row:hover { background: var(--bg-2); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 1ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
