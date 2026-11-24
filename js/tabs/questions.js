@@ -32,14 +32,14 @@ const structureMeasureCatalog = [
 
 function selectedMeasureWindow() {
   const windows = state.ema.scheduling.windows || [];
-  const selected = windows.find(window => window.id === previewSession);
-  if (selected) return selected;
-  if (windows[0]) previewSession = windows[0].id;
-  return windows[0] || null;
+  const selected = windows.find(window => window.id === measureSessionId) || windows[0];
+  measureSessionId = selected?.id ?? null;
+  return selected || null;
 }
 
 function selectMeasureSession(windowId) {
   if (!state.ema.scheduling.windows.some(window => window.id === windowId)) return;
+  measureSessionId = windowId;
   previewSession = windowId;
   rememberBuilderWorkspace();
   measureInsertIndex = null;
@@ -168,7 +168,7 @@ function renderMeasureComposer() {
   const window = selectedMeasureWindow();
   const entries = EMAForgeMeasureFlow.flatten(window);
   flow.innerHTML = `<div class="measure-flow-heading">
-    <strong>${escH(window.label || 'Untitled session')}</strong>
+    <strong>Editing <span>${escH(window.label || 'Untitled session')}</span></strong>
     <button type="button" class="measure-add-button" id="open-measure-picker" aria-controls="measure-picker">+ Add measure</button>
   </div>`;
   flow.querySelector('#open-measure-picker').addEventListener('click', event => openMeasurePicker(event.currentTarget));
@@ -396,7 +396,6 @@ function measureTypeLabel(type) {
 
 function commitMeasureFlow(window, entries) {
   window.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
-  previewSession = window.id;
   renderWindows();
   renderQuestions();
   renderPreviewTabs();
@@ -1012,9 +1011,7 @@ function addMeasureAt(type, insertionIndex = null) {
     targetWindow.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
     if (typeof renderModules === 'function') renderModules();
     if (typeof renderWindows === 'function') renderWindows();
-    previewSession = targetWindow.id;
-    renderPreviewTabs();
-    renderMeasureComposer();
+    renderQuestions();
     schedulePreview();
     setMeasureFeedback(`${module.label} added to ${targetWindow.label}. Fine-tune it in Task settings.`);
     closeMeasurePicker();
@@ -1049,10 +1046,8 @@ function addMeasureAt(type, insertionIndex = null) {
   state.ema.questions.push(question);
   entries.splice(targetIndex, 0, { kind: 'question', questionId: question.id, sourceLabel: 'Survey' });
   targetWindow.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
-  previewSession = targetWindow.id;
   renderWindows();
   renderQuestions();
-  renderPreviewTabs();
   schedulePreview();
   setMeasureFeedback(`${measureTypeLabel(type)} added to ${targetWindow.label}.`);
   closeMeasurePicker();

@@ -31,12 +31,11 @@ function showBuilderIssue(issue) {
   let target = null;
   if (questionIndex) {
     const question = state.ema.questions[Number(questionIndex[1])];
-    const window = question && state.ema.scheduling.windows.find(candidate => candidate.phase_sequence?.some(step =>
-      step.kind === "ema" && (step.question_ids || []).includes(question.id)));
+    const matchingWindows = question ? state.ema.scheduling.windows.filter(candidate => candidate.phase_sequence?.some(step =>
+      step.kind === "ema" && (step.question_ids || []).includes(question.id))) : [];
+    const window = matchingWindows.find(candidate => candidate.id === measureSessionId) || matchingWindows[0];
     if (window) {
-      previewSession = window.id;
-      renderPreviewTabs();
-      renderMeasureComposer();
+      if (window.id !== measureSessionId) selectMeasureSession(window.id);
       target = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
     }
   }
@@ -208,12 +207,14 @@ function renderBuilderShell() {
 
 function rememberBuilderWorkspace() {
   const section = document.querySelector(".tab-btn.active")?.dataset.tab || "study";
-  StorageManager.rememberWorkspace(section, previewSession);
+  StorageManager.rememberWorkspace(section, previewSession, measureSessionId);
 }
 
 function restoreBuilderWorkspace() {
   clearBuilderUndo();
-  const { section, session } = StorageManager.readWorkspace();
+  const { section, session, measureSession = session } = StorageManager.readWorkspace();
+  const windows = state.ema.scheduling.windows;
+  measureSessionId = windows.find(window => window.id === measureSession)?.id ?? windows[0]?.id ?? null;
   if (state.ema.scheduling.windows.some(window => window.id === session) ||
       (session === "onboarding" && state.onboarding.enabled)) {
     previewSession = session;
@@ -293,7 +294,7 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
   if (phoneBuilder.matches) window.scrollTo(0, 0);
   else document.getElementById("config-panel").scrollTop = 0;
   if (button.dataset.tab === "onboarding" && state.onboarding.enabled) previewSession = "onboarding";
-  if (["questions", "schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length &&
+  if (["schedule", "tasks"].includes(button.dataset.tab) && state.ema.scheduling.windows.length &&
       !state.ema.scheduling.windows.some(window => window.id === previewSession)) {
     previewSession = state.ema.scheduling.windows[0].id;
   }

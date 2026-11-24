@@ -728,7 +728,9 @@ document.getElementById('export-btn')?.addEventListener('click', () => {
   document.querySelector('.tab-btn[data-tab="deployment"]')?.click();
   document.getElementById('tab-deployment')?.scrollTo({ top: 0, behavior: 'smooth' });
 });
-document.getElementById('advanced-export-btn')?.addEventListener('click', openAdvancedExportModal);
+for (const id of ['study-files-btn', 'advanced-export-btn']) {
+  document.getElementById(id)?.addEventListener('click', openAdvancedExportModal);
+}
 document.getElementById('modal-close-btn')?.addEventListener('click', () => document.getElementById('export-modal').classList.remove('open'));
 document.getElementById('export-single-file')?.addEventListener('click', async () => {
   if (document.getElementById('export-single-file').disabled) return;

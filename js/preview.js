@@ -31,9 +31,6 @@ function renderPreviewTabs() {
       button.setAttribute('aria-pressed', 'true');
       previewSession = id;
       if (typeof rememberBuilderWorkspace === 'function') rememberBuilderWorkspace();
-      if (document.getElementById('tab-questions')?.classList.contains('active') && id !== 'onboarding') {
-        renderMeasureComposer();
-      }
       renderPreview();
     });
     container.append(button);
