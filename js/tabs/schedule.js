@@ -138,10 +138,9 @@ function buildWindowCard(w, i) {
   });
 
   el.querySelector('.edit-session-measures').addEventListener('click', () => {
+    measureSessionId = w.id;
     previewSession = w.id;
-    renderPreviewTabs();
     document.querySelector('.tab-btn[data-tab="questions"]')?.click();
-    renderMeasureComposer();
   });
 
   return el;

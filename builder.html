@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261124c">
 <link rel="stylesheet" href="css/surfaces.css?v=20261124c">
-<link rel="stylesheet" href="css/builder.css?v=20261124c">
+<link rel="stylesheet" href="css/builder.css?v=20261124d">
 <script src="js/motion.js?v=20261124c" defer></script>
 </head>
 <body>
@@ -341,6 +341,7 @@
       </details>
 
       <div class="question-summary" aria-live="polite">
+        <span class="question-summary-label">Study totals</span>
         <div><strong id="summary-question-count">0</strong><span>Survey items</span></div>
         <div><strong id="summary-block-count">0</strong><span>Physiology tasks</span></div>
         <div><strong id="summary-issue-count">0</strong><span>Measure issues</span></div>
@@ -419,6 +420,10 @@
     <!-- DEPLOYMENT TAB -->
     <div class="config-section" id="tab-deployment">
       <details class="readiness-card deploy-readiness" id="deploy-readiness"><summary class="readiness-heading"><strong>Study readiness</strong><span id="readiness-count"></span></summary><div id="readiness-list" aria-live="polite"></div></details>
+      <div class="deploy-file-shortcut">
+        <div><strong>Local testing or your own host</strong><p>Export a participant study file or a static-hosting bundle.</p></div>
+        <button type="button" class="btn btn-secondary" id="study-files-btn">Export study files</button>
+      </div>
       <div class="section-title">Run a pilot</div>
       <p class="field-hint">Install this draft on your study host, complete a check-in on a phone, and confirm it in Study Admin. <a class="deploy-link" href="quickstart.html#host">See the illustrated guide</a>.</p>
 
@@ -489,12 +494,12 @@
             <div class="field-hint" style="margin-top: 4px;">This is the same receiver configured under Study. It must save the record before returning a success receipt.</div>
           </div>
           <div class="deploy-actions">
-            <button type="button" class="btn btn-secondary" id="advanced-export-btn">Open advanced export options</button>
+            <button type="button" class="btn btn-secondary" id="advanced-export-btn">Export study files</button>
             <button type="button" class="btn btn-secondary" id="download-receiver-btn">Download receiver starter</button>
             <a href="readme.html#webhook-cloudflare" target="_blank" rel="noopener" class="deploy-link">Receiver instructions ↗</a>
           </div>
           <div class="field-hint" id="receiver-starter-status" style="margin-top: 7px;"></div>
-          <div class="deploy-note">Use the advanced export options for a single HTML file or static-hosting bundle. The reference receiver uses private R2 and refuses duplicate overwrites.</div>
+          <div class="deploy-note">A receiver is only needed for automatic uploads. The reference receiver uses private R2 and refuses duplicate overwrites.</div>
         </div>
       </details>
 
@@ -568,14 +573,14 @@
 <div class="modal-overlay" id="export-modal">
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="modal-title">Export Study</div>
+      <div class="modal-title">Export study files</div>
       <button type="button" class="modal-close builder-icon-button" id="modal-close-btn" aria-label="Close export options">✕</button>
     </div>
-    <div class="modal-subtitle">Download the participant app, host it on an HTTPS static host, then make participant links in Review &amp; Deploy. Data uploads require a separate webhook.</div>
+    <div class="modal-subtitle">Use a single HTML file for a local survey check, or a bundle for a static host. Without a receiver, participants can download their responses. Camera measures require a supported secure browser context.</div>
     <div id="export-review" class="export-review" aria-live="polite"></div>
     <button type="button" class="export-option" id="export-single-file">
         <div class="export-option-title">Single HTML file</div>
-        <div class="export-option-desc">One self-contained file. Easiest to share via email or a quick upload. Updating the study means re-exporting.</div>
+        <div class="export-option-desc">One self-contained file. For a local survey check, open the file in your browser and enter a test participant ID. You can also upload it to a host.</div>
     </button>
 
       <button type="button" class="export-option" id="export-zip">
@@ -631,23 +636,23 @@
 </div>
 
 <!-- Scripts loaded in exact dependency order -->
-<script src="js/state.js?v=20260924b"></script>
+<script src="js/state.js?v=20261124d"></script>
 <script src="js/place-context.js?v=20260925g"></script>
-<script src="js/storage.js?v=20261121b"></script>
+<script src="js/storage.js?v=20261124d"></script>
 <script src="js/library-utils.js?v=20260924d"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20261121b"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261124c"></script>
-<script src="js/tabs/schedule.js?v=20261121c"></script>
+<script src="js/tabs/questions.js?v=20261124d"></script>
+<script src="js/tabs/schedule.js?v=20261124d"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20260925g"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
-<script src="js/preview.js?v=20261124b"></script>
+<script src="js/preview.js?v=20261124d"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20261121d"></script>
+<script src="js/export.js?v=20261124d"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -680,7 +685,7 @@
     themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261124c"></script>
+<script src="js/builder-shell.js?v=20261124d"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

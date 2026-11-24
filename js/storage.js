@@ -124,7 +124,8 @@ const StorageManager = {
         }
         this._draftId = id;
         this.hasDraft = true;
-        previewSession = state.ema.scheduling.windows[0]?.id || 'onboarding';
+        measureSessionId = state.ema.scheduling.windows[0]?.id ?? null;
+        previewSession = measureSessionId || 'onboarding';
         this.assignStudyId();
         this.saveLocalState();
         this.renderDrafts();
@@ -137,9 +138,9 @@ const StorageManager = {
         catch (_) { return {}; }
     },
 
-    rememberWorkspace(section, session) {
+    rememberWorkspace(section, session, measureSession = null) {
         if (!this.hasDraft || this._blockedOlderDraft) return;
-        try { localStorage.setItem(this.WORKSPACE_PREFIX + this._draftId, JSON.stringify({ section, session })); }
+        try { localStorage.setItem(this.WORKSPACE_PREFIX + this._draftId, JSON.stringify({ section, session, measureSession })); }
         catch (_) { /* The draft can still be used if local preferences cannot be written. */ }
     },
 

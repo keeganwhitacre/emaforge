@@ -158,6 +158,7 @@ let state = {
 // Ephemeral UI state
 // ---------------------------------------------------------------------------
 let previewSession = "onboarding";
+let measureSessionId = null;
 let previewDebounceTimer = null;
 
 // Use a random string to guarantee IDs never collide even after page reloads
