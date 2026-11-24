@@ -11,6 +11,7 @@ function renderQuestions() {
 }
 
 let measureInsertIndex = null;
+let measurePickerTrigger = null;
 let draggedMeasureIndex = null;
 
 const surveyMeasureCatalog = [
@@ -50,7 +51,6 @@ function selectMeasureSession(windowId) {
 
 function renderMeasureSessionTabs() {
   const tabs = document.getElementById('measure-session-tabs');
-  const addButton = document.getElementById('open-measure-picker');
   if (!tabs) return;
   const windows = state.ema.scheduling.windows || [];
   const selected = selectedMeasureWindow();
@@ -62,11 +62,13 @@ function renderMeasureSessionTabs() {
     button.setAttribute('role', 'tab');
     button.setAttribute('aria-selected', String(selected?.id === window.id));
     button.textContent = window.label || 'Untitled session';
-    button.addEventListener('click', () => selectMeasureSession(window.id));
+    button.addEventListener('click', () => {
+      selectMeasureSession(window.id);
+      tabs.querySelector('.active')?.focus({ preventScroll: true });
+    });
     tabs.appendChild(button);
   });
   if (!windows.length) tabs.innerHTML = '<span class="field-hint">Add a session in Schedule first.</span>';
-  if (addButton) addButton.disabled = !windows.length;
 }
 
 function measurePickerGroups() {
@@ -125,10 +127,11 @@ function confirmPlaceContext(onAccept) {
   dialog.showModal();
 }
 
-function openMeasurePicker(index = null) {
+function openMeasurePicker(trigger, index = null) {
   const picker = document.getElementById('measure-picker');
   const window = selectedMeasureWindow();
   if (!picker || !window) return;
+  measurePickerTrigger = trigger;
   const entries = EMAForgeMeasureFlow.flatten(window);
   measureInsertIndex = Number.isInteger(index) ? Math.max(0, Math.min(index, entries.length)) : entries.length;
   const context = document.getElementById('measure-picker-context');
@@ -139,13 +142,19 @@ function openMeasurePicker(index = null) {
   const search = document.getElementById('measure-picker-search');
   if (search) search.value = '';
   renderMeasurePicker();
-  search?.focus();
-  picker.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+  search?.focus({ preventScroll: true });
+  picker.scrollIntoView({ block: 'start' });
 }
 
-function closeMeasurePicker() {
+function closeMeasurePicker(restoreFocus = false) {
   const picker = document.getElementById('measure-picker');
-  if (picker) picker.hidden = true;
+  if (!picker || picker.hidden) return;
+  picker.hidden = true;
+  if (restoreFocus) {
+    const trigger = measurePickerTrigger?.isConnected ? measurePickerTrigger : document.getElementById('open-measure-picker');
+    trigger?.focus();
+  }
+  measurePickerTrigger = null;
 }
 
 function renderMeasureComposer() {
@@ -159,7 +168,11 @@ function renderMeasureComposer() {
   }
   const window = selectedMeasureWindow();
   const entries = EMAForgeMeasureFlow.flatten(window);
-  flow.innerHTML = `<div class="measure-flow-heading"><div><strong>${escH(window.label || 'Untitled session')}</strong><span class="measure-flow-session">Participant flow</span></div><span>Expand to edit · use arrows to reorder</span></div>`;
+  flow.innerHTML = `<div class="measure-flow-heading">
+    <strong>${escH(window.label || 'Untitled session')}</strong>
+    <button type="button" class="measure-add-button" id="open-measure-picker" aria-controls="measure-picker">+ Add measure</button>
+  </div>`;
+  flow.querySelector('#open-measure-picker').addEventListener('click', event => openMeasurePicker(event.currentTarget));
   const list = document.createElement('div');
   list.className = 'measure-flow-list';
   if (!entries.length) {
@@ -168,7 +181,7 @@ function renderMeasureComposer() {
       <p>Start with a question, instruction, or task.</p>
       <button type="button" class="btn btn-secondary">Choose a measure</button>
     </div>`;
-    list.querySelector('button').addEventListener('click', () => openMeasurePicker());
+    list.querySelector('button').addEventListener('click', event => openMeasurePicker(event.currentTarget));
     flow.appendChild(list);
     return;
   }
@@ -178,6 +191,12 @@ function renderMeasureComposer() {
     appendFlowDropSlot(list, index + 1);
   });
   wireFlowListReordering(list, window, entries);
+  const addRow = document.createElement('button');
+  addRow.type = 'button';
+  addRow.className = 'measure-add-row';
+  addRow.innerHTML = '<span class="measure-add-row-icon" aria-hidden="true">+</span>Add measure';
+  addRow.addEventListener('click', event => openMeasurePicker(event.currentTarget));
+  list.appendChild(addRow);
   flow.appendChild(list);
 }
 
@@ -186,7 +205,7 @@ function appendFlowDropSlot(list, index) {
   slot.className = 'flow-drop-slot';
   slot.dataset.dropIndex = String(index);
   slot.innerHTML = `<button type="button" class="flow-insert-button" aria-label="Add measure at position ${index + 1}" title="Add measure here">+</button>`;
-  slot.querySelector('button').addEventListener('click', () => openMeasurePicker(index));
+  slot.querySelector('button').addEventListener('click', event => openMeasurePicker(event.currentTarget, index));
   list.appendChild(slot);
 }
 
@@ -998,6 +1017,7 @@ function addMeasureAt(type, insertionIndex = null) {
     schedulePreview();
     setMeasureFeedback(`${module.label} added to ${targetWindow.label}. Fine-tune it in Task settings.`);
     closeMeasurePicker();
+    document.querySelector(`.measure-flow-card[data-index="${targetIndex}"] .measure-edit`)?.focus();
     return;
   }
   const question = { id: genQId(), type, text: '', required: true, condition: null };
@@ -1038,11 +1058,17 @@ function addMeasureAt(type, insertionIndex = null) {
   const card = document.querySelector(`.flow-question-card[data-qid="${CSS.escape(question.id)}"]`);
   if (card) {
     setQuestionExpanded(card, true);
-    card.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    if (type !== 'page_break' && type !== 'heart_rate') card.querySelector('.q-text')?.focus({ preventScroll: true });
+    const editor = type === 'page_break' ? '.page-break-label' : type === 'heart_rate' ? '.q-expand' : '.q-text';
+    card.querySelector(editor)?.focus({ preventScroll: true });
+    card.scrollIntoView({ block: 'nearest' });
   }
 }
 
-document.getElementById('open-measure-picker')?.addEventListener('click', () => openMeasurePicker());
-document.getElementById('close-measure-picker')?.addEventListener('click', closeMeasurePicker);
+document.getElementById('close-measure-picker')?.addEventListener('click', () => closeMeasurePicker(true));
+document.getElementById('measure-picker')?.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  event.preventDefault();
+  event.stopPropagation();
+  closeMeasurePicker(true);
+});
 document.getElementById('measure-picker-search')?.addEventListener('input', event => renderMeasurePicker(event.target.value));

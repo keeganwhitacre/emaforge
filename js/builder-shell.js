@@ -12,6 +12,7 @@ const builderSections = {
 };
 
 function sectionForIssue(issue) {
+  if (issue.code === "phase_sequence_empty") return "questions";
   if (issue.path.startsWith("ema.questions")) return "questions";
   if (issue.path.startsWith("ema.scheduling")) return "schedule";
   if (issue.path.startsWith("onboarding")) return "onboarding";
@@ -21,7 +22,7 @@ function sectionForIssue(issue) {
 
 function showBuilderIssue(issue) {
   const emptySession = issue.code === "phase_sequence_empty";
-  const section = emptySession ? "questions" : sectionForIssue(issue);
+  const section = sectionForIssue(issue);
   if (!document.getElementById(`tab-${section}`).classList.contains("active")) {
     document.querySelector(`.tab-btn[data-tab="${section}"]`).click();
   }
@@ -45,12 +46,15 @@ function showBuilderIssue(issue) {
     target = document.querySelector(".measure-empty button");
   }
   if (!target && windowIndex) target = document.querySelectorAll("#window-list .window-item")[Number(windowIndex[1])];
-  if (target?.classList.contains("q-card")) setQuestionExpanded(target, true);
+  if (target?.classList.contains("q-card")) {
+    setQuestionExpanded(target, true);
+    target = target.querySelector(".q-text, .page-break-label") || target;
+  }
   if (!target && issue.path === "study.name") target = document.getElementById("study-name");
   if (!target && issue.path === "study.institution") target = document.getElementById("institution");
   if (!target && issue.path === "study.webhook_url") target = document.getElementById("study-webhook");
   if (!target && issue.path === "onboarding.consent_text") target = document.getElementById("ob-consent-text");
-  if (target?.matches("input, button, [contenteditable]")) target.focus({ preventScroll: true });
+  if (target?.matches("input, textarea, button, [contenteditable]")) target.focus({ preventScroll: true });
   else document.getElementById("builder-section-title").focus({ preventScroll: true });
   target?.scrollIntoView({ block: "center" });
 }
@@ -84,15 +88,18 @@ function renderBuilderNextStep(errors) {
   const card = document.getElementById("builder-next");
   const action = document.getElementById("builder-next-action");
   const section = document.querySelector(".tab-btn.active")?.dataset.tab;
-  card.hidden = section === "deployment";
+  const firstIssue = errors[0];
+  const issue = section === "deployment" ? firstIssue : errors.find(error => sectionForIssue(error) === section);
+  card.hidden = section === "deployment" ? !issue : Boolean(firstIssue && !issue);
   if (card.hidden) return;
 
-  const issue = errors[0];
+  document.getElementById("builder-next-label").textContent = section === "deployment"
+    ? `${errors.length} blocking issue${errors.length === 1 ? "" : "s"}` : "Next step";
   document.getElementById("builder-next-detail").textContent = issue?.message ||
     "Review your protocol and prepare the file for Study Admin.";
-  const sectionName = issue?.code === "phase_sequence_empty" ? "Measures" :
-    issue ? builderSections[sectionForIssue(issue)][0] : null;
-  action.textContent = sectionName ? `Open ${sectionName}` : "Review & Deploy";
+  const issueSection = issue && sectionForIssue(issue);
+  action.textContent = issue ? issueSection === section ? "Go to issue" : `Open ${builderSections[issueSection][0]}`
+    : "Review & Deploy";
   action.onclick = () => {
     if (issue) showBuilderIssue(issue);
     else {
@@ -100,6 +107,33 @@ function renderBuilderNextStep(errors) {
       document.getElementById("builder-section-title").focus();
     }
   };
+}
+
+// Show blocking issues in both the desktop tabs and mobile picker.
+function renderSectionBadges(errors) {
+  const counts = {};
+  errors.forEach(issue => {
+    const key = sectionForIssue(issue);
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  for (const option of sectionSelect.options) {
+    const [title] = builderSections[option.value];
+    const count = counts[option.value];
+    const label = count ? `${title} (${count})` : title;
+    if (option.textContent !== label) option.textContent = label;
+  }
+  document.querySelectorAll(".tab-btn[data-tab]").forEach(tab => {
+    const count = counts[tab.dataset.tab] || 0;
+    let badge = tab.querySelector(".tab-badge");
+    if (!count) { badge?.remove(); return; }
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "tab-badge";
+      tab.append(badge);
+    }
+    if (badge.textContent !== String(count)) badge.textContent = String(count);
+    badge.setAttribute("aria-label", `${count} issue${count === 1 ? "" : "s"} to fix`);
+  });
 }
 
 function renderBuilderShell() {
@@ -117,6 +151,7 @@ function renderBuilderShell() {
   const { errors, warnings, issues } = report;
   renderSectionIssues(issues);
   renderBuilderNextStep(errors);
+  renderSectionBadges(errors);
   document.getElementById("summary-question-count").textContent = count;
   document.getElementById("summary-block-count").textContent = taskCount;
   document.getElementById("summary-issue-count").textContent = issues.filter(issue => sectionForIssue(issue) === "questions").length;

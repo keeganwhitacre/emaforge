@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentation — EMA Forge</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="css/studio.css?v=20261120e">
+  <link rel="stylesheet" href="css/studio.css?v=20261124">
   <script>
     // Apply theme immediately to prevent flashing
     const savedTheme = localStorage.getItem('ema-forge-theme') ||
       (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
-  <link rel="stylesheet" href="css/surfaces.css?v=20261120e">
+  <link rel="stylesheet" href="css/surfaces.css?v=20261124">
   <style>
     /* ── Documentation Layout ───────────────────────────────── */
     #docs-app {
@@ -53,9 +53,9 @@
     }
 
     .docs-nav-title {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
-      text-transform: uppercase;
+      text-transform: none;
       letter-spacing: 0.08em;
       color: var(--fg-3);
       padding: 0 10px;
@@ -282,7 +282,7 @@
       font-weight: 600;
       color: var(--fg);
       font-size: 12px;
-      text-transform: uppercase;
+      text-transform: none;
       letter-spacing: 0.04em;
     }
 
@@ -291,7 +291,7 @@
     }
 
     .docs-prose td code {
-      font-size: 11px;
+      font-size: 12px;
       white-space: nowrap;
     }
 
@@ -302,7 +302,7 @@
       gap: 6px;
       padding: 2px 6px;
       border-radius: 2px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.04em;
       vertical-align: middle;
@@ -356,7 +356,7 @@
 
     .docs-prose details summary::before {
       content: '▸';
-      font-size: 10px;
+      font-size: 12px;
       color: var(--accent);
       transition: transform 0.15s ease;
       display: inline-block;
@@ -676,7 +676,7 @@
 
       /* Status pills wrap better */
       .status-pill {
-        font-size: 10px;
+        font-size: 12px;
         padding: 2px 8px;
       }
 
@@ -714,7 +714,28 @@
       .docs-main { scroll-behavior: auto; }
       .docs-sidebar { transition: none; }
     }
-  </style>
+
+    /* ── 2026 design language ─────────────────────────────── */
+    .docs-sidebar { background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 18px 0; width: 236px; }
+    .docs-main { border: 0; border-radius: var(--surface-radius); box-shadow: var(--group-shadow); }
+    .docs-nav-title { color: var(--fg-3); font-size: 13px; font-weight: 600; letter-spacing: 0; padding: 0 12px; }
+    .docs-nav-link { padding: 9px 12px; border-radius: 10px; color: var(--fg); font-size: 14px; }
+    .docs-nav-link.active { background: var(--bg-1); color: var(--fg); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 .5px var(--hairline); }
+    .docs-prose { font-size: 16px; line-height: 1.65; }
+    .docs-prose code { border: 0; border-radius: 6px; font-size: 13px; }
+    .docs-prose pre { border: 0; background: var(--bg-2); border-radius: var(--radius-lg); }
+    #topbar .topbar-actions-sep { display: none; }
+    #topbar .forge-nav + .topbar-actions { margin-left: 0; gap: 4px; }
+    .docs-prose table { border-radius: var(--group-radius); overflow: hidden; box-shadow: 0 0 0 1px var(--hairline); }
+    .docs-prose th, .docs-prose td { border: 0; border-bottom: 1px solid var(--hairline); }
+    .docs-prose th { background: var(--bg-2); color: var(--fg-2); font-size: 13px; letter-spacing: 0; }
+    .docs-prose tr:last-child td { border-bottom: 0; }
+    .status-pill { padding: 2px 9px; border: 0; border-radius: var(--pill-radius); letter-spacing: 0; background: var(--bg-2); }
+    .feature-item { border: 0; background: var(--bg-2); }
+    .docs-hamburger { border: 0; border-radius: 14px; width: 44px; height: 44px; }
+    .docs-hamburger:hover { background: var(--bg-2); }
+</style>
+<script src="js/motion.js?v=20261124" defer></script>
 </head>
 
 <body>
@@ -723,9 +744,8 @@
 
     <!-- ========== TOP BAR ========== -->
     <header id="topbar" class="forge-header">
-      <a href="index.html" class="forge-back" aria-label="Back to home" title="Back to home"><svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" aria-hidden="true"><path d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/></svg></a>
-
-      <span class="forge-brand"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</span>
+      <a class="forge-brand" href="index.html"><span class="forge-logo" aria-hidden="true"></span>EMA Forge</a>
+      <nav class="forge-nav" aria-label="Site"><a href="builder.html">Builder</a><a href="library.html">Library</a><a href="dashboard.html">Analyze</a><a href="readme.html" aria-current="page">Docs</a></nav>
 
       <div class="topbar-actions">
         <button class="docs-hamburger" id="docs-hamburger" aria-label="Toggle navigation" aria-expanded="false">
@@ -738,8 +758,7 @@
         </button>
         <!-- Theme Toggle -->
         <button type="button" class="forge-header-icon" id="theme-toggle" title="Toggle light or dark theme" aria-label="Toggle light or dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-        <div class="topbar-actions-sep"></div>
-        <a href="builder.html" class="btn-ghost" style="text-decoration:none;">Open Builder</a>
+        <a class="forge-header-icon" href="https://github.com/keeganwhitacre/emaforge" target="_blank" rel="noopener noreferrer" aria-label="Source code on GitHub" title="Source code on GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4 1.5-4-2-6-2.5m12 5v-3.5a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.6 4.7 4.7 0 0 0-.1-3.5s-1.1-.3-3.6 1.4a12.4 12.4 0 0 0-6.5 0C6 1.6 4.9 1.9 4.9 1.9a4.7 4.7 0 0 0-.1 3.5A5 5 0 0 0 3.4 9c0 5.1 3 6.3 6 6.6a3 3 0 0 0-.9 2.4V22"/></svg></a>
       </div>
     </header>
 
@@ -3371,14 +3390,9 @@ https://github.com/keeganwhitacre/emaforge</code></pre>
   <script>
     // Handle Theme Toggle
     const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('ema-forge-theme', newTheme);
-      });
-    }
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
+  }
 
     // Handle active state switching for sidebar links
     const navLinks = document.querySelectorAll('.docs-nav-link');
