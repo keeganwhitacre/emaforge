@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261124c">
 <link rel="stylesheet" href="css/surfaces.css?v=20261124c">
-<link rel="stylesheet" href="css/builder.css?v=20261125">
+<link rel="stylesheet" href="css/builder.css?v=20261125b">
 <script src="js/motion.js?v=20261124c" defer></script>
 </head>
 <body>
@@ -67,16 +67,28 @@
     <div class="measure-picker-groups" id="measure-picker-groups"></div>
   </dialog>
 
-  <dialog class="measure-picker branch-tester" id="branch-tester" aria-labelledby="branch-tester-title">
-    <div class="measure-picker-head">
-      <div><strong id="branch-tester-title">Test branching</strong><span class="branch-test-session"></span></div>
+  <dialog class="branch-tester" id="branch-tester" aria-labelledby="branch-tester-title">
+    <div class="branch-test-header">
+      <div><h2 id="branch-tester-title">Test branching</h2><p class="branch-test-session"></p></div>
       <form method="dialog"><button class="builder-icon-button" aria-label="Close branch tester" autofocus>×</button></form>
     </div>
-    <p class="field-hint">Enter sample answers to see what this session shows or skips.</p>
-    <div class="branch-test-inputs"></div>
-    <div class="branch-test-results" aria-live="polite"></div>
-    <p class="field-hint">To walk through the same path, enter these answers in the phone preview.</p>
-    <button type="button" class="btn btn-secondary branch-preview-link">Open phone preview</button>
+    <div class="branch-test-content">
+      <section aria-labelledby="branch-test-answers">
+        <div class="branch-test-section-heading">
+          <h3 id="branch-test-answers">Sample answers</h3>
+          <button type="button" class="btn-ghost branch-test-reset">Reset</button>
+        </div>
+        <div class="branch-test-inputs"></div>
+      </section>
+      <section aria-labelledby="branch-test-outcome">
+        <div class="branch-test-section-heading"><h3 id="branch-test-outcome">Participant path</h3></div>
+        <div class="branch-test-results" aria-live="polite"></div>
+      </section>
+    </div>
+    <div class="branch-test-footer">
+      <button type="button" class="btn btn-secondary branch-preview-link">Open phone preview</button>
+      <p class="field-hint">Enter the same answers in preview to walk through this path.</p>
+    </div>
   </dialog>
 
   <!-- ========== TOP BAR ========== -->
@@ -658,8 +670,8 @@
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
 <script src="templates/runtime-utils.js?v=20261125"></script>
-<script src="js/branching.js?v=20261125"></script>
-<script src="js/tabs/questions.js?v=20261125"></script>
+<script src="js/branching.js?v=20261125b"></script>
+<script src="js/tabs/questions.js?v=20261125b"></script>
 <script src="js/tabs/schedule.js?v=20261125"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20261125"></script>

@@ -1226,79 +1226,145 @@ html:has(.measure-picker[open]) { overflow: hidden; }
 }
 .deploy-file-shortcut p { color: var(--fg-3); font-size: 13px; }
 
-/* Branch controls stay quiet until a measure is expanded or has a rule. */
-.measure-heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-}
+
+/* Inline branching in the Measures list */
+.measure-heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .measure-heading-actions .btn { white-space: nowrap; }
-.branch-editor {
-  margin: 0 16px 9px 58px;
-  min-width: 0;
-  border-radius: var(--radius);
-}
+.branch-editor { min-width: 0; margin: 0 16px 10px 58px; }
 .flow-question-card:not(.expanded) > .branch-editor:not(.has-branch):not([open]) { display: none; }
 .branch-editor > summary {
-  cursor: pointer;
-  padding: 6px 8px;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
   color: var(--fg-2);
-  overflow-wrap: anywhere;
+  list-style: none;
+  line-height: 1.4;
+  font-size: 13px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background var(--transition);
 }
-.branch-editor.has-branch > summary { color: var(--accent); }
-.branch-editor.branch-needs-review > summary { color: var(--red); }
-.branch-editor[open] {
-  background: color-mix(in srgb, var(--accent) 4%, var(--bg-1));
-  box-shadow: inset 2px 0 0 var(--accent);
-  padding: 4px 8px 8px;
+.branch-editor > summary::-webkit-details-marker { display: none; }
+.branch-editor > summary::before {
+  content: "";
+  flex: 0 0 13px;
+  height: 13px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 17V4m0 8c0-4 3-6 8-6m-2-2 2 2-2 2'/%3E%3Ccircle cx='5' cy='3' r='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
-.branch-editor-body { container-type: inline-size; display: grid; gap: 8px; padding: 0 8px 4px; }
-.branch-editor-body > strong { font-size: 13px; }
+.branch-editor > summary::after {
+  content: "";
+  flex: 0 0 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  opacity: .62;
+}
+.branch-editor[open] > summary::after { transform: rotate(225deg) translateY(-1px); }
+.branch-editor > summary span { min-width: 0; overflow-wrap: anywhere; }
+.branch-editor > summary:hover { background: var(--bg-3); }
+.branch-editor.branch-needs-review > summary { color: var(--red); background: var(--red-dim); }
+.branch-editor-body {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 12px;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--group-radius);
+  background: var(--bg-1);
+}
 .branch-rule {
   display: grid;
-  align-items: center;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 9px 8px;
 }
-.branch-rule > :is(input, select) { min-width: 0; }
-.branch-editor input[type="text"], .branch-test-inputs input[type="text"] {
-  border-color: var(--hairline);
-  font: 14px var(--font);
-}
+.branch-rule + .branch-rule { border-top: 1px solid var(--hairline); padding-top: 10px; }
+.branch-field { display: grid; gap: 4px; min-width: 0; }
+.branch-field > span { color: var(--fg-3); font-size: 12px; font-weight: 600; }
+.branch-source { grid-column: 1 / -1; }
+:is(.branch-field, .branch-test-field) > :is(input, select) { width: 100%; min-width: 0; background: var(--bg-2); }
+.branch-rule > .builder-icon-button { width: 32px; height: 36px; }
 .branch-choice-values { display: grid; gap: 4px; max-height: 132px; overflow: auto; padding: 4px; }
 .branch-choice-values label { display: flex; align-items: baseline; gap: 6px; font-size: 13px; overflow-wrap: anywhere; }
 .branch-choice-values input { flex: none; accent-color: var(--accent); }
-.branch-add { justify-self: start; }
+.branch-add { justify-self: start; color: var(--accent); }
 .measure-flow-card > .branch-editor { grid-column: 3 / -1; margin: 0; }
 .flow-question-card.page-break > .q-header {
   background: var(--bg-2);
-  border-top: 1px solid var(--hairline);
   display: flex;
   flex-wrap: wrap;
 }
-.flow-page-label { font-size: 12px; font-weight: 650; color: var(--fg-3); }
-.flow-question-card.flow-page-child { border-inline-start: 3px solid var(--hairline); }
+.flow-question-card.page-break .page-break-name { flex: 1 1 140px; color: var(--fg); font-size: 14px; font-weight: 650; }
+.flow-page-label { font-size: 12px; color: var(--fg-3); white-space: nowrap; }
+.flow-question-card.flow-page-child { border-inline-start: 2px solid var(--hairline); }
 .flow-question-card.flow-page-child.expanded { border-inline-start-color: transparent; }
-.flow-question-card.flow-page-child:not(.expanded) > .q-header { padding-inline-start: 20px; }
 
-.branch-test-inputs { display: grid; gap: 12px; margin: 14px 0; }
-.branch-test-field { display: grid; gap: 5px; font-size: 14px; font-weight: 600; }
-.branch-test-results { border-top: 1px solid var(--hairline); margin: 14px 0; padding-top: 8px; }
+/* The tester uses the preview column or a compact bottom sheet. */
+dialog.branch-tester {
+  width: min(460px, calc(100% - 2 * var(--forge-inset)));
+  max-height: calc(100dvh - 2 * var(--forge-inset));
+  padding: 0;
+  margin: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--hairline);
+  border-radius: var(--surface-radius);
+  background: var(--bg-1);
+  color: var(--fg);
+  box-shadow: var(--surface-shadow-raised);
+}
+.branch-tester::backdrop { background: var(--scrim); }
+.branch-test-header, .branch-test-content, .branch-test-footer { padding-inline: 18px; }
+.branch-test-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-block: 17px 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+.branch-test-header h2 { font: 700 21px/1.2 var(--font-display); letter-spacing: -.025em; }
+.branch-test-session { margin-top: 3px; font-size: 13px; color: var(--fg-3); }
+.branch-test-header .builder-icon-button { background: var(--bg-2); }
+.branch-test-content { display: grid; gap: 16px; padding-block: 14px 16px; }
+.branch-test-section-heading { display: flex; align-items: center; justify-content: space-between; min-height: 32px; gap: 8px; }
+.branch-test-section-heading h3 { color: var(--fg-2); font-size: 13px; font-weight: 650; }
+.branch-test-reset { color: var(--accent); }
+.branch-test-reset:disabled { color: var(--fg-3); cursor: default; }
+.branch-test-inputs, .branch-test-results { border: 1px solid var(--hairline); border-radius: var(--group-radius); overflow: hidden; }
+.branch-test-inputs:empty { display: none; }
+.branch-test-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(78px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+}
+.branch-test-field > span { font-size: 13px; font-weight: 550; overflow-wrap: anywhere; }
+.branch-test-field + .branch-test-field, .branch-test-result + .branch-test-result { border-top: 1px solid var(--hairline); }
 .branch-test-result {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 4px 8px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--hairline);
+  align-items: center;
+  gap: 3px 8px;
+  padding: 9px 10px;
 }
-.branch-test-result strong { overflow-wrap: anywhere; font-size: 14px; }
-.branch-test-result small { grid-column: 1 / -1; color: var(--fg-3); }
-.branch-status { padding: 2px 8px; border-radius: var(--pill-radius); color: var(--fg-2); background: var(--bg-2); font-size: 12px; }
+.branch-test-result strong { overflow-wrap: anywhere; font-size: 13px; font-weight: 600; }
+.branch-test-result small { grid-column: 1 / -1; color: var(--fg-3); font-size: 12px; }
+.branch-test-page-child { padding-inline-start: 18px; }
+.branch-result-kind { display: block; font-size: 11px; font-weight: 550; color: var(--fg-3); }
+.branch-status { padding: 3px 8px; border-radius: var(--pill-radius); color: var(--fg-2); background: var(--bg-2); font-size: 12px; }
 .branch-status.shown { color: var(--green); background: var(--green-dim); }
-.branch-preview-link { margin-top: 8px; }
+.branch-test-empty { margin: 0; padding: 10px; color: var(--fg-3); font-size: 13px; }
+.branch-test-footer { display: grid; gap: 7px; padding-block: 12px 16px; border-top: 1px solid var(--hairline); }
+.branch-preview-link { justify-self: start; }
+
 @media (min-width: 1051px) {
   dialog.branch-tester[open]:not(:modal) {
     grid-area: 2 / 3;
@@ -1312,13 +1378,11 @@ html:has(.measure-picker[open]) { overflow: hidden; }
   }
   #app:has(> dialog.branch-tester[open]:not(:modal)) > #preview-panel { display: none; }
 }
-@container (max-width: 420px) {
-  .branch-rule { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
-  .branch-rule > :first-child { grid-column: 1 / -1; }
-}
 @media (max-width: 850px) {
   dialog.branch-tester { margin: auto auto max(var(--forge-inset), env(safe-area-inset-bottom)); }
   .measure-flow-heading { flex-wrap: wrap; }
   .branch-editor { margin-inline: 12px; }
   .measure-flow-card > .branch-editor { grid-column: 2 / -1; }
+  .branch-editor > summary, .branch-rule > .builder-icon-button { min-height: 44px; }
+  .branch-field > :is(input, select), .branch-test-field > :is(input, select) { font-size: 16px; }
 }

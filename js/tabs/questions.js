@@ -208,7 +208,7 @@ function renderMeasureComposer() {
       const label = document.createElement('span');
       label.className = 'flow-page-label';
       label.textContent = `Page ${page.number} · ${page.count} measure${page.count === 1 ? '' : 's'}`;
-      card.querySelector('.page-break-name').before(label);
+      card.querySelector('.page-break-name').after(label);
     }
     list.appendChild(card);
     appendFlowDropSlot(list, index + 1);

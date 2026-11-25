@@ -84,6 +84,8 @@ function buildBranchEditor(target, sources, kind) {
   const summary = document.createElement('summary');
   const editor = document.createElement('div');
   editor.className = 'branch-editor-body';
+  const summaryText = document.createElement('span');
+  summary.append(summaryText);
   details.append(summary, editor);
   const byId = new Map(sources.map(source => [source.id, source]));
 
@@ -99,10 +101,10 @@ function buildBranchEditor(target, sources, kind) {
       (Array.isArray(rule.value) && !rule.value.length));
     details.classList.toggle('has-branch', Boolean(target[key]));
     details.classList.toggle('branch-needs-review', unavailable || (Boolean(target[key]) && incomplete));
-    if (!target[key]) summary.textContent = `Make this ${kind} conditional`;
-    else if (unavailable) summary.textContent = 'Branch needs review · Source unavailable earlier in this session';
-    else if (incomplete) summary.textContent = 'Branch needs review · Finish the rule';
-    else summary.textContent = `${verb} if ` + items.map(rule => {
+    if (!target[key]) summaryText.textContent = `Add ${kind === 'task' ? 'run' : 'display'} rule`;
+    else if (unavailable) summaryText.textContent = 'Source must come earlier in this session';
+    else if (incomplete) summaryText.textContent = 'Finish setting up this rule';
+    else summaryText.textContent = `${verb} if ` + items.map(rule => {
       const source = byId.get(rule.question_id);
       const labels = new Map(branchOptions(source).map(([value, label]) => [String(value), label]));
       const value = (Array.isArray(rule.value) ? rule.value : [rule.value]).map(item => labels.get(String(item)) || item).join(', ');
@@ -120,9 +122,12 @@ function buildBranchEditor(target, sources, kind) {
     updateSummary();
     const items = rules();
     editor.replaceChildren();
-    const heading = document.createElement('strong');
-    heading.textContent = `${verb} this ${kind} if`;
-    editor.append(heading);
+    if (!items.length && sources.length) {
+      const note = document.createElement('p');
+      note.className = 'field-hint';
+      note.textContent = `${verb} this ${kind} based on an earlier answer.`;
+      editor.append(note);
+    }
     if (items.length > 1) {
       const mode = document.createElement('select');
       mode.setAttribute('aria-label', 'How conditions are combined');
@@ -132,6 +137,19 @@ function buildBranchEditor(target, sources, kind) {
       mode.addEventListener('change', () => { target[key].logical_op = mode.value; changed(); });
       editor.append(mode);
     }
+    function field(text, control, className = '') {
+      const group = document.createElement('div');
+      group.className = `branch-field ${className}`;
+      const caption = document.createElement('span');
+      caption.textContent = text;
+      group.append(caption, control);
+      return group;
+    }
+
+    function focusRule(index, label) {
+      editor.querySelectorAll('.branch-rule')[index]?.querySelector(`[aria-label="Condition ${index + 1} ${label}"]`)?.focus({ preventScroll: true });
+    }
+
     items.forEach((rule, index) => {
       const row = document.createElement('div');
       row.className = 'branch-rule';
@@ -153,20 +171,22 @@ function buildBranchEditor(target, sources, kind) {
       if (rule.operator && !operators.includes(rule.operator)) operators.push(rule.operator);
       for (const operator of operators) comparison.add(new Option(branchOperatorLabels[operator] || operator, operator));
       comparison.value = rule.operator || operators[0];
+      comparison.disabled = !source;
       const value = branchValueControl(source, rule.value, isMulti && comparison.value.startsWith('includes') || Array.isArray(rule.value));
       value.setAttribute('aria-label', `Condition ${index + 1} answer`);
+      if ('disabled' in value) value.disabled = !source;
       select.addEventListener('change', () => {
         rule.question_id = select.value;
         const type = byId.get(select.value)?.type;
         rule.operator = ['checkbox', 'body_map'].includes(type) ? 'includes' : 'eq';
         rule.value = '';
         changed(true);
-        editor.querySelectorAll('.branch-rule')[index]?.querySelector('select:nth-child(2)')?.focus();
+        focusRule(index, 'comparison');
       });
       comparison.addEventListener('change', () => {
         rule.operator = comparison.value;
         changed(true);
-        editor.querySelectorAll('.branch-rule')[index]?.querySelector('select:nth-child(2)')?.focus();
+        focusRule(index, 'comparison');
       });
       value.addEventListener('input', () => { rule.value = readBranchValue(value, rule.value); changed(); });
       const remove = document.createElement('button');
@@ -181,12 +201,13 @@ function buildBranchEditor(target, sources, kind) {
         editor.querySelectorAll('.branch-rule')[Math.min(index, remaining.length - 1)]?.querySelector('select')?.focus();
         if (!remaining.length) summary.focus();
       });
-      row.append(select, comparison, value, remove);
+      row.append(field('Earlier answer', select, 'branch-source'),
+        field('Comparison', comparison), field('Value', value), remove);
       editor.append(row);
     });
     const add = document.createElement('button');
     add.type = 'button';
-    add.className = 'btn btn-secondary branch-add';
+    add.className = 'btn-ghost branch-add';
     add.textContent = 'Add condition';
     add.disabled = !sources.length;
     add.addEventListener('click', () => {
@@ -194,7 +215,7 @@ function buildBranchEditor(target, sources, kind) {
       changed(true);
       Array.from(editor.querySelectorAll('.branch-rule')).at(-1)?.querySelector('select')?.focus();
     });
-    editor.append(add);
+    if (sources.length) editor.append(add);
     if (!sources.length) {
       const help = document.createElement('p');
       help.className = 'field-hint';
@@ -211,6 +232,7 @@ function openBranchTester(session, trigger) {
   const dialog = document.getElementById('branch-tester');
   const fields = dialog.querySelector('.branch-test-inputs');
   const results = dialog.querySelector('.branch-test-results');
+  const reset = dialog.querySelector('.branch-test-reset');
   if (dialog.open) {
     dialog.querySelector('[autofocus]').focus({ preventScroll: true });
     return;
@@ -233,6 +255,13 @@ function openBranchTester(session, trigger) {
       const status = document.createElement('span');
       status.className = item.shown ? 'branch-status shown' : 'branch-status';
       status.textContent = item.shown ? 'Shown' : 'Skipped';
+      if (item.pageSkipped) row.classList.add('branch-test-page-child');
+      if (item.kind === 'page') {
+        const type = document.createElement('span');
+        type.className = 'branch-result-kind';
+        type.textContent = 'Page';
+        title.prepend(type);
+      }
       row.append(title, status);
       if (!item.shown) {
         const reason = document.createElement('small');
@@ -242,13 +271,19 @@ function openBranchTester(session, trigger) {
             const question = questionById(id);
             const labels = new Map(branchOptions(question));
             const displayed = (Array.isArray(value) ? value : [value]).map(answer => labels.get(answer) || answer).join(', ');
-            return `${branchQuestionLabel(question)} was ${displayed || 'unanswered'}`;
+            return `Answered ${displayed} to “${branchQuestionLabel(question)}”`;
           }).join(' · ') || 'Conditions did not match';
         row.append(reason);
       }
       results.append(row);
     }
-    if (!results.children.length) results.textContent = 'This session has no conditional measures.';
+    if (!results.children.length) {
+      const empty = document.createElement('p');
+      empty.className = 'branch-test-empty';
+      empty.textContent = 'This session has no conditional measures.';
+      results.append(empty);
+    }
+    reset.disabled = !Object.keys(answers).length;
   }
 
   function renderInputs() {
@@ -273,6 +308,11 @@ function openBranchTester(session, trigger) {
     }
     update();
   }
+  reset.onclick = () => {
+    for (const id of Object.keys(answers)) delete answers[id];
+    renderInputs();
+    fields.querySelector('input, select')?.focus();
+  };
   renderInputs();
   dialog.addEventListener('branch-change', renderInputs);
   dialog.querySelector('.branch-preview-link').onclick = () => {
