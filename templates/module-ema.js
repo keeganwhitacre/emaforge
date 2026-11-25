@@ -71,37 +71,34 @@ const EMA = (function() {
     return condition.question_id === questionId;
   }
 
+  let pageMarkers = [];
+  let earlierResponses = {};
+  let visitedPages = new Set();
+
   function buildPages(questionIds) {
-    emaPages = [];
-    let currentBlock = [];
-    EMAForgeRuntimeUtils.questionsForStep(config.ema.questions, questionIds).forEach(q => {
-      if (q.type === 'page_break') {
-        if (currentBlock.length > 0) {
-          // Shuffle the block if the config allows it
-          if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
-          emaPages.push(currentBlock);
-          currentBlock = [];
-        }
-        return;
-      }
-
-      if (q.type === 'instruction') {
-        if (currentBlock.length > 0) {
-          if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
-          emaPages.push(currentBlock);
-          currentBlock = [];
-        }
-        emaPages.push([q]);
-        return;
-      }
-
-      currentBlock.push(q);
+    const pages = EMAForgeRuntimeUtils.surveyPages(config.ema.questions, questionIds);
+    pageMarkers = pages.map(page => page.marker);
+    emaPages = pages.map(({ questions }) => {
+      if (config.ema.randomize_questions && canRandomize(questions)) shuffleArray(questions);
+      return questions;
     });
+  }
 
-    if (currentBlock.length > 0) {
-      if (config.ema.randomize_questions && canRandomize(currentBlock)) shuffleArray(currentBlock);
-      emaPages.push(currentBlock);
+  function branchResponses() {
+    return { ...earlierResponses, ...emaResponses.responses };
+  }
+
+  function previousVisitedPage() {
+    for (let index = currentPageIndex - 1; index >= 0; index--) {
+      if (visitedPages.has(index)) return index;
     }
+    return -1;
+  }
+
+  function canGoBack(index) {
+    return config.ema.allow_back_navigation === true && index >= 0 &&
+      !EMAForgeRuntimeUtils.pageContainsPhysiology(emaPages[currentPageIndex]) &&
+      !EMAForgeRuntimeUtils.pageContainsPhysiology(emaPages[index]);
   }
 
   function recordResponse(qid, value) {
@@ -131,6 +128,7 @@ const EMA = (function() {
     });
     emaResponses.presentationOrder.length = currentPageIndex + 1;
     emaResponses.skippedQuestions = emaResponses.skippedQuestions.filter(item => !futureIds.has(item.questionId));
+    visitedPages = new Set([...visitedPages].filter(index => index <= currentPageIndex));
     furthestPageVisited = currentPageIndex;
   }
 
@@ -728,9 +726,10 @@ const EMA = (function() {
     let visibleQuestions = [];
     while (currentPageIndex < emaPages.length) {
       const pageQuestions = emaPages[currentPageIndex];
-      visibleQuestions = pageQuestions.filter(q => {
-        return evalCond(q.condition, emaResponses.responses);
-      });
+      const marker = pageMarkers[currentPageIndex];
+      const responses = branchResponses();
+      const showPage = evalCond(marker?.page_condition, responses);
+      visibleQuestions = showPage ? pageQuestions.filter(q => evalCond(q.condition, responses)) : [];
       emaResponses.presentationOrder[currentPageIndex] = visibleQuestions.filter(q => q.type !== 'instruction').map(q => q.id);
       const pageIds = new Set(pageQuestions.map(q => q.id));
       emaResponses.skippedQuestions = emaResponses.skippedQuestions.filter(item => !pageIds.has(item.questionId));
@@ -740,7 +739,8 @@ const EMA = (function() {
           emaResponses.skippedQuestions.push({
             questionId: q.id,
             page: currentPageIndex + 1,
-            reason: 'condition_false',
+            reason: showPage ? 'condition_false' : 'page_condition_false',
+            ...(!showPage && { pageId: marker.id }),
             evaluatedAt: new Date().toISOString()
           });
         }
@@ -756,13 +756,10 @@ const EMA = (function() {
       return;
     }
 
+    visitedPages.add(currentPageIndex);
     furthestPageVisited = Math.max(furthestPageVisited, currentPageIndex);
     if (backBtn) {
-      backBtn.hidden = !EMAForgeRuntimeUtils.canNavigateBack(
-        config.ema.allow_back_navigation,
-        currentPageIndex,
-        emaPages
-      );
+      backBtn.hidden = !canGoBack(previousVisitedPage());
     }
 
     const pct = Math.round(((currentPageIndex + 1) / emaPages.length) * 100);
@@ -802,7 +799,7 @@ const EMA = (function() {
         checkSubmit();
         return;
       }
-      const nextVisible = pageQuestions.filter(question => evalCond(question.condition, emaResponses.responses));
+      const nextVisible = pageQuestions.filter(question => evalCond(question.condition, branchResponses()));
       const currentIds = visibleQuestions.map(question => question.id).join('|');
       const nextIds = nextVisible.map(question => question.id).join('|');
       if (currentIds !== nextIds) {
@@ -978,15 +975,12 @@ const EMA = (function() {
     const backBtn = document.getElementById('ema-back-btn');
     if (backBtn) {
       backBtn.onclick = () => {
-        if (!EMAForgeRuntimeUtils.canNavigateBack(
-          config.ema.allow_back_navigation,
-          currentPageIndex,
-          emaPages
-        )) return;
+        const previous = previousVisitedPage();
+        if (!canGoBack(previous)) return;
         const container = document.getElementById('ema-single-container');
         container.classList.add('fade-out');
         setTimeout(() => {
-          currentPageIndex--;
+          currentPageIndex = previous;
           renderCurrentPage();
         }, 300);
       };
@@ -1012,6 +1006,8 @@ const EMA = (function() {
         invalidatedResponses: []
       };
 
+      earlierResponses = EMAForgeRuntimeUtils.collectResponses(sessionData.data);
+      visitedPages = new Set();
       buildPages(phasePlan?.questionIds);
       currentPageIndex = 0;
       furthestPageVisited = 0;

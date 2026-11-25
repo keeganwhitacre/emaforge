@@ -13,7 +13,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261124c">
 <link rel="stylesheet" href="css/surfaces.css?v=20261124c">
-<link rel="stylesheet" href="css/builder.css?v=20261124d">
+<link rel="stylesheet" href="css/builder.css?v=20261125">
 <script src="js/motion.js?v=20261124c" defer></script>
 </head>
 <body>
@@ -65,6 +65,18 @@
     </div>
     <label class="measure-picker-search"><span class="sr-only">Search measures</span><input type="search" id="measure-picker-search" placeholder="Search questions and physiology tasks…"></label>
     <div class="measure-picker-groups" id="measure-picker-groups"></div>
+  </dialog>
+
+  <dialog class="measure-picker branch-tester" id="branch-tester" aria-labelledby="branch-tester-title">
+    <div class="measure-picker-head">
+      <div><strong id="branch-tester-title">Test branching</strong><span class="branch-test-session"></span></div>
+      <form method="dialog"><button class="builder-icon-button" aria-label="Close branch tester" autofocus>×</button></form>
+    </div>
+    <p class="field-hint">Enter sample answers to see what this session shows or skips.</p>
+    <div class="branch-test-inputs"></div>
+    <div class="branch-test-results" aria-live="polite"></div>
+    <p class="field-hint">To walk through the same path, enter these answers in the phone preview.</p>
+    <button type="button" class="btn btn-secondary branch-preview-link">Open phone preview</button>
   </dialog>
 
   <!-- ========== TOP BAR ========== -->
@@ -639,20 +651,22 @@
 <script src="js/state.js?v=20261124d"></script>
 <script src="js/place-context.js?v=20260925g"></script>
 <script src="js/storage.js?v=20261124d"></script>
-<script src="js/library-utils.js?v=20260924d"></script>
+<script src="js/library-utils.js?v=20261125"></script>
 <script src="js/measure-flow-utils.js?v=20260923a"></script>
 <script src="js/templates.js?v=20261121b"></script>
 <script src="js/tabs/study.js?v=20260923e"></script>
 <script src="js/tabs/onboarding.js"></script>
 <script src="js/builder-undo.js?v=20261121c"></script>
-<script src="js/tabs/questions.js?v=20261124d"></script>
-<script src="js/tabs/schedule.js?v=20261124d"></script>
+<script src="templates/runtime-utils.js?v=20261125"></script>
+<script src="js/branching.js?v=20261125"></script>
+<script src="js/tabs/questions.js?v=20261125"></script>
+<script src="js/tabs/schedule.js?v=20261125"></script>
 <script src="js/tabs/tasks.js?v=20260922b"></script>
-<script src="js/protocol-validator.js?v=20260925g"></script>
+<script src="js/protocol-validator.js?v=20261125"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
-<script src="js/preview.js?v=20261124d"></script>
+<script src="js/preview.js?v=20261125"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20261124d"></script>
+<script src="js/export.js?v=20261125"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -685,7 +699,7 @@
     themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261124d"></script>
+<script src="js/builder-shell.js?v=20261125"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>

@@ -76,6 +76,10 @@
         const actual = Array.isArray(value) ? value : [value];
         return expected.some(item => actual.includes(item));
       }
+      case "includes_all": return Array.isArray(comparison) && comparison.length > 0 &&
+        Array.isArray(value) && comparison.every(item => value.includes(item));
+      case "includes_none": return Array.isArray(comparison) && comparison.length > 0 &&
+        Array.isArray(value) && comparison.every(item => !value.includes(item));
       default: return false;
     }
   }
@@ -119,6 +123,67 @@
   function questionsForStep(questions, questionIds) {
     const byId = new Map((questions || []).map(question => [question.id, question]));
     return (questionIds || []).map(questionId => byId.get(questionId)).filter(Boolean);
+  }
+
+  function surveyPages(questions, questionIds) {
+    const pages = [];
+    let marker = null;
+    let items = [];
+    function finishPage() {
+      if (items.length) pages.push({ marker, questions: items });
+      items = [];
+      marker = null;
+    }
+    for (const question of questionsForStep(questions, questionIds)) {
+      if (question.type === "page_break") {
+        finishPage();
+        marker = question;
+      } else {
+        if (question.type === "instruction" && items.length) finishPage();
+        items.push(question);
+        if (question.type === "instruction") finishPage();
+      }
+    }
+    finishPage();
+    return pages;
+  }
+
+  function traceBranches(questions, sequence, answers) {
+    const responses = Object.create(null);
+    const trace = [];
+    const sources = new Set();
+    function test(condition) {
+      const rules = condition?.rules || [condition];
+      for (const rule of rules) if (rule?.question_id) sources.add(rule.question_id);
+      const shown = evaluateCondition(condition, responses);
+      const failed = rules.filter(rule => rule?.question_id && !evaluateCondition(rule, responses)).map(rule => ({
+        id: rule.question_id, value: responseValue(responses[rule.question_id])
+      }));
+      const missing = failed.filter(({ value }) => value == null || value === "").map(({ id }) => id);
+      return { shown, missing, failed };
+    }
+    for (const step of sequence || []) {
+      if (step.kind === "task") {
+        trace.push({ kind: "task", id: step.id, ...test(step.condition) });
+        continue;
+      }
+      for (const page of surveyPages(questions, step.question_ids)) {
+        const gate = test(page.marker?.page_condition);
+        if (page.marker?.page_condition) {
+          trace.push({ kind: "page", id: page.marker.id, ...gate });
+        }
+        for (const question of page.questions) {
+          const result = test(question.condition);
+          const outcome = gate.shown ? result : { shown: false, missing: [], pageSkipped: true };
+          if (question.condition || outcome.pageSkipped) {
+            trace.push({ kind: "question", id: question.id, ...outcome });
+          }
+          if (outcome.shown && Object.hasOwn(answers, question.id)) responses[question.id] = answers[question.id];
+          else delete responses[question.id];
+        }
+      }
+    }
+    return { trace, sources: [...sources] };
   }
 
   function pageContainsPhysiology(page) {
@@ -280,6 +345,8 @@
     evaluateCondition,
     buildPhasePlan,
     questionsForStep,
+    surveyPages,
+    traceBranches,
     pageContainsPhysiology,
     canNavigateBack,
     questionIdsAfterPage,

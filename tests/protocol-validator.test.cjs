@@ -186,3 +186,20 @@ test("conditional piping sources recommend fallback wording", () => {
   const report = validator.validate(config);
   assert.ok(report.warnings.some(item => item.code === "piping_fallback_missing"));
 });
+
+test("branch sources follow session order and must precede the page they control", () => {
+  const config = validConfig();
+  config.ema.questions.unshift({
+    id: "page", type: "page_break",
+    page_condition: { question_id: "mood", operator: "gte", value: 7 }
+  });
+  config.ema.questions.push({ id: "followup", type: "text", text: "What happened?" });
+  const step = config.ema.scheduling.windows[0].phase_sequence[0];
+  step.question_ids = ["mood", "page", "followup"];
+  assert.deepEqual(validator.validate(config).errors, []);
+  step.question_ids = ["page", "followup", "mood"];
+  assert.ok(validator.validate(config).errors.some(issue => issue.code === "condition_question_unavailable_in_session" &&
+    issue.path.includes("page_condition")));
+  step.question_ids = ["mood", "followup", "page"];
+  assert.ok(validator.validate(config).errors.some(issue => issue.code === "conditional_page_empty"));
+});

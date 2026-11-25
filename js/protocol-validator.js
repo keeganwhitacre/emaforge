@@ -5,7 +5,7 @@
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.EMAForgeProtocolValidator = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function createProtocolValidator() {
-  const VALID_OPERATORS = new Set(["eq", "neq", "gt", "gte", "lt", "lte", "includes"]);
+  const VALID_OPERATORS = new Set(["eq", "neq", "gt", "gte", "lt", "lte", "includes", "includes_all", "includes_none"]);
   const VALID_QUESTION_TYPES = new Set([
     "instruction", "slider", "choice", "checkbox", "text", "numeric", "affect_grid", "body_map", "heart_rate", "place_context", "page_break"
   ]);
@@ -53,7 +53,7 @@
       if (!VALID_OPERATORS.has(rule && rule.operator)) {
         issues.push(issue("error", "condition_operator_invalid", rulePath, "Condition uses an unsupported operator."));
       }
-      if (!rule || rule.value === undefined || rule.value === null || rule.value === "") {
+      if (!rule || rule.value === undefined || rule.value === null || rule.value === "" || (Array.isArray(rule.value) && rule.value.length === 0)) {
         issues.push(issue("error", "condition_value_missing", rulePath, "Condition comparison value is missing."));
       }
     });
@@ -207,7 +207,6 @@
     });
 
     const questionIds = new Set();
-    const priorQuestionIds = new Set();
     questions.forEach((question, questionIndex) => {
       const path = `ema.questions[${questionIndex}]`;
       if (!question || !String(question.id || "").trim()) {
@@ -274,8 +273,10 @@
           issues.push(issue("error", "body_map_regions_invalid", `${path}.regions`, "Body maps need at least two uniquely identified, labeled regions."));
         }
       }
-      validateCondition(question && question.condition, priorQuestionIds, `${path}.condition`, issues);
-      if (question && RESPONSE_TYPES.has(question.type) && question.id) priorQuestionIds.add(question.id);
+      if (question?.type !== "page_break") {
+        validateCondition(question?.condition, declaredQuestionIds, `${path}.condition`, issues);
+      }
+      validateCondition(question?.page_condition, declaredQuestionIds, `${path}.page_condition`, issues);
     });
 
     const surveyStepIds = new Set();
@@ -308,9 +309,16 @@
           if (eligible.length === 0) {
             issues.push(issue("error", "ema_step_empty", stepPath, `Survey step has no questions for "${window.label || window.id}".`));
           }
-          eligible.forEach(question => {
-            validateConditionAvailability(question.condition, availableResponses, `question:${question.id}.condition@${window.id}`, issues);
+          ids.map(id => questionsById.get(id)).filter(Boolean).forEach((question, index, ordered) => {
             const questionIndex = questionIndexes.get(question.id);
+            if (question.type === "page_break") {
+              if (question.page_condition && (!ordered[index + 1] || ordered[index + 1].type === "page_break")) {
+                issues.push(issue("error", "conditional_page_empty", `ema.questions[${questionIndex}].page_condition`, "Move this page rule before the measures it controls."));
+              }
+              validateConditionAvailability(question.page_condition, availableResponses, `ema.questions[${questionIndex}].page_condition`, issues);
+              return;
+            }
+            validateConditionAvailability(question.condition, availableResponses, `ema.questions[${questionIndex}].condition`, issues);
             validatePipingAvailability(
               question.text,
               question.id,

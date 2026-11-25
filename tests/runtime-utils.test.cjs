@@ -206,3 +206,34 @@ test("zero expiry explicitly disables response-window enforcement", () => {
   assert.equal(utils.canStartResponseWindow(policy, Number.MAX_SAFE_INTEGER), true);
   assert.equal(utils.isResponseWindowHardExpired(policy, Number.MAX_SAFE_INTEGER), false);
 });
+
+test("a named page gate skips its questions and their answers cannot trigger later branches", () => {
+  const questions = [
+    { id: "stress", type: "slider" },
+    { id: "page", type: "page_break", page_condition: { question_id: "stress", operator: "gte", value: 7 } },
+    { id: "coping", type: "choice" },
+    { id: "details", type: "text", condition: { question_id: "coping", operator: "eq", value: "Yes" } },
+    { id: "end", type: "page_break" },
+    { id: "feedback", type: "text", condition: { question_id: "coping", operator: "eq", value: "Yes" } }
+  ];
+  const sequence = [{ kind: "ema", question_ids: questions.map(question => question.id) }];
+  const pages = utils.surveyPages(questions, sequence[0].question_ids);
+  assert.deepEqual(pages.map(page => [page.marker?.id, page.questions.map(q => q.id)]), [
+    [undefined, ["stress"]], ["page", ["coping", "details"]], ["end", ["feedback"]]
+  ]);
+  const hidden = utils.traceBranches(questions, sequence, { stress: 4, coping: "Yes" });
+  assert.deepEqual(hidden.sources, ["stress", "coping"]);
+  assert.equal(hidden.trace.find(item => item.id === "page").shown, false);
+  assert.equal(hidden.trace.find(item => item.id === "details").pageSkipped, true);
+  assert.deepEqual(hidden.trace.find(item => item.id === "feedback").missing, ["coping"]);
+  const shown = utils.traceBranches(questions, sequence, { stress: 8, coping: "Yes" });
+  assert.ok(shown.trace.every(item => item.shown));
+});
+
+test("multi-select branch operators distinguish matching only some options and missing answers", () => {
+  const rule = { question_id: "context", operator: "includes_all", value: ["work", "alone"] };
+  assert.equal(utils.evaluateCondition(rule, { context: ["work"] }), false);
+  assert.equal(utils.evaluateCondition(rule, { context: ["work", "alone"] }), true);
+  assert.equal(utils.evaluateCondition({ ...rule, operator: "includes_none" }, { context: ["home"] }), true);
+  assert.equal(utils.evaluateCondition({ ...rule, operator: "includes_none" }, {}), false);
+});

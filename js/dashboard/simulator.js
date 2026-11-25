@@ -117,22 +117,28 @@
     };
     let responseOffset = 5000;
 
-    for (const questionId of step.question_ids || []) {
-      const question = questionMap[questionId];
-      if (!question || question.type === "page_break") continue;
-      if (question.type === "instruction") continue;
-      entry.eligibleQuestionIds.push(questionId);
-      if (!runtimeUtils.evaluateCondition(question.condition, responses)) {
-        entry.skippedQuestions.push({ questionId, reason: "condition_false" });
-        continue;
+    const pages = runtimeUtils.surveyPages(Object.values(questionMap), step.question_ids);
+    const hasPageConditions = pages.some(page => page.marker?.page_condition);
+    for (const [index, page] of pages.entries()) {
+      const pageIndex = hasPageConditions ? index : 0;
+      entry.presentationOrder[pageIndex] ||= [];
+      const showPage = runtimeUtils.evaluateCondition(page.marker?.page_condition, responses);
+      for (const question of page.questions) {
+        if (question.type === "instruction") continue;
+        const questionId = question.id;
+        entry.eligibleQuestionIds.push(questionId);
+        if (!showPage || !runtimeUtils.evaluateCondition(question.condition, responses)) {
+          entry.skippedQuestions.push({ questionId, reason: showPage ? "condition_false" : "page_condition_false" });
+          continue;
+        }
+        entry.presentationOrder[pageIndex].push(questionId);
+        if (random() < missingnessRate) continue;
+        responseOffset += Math.round(3500 + random() * 7000);
+        const value = responseFor(question, random, participantIndex, day);
+        const record = { value, respondedAt: new Date(Date.parse(startedAt) + responseOffset).toISOString() };
+        entry.responses[questionId] = record;
+        responses[questionId] = record;
       }
-      entry.presentationOrder[0].push(questionId);
-      if (random() < missingnessRate) continue;
-      responseOffset += Math.round(3500 + random() * 7000);
-      const value = responseFor(question, random, participantIndex, day);
-      const record = { value, respondedAt: new Date(Date.parse(startedAt) + responseOffset).toISOString() };
-      entry.responses[questionId] = record;
-      responses[questionId] = record;
     }
     entry.submittedAt = new Date(Date.parse(startedAt) + responseOffset + 2500).toISOString();
     return entry;

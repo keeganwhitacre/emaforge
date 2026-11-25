@@ -39,6 +39,7 @@ function selectedMeasureWindow() {
 
 function selectMeasureSession(windowId) {
   if (!state.ema.scheduling.windows.some(window => window.id === windowId)) return;
+  document.getElementById('branch-tester')?.close();
   measureSessionId = windowId;
   previewSession = windowId;
   rememberBuilderWorkspace();
@@ -169,9 +170,13 @@ function renderMeasureComposer() {
   const entries = EMAForgeMeasureFlow.flatten(window);
   flow.innerHTML = `<div class="measure-flow-heading">
     <strong>Editing <span>${escH(window.label || 'Untitled session')}</span></strong>
-    <button type="button" class="measure-add-button" id="open-measure-picker" aria-controls="measure-picker">+ Add measure</button>
+    <div class="measure-heading-actions">
+      <button type="button" class="btn btn-secondary" id="test-branches">Test branching</button>
+      <button type="button" class="measure-add-button" id="open-measure-picker" aria-controls="measure-picker">+ Add measure</button>
+    </div>
   </div>`;
   flow.querySelector('#open-measure-picker').addEventListener('click', event => openMeasurePicker(event.currentTarget));
+  flow.querySelector('#test-branches').addEventListener('click', event => openBranchTester(window, event.currentTarget));
   const list = document.createElement('div');
   list.className = 'measure-flow-list';
   if (!entries.length) {
@@ -185,8 +190,27 @@ function renderMeasureComposer() {
     return;
   }
   appendFlowDropSlot(list, 0);
+  const pageLabels = new Map();
+  let number = 0;
+  for (const step of window.phase_sequence) {
+    if (step.kind !== 'ema') continue;
+    for (const page of EMAForgeRuntimeUtils.surveyPages(state.ema.questions, step.question_ids)) {
+      number++;
+      if (page.marker) pageLabels.set(page.marker.id, { number, count: page.questions.length });
+      for (const question of page.questions) if (page.marker) pageLabels.set(question.id, { child: true });
+    }
+  }
   entries.forEach((entry, index) => {
-    list.appendChild(buildMeasureFlowCard(window, entries, entry, index));
+    const card = buildMeasureFlowCard(window, entries, entry, index);
+    const page = pageLabels.get(entry.questionId);
+    if (page?.child) card.classList.add('flow-page-child');
+    if (page?.number) {
+      const label = document.createElement('span');
+      label.className = 'flow-page-label';
+      label.textContent = `Page ${page.number} · ${page.count} measure${page.count === 1 ? '' : 's'}`;
+      card.querySelector('.page-break-name').before(label);
+    }
+    list.appendChild(card);
     appendFlowDropSlot(list, index + 1);
   });
   wireFlowListReordering(list, window, entries);
@@ -268,16 +292,8 @@ function buildMeasureFlowCard(window, entries, entry, index) {
       <button type="button" class="measure-remove" aria-label="Remove from session">✕</button>
     </span>`;
   if (entry.kind === 'task') {
-    const details = document.createElement('details');
-    details.className = 'measure-flow-condition';
-    const summary = document.createElement('summary');
-    summary.textContent = entry.condition ? 'Conditional · edit rule' : 'Add conditional logic';
-    const taskStep = window.phase_sequence[entry.sourceStepIndex];
-    if (taskStep) {
-      details.append(summary, buildConditionRow(taskStep, window));
-      details.addEventListener('toggle', () => { if (details.open) summary.textContent = 'Conditional logic'; });
-      card.appendChild(details);
-    }
+    const step = window.phase_sequence[entry.sourceStepIndex];
+    card.append(buildConditionRow(step, window));
   }
   card.addEventListener('dragstart', event => {
     event.dataTransfer.effectAllowed = 'move';
@@ -312,7 +328,9 @@ function buildQuestionFlowCard(window, entries, entry, flowIndex, question) {
     .filter(candidate => candidate.kind === 'question')
     .map(candidate => state.ema.questions.find(item => item.id === candidate.questionId))
     .filter(candidate => candidate && !['page_break', 'instruction', 'affect_grid'].includes(candidate.type));
-  const card = buildQCard(question, questionIndex, flowIndex + 1, { flow: true, pipeSources });
+  const card = buildQCard(question, questionIndex, flowIndex + 1, { pipeSources });
+  const sources = branchSources(entries.slice(0, flowIndex).filter(item => item.kind === 'question').map(item => item.questionId));
+  card.querySelector('.q-header').after(buildBranchEditor(question, sources, question.type === 'page_break' ? 'page' : 'question'));
   card.classList.add('flow-item', 'flow-question-card');
   const header = card.querySelector('.q-header');
   const actions = document.createElement('span');
@@ -395,6 +413,9 @@ function measureTypeLabel(type) {
 }
 
 function commitMeasureFlow(window, entries) {
+  for (const entry of entries) {
+    if (entry.kind === 'task') entry.condition = window.phase_sequence[entry.sourceStepIndex]?.condition || null;
+  }
   window.phase_sequence = EMAForgeMeasureFlow.compile(entries, genSId);
   renderWindows();
   renderQuestions();
@@ -561,10 +582,6 @@ function buildQCard(q, index, displayNum, options = {}) {
 
       ${buildPipingControls(options.pipeSources || [], q)}
 
-      <div class="field-group condition-wrapper" style="margin-top:10px;">
-        <label class="field-label">Skip Logic</label>
-        ${buildConditionBlock(q, index)}
-      </div>
       ${q.type !== 'instruction' && q.type !== 'place_context' ? `<div class="toggle-row">
         <span class="toggle-label">Required</span>
         <label class="toggle">
@@ -612,7 +629,6 @@ function buildQCard(q, index, displayNum, options = {}) {
   if (q.type === 'heart_rate')                          bindHeartRateFields(card, q);
   if (q.type === 'place_context')                       bindPlaceContextFields(card, q);
 
-  bindConditionBlock(card, q, index);
   return card;
 }
 
@@ -872,117 +888,6 @@ function bindAffectGridFields(card, q) {
   bind('.q-ahi', v => q.arousal_labels[1] = v);
   const qd = card.querySelector('.q-quadrants');
   if (qd) qd.addEventListener('change', () => { q.show_quadrant_labels = qd.checked; schedulePreview(); });
-}
-
-// ---------------------------------------------------------------------------
-// Skip Logic / Condition block
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// Skip Logic / Compound Condition block
-// ---------------------------------------------------------------------------
-function buildConditionBlock(q, index) {
-  const priors = state.ema.questions.slice(0, index).filter(p => !['page_break', 'instruction', 'checkbox', 'affect_grid'].includes(p.type));
-  if (priors.length === 0) return `<div style="font-size:11px;color:var(--fg-3);padding:4px 0">No prior questions available.</div>`;
-
-  // Migrate legacy condition to compound array
-  if (q.condition && !q.condition.rules) {
-    q.condition = { logical_op: 'AND', rules: [q.condition] };
-  }
-
-  const has = !!q.condition;
-  const rules = has ? q.condition.rules : [];
-  const logOp = has ? (q.condition.logical_op || 'AND') : 'AND';
-
-  let rulesHtml = rules.map((r, ri) => {
-    const qOpts = priors.map(p => `<option value="${p.id}" ${p.id===r.question_id?'selected':''}>${escH(p.text?.slice(0,40)||p.id)}</option>`).join('');
-    const ops = ['eq','neq','gt','gte','lt','lte','includes'].map(op => `<option value="${op}" ${r.operator===op?'selected':''}>${op}</option>`).join('');
-    return `
-      <div class="condition-row" data-ri="${ri}">
-        <select class="cond-q" aria-label="Previous measure">${qOpts}</select>
-        <select class="cond-op" aria-label="Comparison">${ops}</select>
-        <input type="text" class="cond-val" value="${escH(String(r.value??''))}" aria-label="Comparison value" placeholder="Value">
-        <button type="button" class="cond-del-rule builder-icon-button" aria-label="Remove rule ${ri + 1}">✕</button>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <div class="q-condition-block">
-      <div class="toggle-row">
-        <span class="toggle-label" style="font-size:11px;">Enable skip logic</span>
-        <label class="toggle"><input type="checkbox" class="cond-enable" ${has?'checked':''}><span class="toggle-track"></span></label>
-      </div>
-      <div class="cond-fields" style="display:${has?'flex':'none'};flex-direction:column;gap:6px;margin-top:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <select class="cond-logical-op" aria-label="How rules are combined">
-            <option value="AND" ${logOp==='AND'?'selected':''}>Match ALL rules (AND)</option>
-            <option value="OR"  ${logOp==='OR'?'selected':''}>Match ANY rule (OR)</option>
-          </select>
-          <button type="button" class="cond-add-rule btn btn-secondary">Add rule</button>
-        </div>
-        <div class="rules-container" style="background:var(--bg-elevated);padding:8px;border-radius:6px;border:1px solid var(--border);">
-          ${rulesHtml || '<div style="font-size:11px;color:var(--fg-3);">No rules defined. Click + Add Rule.</div>'}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function refreshConditionBlock(card, q, index) {
-  const wrapper = card.querySelector('.condition-wrapper');
-  wrapper.innerHTML = `<label class="field-label">Skip Logic</label>` + buildConditionBlock(q, index);
-  bindConditionBlock(card, q, index);
-}
-
-function bindConditionBlock(card, q, index) {
-  const toggle = card.querySelector('.cond-enable');
-  if (!toggle) return;
-
-  toggle.addEventListener('change', () => {
-    if (toggle.checked) {
-      q.condition = { logical_op: 'AND', rules: [{ question_id: '', operator: 'eq', value: '' }] };
-    } else {
-      q.condition = null;
-    }
-    schedulePreview();
-    refreshConditionBlock(card, q, index);
-  });
-
-  if (!q.condition) return;
-
-  const logOp = card.querySelector('.cond-logical-op');
-  if (logOp) logOp.addEventListener('change', e => { q.condition.logical_op = e.target.value; schedulePreview(); });
-
-  const addBtn = card.querySelector('.cond-add-rule');
-  if (addBtn) addBtn.addEventListener('click', () => {
-    q.condition.rules.push({ question_id: '', operator: 'eq', value: '' });
-    schedulePreview(); 
-    refreshConditionBlock(card, q, index);
-  });
-
-  card.querySelectorAll('.condition-row').forEach((row, i) => {
-    const rule = q.condition.rules[i];
-    const qSel = row.querySelector('.cond-q');
-    const opSel = row.querySelector('.cond-op');
-    const valInp = row.querySelector('.cond-val');
-    const delBtn = row.querySelector('.cond-del-rule');
-
-    qSel.addEventListener('change', e => { rule.question_id = e.target.value; schedulePreview(); });
-    opSel.addEventListener('change', e => { rule.operator = e.target.value; schedulePreview(); });
-    valInp.addEventListener('input', e => {
-      const v = e.target.value;
-      if (v.includes(',')) rule.value = v.split(',').map(x => x.trim());
-      else if (v !== '' && !isNaN(Number(v))) rule.value = Number(v);
-      else rule.value = v;
-      schedulePreview();
-    });
-    delBtn.addEventListener('click', () => {
-      q.condition.rules.splice(i, 1);
-      if (q.condition.rules.length === 0) q.condition = null;
-      schedulePreview(); 
-      refreshConditionBlock(card, q, index);
-    });
-  });
 }
 
 // ---------------------------------------------------------------------------

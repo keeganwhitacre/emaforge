@@ -1095,8 +1095,9 @@
             <li><strong>Show in these survey steps:</strong> choose the exact session steps where this question appears.
               Select more than one step when you intentionally want to repeat a question.</li>
             <li><strong>Required:</strong> blocks advancement until answered.</li>
-            <li><strong>Skip Logic:</strong> combine AND/OR rules using eligible earlier questions. The builder offers operators
-              based on the source. Skipped items are recorded separately from unanswered items.
+            <li><strong>Branching:</strong> Expand a measure and choose <strong>Make this question conditional</strong>.
+              Select an earlier measure in the session, a comparison, and an answer. When you add multiple rules,
+              choose whether all or any must match. Existing rules are visible on collapsed rows.
             </li>
             <li><strong>Earlier-answer personalization:</strong> in a later question, use <strong>Insert earlier
               answer</strong>, choose the source item, and set fallback wording for participants who did not answer it.
@@ -1106,6 +1107,15 @@
             </li>
           </ul>
 
+          <h3>Conditional pages and tasks</h3>
+          <p>To make a page conditional, add or open a <strong>New screen</strong> row and choose
+            <strong>Make this page conditional</strong>. The rule applies to the measures grouped under that
+            screen. Its source must appear earlier in the session, before the page opens. A physiology task
+            can have its own rule using the same controls.</p>
+          <p>Use <strong>Test branching</strong> in Measures to enter sample answers and see which rules
+            match. Use <strong>Open phone preview</strong> to walk through the session with those answers.
+            Skipped items are recorded separately from shown items left unanswered.</p>
+
           <details>
             <summary>Skip logic semantics — edge cases worth knowing</summary>
             <div class="details-body">
@@ -1113,8 +1123,7 @@
               <ul>
                 <li>For sliders, comparisons are numeric. <code>q1 gt 70</code> works as expected.</li>
                 <li>For single-choice, comparisons are string equality against the option label (not index).</li>
-                <li>For checkbox (multi-select), comparisons use <code>includes</code>. <code>eq</code> on a
-                  multi-select will nearly always be false because the stored value is an array.</li>
+                <li>For multi-select, choose whether the answer includes any, all, or none of the selected options.</li>
                 <li>For Affect Grid, skip-logic is disabled in the UI (the value is a compound object, not a scalar).
                 </li>
                 <li>For Heart Rate, comparisons hit the <code>bpm</code> field directly, so <code>q_hr_1 gt 80</code>

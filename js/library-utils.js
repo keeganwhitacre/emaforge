@@ -83,7 +83,7 @@
     questions.forEach((question, index) => {
       if (!question?.id || ids.has(question.id)) errors.push(`Question ${index + 1} needs a unique ID.`);
       if (!QUESTION_TYPES.has(question?.type)) errors.push(`Question ${question?.id || index + 1} has an unsupported type.`);
-      conditionRules(question?.condition).forEach(rule => {
+      conditionRules(question?.page_condition || question?.condition).forEach(rule => {
         if (!ids.has(rule.question_id)) errors.push(`Question ${question.id} branches on an item that does not appear earlier in the pack.`);
       });
       Array.from(String(question?.text || '').matchAll(/\{\{([^{}]+)\}\}/g)).forEach(match => {
@@ -123,7 +123,8 @@
       ...JSON.parse(JSON.stringify(question)),
       id: idMap.get(question.id),
       text: rewritePiping(question.text, idMap),
-      condition: rewriteCondition(question.condition, idMap)
+      condition: rewriteCondition(question.condition, idMap),
+      ...(question.page_condition && { page_condition: rewriteCondition(question.page_condition, idMap) })
     }));
     targetState.ema.questions.push(...questions);
     window.phase_sequence.push({
