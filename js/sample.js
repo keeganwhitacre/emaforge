@@ -1,15 +1,18 @@
 "use strict";
 
-const surveyButton = document.getElementById('sample-survey');
-const physiologyButton = document.getElementById('sample-physiology');
+const sampleMode = document.getElementById('sample-mode');
+const sampleReset = document.getElementById('sample-reset');
+const sampleNote = document.getElementById('sample-note');
 const sampleFrame = document.getElementById('sample-frame');
 const sampleStatus = document.getElementById('sample-status');
 let sampleRequest = 0;
 
 async function showSample(withHeartRate) {
   const request = ++sampleRequest;
-  surveyButton.setAttribute('aria-pressed', String(!withHeartRate));
-  physiologyButton.setAttribute('aria-pressed', String(withHeartRate));
+  sampleNote.textContent = withHeartRate
+    ? 'Heart rate is simulated · Answers aren’t saved'
+    : 'Sample only · Answers aren’t saved';
+  sampleFrame.hidden = true;
   sampleStatus.textContent = 'Loading sample…';
   const config = buildConfig();
   config.study.name = 'Everyday mood check-in';
@@ -51,7 +54,7 @@ async function showSample(withHeartRate) {
   window.phase_sequence[0].question_ids = questions.map(question => question.id);
   try {
     const html = await buildStudyHtml({
-      configInline: true, configOverride: config, previewMode: true, previewSession: window.id
+      configInline: true, configOverride: config, previewMode: true, previewSession: window.id, previewInStage: true
     });
     if (request !== sampleRequest) return;
     sampleFrame.srcdoc = html;
@@ -62,6 +65,7 @@ async function showSample(withHeartRate) {
   }
 }
 
-surveyButton.onclick = () => showSample(false);
-physiologyButton.onclick = () => showSample(true);
-showSample(false);
+const loadSelectedSample = () => showSample(sampleMode.value === 'physiology');
+sampleMode.onchange = loadSelectedSample;
+sampleReset.onclick = loadSelectedSample;
+loadSelectedSample();

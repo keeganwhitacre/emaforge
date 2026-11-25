@@ -87,7 +87,7 @@ function stitchStudyJs(cfg, { configInline, previewMode, previewSession: _ps }) 
   return studyJs;
 }
 
-function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, studyTag, cssTag, previewMode = false }) {
+function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, studyTag, cssTag, previewMode = false, previewInStage = false }) {
 
   // Dynamically generate the time inputs based on the study's actual windows
   const dynamicWindowsHtml = (cfg.ema?.scheduling?.windows || []).map(w => `
@@ -116,7 +116,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
   ${coreTag}
   ${cssTag}
 </head>
-<body${previewMode ? ' class="preview-mode"' : ''}>
+<body${previewMode ? (previewInStage ? ' class="preview-mode preview-in-stage"' : ' class="preview-mode"') : ''}>
   ${previewMode ? '<details class="preview-simulation-note"><summary>Simulated preview <span aria-hidden="true">ⓘ</span></summary><p>Camera, flashlight, PPG, calibration, and task values are simulated. No device sensors are used.</p></details>' : ''}
   <video id="video-feed" playsinline muted style="position:fixed;top:-999px;opacity:0;"></video>
   <canvas id="sampling-canvas" style="position:fixed;top:-999px;opacity:0;"></canvas>
@@ -410,7 +410,7 @@ function buildHtmlShell({ cfg, themeCSS, includeEpatCore, configTag, coreTag, st
 </html>`;
 }
 
-async function buildStudyHtml({ configInline, previewMode = false, previewSession: _ps, configOverride = null }) {
+async function buildStudyHtml({ configInline, previewMode = false, previewSession: _ps, configOverride = null, previewInStage = false }) {
   await loadTemplates();
   const cfg = configOverride || buildConfig();
   const themeCSS = getThemeCSS(cfg.study.theme, cfg.study.accent_color);
@@ -422,7 +422,7 @@ async function buildStudyHtml({ configInline, previewMode = false, previewSessio
   const coreTag = needsCore ? `<script>\n${templates.epatCore}\n<\/script>` : '';
   const cssTag = `<style>:root{${themeCSS}}${runtimeCss}</style>`;
   const studyTag = `<script>\n${studyJs}\n<\/script>`;
-  return buildHtmlShell({ cfg, themeCSS, includeEpatCore: !!needsCore, configTag, coreTag, studyTag, cssTag, previewMode });
+  return buildHtmlShell({ cfg, themeCSS, includeEpatCore: !!needsCore, configTag, coreTag, studyTag, cssTag, previewMode, previewInStage });
 }
 
 async function buildCloudflareStudyHtml() {
@@ -491,8 +491,9 @@ function getRuntimeCss() {
     .preview-simulation-note summary { padding: 6px 9px; cursor: pointer; font-weight: 700; list-style: none; text-transform: uppercase; letter-spacing: .04em; }
     .preview-simulation-note summary::-webkit-details-marker { display: none; }
     .preview-simulation-note p { margin: 0; padding: 0 10px 9px; color: var(--fg-muted); font-size: .68rem; text-align: left; }
-    .preview-mode .screen { top: calc(env(safe-area-inset-top, 0px) + 76px); padding-top: 12px; }
-    .preview-mode:has(.preview-simulation-note[open]) .screen { top: calc(env(safe-area-inset-top, 0px) + 128px); }
+    .preview-in-stage .preview-simulation-note { display: none; }
+    .preview-mode:not(.preview-in-stage) .screen { top: calc(env(safe-area-inset-top, 0px) + 76px); padding-top: 12px; }
+    .preview-mode:not(.preview-in-stage):has(.preview-simulation-note[open]) .screen { top: calc(env(safe-area-inset-top, 0px) + 128px); }
     .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top, 24px) + 24px) 24px calc(env(safe-area-inset-bottom, 24px) + 24px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; overflow-y: auto; }
     .pilot-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 20; margin: 0; padding: 4px; text-align: center; background: var(--bg-elevated); color: var(--fg); font-size: 11px; pointer-events: none; }
     .screen.active { opacity: 1; pointer-events: all; }

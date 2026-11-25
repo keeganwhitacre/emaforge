@@ -308,26 +308,35 @@ document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener(
 document.getElementById("start-template-btn").addEventListener("click", () => {
   document.getElementById("import-modal").classList.add("open");
 });
-document.getElementById("builder-preview-btn").addEventListener("click", () => {
+const openPreviewButton = document.getElementById("builder-preview-btn");
+const exitPreviewButton = document.getElementById("close-preview-btn");
+let previewInertSiblings = [];
+openPreviewButton.addEventListener("click", () => {
+  if (previewPanel.classList.contains("preview-fullscreen")) return;
   document.getElementById("branch-tester")?.close();
-  const panel = document.getElementById("preview-panel");
-  panel.classList.remove("open-mobile");
-  panel.classList.add("preview-fullscreen");
+  previewPanel.classList.add("preview-fullscreen");
+  previewPanel.setAttribute("role", "dialog");
+  previewPanel.setAttribute("aria-label", "Participant preview");
+  previewPanel.setAttribute("aria-modal", "true");
   document.body.classList.add("preview-open");
-  for (const sibling of panel.parentElement.children) {
-    if (sibling !== panel) sibling.inert = true;
-  }
-  document.getElementById("close-preview-btn").focus();
+  previewInertSiblings = Array.from(previewPanel.parentElement.children)
+    .filter(sibling => sibling !== previewPanel && !sibling.inert);
+  for (const sibling of previewInertSiblings) sibling.inert = true;
+  syncPreviewStage();
+  exitPreviewButton.focus();
 });
-document.getElementById("close-preview-btn").addEventListener("click", () => {
-  document.getElementById("preview-panel").classList.remove("open-mobile", "preview-fullscreen");
+exitPreviewButton.addEventListener("click", () => {
+  previewPanel.classList.remove("preview-fullscreen");
+  for (const attribute of ["role", "aria-label", "aria-modal"]) previewPanel.removeAttribute(attribute);
   document.body.classList.remove("preview-open");
-  for (const sibling of document.getElementById("preview-panel").parentElement.children) sibling.inert = false;
-  document.getElementById("builder-preview-btn").focus();
+  for (const sibling of previewInertSiblings) sibling.inert = false;
+  previewInertSiblings = [];
+  syncPreviewStage();
+  openPreviewButton.focus({ preventScroll: true });
 });
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && document.getElementById("preview-panel").classList.contains("preview-fullscreen")) {
-    document.getElementById("close-preview-btn").click();
+  if (event.key === "Escape" && !event.defaultPrevented && previewPanel.classList.contains("preview-fullscreen")) {
+    exitPreviewButton.click();
   }
 });
 document.addEventListener("click", event => {
