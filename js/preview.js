@@ -6,6 +6,8 @@ function schedulePreview() {
       StorageManager.debouncedSave();
     }
     if (typeof renderBuilderShell === 'function') renderBuilderShell();
+    const tester = document.getElementById('branch-tester');
+    if (tester?.open) tester.dispatchEvent(new Event('branch-change'));
   }
 
 function renderPreviewTabs() {
@@ -39,6 +41,7 @@ function renderPreviewTabs() {
 
 let previewRequestId = 0;
 async function renderPreview() {
+  clearTimeout(previewDebounceTimer);
   if (!window.buildStudyHtml) return;
   const requestId = ++previewRequestId;
   const errorEl = document.getElementById('preview-error');

@@ -282,6 +282,7 @@ document.getElementById("phone-backup-btn").addEventListener("click", () => {
   document.getElementById("btn-save-project").click();
 });
 document.querySelectorAll(".tab-btn").forEach(button => button.addEventListener("click", () => {
+  if (button.dataset.tab !== "questions") document.getElementById("branch-tester")?.close();
   const [title, description] = builderSections[button.dataset.tab];
   document.querySelectorAll(".tab-btn").forEach(tab => tab.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
@@ -308,6 +309,7 @@ document.getElementById("start-template-btn").addEventListener("click", () => {
   document.getElementById("import-modal").classList.add("open");
 });
 document.getElementById("builder-preview-btn").addEventListener("click", () => {
+  document.getElementById("branch-tester")?.close();
   const panel = document.getElementById("preview-panel");
   panel.classList.remove("open-mobile");
   panel.classList.add("preview-fullscreen");
