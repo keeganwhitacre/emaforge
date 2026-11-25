@@ -71,8 +71,8 @@ test("a legacy browser draft survives opening a library protocol and switching b
 
 test("both public sample modes use the real participant renderer with preview-only controls", async () => {
   const elements = new Map();
-  for (const id of ["sample-survey", "sample-physiology", "sample-frame", "sample-status"]) {
-    elements.set(id, { setAttribute() {} });
+  for (const id of ["sample-mode", "sample-reset", "sample-note", "sample-frame", "sample-status"]) {
+    elements.set(id, {});
   }
   const context = vm.createContext({
     document: {
@@ -87,6 +87,7 @@ test("both public sample modes use the real participant renderer with preview-on
   await vm.runInContext("showSample(false)", context);
   const survey = elements.get("sample-frame").srcdoc;
   assert.match(survey, /window\.__PREVIEW_MODE__ = true/);
+  assert.match(survey, /class="preview-mode preview-in-stage"/);
   assert.match(survey, /How are you feeling right now\?/);
   assert.match(survey, /inert aria-hidden="true" class="screen" id="screen-ob-consent"/);
   assert.doesNotMatch(survey, /sample_heart_rate|id="download-btn"/);

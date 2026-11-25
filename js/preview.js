@@ -10,6 +10,35 @@ function schedulePreview() {
     if (tester?.open) tester.dispatchEvent(new Event('branch-change'));
   }
 
+const previewPanel = document.getElementById('preview-panel');
+const previewFrame = document.getElementById('preview-iframe');
+const previewSessionSelect = document.getElementById('preview-session-select');
+
+function choosePreviewSession(id) {
+  previewSession = id;
+  previewSessionSelect.value = id;
+  for (const button of document.querySelectorAll('.preview-session-tab')) {
+    button.setAttribute('aria-pressed', String(button.dataset.session === id));
+  }
+  if (typeof rememberBuilderWorkspace === 'function') rememberBuilderWorkspace();
+  renderPreview();
+}
+
+function syncPreviewStage() {
+  previewFrame.contentDocument?.body?.classList.toggle(
+    'preview-in-stage', previewPanel.classList.contains('preview-fullscreen')
+  );
+}
+
+previewFrame.addEventListener('load', () => {
+  syncPreviewStage();
+  previewFrame.contentDocument?.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !event.defaultPrevented && previewPanel.classList.contains('preview-fullscreen')) {
+      document.getElementById('close-preview-btn').click();
+    }
+  });
+});
+
 function renderPreviewTabs() {
   const container = document.getElementById('preview-session-tabs');
   if (!container) return;
@@ -21,6 +50,9 @@ function renderPreviewTabs() {
 
   const sessions = state.ema.scheduling.windows.map(({ id, label }) => [id, label || 'Untitled session']);
   if (state.onboarding.enabled) sessions.unshift(['onboarding', 'Setup']);
+  previewSessionSelect.replaceChildren(...sessions.map(([id, label]) => new Option(label, id)));
+  previewSessionSelect.value = previewSession;
+  previewSessionSelect.hidden = sessions.length === 0;
   sessions.forEach(([id, label]) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -28,13 +60,7 @@ function renderPreviewTabs() {
     button.dataset.session = id;
     button.textContent = label;
     button.setAttribute('aria-pressed', String(previewSession === id));
-    button.addEventListener('click', () => {
-      container.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed', 'false');
-      button.setAttribute('aria-pressed', 'true');
-      previewSession = id;
-      if (typeof rememberBuilderWorkspace === 'function') rememberBuilderWorkspace();
-      renderPreview();
-    });
+    button.addEventListener('click', () => choosePreviewSession(id));
     container.append(button);
   });
 }
@@ -54,18 +80,17 @@ async function renderPreview() {
   try {
     const html = await buildStudyHtml({ configInline: true, previewMode: true, previewSession });
     if (requestId !== previewRequestId) return;
-    const iframe = document.getElementById('preview-iframe');
-    if (iframe) {
-      iframe.srcdoc = html;
-    }
+    previewFrame.srcdoc = html;
     if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
   } catch(e) {
     if (requestId !== previewRequestId) return;
     console.error("Preview render failed:", e);
-    const iframe = document.getElementById('preview-iframe');
-    if (iframe) iframe.removeAttribute('srcdoc');
+    previewFrame.removeAttribute('srcdoc');
     if (errorEl) { errorEl.textContent = 'Preview could not be generated. Check the browser console and try resetting the preview.'; errorEl.hidden = false; }
   }
 }
 
 document.getElementById('preview-reset-btn').addEventListener('click', renderPreview);
+
+previewSessionSelect.addEventListener('change', () => choosePreviewSession(previewSessionSelect.value));
+document.getElementById('preview-stage-reset-btn').addEventListener('click', renderPreview);

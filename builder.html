@@ -13,7 +13,8 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/studio.css?v=20261124c">
 <link rel="stylesheet" href="css/surfaces.css?v=20261124c">
-<link rel="stylesheet" href="css/builder.css?v=20261125d">
+<link rel="stylesheet" href="css/builder.css?v=20261125e">
+<link rel="stylesheet" href="css/participant-stage.css?v=20261125">
 <script src="js/motion.js?v=20261124c" defer></script>
 </head>
 <body>
@@ -572,22 +573,32 @@
 
   <!-- ========== PREVIEW PANEL ========== -->
   <section id="preview-panel">
-    <button id="close-preview-btn" type="button" aria-label="Close preview">✕ Close preview</button>
-    <div class="preview-card"><div id="preview-header">
-      <span class="preview-label">Participant Preview</span>
-      <div style="display:flex;gap:8px;align-items:center">
-        <!-- Injected dynamically by js/preview.js -->
-        <div class="preview-session-tabs forge-segments" id="preview-session-tabs" role="group" aria-label="Preview session"></div>
-        <button class="preview-reset-btn" id="preview-reset-btn" title="Restart preview">↺ Reset</button>
+    <div class="preview-card participant-stage">
+      <header class="participant-stage-toolbar">
+        <button class="participant-stage-control" id="close-preview-btn" type="button" aria-label="Exit preview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Exit
+        </button>
+        <select class="participant-stage-select" id="preview-session-select" aria-label="Preview session"></select>
+        <button class="participant-stage-control" id="preview-stage-reset-btn" type="button" title="Restart preview" aria-label="Restart preview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 2.7 6.4M3 5v7h7"/></svg>
+        </button>
+        <p class="participant-stage-note">Preview only · Sensor readings are simulated</p>
+      </header>
+      <div id="preview-header">
+        <span class="preview-label">Participant Preview</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <!-- Injected dynamically by js/preview.js -->
+          <div class="preview-session-tabs forge-segments" id="preview-session-tabs" role="group" aria-label="Preview session"></div>
+          <button class="preview-reset-btn" id="preview-reset-btn" title="Restart preview">↺ Reset</button>
+        </div>
       </div>
-    </div>
-    <div id="preview-viewport">
-      <div class="phone-shell">
-        <div class="phone-notch" aria-hidden="true"></div>
-        <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin" title="Preview"></iframe>
+      <div id="preview-viewport" class="participant-stage-canvas">
+        <div class="phone-shell participant-stage-screen">
+          <div class="phone-notch" aria-hidden="true"></div>
+          <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin" title="Participant survey preview"></iframe>
+        </div>
       </div>
-    </div>
-    <p id="preview-error" class="preview-error" role="alert" hidden></p>
+      <p id="preview-error" class="preview-error participant-stage-status" role="alert" hidden></p>
     </div>
 
   </section>
@@ -676,9 +687,9 @@
 <script src="js/tabs/tasks.js?v=20260922b"></script>
 <script src="js/protocol-validator.js?v=20261125"></script>
 <script src="js/tabs/deployment.js?v=20261120"></script>
-<script src="js/preview.js?v=20261125"></script>
+<script src="js/preview.js?v=20261125e"></script>
 <script src="js/modals.js"></script>
-<script src="js/export.js?v=20261125c"></script>
+<script src="js/export.js?v=20261125e"></script>
 
 <!-- Initialize everything -->
 <script>
@@ -711,7 +722,7 @@
     themeBtn.addEventListener('click', () => ForgeMotion.toggleTheme());
   }
 </script>
-<script src="js/builder-shell.js?v=20261125"></script>
+<script src="js/builder-shell.js?v=20261125e"></script>
 <script src="js/setup.js?v=20261121"></script>
 </body>
 </html>
