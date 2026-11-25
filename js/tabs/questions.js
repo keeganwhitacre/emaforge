@@ -194,10 +194,15 @@ function renderMeasureComposer() {
   let number = 0;
   for (const step of window.phase_sequence) {
     if (step.kind !== 'ema') continue;
+    let lastMarker;
     for (const page of EMAForgeRuntimeUtils.surveyPages(state.ema.questions, step.question_ids)) {
-      number++;
-      if (page.marker) pageLabels.set(page.marker.id, { number, count: page.questions.length });
-      for (const question of page.questions) if (page.marker) pageLabels.set(question.id, { child: true });
+      if (!page.marker || page.marker !== lastMarker) number++;
+      if (page.marker) {
+        const count = page.marker === lastMarker ? pageLabels.get(page.marker.id).count : 0;
+        pageLabels.set(page.marker.id, { number, count: count + page.questions.length });
+        for (const question of page.questions) pageLabels.set(question.id, { child: true });
+      }
+      lastMarker = page.marker;
     }
   }
   entries.forEach((entry, index) => {

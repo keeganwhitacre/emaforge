@@ -26,7 +26,7 @@ async function fetchTemplate(path) {
 
 async function loadTemplates() {
   if (!templates.epatCore) templates.epatCore = await fetchTemplate('templates/epat-core.js');
-  if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20261125');
+  if (!templates.runtimeUtils) templates.runtimeUtils = await fetchTemplate('templates/runtime-utils.js?v=20261125c');
   if (!templates.studyBase) templates.studyBase = await fetchTemplate('templates/study-base.js?v=20261120');
   if (!templates.modOnboarding) templates.modOnboarding = await fetchTemplate('templates/module-onboarding.js?v=20260923c');
   if (!templates.modEma) templates.modEma = await fetchTemplate('templates/module-ema.js?v=20261125');

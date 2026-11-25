@@ -129,10 +129,12 @@
     const pages = [];
     let marker = null;
     let items = [];
+    // A page rule covers everything up to the next page break, including
+    // the extra pages that instructions split off, so `marker` is only
+    // replaced when the next page_break arrives.
     function finishPage() {
       if (items.length) pages.push({ marker, questions: items });
       items = [];
-      marker = null;
     }
     for (const question of questionsForStep(questions, questionIds)) {
       if (question.type === "page_break") {
@@ -152,32 +154,41 @@
     const responses = Object.create(null);
     const trace = [];
     const sources = new Set();
+    const sourceStates = new Map();
     function test(condition) {
       const rules = condition?.rules || [condition];
       for (const rule of rules) if (rule?.question_id) sources.add(rule.question_id);
       const shown = evaluateCondition(condition, responses);
-      const failed = rules.filter(rule => rule?.question_id && !evaluateCondition(rule, responses)).map(rule => ({
+      const failed = rules.filter(rule => rule && !evaluateCondition(rule, responses)).map(rule => ({
         id: rule.question_id, value: responseValue(responses[rule.question_id])
       }));
-      const missing = failed.filter(({ value }) => value == null || value === "").map(({ id }) => id);
-      return { shown, missing, failed };
+      const missing = failed.filter(({ id, value }) => id && (value == null || value === "")).map(({ id }) => id);
+      const pending = missing.filter(id => ["shown", "waiting"].includes(sourceStates.get(id)));
+      const skippedSources = missing.filter(id => sourceStates.get(id) === "skipped");
+      const waiting = !shown && pending.length > 0 &&
+        (condition.logical_op === "OR" || failed.every(({ id }) => pending.includes(id) && missing.includes(id)));
+      return { shown, missing, failed, pending, skippedSources, waiting };
     }
     for (const step of sequence || []) {
       if (step.kind === "task") {
         trace.push({ kind: "task", id: step.id, ...test(step.condition) });
         continue;
       }
+      let reportedMarker = null;
       for (const page of surveyPages(questions, step.question_ids)) {
         const gate = test(page.marker?.page_condition);
-        if (page.marker?.page_condition) {
+        // One page rule can span several runtime pages; report it once.
+        if (page.marker?.page_condition && page.marker !== reportedMarker) {
+          reportedMarker = page.marker;
           trace.push({ kind: "page", id: page.marker.id, ...gate });
         }
         for (const question of page.questions) {
           const result = test(question.condition);
-          const outcome = gate.shown ? result : { shown: false, missing: [], pageSkipped: true };
+          const outcome = gate.shown ? result : { shown: false, waiting: gate.waiting, pageSkipped: true };
           if (question.condition || outcome.pageSkipped) {
             trace.push({ kind: "question", id: question.id, ...outcome });
           }
+          sourceStates.set(question.id, outcome.shown ? "shown" : outcome.waiting ? "waiting" : "skipped");
           if (outcome.shown && Object.hasOwn(answers, question.id)) responses[question.id] = answers[question.id];
           else delete responses[question.id];
         }

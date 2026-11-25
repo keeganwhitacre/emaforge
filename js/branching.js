@@ -203,6 +203,12 @@ function buildBranchEditor(target, sources, kind) {
       });
       row.append(field('Earlier answer', select, 'branch-source'),
         field('Comparison', comparison), field('Value', value), remove);
+      if (comparison.value === 'includes_none') {
+        const hint = document.createElement('p');
+        hint.className = 'field-hint branch-rule-hint';
+        hint.textContent = `Also ${kind === 'task' ? 'skips the task' : 'hides this'} when the earlier question was skipped or left blank.`;
+        row.append(hint);
+      }
       editor.append(row);
     });
     const add = document.createElement('button');
@@ -246,6 +252,7 @@ function openBranchTester(session, trigger) {
   function update() {
     results.replaceChildren();
     for (const item of evaluate().trace) {
+      const { waiting } = item;
       const row = document.createElement('div');
       row.className = 'branch-test-result';
       const title = document.createElement('strong');
@@ -253,8 +260,9 @@ function openBranchTester(session, trigger) {
         ? state.modules.find(module => module.id === item.id)?.label || item.id
         : branchQuestionLabel(questionById(item.id));
       const status = document.createElement('span');
-      status.className = item.shown ? 'branch-status shown' : 'branch-status';
-      status.textContent = item.shown ? 'Shown' : 'Skipped';
+      status.className = `branch-status ${item.shown ? 'shown' : waiting ? 'waiting' : ''}`;
+      status.textContent = item.shown ? 'Shown' : waiting ? 'Waiting' : 'Skipped';
+      if (waiting) row.classList.add('is-waiting');
       if (item.pageSkipped) row.classList.add('branch-test-page-child');
       if (item.kind === 'page') {
         const type = document.createElement('span');
@@ -265,14 +273,19 @@ function openBranchTester(session, trigger) {
       row.append(title, status);
       if (!item.shown) {
         const reason = document.createElement('small');
-        reason.textContent = item.pageSkipped ? 'Page rule did not match' :
-          item.missing.length ? `No available answer for ${item.missing.map(id => branchQuestionLabel(questionById(id))).join(', ')}` :
-          item.failed.map(({ id, value }) => {
-            const question = questionById(id);
-            const labels = new Map(branchOptions(question));
-            const displayed = (Array.isArray(value) ? value : [value]).map(answer => labels.get(answer) || answer).join(', ');
-            return `Answered ${displayed} to “${branchQuestionLabel(question)}”`;
-          }).join(' · ') || 'Conditions did not match';
+        const sourceNames = ids => ids.map(id => `“${branchQuestionLabel(questionById(id))}”`).join(', ');
+        const failedAnswers = item.failed?.filter(({ value }) => value != null && value !== '').map(({ id, value }) => {
+          const question = questionById(id);
+          const labels = new Map(branchOptions(question));
+          const displayed = (Array.isArray(value) ? value : [value]).map(answer => labels.get(answer) || answer).join(', ');
+          return `Answered ${displayed} to “${branchQuestionLabel(question)}”`;
+        });
+        if (item.pageSkipped) reason.textContent = waiting ? 'Depends on its page rule' : 'Page rule did not match';
+        else if (waiting) reason.textContent = `Waiting for ${sourceNames(item.pending)}`;
+        else {
+          const skipped = item.skippedSources.length ? `${sourceNames(item.skippedSources)} did not appear on this path` : '';
+          reason.textContent = [...failedAnswers, skipped].filter(Boolean).join(' · ') || 'Conditions did not match';
+        }
         row.append(reason);
       }
       results.append(row);

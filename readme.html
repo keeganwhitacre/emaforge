@@ -1098,6 +1098,8 @@
             <li><strong>Branching:</strong> Expand a measure and choose <strong>Add display rule</strong>.
               Select an earlier measure in the session, a comparison, and an answer. When you add multiple rules,
               choose whether all or any must match. Existing rules are visible on collapsed rows.
+              For multi-select questions, <strong>includes none of</strong> also hides the measure when the
+              earlier question was skipped or left blank.
             </li>
             <li><strong>Earlier-answer personalization:</strong> in a later question, use <strong>Insert earlier
               answer</strong>, choose the source item, and set fallback wording for participants who did not answer it.
@@ -1110,10 +1112,11 @@
           <h3>Conditional pages and tasks</h3>
           <p>To make a page conditional, add or open a <strong>New screen</strong> row and choose
             <strong>Add display rule</strong>. The rule applies to the measures grouped under that
-            screen. Its source must appear earlier in the session, before the page opens. A physiology task
+            screen, including any that follow an instruction on that screen, up to the next
+            <strong>New screen</strong> row. Its source must appear earlier in the session, before the page opens. A physiology task
             can have its own rule using the same controls.</p>
           <p>Use <strong>Test branching</strong> in Measures to enter sample answers and see which rules
-            match. Use <strong>Open phone preview</strong> to walk through the session with those answers.
+            match. Items whose source has no sample answer yet show as <strong>Waiting</strong>. Use <strong>Open phone preview</strong> to walk through the session with those answers.
             Skipped items are recorded separately from shown items left unanswered.</p>
 
           <details>

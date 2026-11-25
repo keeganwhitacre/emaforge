@@ -229,7 +229,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 .preview-card { display: flex; flex-direction: column; flex: 0 0 auto; min-height: 0; background: var(--surface-muted); }
 #preview-header { flex-wrap: wrap; gap: 8px; padding: 16px 17px 12px; background: transparent; border: 0; }
 .preview-label { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--fg); text-transform: none; letter-spacing: 0; }
-.preview-session-tabs { flex-wrap: wrap; }
+/* Sessions stay on one row; with many, the row scrolls sideways instead
+   of stacking into a column. */
+.preview-session-tabs { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.preview-session-tabs::-webkit-scrollbar { display: none; }
+.preview-session-tab { flex: none; white-space: nowrap; scroll-snap-align: start; }
+#preview-header { align-self: stretch; box-sizing: border-box; max-width: 100%; min-width: 0; }
+#preview-header > div { min-width: 0; max-width: 100%; }
 .preview-session-tabs:not(:has(button)) { display: none; }
 .preview-session-tab { overflow-wrap: anywhere; }
 #preview-viewport { flex: 0 0 auto; padding: 6px 17px 20px; background: transparent; }
@@ -872,7 +878,8 @@ body.preview-open { overflow: hidden; }
 .measure-flow-list > .flow-drop-slot:first-child + .flow-item { box-shadow: none; }
 .flow-item { transition: background var(--transition); }
 .flow-item:hover { background: color-mix(in srgb, var(--bg-2) 55%, transparent); }
-/* Keep an expanded editor visually attached to its row. */
+/* Keep an expanded editor visually attached to its row. The accent tint is
+   a selection highlight (like a selected sidebar item), not a status. */
 .measure-flow-list .flow-item:is(.expanded, :has(> .branch-editor[open])) {
   background: color-mix(in srgb, var(--accent) 4%, var(--bg-1));
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 65%, var(--bg-1)), inset 0 1px 0 var(--hairline);
@@ -967,7 +974,8 @@ body.preview-open { overflow: hidden; }
 /* Counts: one footnote line under the list. */
 .question-summary { display: flex; flex-wrap: wrap; gap: 0; margin: -12px 16px 0; padding: 0; border: 0; background: transparent; }
 .question-summary > div { flex-direction: row; align-items: baseline; gap: 4px; padding: 0; border: 0; }
-.question-summary > div + div::before { content: "·"; margin: 0 8px; color: var(--fg-3); }
+/* The separator trails each item, so a wrapped line never starts with "·". */
+.question-summary > div:not(:last-child)::after { content: "·"; margin: 0 8px; color: var(--fg-3); }
 .question-summary strong { font-size: 13px; font-weight: 600; color: var(--fg-2); line-height: 1.4; }
 .question-summary span { font-size: 13px; color: var(--fg-3); text-align: left; }
 .question-summary .question-summary-label { flex-basis: 100%; margin-bottom: 3px; font-weight: 600; }
@@ -1268,31 +1276,34 @@ html:has(.measure-picker[open]) { overflow: hidden; }
 .branch-editor[open] > summary::after { transform: rotate(225deg) translateY(-1px); }
 .branch-editor > summary span { min-width: 0; overflow-wrap: anywhere; }
 .branch-editor > summary:hover { background: var(--bg-3); }
-.branch-editor.branch-needs-review > summary { color: var(--red); background: var(--red-dim); }
+/* Unfinished rules are a warning to come back to, not a tappable action. */
+.branch-editor.branch-needs-review > summary { color: var(--yellow); background: var(--yellow-dim); }
+/* The rule's fields sit directly in the row, under a hairline, rather
+   than in a card of their own (one level of grouping). */
 .branch-editor-body {
   display: grid;
-  gap: 10px;
-  margin: 8px 0 12px;
-  padding: 12px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--group-radius);
-  background: var(--bg-1);
+  gap: 12px;
+  margin: 10px 0 6px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--hairline);
 }
+.branch-editor-body > select { justify-self: start; width: auto; min-width: 220px; }
 .branch-rule {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
   align-items: end;
   gap: 9px 8px;
 }
-.branch-rule + .branch-rule { border-top: 1px solid var(--hairline); padding-top: 10px; }
+.branch-rule + .branch-rule { border-top: 1px solid var(--hairline); padding-top: 12px; }
+.branch-rule-hint { grid-column: 1 / -1; margin: -2px 0 0; }
 .branch-field { display: grid; gap: 4px; min-width: 0; }
-.branch-field > span { color: var(--fg-3); font-size: 12px; font-weight: 600; }
+.branch-field > span { color: var(--fg-3); font-size: 12px; font-weight: 500; }
 .branch-source { grid-column: 1 / -1; }
 :is(.branch-field, .branch-test-field) > :is(input, select) { width: 100%; min-width: 0; background: var(--bg-2); }
-.branch-rule > .builder-icon-button { width: 32px; height: 36px; }
-.branch-choice-values { display: grid; gap: 4px; max-height: 132px; overflow: auto; padding: 4px; }
-.branch-choice-values label { display: flex; align-items: baseline; gap: 6px; font-size: 13px; overflow-wrap: anywhere; }
-.branch-choice-values input { flex: none; accent-color: var(--accent); }
+.branch-rule > .builder-icon-button { width: 36px; height: 36px; margin-bottom: 2px; border-radius: 50%; background: transparent; color: var(--fg-3); }
+.branch-choice-values { display: grid; gap: 2px; max-height: 148px; overflow: auto; padding: 6px 10px; border-radius: var(--radius); background: var(--bg-2); }
+.branch-choice-values label { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 14px; overflow-wrap: anywhere; }
+.branch-choice-values input { flex: none; width: 16px; height: 16px; accent-color: var(--action-fill); }
 .branch-add { justify-self: start; color: var(--accent); }
 .measure-flow-card > .branch-editor { grid-column: 3 / -1; margin: 0; }
 .flow-question-card.page-break > .q-header {
@@ -1337,31 +1348,34 @@ dialog.branch-tester {
 .branch-test-section-heading h3 { color: var(--fg-2); font-size: 13px; font-weight: 650; }
 .branch-test-reset { color: var(--accent); }
 .branch-test-reset:disabled { color: var(--fg-3); cursor: default; }
-.branch-test-inputs, .branch-test-results { border: 1px solid var(--hairline); border-radius: var(--group-radius); overflow: hidden; }
+.branch-test-inputs, .branch-test-results { border: 0; border-radius: var(--group-radius); background: var(--bg-2); overflow: hidden; }
+.branch-test-field > :is(input, select), .branch-test-field .branch-choice-values { background: var(--bg-1); }
 .branch-test-inputs:empty { display: none; }
+/* Each sample answer sits under its question at full width, so long
+   options are never cut off. */
 .branch-test-field {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(78px, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
+  gap: 6px;
+  padding: 10px 14px 12px;
 }
-.branch-test-field > span { font-size: 13px; font-weight: 550; overflow-wrap: anywhere; }
+.branch-test-field > span { color: var(--fg-2); font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
 .branch-test-field + .branch-test-field, .branch-test-result + .branch-test-result { border-top: 1px solid var(--hairline); }
 .branch-test-result {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 3px 8px;
-  padding: 9px 10px;
+  gap: 2px 10px;
+  padding: 10px 14px;
 }
 .branch-test-result strong { overflow-wrap: anywhere; font-size: 13px; font-weight: 600; }
 .branch-test-result small { grid-column: 1 / -1; color: var(--fg-3); font-size: 12px; }
-.branch-test-page-child { padding-inline-start: 18px; }
+.branch-test-page-child { padding-inline-start: 28px; }
+.branch-test-result.is-waiting strong { color: var(--fg-2); font-weight: 500; }
 .branch-result-kind { display: block; font-size: 11px; font-weight: 550; color: var(--fg-3); }
-.branch-status { padding: 3px 8px; border-radius: var(--pill-radius); color: var(--fg-2); background: var(--bg-2); font-size: 12px; }
+.branch-status { padding: 3px 9px; border-radius: var(--pill-radius); color: var(--fg-2); background: var(--bg-3); font-size: 12px; font-weight: 500; }
+.branch-status.waiting { color: var(--fg-3); background: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
 .branch-status.shown { color: var(--green); background: var(--green-dim); }
-.branch-test-empty { margin: 0; padding: 10px; color: var(--fg-3); font-size: 13px; }
+.branch-test-empty { margin: 0; padding: 12px 14px; color: var(--fg-3); font-size: 13px; }
 .branch-test-footer { display: grid; gap: 7px; padding-block: 12px 16px; border-top: 1px solid var(--hairline); }
 .branch-preview-link { justify-self: start; }
 
